@@ -3,12 +3,48 @@
     "name": "Google",
     "slug": "google",
     "overview": "Google LLC is an American multinational technology company that specializes in Internet-related services and products.",
-    "website": "https://www.google.com"
+    "website": "https://www.google.com",
+    "policy_changes": [
+      {
+        "changed_at": "2024-04-15",
+        "summary": "Updated privacy policy regarding data retention."
+      },
+      {
+        "changed_at": "2021-02-12",
+        "summary": "Modified terms for user data handling."
+      },
+      {
+        "changed_at": "2023-01-12",
+        "summary": "Modified terms for user data handling."
+      },
+      {
+        "changed_at": "2022-02-12",
+        "summary": "Modified terms for user data handling."
+      }
+    ]
   },
   {
     "name": "Apple",
     "slug": "apple",
     "overview": "Apple Inc. is an American multinational technology company headquartered in Cupertino, California.",
-    "website": "https://www.apple.com"
+    "website": "https://www.apple.com",
+    "policy_changes": [
+      {
+        "changed_at": "2024-03-20",
+        "summary": "Changes to cloud storage service terms."
+      }
+    ]
+  },
+  {
+    "name": "Microsoft",
+    "slug": "microsoft",
+    "overview": "Microsoft Corporation is an American multinational technology company with headquarters in Redmond, Washington.",
+    "website": "https://www.microsoft.com",
+    "policy_changes": [
+      {
+        "changed_at": "2024-03-10",
+        "summary": "Updated privacy policy regarding data collection."
+      }
+    ]
   }
 ]

@@ -14,10 +14,21 @@ def format_date(date_str):
 
 @main_bp.route('/')
 def index():
-    recent_changes = load_data('changes.json')
-    for change in recent_changes:
-        change['changed_at'] = format_date(
-            change['changed_at'])  # Format the date
+    companies = load_data('companies.json')
+    recent_changes = []
+    for company in companies:
+        if 'policy_changes' in company:
+            for change in company['policy_changes']:
+                formatted_change = {
+                    # Make sure this is correctly captured
+                    'company': company['name'],
+                    'company_slug': company['slug'],
+                    'changed_at': format_date(change['changed_at']),
+                    'summary': change['summary']
+                }
+                recent_changes.append(formatted_change)
+    # print("Recent changes prepared for template:",
+    #       recent_changes)  # Debugging line
     return render_template('index.html', recent_changes=recent_changes)
 
 
@@ -27,4 +38,16 @@ def company_profile(slug):
     company = next((c for c in companies if c['slug'] == slug), None)
     if not company:
         return render_template('404.html'), 404
+
+    # Ensure all dates in 'policy_changes' are converted to datetime objects and sorted
+    if 'policy_changes' in company:
+        for change in company['policy_changes']:
+            # Convert 'changed_at' from string to datetime object
+            change['changed_at'] = datetime.strptime(
+                change['changed_at'], '%Y-%m-%d')
+
+        # Sort the policy changes by date, in decscending order
+        company['policy_changes'].sort(
+            key=lambda x: x['changed_at'], reverse=True)
+
     return render_template('company_profile.html', company=company)
