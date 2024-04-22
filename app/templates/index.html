@@ -1,26 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Security Policy Tracker</title>
-</head>
-
-<body>
-    <h1>Welcome to the Security Policy Tracker</h1>
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Welcome to the Security Policy Tracker</h1>
     <div class="recent-changes">
-        <h2>Recent Policy Updates</h2>
-        <ul>
+        <h2 class="text-center mb-3">Recent Policy Updates</h2>
+        <div class="change-card-container">
             {% for change in recent_changes %}
-            <li>
-                <strong>Company:</strong> {{ change.company }}<br> <!-- Ensure this uses the correct key 'company' -->
-                <strong>Changed On:</strong> {{ change.changed_at }}<br>
-                <strong>Summary:</strong> {{ change.summary }}<br>
-                <a href="{{ url_for('main_bp.company_profile', slug=change.company_slug) }}">View Company</a>
-            </li>
+            <div class="change-card">
+                <h2 class="company-name"><a href="{{ url_for('main_bp.company_profile', slug=change.company_slug) }}">{{
+                        change.company }}</a></h2>
+                <p class="changed-on"><strong>Changed On:</strong> {{ change.changed_at }}</p>
+                <p class="summary">{{ change.summary }}</p>
+            </div>
             {% endfor %}
-        </ul>
+        </div>
     </div>
-</body>
-
-</html>
+</div>
+{% endblock %}

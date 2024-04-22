@@ -1,3 +1,61 @@
+/* Start main page styling */
+/* General typography improvements */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+h1 {
+    color: #333;
+}
+
+/* Styling for policy change cards */
+.change-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.change-card h2 {
+    color: #007bff;
+    font-size: 1.25rem;
+}
+
+.change-card a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.change-card a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive grid layout */
+@media (min-width: 768px) {
+    .change-card-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .change-card {
+        flex: 1;
+        min-width: calc(50% - 20px);
+    }
+}
+
+@media (min-width: 992px) {
+    .change-card {
+        min-width: calc(33.3333% - 20px);
+    }
+}
+
+/* End main page styling */
+
 /* Timeline styles */
 .timeline {
     border-left: 2px solid #ddd;
@@ -42,4 +100,36 @@
 /* Ensure the first item's dot aligns with the text properly */
 .timeline .timeline-item:first-child::after {
     top: 5px;
+}
+
+.search-results {
+    background: white;
+    /* Ensure it stands out over other content */
+    border: 1px solid #ccc;
+    /* Add a subtle border */
+    border-top: none;
+    /* Remove top border to blend with the input */
+    z-index: 1000;
+    /* Make sure it's above other content */
+    max-height: 300px;
+    /* Limit the height and add scrolling */
+    overflow-y: auto;
+    /* Add scroll to the dropdown */
+    width: 100%;
+    /* Make the dropdown the same width as the input */
+}
+
+.search-results .list-group-item {
+    padding: 10px 15px;
+    /* Standard padding */
+    border: none;
+    /* Removes individual borders in dropdown items for a clean look */
+    border-radius: 0;
+    /* Ensures no rounded corners within dropdown items */
+}
+
+.search-results .list-group-item:hover,
+.search-results .list-group-item:focus {
+    background-color: #f8f9fa;
+    /* Light grey background on hover/focus */
 }
