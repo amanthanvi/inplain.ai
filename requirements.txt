@@ -1,5 +1,3 @@
 Flask
-Flask-SQLAlchemy
 flask-login
 python-dotenv
-Flask-Migrate

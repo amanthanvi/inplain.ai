@@ -2,12 +2,13 @@ from flask import Flask
 
 
 def create_app():
-    # create and configure the app
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__)
 
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    # Configuration setup
+    app.config['SECRET_KEY'] = 'your_secret_key_here'
+
+    # Import and register blueprints
+    from .views.main import main_bp
+    app.register_blueprint(main_bp)
 
     return app
