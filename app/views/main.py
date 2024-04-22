@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from app.utils.data_handler import load_data
 from datetime import datetime
 
@@ -29,7 +29,34 @@ def index():
                 recent_changes.append(formatted_change)
     # print("Recent changes prepared for template:",
     #       recent_changes)  # Debugging line
+    recent_changes.sort(key=lambda x: datetime.strptime(
+        x['changed_at'], '%Y-%m-%d'), reverse=True)  # Sort by date
     return render_template('index.html', recent_changes=recent_changes)
+
+
+@main_bp.route('/search')
+def search():
+    query = request.args.get('query', '').lower()
+    if not query:
+        # Redirect if no query for form submission
+        return redirect(url_for('main_bp.index'))
+
+    companies = load_data('companies.json')
+    matched_companies = [
+        company for company in companies if query in company['name'].lower()]
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify(matched_companies)  # Return JSON for AJAX requests
+
+    # Render a search results page if accessed via direct link or form submission
+    return render_template('search_results.html', companies=matched_companies, query=query)
+
+
+@main_bp.route('/companies')
+def company_list():
+    # Assuming you have a function to load company data
+    companies = load_data('companies.json')
+    return render_template('company_list.html', companies=companies)
 
 
 @main_bp.route('/company/<slug>')
