@@ -13,7 +13,7 @@
         <ul>
             {% for change in recent_changes %}
             <li>
-                <strong>Company:</strong> {{ change.company }}<br>
+                <strong>Company:</strong> {{ change.company }}<br> <!-- Ensure this uses the correct key 'company' -->
                 <strong>Changed On:</strong> {{ change.changed_at }}<br>
                 <strong>Summary:</strong> {{ change.summary }}<br>
                 <a href="{{ url_for('main_bp.company_profile', slug=change.company_slug) }}">View Company</a>
