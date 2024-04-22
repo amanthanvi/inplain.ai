@@ -1,0 +1,14 @@
+[
+  {
+    "company": "Google",
+    "company_slug": "google",
+    "changed_at": "2024-04-08",
+    "summary": "Updated privacy policy regarding data retention."
+  },
+  {
+    "company": "Apple",
+    "company_slug": "apple",
+    "changed_at": "2024-04-07",
+    "summary": "Amended terms related to cloud storage services."
+  }
+]

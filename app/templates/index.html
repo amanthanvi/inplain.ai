@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Security Policy Tracker</title>
+</head>
+
+<body>
+    <h1>Welcome to the Security Policy Tracker</h1>
+    <div class="recent-changes">
+        <h2>Recent Policy Updates</h2>
+        <ul>
+            {% for change in recent_changes %}
+            <li>
+                <strong>Company:</strong> {{ change.company }}<br>
+                <strong>Changed On:</strong> {{ change.changed_at }}<br>
+                <strong>Summary:</strong> {{ change.summary }}<br>
+                <a href="{{ url_for('main_bp.company_profile', slug=change.company_slug) }}">View Company</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+
+</html>

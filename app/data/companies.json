@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Google",
+    "slug": "google",
+    "overview": "Google LLC is an American multinational technology company that specializes in Internet-related services and products.",
+    "website": "https://www.google.com"
+  },
+  {
+    "name": "Apple",
+    "slug": "apple",
+    "overview": "Apple Inc. is an American multinational technology company headquartered in Cupertino, California.",
+    "website": "https://www.apple.com"
+  }
+]
