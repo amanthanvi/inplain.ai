@@ -15,10 +15,16 @@ variable "vercel_team_id" {
   type        = string
 }
 
-variable "anthropic_api_key" {
-  description = "Anthropic API key for Claude"
+variable "openrouter_api_key" {
+  description = "OpenRouter API key for AI models"
   type        = string
   sensitive   = true
+}
+
+variable "default_ai_model" {
+  description = "Default AI model to use"
+  type        = string
+  default     = "google/gemini-2.5-flash-preview-05-20"
 }
 
 variable "aws_region" {

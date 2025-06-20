@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { getDiff, getSummary } from '@/lib/api'
 import { LoadingSpinner } from './LoadingSpinner'
 import { DiffCard } from './DiffCard'
+import { ModelSelector } from './ModelSelector'
 import { useToast } from '@/components/ui/use-toast'
 
 interface DiffViewerProps {
@@ -18,6 +19,8 @@ export function DiffViewer({ slug }: DiffViewerProps) {
   const [loading, setLoading] = useState(true)
   const [loadingSummary, setLoadingSummary] = useState(false)
   const [showRawDiff, setShowRawDiff] = useState(false)
+  const [showModelSelector, setShowModelSelector] = useState(false)
+  const [selectedModel, setSelectedModel] = useState<string>('google/gemini-2.5-flash-preview-05-20')
   const { toast } = useToast()
 
   useEffect(() => {
@@ -42,16 +45,33 @@ export function DiffViewer({ slug }: DiffViewerProps) {
     
     setLoadingSummary(true)
     try {
-      const summaryData = await getSummary(slug, diffData.diff.id)
-      setSummary(summaryData)
+      const response = await fetch(`/api/summary/${slug}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          diffId: diffData.diff.id,
+          model: selectedModel,
+          force: true
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate summary')
+      }
+      
+      const result = await response.json()
+      setSummary(result.summary)
+      
       toast({
         title: "Summary generated",
-        description: "AI analysis complete",
+        description: `Analysis complete using ${selectedModel.split('/')[1]}`,
       })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to generate summary",
+        description: error instanceof Error ? error.message : "Failed to generate summary",
         variant: "destructive",
       })
     } finally {
@@ -78,10 +98,33 @@ export function DiffViewer({ slug }: DiffViewerProps) {
       <DiffCard diff={diffData.diff} summary={summary} />
 
       {!summary && (
-        <div className="flex justify-center">
-          <Button onClick={generateSummary} disabled={loadingSummary}>
-            {loadingSummary ? "Generating..." : "Generate AI Summary"}
-          </Button>
+        <div className="space-y-4">
+          <div className="flex gap-2 justify-center">
+            <Button onClick={generateSummary} disabled={loadingSummary}>
+              {loadingSummary ? "Generating..." : "Generate AI Summary"}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowModelSelector(!showModelSelector)}
+            >
+              Choose Model
+            </Button>
+          </div>
+          
+          {showModelSelector && (
+            <ModelSelector
+              selectedModel={selectedModel}
+              onModelSelect={(model) => {
+                setSelectedModel(model)
+                setShowModelSelector(false)
+                toast({
+                  title: "Model selected",
+                  description: `Using ${model.split('/')[1]} for analysis`,
+                })
+              }}
+              showCosts={true}
+            />
+          )}
         </div>
       )}
 

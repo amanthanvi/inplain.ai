@@ -7,7 +7,7 @@
 
 ## 🎯 Overview
 
-PolicyDiff monitors public privacy policies and terms of service pages, automatically tracking changes and providing plain-language summaries of what changed and why it matters. Built on Vercel Edge Functions with Next.js 15 and Claude 4 Opus for intelligent analysis.
+PolicyDiff monitors public privacy policies and terms of service pages, automatically tracking changes and providing plain-language summaries of what changed and why it matters. Built on Vercel Edge Functions with Next.js 15 and OpenRouter AI models for intelligent analysis.
 
 ## 🏗️ Architecture
 
@@ -15,7 +15,7 @@ PolicyDiff monitors public privacy policies and terms of service pages, automati
 - **API**: Vercel Edge Functions for sub-300ms responses
 - **Scraper**: Python Scrapy 2.13.2 microservice for JS-heavy sites
 - **Storage**: Vercel Blob (snapshots) + Vercel KV (metadata)
-- **AI**: Claude 4 Opus for change summaries
+- **AI**: OpenRouter (Google, Meta, OpenAI, Anthropic) for change summaries
 - **Monitoring**: OpenTelemetry traces + Prometheus metrics
 
 ## 📁 Repository Structure
@@ -151,7 +151,7 @@ This project is licensed under the Apache License 2.0 - see [LICENSE](LICENSE) f
 
 ## 🙏 Acknowledgments
 
-- Built with Claude 4 Opus by Anthropic
+- AI analysis powered by OpenRouter (Google Gemini, Meta Llama, OpenAI GPT, Anthropic Claude)
 - Powered by Vercel Edge Functions
 - UI components from shadcn/ui
 
