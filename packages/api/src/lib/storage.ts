@@ -1,5 +1,5 @@
 import { kv } from '@vercel/kv'
-import { get, put, list } from '@vercel/blob'
+import { put, list } from '@vercel/blob'
 import type { SnapshotMeta, DiffMeta, Summary } from '@policydiff/shared'
 
 export class StorageClient {
@@ -29,8 +29,9 @@ export class StorageClient {
 
   async getSnapshotContent(blobKey: string): Promise<string | null> {
     try {
-      const blob = await get(blobKey)
-      return blob.text()
+      const response = await fetch(blobKey)
+      if (!response.ok) return null
+      return response.text()
     } catch {
       return null
     }
@@ -72,8 +73,9 @@ export class StorageClient {
 
   async getDiffContent(blobKey: string): Promise<any | null> {
     try {
-      const blob = await get(blobKey)
-      const text = await blob.text()
+      const response = await fetch(blobKey)
+      if (!response.ok) return null
+      const text = await response.text()
       return JSON.parse(text)
     } catch {
       return null
@@ -82,6 +84,7 @@ export class StorageClient {
 
   async saveDiffContent(blobKey: string, content: any): Promise<void> {
     await put(blobKey, JSON.stringify(content), {
+      access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false
     })

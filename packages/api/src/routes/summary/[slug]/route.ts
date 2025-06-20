@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { StorageClient } from '../../../lib/storage'
 import { PolicyAnalysisService } from '../../../lib/ai-service'
 import { SummarySchema } from '@policydiff/shared'
-import { formatTimestamp } from '@policydiff/shared/utils'
+import { formatTimestamp } from '@policydiff/shared'
 
 const storage = new StorageClient()
 

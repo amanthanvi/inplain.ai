@@ -1,0 +1,10 @@
+
+> @policydiff/web@1.0.0 build
+> next build
+
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'swcMinify'
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+  ▲ Next.js 15.0.0
+
+   Creating an optimized production build ...

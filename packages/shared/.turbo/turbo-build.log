@@ -1,0 +1,142 @@
+
+> @policydiff/shared@1.0.0 build
+> tsup
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:12:6:
+      12 │       "types": "./dist/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:10:6:
+      10 │       "import": "./dist/index.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:11:6:
+      11 │       "require": "./dist/index.js",
+         ╵       ~~~~~~~~~
+
+▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:17:6:
+      17 │       "types": "./dist/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:15:6:
+      15 │       "import": "./dist/index.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:16:6:
+      16 │       "require": "./dist/index.js",
+         ╵       ~~~~~~~~~
+
+CLI Building entry: src/index.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.0
+CLI Using tsup config: /Users/amanthanvi/GitRepos/my_security_policy_app/packages/shared/tsup.config.ts
+CLI Target: es2022
+CLI Cleaning output folder
+CJS Build start
+ESM Build start
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe condition "types" here will never be used as it comes after both "import" and "require"[0m [package.json]
+
+    package.json:12:6:
+[37m      12 │       [32m"types"[37m: "./dist/index.d.ts"
+         ╵       [32m~~~~~~~[0m
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:10:6:
+[37m      10 │       [32m"import"[37m: "./dist/index.mjs",
+         ╵       [32m~~~~~~~~[0m
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:11:6:
+[37m      11 │       [32m"require"[37m: "./dist/index.js",
+         ╵       [32m~~~~~~~~~[0m
+
+
+
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe condition "types" here will never be used as it comes after both "import" and "require"[0m [package.json]
+
+    package.json:17:6:
+[37m      17 │       [32m"types"[37m: "./dist/index.d.ts"
+         ╵       [32m~~~~~~~[0m
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:15:6:
+[37m      15 │       [32m"import"[37m: "./dist/index.mjs",
+         ╵       [32m~~~~~~~~[0m
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:16:6:
+[37m      16 │       [32m"require"[37m: "./dist/index.js",
+         ╵       [32m~~~~~~~~~[0m
+
+
+
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe condition "types" here will never be used as it comes after both "import" and "require"[0m [package.json]
+
+    package.json:12:6:
+[37m      12 │       [32m"types"[37m: "./dist/index.d.ts"
+         ╵       [32m~~~~~~~[0m
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:10:6:
+[37m      10 │       [32m"import"[37m: "./dist/index.mjs",
+         ╵       [32m~~~~~~~~[0m
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:11:6:
+[37m      11 │       [32m"require"[37m: "./dist/index.js",
+         ╵       [32m~~~~~~~~~[0m
+
+
+
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe condition "types" here will never be used as it comes after both "import" and "require"[0m [package.json]
+
+    package.json:17:6:
+[37m      17 │       [32m"types"[37m: "./dist/index.d.ts"
+         ╵       [32m~~~~~~~[0m
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:15:6:
+[37m      15 │       [32m"import"[37m: "./dist/index.mjs",
+         ╵       [32m~~~~~~~~[0m
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:16:6:
+[37m      16 │       [32m"require"[37m: "./dist/index.js",
+         ╵       [32m~~~~~~~~~[0m
+
+
+
+CJS dist/index.js     6.28 KB
+CJS dist/index.js.map 12.90 KB
+CJS ⚡️ Build success in 70ms
+ESM dist/index.mjs     5.66 KB
+ESM dist/index.mjs.map 12.84 KB
+ESM ⚡️ Build success in 70ms
+DTS Build start
+DTS ⚡️ Build success in 873ms
+DTS dist/index.d.ts  6.92 KB
+DTS dist/index.d.mts 6.92 KB
