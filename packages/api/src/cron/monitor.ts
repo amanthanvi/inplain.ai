@@ -49,11 +49,11 @@ async function getActiveCompanies(): Promise<CompanyRecord[]> {
   
   if (!companiesData || companiesData.length === 0) {
     const defaultCompanies: CompanyRecord[] = [
-      { slug: 'google', name: 'Google', url: 'https://policies.google.com/privacy', checkInterval: 3600, active: true },
-      { slug: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/privacy/policy', checkInterval: 3600, active: true },
-      { slug: 'amazon', name: 'Amazon', url: 'https://www.amazon.com/gp/help/customer/display.html?nodeId=468496', checkInterval: 3600, active: true },
-      { slug: 'microsoft', name: 'Microsoft', url: 'https://privacy.microsoft.com/en-us/privacystatement', checkInterval: 3600, active: true },
-      { slug: 'apple', name: 'Apple', url: 'https://www.apple.com/legal/privacy/', checkInterval: 3600, active: true }
+      { slug: 'google', name: 'Google', url: 'https://policies.google.com/privacy', checkInterval: 86400, active: true },
+      { slug: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/privacy/policy', checkInterval: 86400, active: true },
+      { slug: 'amazon', name: 'Amazon', url: 'https://www.amazon.com/gp/help/customer/display.html?nodeId=468496', checkInterval: 86400, active: true },
+      { slug: 'microsoft', name: 'Microsoft', url: 'https://privacy.microsoft.com/en-us/privacystatement', checkInterval: 86400, active: true },
+      { slug: 'apple', name: 'Apple', url: 'https://www.apple.com/legal/privacy/', checkInterval: 86400, active: true }
     ]
     
     await kv.set('companies:active', defaultCompanies)

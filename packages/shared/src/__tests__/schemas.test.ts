@@ -107,7 +107,7 @@ describe('Schemas', () => {
         name: 'Google',
         url: 'https://policies.google.com/privacy',
         category: 'tech',
-        checkInterval: 3600,
+        checkInterval: 86400,
         active: true
       }
       
@@ -122,7 +122,7 @@ describe('Schemas', () => {
       }
       
       const parsed = CompanySchema.parse(minimal)
-      expect(parsed.checkInterval).toBe(3600)
+      expect(parsed.checkInterval).toBe(86400)
       expect(parsed.active).toBe(true)
     })
   })

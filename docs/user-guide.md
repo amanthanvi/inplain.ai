@@ -41,7 +41,7 @@ Each change is analyzed for privacy impact:
 ## Features
 
 ### Real-time Monitoring
-- Policies are checked hourly for changes
+- Policies are checked daily for changes
 - New snapshots are automatically captured when changes are detected
 - Diffs are generated and analyzed within minutes
 
@@ -92,7 +92,7 @@ curl -X POST /api/companies \
     "slug": "example-company",
     "name": "Example Company",
     "url": "https://example.com/privacy",
-    "checkInterval": 3600
+    "checkInterval": 86400
   }'
 ```
 

@@ -37,7 +37,7 @@ PolicyDiff V2 has been successfully architected and implemented as a modern, pro
 ## Feature Completeness
 
 ### ✅ Core Features Implemented
-- [x] **Policy Monitoring**: 19 major companies tracked hourly
+- [x] **Policy Monitoring**: 19 major companies tracked daily
 - [x] **Change Detection**: SHA-256 content hashing with diff generation
 - [x] **AI Summaries**: Claude 4 Opus integration with risk assessment
 - [x] **Real-time UI**: React-based dashboard with live updates
@@ -47,7 +47,7 @@ PolicyDiff V2 has been successfully architected and implemented as a modern, pro
 - [x] **Categories**: Automated change classification
 
 ### ✅ Technical Features
-- [x] **Cron Jobs**: Automated hourly policy checks
+- [x] **Cron Jobs**: Automated daily policy checks
 - [x] **Rate Limiting**: Respectful crawling with user-agent rotation
 - [x] **Error Handling**: Robust retry mechanisms
 - [x] **Caching**: Multi-layer caching (Edge, KV, browser)
@@ -121,7 +121,7 @@ PolicyDiff V2 has been successfully architected and implemented as a modern, pro
 - **Anthropic API**: ~$15/month (Claude 4 usage)
 - **AWS Services**: ~$10/month (monitoring + backup)
 - **Docker Registry**: ~$5/month (container storage)
-- **Total**: ~$50/month for 500 sites @ hourly checks
+- **Total**: ~$50/month for 500 sites @ daily checks
 
 ### Cost Optimization
 - Edge caching reduces API calls by 80%
@@ -146,7 +146,7 @@ PolicyDiff V2 has been successfully architected and implemented as a modern, pro
 ### ✅ Disaster Recovery
 - **Backup**: Automated S3 backups with 30-day retention
 - **Replication**: Multi-region deployment capability
-- **Recovery Time**: <1 hour RTO, <15 minutes RPO
+- **Recovery Time**: <24 hour RTO, <15 minutes RPO
 - **Documentation**: Runbooks for incident response
 
 ## License Compliance

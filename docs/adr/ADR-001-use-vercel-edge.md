@@ -7,7 +7,7 @@ Accepted
 2025-06-20
 
 ## Context
-PolicyDiff needs a scalable API layer that can handle real-time diff generation and AI-powered summaries while maintaining sub-300ms response times. The system must be cost-effective for monitoring 500+ sites with hourly checks.
+PolicyDiff needs a scalable API layer that can handle real-time diff generation and AI-powered summaries while maintaining sub-300ms response times. The system must be cost-effective for monitoring 500+ sites with daily checks.
 
 ## Decision
 We will use Vercel Edge Functions as the primary API layer for PolicyDiff.
