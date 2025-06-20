@@ -4,14 +4,6 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "regions": ["iad1"],
-  "functions": {
-    "packages/api/src/routes/**/*.ts": {
-      "maxDuration": 30
-    },
-    "packages/api/src/cron/monitor.ts": {
-      "maxDuration": 60
-    }
-  },
   "crons": [
     {
       "path": "/api/cron/monitor",
