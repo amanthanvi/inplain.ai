@@ -89,4 +89,12 @@ export class StorageClient {
       addRandomSuffix: false
     })
   }
+
+  async getCachedAnalysis(key: string): Promise<any | null> {
+    return kv.get(key)
+  }
+
+  async setCachedAnalysis(key: string, analysis: any, ttl: number): Promise<void> {
+    await kv.set(key, analysis, { ex: ttl })
+  }
 }

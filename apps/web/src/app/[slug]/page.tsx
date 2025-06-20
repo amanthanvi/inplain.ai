@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import { DiffViewer } from '@/components/DiffViewer'
 import { Timeline } from '@/components/Timeline'
+import { CurrentPolicy } from '@/components/CurrentPolicy'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { getCompanyBySlug } from '@/lib/api'
 
@@ -45,19 +46,28 @@ export default async function CompanyPage({ params }: PageProps) {
           </p>
         </section>
         
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <h2 className="text-2xl font-semibold mb-4">Latest Changes</h2>
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">Current Policy</h2>
             <Suspense fallback={<LoadingSpinner />}>
-              <DiffViewer slug={slug} />
+              <CurrentPolicy slug={slug} />
             </Suspense>
-          </div>
+          </section>
           
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">Change History</h2>
-            <Suspense fallback={<LoadingSpinner />}>
-              <Timeline slug={slug} />
-            </Suspense>
+          <div className="grid gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <h2 className="text-2xl font-semibold mb-4">Latest Changes</h2>
+              <Suspense fallback={<LoadingSpinner />}>
+                <DiffViewer slug={slug} />
+              </Suspense>
+            </div>
+            
+            <div>
+              <h2 className="text-2xl font-semibold mb-4">Change History</h2>
+              <Suspense fallback={<LoadingSpinner />}>
+                <Timeline slug={slug} />
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>
