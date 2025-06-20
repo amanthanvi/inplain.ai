@@ -19,7 +19,7 @@
     }
   ],
   "functions": {
-    "/api/cron/monitor": {
+    "api/cron/monitor": {
       "includeFiles": "**"
     }
   }
