@@ -6,13 +6,14 @@ import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { getCompanyBySlug } from '@/lib/api'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  const company = await getCompanyBySlug(params.slug)
+  const { slug } = await params
+  const company = await getCompanyBySlug(slug)
   
   if (!company) {
     return {
@@ -27,7 +28,8 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 export default async function CompanyPage({ params }: PageProps) {
-  const company = await getCompanyBySlug(params.slug)
+  const { slug } = await params
+  const company = await getCompanyBySlug(slug)
   
   if (!company) {
     notFound()
@@ -47,14 +49,14 @@ export default async function CompanyPage({ params }: PageProps) {
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-semibold mb-4">Latest Changes</h2>
             <Suspense fallback={<LoadingSpinner />}>
-              <DiffViewer slug={params.slug} />
+              <DiffViewer slug={slug} />
             </Suspense>
           </div>
           
           <div>
             <h2 className="text-2xl font-semibold mb-4">Change History</h2>
             <Suspense fallback={<LoadingSpinner />}>
-              <Timeline slug={params.slug} />
+              <Timeline slug={slug} />
             </Suspense>
           </div>
         </div>
