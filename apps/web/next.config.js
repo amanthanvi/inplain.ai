@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  transpilePackages: ['@policydiff/shared'],
+  transpilePackages: ['@policydiff/shared', '@policydiff/api'],
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb'
