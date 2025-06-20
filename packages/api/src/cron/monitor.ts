@@ -2,7 +2,7 @@ import { kv } from '@vercel/kv'
 import { put } from '@vercel/blob'
 import { StorageClient } from '../lib/storage'
 import { SnapshotMetaSchema, CrawlJobSchema } from '@policydiff/shared'
-import { formatTimestamp, hashContent } from '@policydiff/shared/utils'
+import { formatTimestamp, hashContent } from '@policydiff/shared'
 
 const storage = new StorageClient()
 
@@ -115,6 +115,7 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
     const blobKey = `snapshots/${company.slug}/${formatTimestamp()}.html`
     
     await put(blobKey, content, {
+      access: 'public',
       contentType: 'text/html',
       addRandomSuffix: false
     })

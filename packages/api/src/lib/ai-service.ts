@@ -1,4 +1,4 @@
-import { formatTimestamp } from '@policydiff/shared/utils'
+import { formatTimestamp } from '@policydiff/shared'
 
 export interface AIProvider {
   name: string

@@ -1,0 +1,27 @@
+
+> @policydiff/api@1.0.0 build
+> tsc
+
+src/cron/monitor.ts(117,33): error TS2345: Argument of type '{ contentType: string; addRandomSuffix: false; }' is not assignable to parameter of type 'PutCommandOptions'.
+  Property 'access' is missing in type '{ contentType: string; addRandomSuffix: false; }' but required in type 'PutCommandOptions'.
+src/routes/diff/[slug]/route.ts(41,34): error TS18048: 'fromSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(42,34): error TS18048: 'toSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(57,23): error TS18048: 'fromSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(58,21): error TS18048: 'toSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(71,23): error TS18048: 'fromSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(72,21): error TS18048: 'toSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(81,13): error TS18048: 'fromSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(82,21): error TS18048: 'fromSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(85,13): error TS18048: 'toSnapshot' is possibly 'undefined'.
+src/routes/diff/[slug]/route.ts(86,21): error TS18048: 'toSnapshot' is possibly 'undefined'.
+src/routes/feed/route.ts(27,31): error TS18048: 'diff' is possibly 'undefined'.
+src/routes/feed/route.ts(27,73): error TS18048: 'diff' is possibly 'undefined'.
+src/routes/feed/route.ts(33,23): error TS18048: 'diff' is possibly 'undefined'.
+src/routes/feed/route.ts(34,30): error TS18048: 'diff' is possibly 'undefined'.
+src/routes/feed/route.ts(35,31): error TS18048: 'diff' is possibly 'undefined'.
+src/routes/feed/route.ts(36,30): error TS18048: 'diff' is possibly 'undefined'.
+src/routes/feed/route.ts(37,30): error TS18048: 'diff' is possibly 'undefined'.
+npm ERR! Lifecycle script `build` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @policydiff/api@1.0.0 
+npm ERR!   at location: /Users/amanthanvi/GitRepos/my_security_policy_app/packages/api 

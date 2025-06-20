@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { StorageClient } from '../../../lib/storage'
 import { DiffEngine } from '../../../lib/diff-engine'
 import { DiffMetaSchema } from '@policydiff/shared'
-import { formatTimestamp } from '@policydiff/shared/utils'
+import { formatTimestamp } from '@policydiff/shared'
 
 const storage = new StorageClient()
 const diffEngine = new DiffEngine()
