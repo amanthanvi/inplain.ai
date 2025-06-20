@@ -1,12 +1,9 @@
 {
   "framework": "nextjs",
-  "buildCommand": "pnpm build",
-  "devCommand": "pnpm dev",
-  "installCommand": "pnpm install",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm ci",
   "regions": ["iad1"],
-  "env": {
-    "NODE_OPTIONS": "--no-experimental-fetch"
-  },
   "crons": [
     {
       "path": "/api/cron/monitor",
