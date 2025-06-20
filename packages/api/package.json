@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@policydiff/shared": "workspace:*",
+    "@policydiff/shared": "*",
     "@vercel/blob": "^0.19.0",
     "@vercel/kv": "^1.0.1",
     "diff-match-patch": "^1.0.5",
