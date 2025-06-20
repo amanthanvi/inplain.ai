@@ -9,8 +9,8 @@ const storage = new StorageClient()
 const diffEngine = new DiffEngine()
 
 const querySchema = z.object({
-  from: z.string().uuid().optional(),
-  to: z.string().uuid().optional()
+  from: z.string().uuid().optional().nullable(),
+  to: z.string().uuid().optional().nullable()
 })
 
 export async function GET(
@@ -22,8 +22,8 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     
     const query = querySchema.parse({
-      from: searchParams.get('from'),
-      to: searchParams.get('to')
+      from: searchParams.get('from') || undefined,
+      to: searchParams.get('to') || undefined
     })
 
     const snapshots = await storage.getLatestSnapshots(slug, 2)
