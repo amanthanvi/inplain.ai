@@ -12,7 +12,7 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "pnpm@8.15.0",
+  "packageManager": "npm@10.2.0",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -37,9 +37,11 @@
     "turbo": "^1.13.0",
     "typescript": "^5.5.0"
   },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "^18.3.3"
-    }
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "overrides": {
+    "@types/react": "^18.3.3"
   }
 }
