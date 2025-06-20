@@ -1,0 +1,20 @@
+slug,name,url,category,checkInterval,active
+google,Google,https://policies.google.com/privacy,tech,3600,true
+apple,Apple,https://www.apple.com/legal/privacy/,tech,3600,true
+microsoft,Microsoft,https://privacy.microsoft.com/en-us/privacystatement,tech,3600,true
+meta,Meta,https://www.facebook.com/privacy/policy,social,3600,true
+amazon,Amazon,https://www.amazon.com/gp/help/customer/display.html?nodeId=468496,ecommerce,3600,true
+netflix,Netflix,https://help.netflix.com/legal/privacy,streaming,3600,true
+uber,Uber,https://www.uber.com/legal/en/document/?name=privacy-notice&country=united-states&lang=en,transportation,3600,true
+nvidia,NVIDIA,https://www.nvidia.com/en-us/about-nvidia/privacy-policy/,tech,3600,true
+oracle,Oracle,https://www.oracle.com/legal/privacy/privacy-policy.html,enterprise,3600,true
+tesla,Tesla,https://www.tesla.com/legal/privacy,automotive,3600,true
+ibm,IBM,https://www.ibm.com/us-en/privacy,enterprise,3600,true
+adobe,Adobe,https://www.adobe.com/privacy/policy.html,software,3600,true
+cisco,Cisco,https://www.cisco.com/c/en/us/about/legal/privacy-full.html,networking,3600,true
+sony,Sony,https://electronics.sony.com/privacy-policy,electronics,3600,true
+samsung,Samsung,https://www.samsung.com/us/account/privacy-policy/,electronics,3600,true
+salesforce,Salesforce,https://www.salesforce.com/company/privacy/,enterprise,3600,true
+intel,Intel,https://www.intel.com/content/www/us/en/privacy/intel-privacy-notice.html,semiconductors,3600,true
+dell,Dell,https://www.dell.com/learn/us/en/uscorp1/policies-privacy,hardware,3600,true
+paloalto,Palo Alto Networks,https://www.paloaltonetworks.com/legal-notices/privacy,cybersecurity,3600,true
