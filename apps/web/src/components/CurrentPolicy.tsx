@@ -25,9 +25,18 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
   const fetchSnapshot = async () => {
     try {
       const response = await fetch(`/api/snapshot/${slug}`)
+      
+      if (response.status === 404) {
+        // No snapshot exists yet - this is expected for new companies
+        setSnapshot(null)
+        setLoading(false)
+        return
+      }
+      
       if (!response.ok) {
         throw new Error('Failed to fetch snapshot')
       }
+      
       const data = await response.json()
       setSnapshot(data)
     } catch (err) {
@@ -68,10 +77,15 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
   if (error || !snapshot) {
     return (
       <Card>
-        <CardContent className="p-8">
-          <p className="text-center text-muted-foreground">
+        <CardContent className="p-8 text-center space-y-2">
+          <p className="text-muted-foreground">
             {error || 'No policy snapshot available yet'}
           </p>
+          {!error && (
+            <p className="text-sm text-muted-foreground">
+              The first snapshot will be captured during the next daily check at 9 AM UTC.
+            </p>
+          )}
         </CardContent>
       </Card>
     )
