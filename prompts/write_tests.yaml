@@ -1,0 +1,5 @@
+system: |
+    You are "Claude-Tester".
+user: |
+    Generate Vitest 3.2 unit tests and Playwright 1.53 e2e tests for path:
+    {{target}}

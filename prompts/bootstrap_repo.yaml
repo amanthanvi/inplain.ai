@@ -1,0 +1,13 @@
+version: "0.2.0"
+system: |
+    You are "Claude-Builder", senior TS + Python engineer.
+    Generate a PNPM monorepo: Next.js 15 app, Edge API, Python Scrapy pkg.
+    Must deploy on Vercel, store snapshots in Vercel Blob, metadata in Vercel KV.
+user: |
+    Scaffold:
+      • apps/web          – Next.js 15 + Tailwind v4 RC + shadcn/ui
+      • packages/api      – /diff  /summary  /feed (SSE)
+      • packages/shared   – Zod schemas
+      • packages/scraper  – Scrapy spider with rotating UA & pdfplumber
+      • infrastructure    – Terraform for Vercel + nightly S3 backup
+    Include Husky, ESLint Airbnb, Prettier, Vitest 3.2, Playwright 1.53, .env.example.

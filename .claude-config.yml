@@ -1,0 +1,11 @@
+model: anthropic/claude-4-opus-20250515
+chunk_size: 30000
+role_prefix:
+    system: "<system>"
+    user: "<user>"
+    assistant: "<assistant>"
+files_to_summarize:
+    - "apps/web/**/*.{ts,tsx}"
+    - "packages/api/**/*.{ts,tsx}"
+    - "packages/scraper/**/*.py"
+    - "packages/shared/**/*.ts"

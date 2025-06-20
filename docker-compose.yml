@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:3.0
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - DEBUG=0
+      - DATA_DIR=/tmp/localstack/data
+    volumes:
+      - localstack_data:/tmp/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  scraper:
+    build:
+      context: ./packages/scraper
+      dockerfile: Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SCRAPY_SETTINGS_MODULE=settings
+      - BLOB_STORAGE_URL=${BLOB_STORAGE_URL:-http://localstack:4566}
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./packages/scraper:/app
+      - ./companies.csv:/app/companies.csv:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    command: ["python", "crawl.py", "--continuous"]
+
+volumes:
+  redis_data:
+  localstack_data:

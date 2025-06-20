@@ -1,6 +1,2 @@
-Flask
-flask-login
-python-dotenv
-flask-cors
-requests
-scrapy
+# Python dependencies for PolicyDiff V2
+# Scraper service dependencies are in packages/scraper/requirements.txt
