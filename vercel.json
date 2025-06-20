@@ -6,11 +6,9 @@
   "regions": ["iad1"],
   "functions": {
     "packages/api/src/routes/**/*.ts": {
-      "runtime": "edge",
       "maxDuration": 30
     },
     "packages/api/src/cron/monitor.ts": {
-      "runtime": "edge",
       "maxDuration": 60
     }
   },
