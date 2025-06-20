@@ -15,8 +15,13 @@ resource "vercel_project" "policydiff" {
   
   environment = [
     {
-      key    = "ANTHROPIC_API_KEY"
-      value  = var.anthropic_api_key
+      key    = "OPENROUTER_API_KEY"
+      value  = var.openrouter_api_key
+      target = ["production", "preview"]
+    },
+    {
+      key    = "DEFAULT_AI_MODEL"
+      value  = var.default_ai_model
       target = ["production", "preview"]
     },
     {
@@ -28,6 +33,16 @@ resource "vercel_project" "policydiff" {
       key    = "CRON_SECRET"
       value  = random_password.cron_secret.result
       target = ["production"]
+    },
+    {
+      key    = "AI_RATE_LIMIT_PER_MINUTE"
+      value  = "60"
+      target = ["production", "preview"]
+    },
+    {
+      key    = "AI_CACHE_EXPIRY_HOURS"
+      value  = "24"
+      target = ["production", "preview"]
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
+import { ModelInfo } from '@/components/ModelSelector'
 import type { DiffMeta, Summary } from '@policydiff/shared'
 
 interface DiffCardProps {
@@ -58,14 +59,19 @@ export function DiffCard({ diff, summary, showFullDiff = false }: DiffCardProps)
 
         {summary && (
           <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold">AI Analysis</h4>
+              <ModelInfo modelId={summary.model} />
+            </div>
+            
             <div>
-              <h4 className="font-semibold mb-1">Summary</h4>
+              <h5 className="font-medium mb-1">Summary</h5>
               <p className="text-sm text-muted-foreground">{summary.summary}</p>
             </div>
 
             {summary.highlights.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-1">Key Changes</h4>
+                <h5 className="font-medium mb-1">Key Changes</h5>
                 <ul className="list-disc list-inside space-y-1">
                   {summary.highlights.map((highlight, i) => (
                     <li key={i} className="text-sm text-muted-foreground">
@@ -77,14 +83,21 @@ export function DiffCard({ diff, summary, showFullDiff = false }: DiffCardProps)
             )}
 
             {summary.categories.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                {summary.categories.map((category) => (
-                  <Badge key={category} variant="outline" className="text-xs">
-                    {category.replace('_', ' ')}
-                  </Badge>
-                ))}
+              <div>
+                <h5 className="font-medium mb-1">Categories</h5>
+                <div className="flex gap-2 flex-wrap">
+                  {summary.categories.map((category) => (
+                    <Badge key={category} variant="outline" className="text-xs">
+                      {category.replace('_', ' ')}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
+            
+            <div className="text-xs text-muted-foreground pt-2 border-t">
+              Tokens used: {summary.tokensUsed} • Generated {formatDuration(getTimeDiff(summary.createdAt))} ago
+            </div>
           </div>
         )}
       </CardContent>

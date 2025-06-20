@@ -61,7 +61,7 @@ GET /diff/{slug}
 
 ### Generate Summary
 
-Creates or retrieves an AI-powered summary of policy changes.
+Creates or retrieves an AI-powered summary of policy changes using OpenRouter AI models.
 
 ```http
 POST /summary/{slug}
@@ -71,9 +71,18 @@ POST /summary/{slug}
 ```json
 {
   "diffId": "uuid",
+  "model": "google/gemini-2.5-flash-preview-05-20",
   "force": false
 }
 ```
+
+**Available Models:**
+- `google/gemini-2.5-flash-preview-05-20` (default, fastest)
+- `meta-llama/llama-3.3-70b-instruct`
+- `openai/gpt-4o-mini`
+- `anthropic/claude-3-haiku-20240307`
+- `google/gemma-2-9b-it`
+- And 5 more legal-specialized models
 
 **Response:**
 ```json
@@ -82,7 +91,7 @@ POST /summary/{slug}
     "id": "uuid",
     "diffId": "uuid",
     "createdAt": "2025-06-20T10:01:00Z",
-    "model": "claude-3-opus-20240229",
+    "model": "google/gemini-2.5-flash-preview-05-20",
     "summary": "Google updated their data retention policies...",
     "highlights": [
       "Data retention reduced to 18 months",
@@ -231,6 +240,7 @@ All errors return a JSON object with an error message:
 ## Rate Limiting
 
 - Public endpoints: 60 requests per minute per IP
+- AI summary endpoints: 60 requests per minute (shared across all models)
 - Authenticated endpoints: 1000 requests per minute per API key
 - Cron endpoints: 1 request per minute
 
@@ -241,18 +251,37 @@ X-RateLimit-Remaining: 59
 X-RateLimit-Reset: 1640995200
 ```
 
+## AI Model Selection
+
+PolicyDiff uses OpenRouter to provide access to multiple AI models optimized for legal document analysis:
+
+### Available Models (sorted by cost)
+
+1. **Google Gemini 2.5 Flash** (default) - $0.00015/1k input, $0.0006/1k output
+2. **Meta Llama 3.3 70B Instruct** - $0.00015/1k input, $0.0015/1k output  
+3. **OpenAI GPT-4o Mini** - $0.00015/1k input, $0.0006/1k output
+4. **Anthropic Claude 3 Haiku** - $0.00025/1k input, $0.00125/1k output
+5. **Google Gemma 2 9B** - $0.0002/1k input, $0.0002/1k output
+
+All models are specialized for legal document analysis and provide consistent summary formats.
+
 ## Caching
 
 Responses are cached for optimal performance:
 
 - **Diffs**: 5 minutes (300 seconds)
-- **Summaries**: 1 hour (3600 seconds)
+- **AI Summaries**: 24 hours (86400 seconds) - cached by model and diff combination
 - **Static data**: 24 hours
 
 Cache headers:
 ```http
 Cache-Control: public, s-maxage=300, stale-while-revalidate=600
 ```
+
+**AI Summary Caching:**
+- Summaries are cached per model-diff combination
+- Rate limiting prevents excessive API calls to OpenRouter
+- Cache invalidation occurs automatically after 24 hours
 
 ## Webhooks (Coming Soon)
 

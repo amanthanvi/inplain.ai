@@ -46,11 +46,20 @@ Each change is analyzed for privacy impact:
 - Diffs are generated and analyzed within minutes
 
 ### AI-Powered Summaries
-PolicyDiff uses Claude 4 Opus to provide:
+PolicyDiff uses OpenRouter's legal-specialized AI models to provide:
 - Plain-language summaries of what changed
 - Key highlights of the most important updates
 - Risk assessment for privacy impact
 - Categorization of change types (data collection, user rights, etc.)
+
+**Available AI Models:**
+- Google Gemini 2.5 Flash (default) - Fast and cost-effective
+- Meta Llama 3.3 70B - Advanced reasoning capabilities
+- OpenAI GPT-4o Mini - Balanced performance
+- Anthropic Claude 3 Haiku - Privacy-focused analysis
+- Google Gemma 2 9B - Lightweight but accurate
+
+You can select different models when generating summaries to get varied perspectives on policy changes.
 
 ### Change Categories
 Changes are automatically categorized into:
@@ -154,7 +163,9 @@ AI summaries include:
 ### Missing Summaries
 - AI summaries are generated on-demand
 - Click "Generate AI Summary" if not automatically created
+- Use "Choose Model" to select different AI models for analysis
 - Some changes may be too minor to warrant summaries
+- Rate limiting may delay summary generation (60 requests per minute)
 
 ### Slow Loading
 - Large diffs may take time to process
@@ -168,6 +179,7 @@ PolicyDiff is built with:
 - **API**: Vercel Edge Functions
 - **Scraping**: Python Scrapy with Playwright
 - **Storage**: Vercel KV and Blob storage
-- **AI**: Anthropic Claude 4 Opus
+- **AI**: OpenRouter (multiple providers: Google, Meta, OpenAI, Anthropic)
+- **Caching**: 24-hour AI summary cache with rate limiting
 
 For technical documentation, see the [Developer Guide](./api.md).
