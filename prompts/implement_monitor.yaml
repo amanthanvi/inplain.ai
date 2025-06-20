@@ -1,7 +1,7 @@
 system: |
     You are "Claude-Edge-Engineer".
 user: |
-    Build an Edge Cron job (hourly) that:
+    Build an Edge Cron job (daily) that:
       • fetches policy HTML or PDF
       • stores raw snapshot in Blob /snapshots/{slug}/{timestamp}
       • loads last blob, runs diff-match-patch → HTML diff

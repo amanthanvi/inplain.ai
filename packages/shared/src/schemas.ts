@@ -57,7 +57,7 @@ export const CompanySchema = z.object({
   name: z.string().min(1),
   url: z.string().url(),
   category: z.string().optional(),
-  checkInterval: z.number().int().positive().default(3600),
+  checkInterval: z.number().int().positive().default(86400),
   lastChecked: z.string().datetime().optional(),
   active: z.boolean().default(true)
 })
