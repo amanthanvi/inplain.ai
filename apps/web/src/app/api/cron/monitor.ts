@@ -90,7 +90,9 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
   await kv.set(`job:${jobId}`, job, { ex: 3600 })
   
   try {
+    console.log(`[Monitor] About to fetch content for ${company.name}`)
     const content = await fetchPolicyContent(company.url)
+    console.log(`[Monitor] Fetch completed for ${company.name}, content: ${content ? content.length + ' chars' : 'null'}`)
     
     if (!content) {
       throw new Error('Failed to fetch content - received null')
@@ -171,41 +173,62 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
 
 async function fetchPolicyContent(url: string): Promise<string | null> {
   try {
-    // Create a manual timeout using Promise.race for Edge Runtime compatibility
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30000)
+    console.log(`[Monitor] Starting fetch for ${url}`)
     
-    const response = await Promise.race([
-      fetch(url, {
-        headers: {
-          'User-Agent': 'PolicyDiff/1.0 (https://policydiff.com; contact@policydiff.com)',
-          'Accept': 'text/html,application/xhtml+xml',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Cache-Control': 'no-cache'
-        },
-        signal: controller.signal
-      }),
-      new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 30000)
-      )
-    ])
+    // Log the fetch attempt details
+    const fetchOptions = {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; PolicyDiff/1.0; +https://policydiff.com)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      },
+      redirect: 'follow' as RequestRedirect,
+      // Remove compression to avoid potential Edge Runtime issues
+      // 'Accept-Encoding': 'gzip, deflate, br' removed
+    }
     
-    clearTimeout(timeoutId)
+    console.log(`[Monitor] Fetch options:`, JSON.stringify(fetchOptions, null, 2))
+    
+    const response = await fetch(url, fetchOptions)
+    
+    console.log(`[Monitor] Response received:`, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
+      url: response.url,
+      redirected: response.redirected
+    })
     
     if (!response.ok) {
+      console.error(`[Monitor] HTTP error for ${url}: ${response.status} ${response.statusText}`)
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
     
     const contentType = response.headers.get('content-type') || ''
-    if (!contentType.includes('text/html') && !contentType.includes('text/plain')) {
-      throw new Error(`Unsupported content type: ${contentType}`)
-    }
+    console.log(`[Monitor] Content-Type: ${contentType}`)
     
     const text = await response.text()
-    console.log(`[Monitor] Successfully fetched ${url} - ${text.length} characters`)
+    console.log(`[Monitor] Text received: ${text.length} characters`)
+    
+    if (text.length === 0) {
+      throw new Error('Received empty response body')
+    }
+    
+    // Log first 500 chars for debugging
+    console.log(`[Monitor] Content preview: ${text.substring(0, 500)}...`)
+    
     return text
   } catch (error) {
-    console.error(`[Monitor] Fetch error for ${url}:`, error)
+    // More detailed error logging
+    console.error(`[Monitor] Detailed fetch error for ${url}:`, {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      error: error
+    })
     return null
   }
 }
