@@ -26,10 +26,38 @@ export async function POST(
     const { diffId, force, model } = bodySchema.parse(body)
 
     if (!OPENROUTER_API_KEY) {
-      return NextResponse.json(
-        { error: 'AI service not configured' },
-        { status: 500 }
-      )
+      console.warn('OPENROUTER_API_KEY not configured - returning mock summary for demo')
+      
+      // Return a mock summary for demo purposes
+      const mockSummary = {
+        id: crypto.randomUUID(),
+        diffId,
+        createdAt: formatTimestamp(),
+        model: 'demo-mode',
+        prompt: 'Mock AI analysis for demonstration',
+        summary: 'This is a demonstration summary. The privacy policy has been updated with changes to data collection practices and user rights. In production, this would show actual AI-generated analysis of the specific changes.',
+        highlights: [
+          'Enhanced user data control options',
+          'Updated third-party sharing policies',
+          'New data retention guidelines',
+          'Improved security measures'
+        ],
+        riskLevel: 'low' as const,
+        categories: ['data_collection', 'user_rights', 'security'],
+        tokensUsed: 0
+      }
+      
+      return NextResponse.json({
+        summary: mockSummary,
+        cached: false,
+        mockMode: true
+      }, {
+        headers: {
+          'Cache-Control': 'private, s-maxage=60',
+          'Content-Type': 'application/json',
+          'X-Mock-Mode': 'true'
+        }
+      })
     }
 
     const diff = await storage.getDiff(slug, diffId)

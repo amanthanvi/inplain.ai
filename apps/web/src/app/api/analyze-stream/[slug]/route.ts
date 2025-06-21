@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { StorageClient } from '../../lib/storage'
 import { ContentExtractor } from '../../../../lib/content-extractor'
 import { ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, SYSTEM_PROMPTS, selectBestModel } from '../../../../lib/prompts'
+import { MockAIService } from '../../../../lib/mock-ai-service'
 
 const storage = new StorageClient()
 
@@ -16,10 +17,20 @@ export async function POST(
     const { slug } = await params
     
     if (!OPENROUTER_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: 'AI service not configured' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      )
+      console.warn('OPENROUTER_API_KEY not configured - using mock AI service for demo')
+      
+      // Use mock service for demo purposes
+      const mockService = new MockAIService()
+      const stream = mockService.getStreamingResponse()
+      
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'X-Mock-Mode': 'true'
+        }
+      })
     }
     
     // Get the latest snapshot
@@ -147,10 +158,24 @@ export async function POST(
           })
           
           if (!response.ok) {
-            const errorText = await response.text()
+            let errorMessage = `AI API error (${response.status})`
+            try {
+              const errorText = await response.text()
+              const errorJson = JSON.parse(errorText)
+              errorMessage = errorJson.error?.message || errorJson.message || errorText
+            } catch {
+              errorMessage = `AI API error: ${response.status} ${response.statusText}`
+            }
+            
+            console.error('OpenRouter API error:', {
+              status: response.status,
+              message: errorMessage,
+              model: selectedModel
+            })
+            
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({
               type: 'error',
-              error: `AI API error: ${errorText}`
+              error: errorMessage
             })}\n\n`))
             controller.close()
             return
