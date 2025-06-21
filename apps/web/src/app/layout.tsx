@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
+import { AppStatus } from '@/components/AppStatus'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -80,6 +81,7 @@ export default function RootLayout({
           </footer>
         </div>
         <Toaster />
+        <AppStatus />
       </body>
     </html>
   )

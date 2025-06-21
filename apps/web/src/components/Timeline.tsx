@@ -43,8 +43,11 @@ export function Timeline({ slug }: TimelineProps) {
   if (diffs.length === 0) {
     return (
       <Card>
-        <CardContent className="text-center py-8">
+        <CardContent className="text-center py-8 space-y-2">
           <p className="text-muted-foreground text-sm">No change history available yet</p>
+          <p className="text-xs text-muted-foreground">
+            Changes will appear here after the daily monitoring runs
+          </p>
         </CardContent>
       </Card>
     )
