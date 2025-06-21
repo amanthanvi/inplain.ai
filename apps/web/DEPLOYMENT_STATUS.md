@@ -38,8 +38,9 @@ The app runs once daily at 9 AM UTC to check for policy changes.
 
 ## 📊 Current Status
 - App is live and functional
-- Requires 2+ snapshots to show diffs
-- First snapshot captured, waiting for second snapshot to enable diff view
+- Fixed Edge Runtime compatibility issues in cron job
+- Cron job was failing due to AbortSignal.timeout() not being available
+- Latest fix deployed - waiting for next cron run to capture policies
 - AI analysis working with proper caching
 
 ## 🚀 Next Steps
