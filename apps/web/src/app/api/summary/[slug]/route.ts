@@ -58,16 +58,37 @@ export async function POST(
       )
     }
 
+    // Get the original snapshot content for better analysis
+    const [fromSnapshot, toSnapshot] = await Promise.all([
+      storage.getSnapshot(slug, diff.fromSnapshotId),
+      storage.getSnapshot(slug, diff.toSnapshotId)
+    ])
+
+    let oldContent: string | undefined
+    let newContent: string | undefined
+
+    if (fromSnapshot && toSnapshot) {
+      const [fromContent, toContent] = await Promise.all([
+        storage.getSnapshotContent(fromSnapshot.blobKey),
+        storage.getSnapshotContent(toSnapshot.blobKey)
+      ])
+      
+      oldContent = fromContent || undefined
+      newContent = toContent || undefined
+    }
+
     // Initialize AI service
     const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, model || DEFAULT_MODEL)
     
-    // Generate analysis
+    // Generate analysis with original content when available
     const analysis = await aiService.analyzePolicyChanges({
       additions: diff.additions,
       deletions: diff.deletions,
       changeCount: diff.changeCount,
       changeType: diff.changeType,
-      htmlDiff: diffContent.htmlDiff
+      htmlDiff: diffContent.htmlDiff,
+      oldContent,
+      newContent
     }, { model: model || DEFAULT_MODEL })
     
     const summary = SummarySchema.parse({
