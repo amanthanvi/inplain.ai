@@ -37,13 +37,21 @@ KV_REST_API_TOKEN=from-upstash
 The app runs once daily at 9 AM UTC to check for policy changes.
 
 ## 📊 Current Status
-- App is live and functional
-- Fixed Edge Runtime compatibility issues in cron job
-- Cron job was failing due to AbortSignal.timeout() not being available
-- Latest fix deployed - waiting for next cron run to capture policies
-- AI analysis working with proper caching
+- ✅ App is live and functional at https://policydiff.vercel.app
+- ✅ Cron job successfully capturing all 5 companies
+- ✅ Policy content stored in Vercel KV (replaced Blob storage)
+- ✅ AI analysis working with proper caching
+- ✅ All Edge Runtime compatibility issues resolved
 
 ## 🚀 Next Steps
-1. Wait for daily cron to capture second snapshot
-2. Monitor for any errors in Vercel logs
+1. Wait for daily cron to capture second snapshot (needed for diffs)
+2. Monitor KV storage usage (512KB limit per value)
 3. Consider upgrading to Vercel Pro for more frequent monitoring
+4. Consider setting up Vercel Blob storage for larger content
+
+## 🐛 Fixed Issues
+- Replaced Vercel Blob with KV storage to fix missing token error
+- Fixed Edge Runtime compatibility (removed AbortSignal.timeout())
+- Fixed const reassignment error in monitor.ts
+- Fixed TypeScript strict null checking errors
+- Migrated from pnpm to npm for Vercel compatibility
