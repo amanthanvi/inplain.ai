@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useStreamingAnalysis } from '@/hooks/useStreamingAnalysis'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, FileText, Calendar, Hash, Sparkles } from 'lucide-react'
+import { Loader2, FileText, Calendar, Hash, Sparkles, Shield, AlertCircle, CheckCircle2, Info, Users, Lock, Cookie, Clock, Mail } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 interface CurrentPolicyProps {
@@ -17,6 +18,8 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [useStreaming, setUseStreaming] = useState(true)
+  const streaming = useStreamingAnalysis()
 
   useEffect(() => {
     fetchSnapshot()
@@ -47,23 +50,31 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
   }
 
   const analyzePolicy = async () => {
-    setAnalyzing(true)
-    try {
-      const response = await fetch(`/api/analyze/${slug}`, {
-        method: 'POST'
-      })
-      if (!response.ok) {
-        throw new Error('Failed to analyze policy')
+    if (useStreaming) {
+      streaming.reset()
+      await streaming.startStreaming(slug)
+    } else {
+      setAnalyzing(true)
+      try {
+        const response = await fetch(`/api/analyze/${slug}`, {
+          method: 'POST'
+        })
+        if (!response.ok) {
+          throw new Error('Failed to analyze policy')
+        }
+        const data = await response.json()
+        setAnalysis(data.analysis)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to analyze policy')
+      } finally {
+        setAnalyzing(false)
       }
-      const data = await response.json()
-      setAnalysis(data.analysis)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze policy')
-    } finally {
-      setAnalyzing(false)
     }
   }
 
+  // Unified analysis data from either regular or streaming
+  const currentAnalysis = analysis || streaming.analysis
+  
   if (loading) {
     return (
       <Card>
@@ -133,14 +144,14 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
               variant="outline"
               size="sm"
               onClick={analyzePolicy}
-              disabled={analyzing || !!analysis}
+              disabled={analyzing || streaming.isStreaming || !!currentAnalysis}
             >
-              {analyzing ? (
+              {(analyzing || streaming.isStreaming) ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Analyzing...
                 </>
-              ) : analysis ? (
+              ) : currentAnalysis ? (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
                   Analysis Ready
@@ -156,7 +167,30 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
         </CardContent>
       </Card>
 
-      {analysis && (
+      {(streaming.isStreaming || streaming.content) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              AI Analysis {streaming.isStreaming && '(Streaming...)'}
+            </CardTitle>
+            {streaming.metadata && (
+              <CardDescription>
+                Model: {streaming.metadata.model}
+              </CardDescription>
+            )}
+          </CardHeader>
+          <CardContent>
+            {streaming.error ? (
+              <InteractiveMarkdown content={formatErrorToMarkdown(streaming.error)} />
+            ) : streaming.isStreaming ? (
+              <InteractiveMarkdown content={formatLoadingMarkdown()} />
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
+
+      {currentAnalysis && !streaming.isStreaming && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -164,14 +198,21 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
               AI Analysis
             </CardTitle>
             <CardDescription>
-              Generated {formatDistanceToNow(new Date(analysis.generatedAt), { addSuffix: true })}
-              {' • '}Model: {analysis.model}
+              Generated {formatDistanceToNow(new Date(currentAnalysis.generatedAt), { addSuffix: true })}
+              {' • '}Model: {currentAnalysis.model}
+              {currentAnalysis.cached && ' • Cached'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <div className="whitespace-pre-wrap">{analysis.content}</div>
-            </div>
+            {(currentAnalysis.structured_content && !currentAnalysis.structured_content.parse_error) ? (
+              <InteractiveMarkdown 
+                content={formatAnalysisToMarkdown(currentAnalysis.structured_content)} 
+              />
+            ) : (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <div className="whitespace-pre-wrap">{currentAnalysis.raw_content || currentAnalysis.content}</div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

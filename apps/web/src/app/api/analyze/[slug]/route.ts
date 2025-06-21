@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { StorageClient } from '../../lib/storage'
 import { PolicyAnalysisService } from '../../lib/ai-service'
+import { ContentExtractor } from '../../../../lib/content-extractor'
+import { ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, selectBestModel } from '../../../../lib/prompts'
 
 const storage = new StorageClient()
 
@@ -50,6 +52,24 @@ export async function POST(
       )
     }
     
+    // Extract clean text from HTML
+    const extractedContent = ContentExtractor.extract(content)
+    
+    if (!extractedContent.text || extractedContent.text.length < 100) {
+      return NextResponse.json(
+        { error: 'Failed to extract meaningful content from policy' },
+        { status: 422 }
+      )
+    }
+    
+    // Verify this is actually a privacy policy
+    if (!ContentExtractor.isPrivacyPolicy(extractedContent.text)) {
+      return NextResponse.json(
+        { error: 'Content does not appear to be a privacy policy' },
+        { status: 422 }
+      )
+    }
+    
     // Check if we already have a cached analysis
     const cacheKey = `analysis:${snapshot.id}`
     const cachedAnalysis = await storage.getCachedAnalysis(cacheKey)
@@ -61,32 +81,82 @@ export async function POST(
       })
     }
     
-    // Generate new analysis
+    // Generate new analysis with enhanced prompt
     const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, DEFAULT_MODEL)
     
-    const prompt = `Analyze this privacy policy and provide:
-1. A brief executive summary (2-3 sentences)
-2. Key highlights (3-5 bullet points)
-3. Main categories of data collected
-4. User rights mentioned
-5. Notable concerns or positives
-
-Policy content:
-${content.substring(0, 50000)}` // Limit to 50k chars for cost efficiency
+    // Create a structured prompt with metadata
+    const policyMetadata = [
+      `Company: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`,
+      extractedContent.title ? `Title: ${extractedContent.title}` : '',
+      extractedContent.metadata.lastUpdated ? `Last Updated: ${extractedContent.metadata.lastUpdated}` : '',
+      extractedContent.metadata.effectiveDate ? `Effective Date: ${extractedContent.metadata.effectiveDate}` : '',
+      `Word Count: ${extractedContent.metadata.wordCount}`,
+      `Sections: ${extractedContent.sections.length}`
+    ].filter(Boolean).join('\n')
+    
+    const sectionSummary = extractedContent.sections.slice(0, 10)
+      .map(s => `- ${s.title}`)
+      .join('\n')
+    
+    // Use optimized prompt from prompts library
+    const prompt = ANALYSIS_PROMPTS.comprehensive(
+      policyMetadata,
+      sectionSummary,
+      extractedContent.text.substring(0, 30000)
+    )
+    
+    // Get available models and select the best one
+    const availableModels = aiService.getAvailableModels().map(m => m.id)
+    const selectedModel = selectBestModel('comprehensive', availableModels)
+    
+    // Define fallback models for reliability
+    const fallbackModels = PROMPT_OPTIMIZATION.modelRecommendations.comprehensive
+      .filter(m => m !== selectedModel && availableModels.includes(m))
     
     const response = await aiService.generateResponse(prompt, {
-      model: DEFAULT_MODEL,
-      temperature: 0.3,
-      maxTokens: 1000
+      model: selectedModel,
+      temperature: PROMPT_OPTIMIZATION.temperatures.structured,
+      maxTokens: PROMPT_OPTIMIZATION.maxTokens.comprehensive,
+      systemPrompt: 'You are a privacy policy expert. Always respond with valid JSON only, no markdown or additional text.',
+      fallbackModels
     })
+    
+    // Parse the JSON response
+    let parsedAnalysis
+    try {
+      // Clean the response in case it has markdown formatting
+      const cleanedContent = response.content
+        .replace(/^```json\n?/i, '')
+        .replace(/\n?```$/i, '')
+        .trim()
+      
+      parsedAnalysis = JSON.parse(cleanedContent)
+    } catch (parseError) {
+      console.error('Failed to parse AI response as JSON:', parseError)
+      console.error('Raw response:', response.content)
+      
+      // Fallback to text analysis if JSON parsing fails
+      parsedAnalysis = {
+        executive_summary: response.content,
+        parse_error: true
+      }
+    }
     
     const analysis = {
       id: crypto.randomUUID(),
       snapshotId: snapshot.id,
       generatedAt: new Date().toISOString(),
       model: DEFAULT_MODEL,
-      content: response.content,
-      tokensUsed: response.tokensUsed || 0
+      structured_content: parsedAnalysis,
+      raw_content: response.content,
+      tokensUsed: response.tokensUsed || 0,
+      metadata: {
+        wordCount: extractedContent.metadata.wordCount,
+        sections: extractedContent.sections.length,
+        title: extractedContent.title,
+        lastUpdated: extractedContent.metadata.lastUpdated,
+        effectiveDate: extractedContent.metadata.effectiveDate
+      }
     }
     
     // Cache the analysis
