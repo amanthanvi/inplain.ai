@@ -29,6 +29,8 @@ export async function monitorPolicies() {
     // Log detailed results
     results.forEach((result, index) => {
       const company = companies[index]
+      if (!company) return
+      
       if (result.status === 'rejected') {
         console.error(`[Monitor] Failed to check ${company.name}:`, result.reason)
       } else {
