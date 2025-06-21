@@ -58,10 +58,27 @@ export function DiffViewer({ slug }: DiffViewerProps) {
       })
       
       if (!response.ok) {
-        throw new Error('Failed to generate summary')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || `Summary generation failed (${response.status})`
+        
+        // Add specific error handling for common issues
+        if (response.status === 500) {
+          throw new Error(`${errorMessage}. Please try again or select a different model.`)
+        } else if (response.status === 404) {
+          throw new Error('Diff not found. Please refresh the page and try again.')
+        } else if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please wait a moment and try again.')
+        } else {
+          throw new Error(errorMessage)
+        }
       }
       
       const result = await response.json()
+      
+      if (!result.summary) {
+        throw new Error('No summary data received from the server')
+      }
+      
       setSummary(result.summary)
       
       toast({
@@ -69,8 +86,10 @@ export function DiffViewer({ slug }: DiffViewerProps) {
         description: `Analysis complete using ${selectedModel.split('/')[1]}`,
       })
     } catch (error) {
+      console.error('Summary generation error:', error)
+      
       toast({
-        title: "Error",
+        title: "Summary Generation Failed",
         description: error instanceof Error ? error.message : "Failed to generate summary",
         variant: "destructive",
       })

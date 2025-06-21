@@ -54,20 +54,34 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
   const analyzePolicy = async () => {
     if (useStreaming) {
       streaming.reset()
-      await streaming.startStreaming(slug)
+      try {
+        await streaming.startStreaming(slug)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to start streaming analysis')
+      }
     } else {
       setAnalyzing(true)
+      setError(null)
       try {
         const response = await fetch(`/api/analyze/${slug}`, {
           method: 'POST'
         })
+        
         if (!response.ok) {
-          throw new Error('Failed to analyze policy')
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || `Analysis failed (${response.status})`)
         }
+        
         const data = await response.json()
-        setAnalysis(data.analysis)
+        if (data.analysis) {
+          setAnalysis(data.analysis)
+        } else {
+          throw new Error('No analysis data received')
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to analyze policy')
+        const errorMessage = err instanceof Error ? err.message : 'Failed to analyze policy'
+        setError(errorMessage)
+        console.error('Policy analysis error:', err)
       } finally {
         setAnalyzing(false)
       }
@@ -169,14 +183,19 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
         </CardContent>
       </Card>
 
-      {(streaming.isStreaming || streaming.content) && (
+      {(streaming.isStreaming || streaming.content || streaming.error) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
+              {streaming.error ? (
+                <AlertCircle className="h-5 w-5 text-destructive" />
+              ) : (
+                <Sparkles className="h-5 w-5" />
+              )}
               AI Analysis {streaming.isStreaming && '(Streaming...)'}
+              {streaming.error && ' - Error'}
             </CardTitle>
-            {streaming.metadata && (
+            {streaming.metadata && !streaming.error && (
               <CardDescription>
                 Model: {streaming.metadata.model}
               </CardDescription>
@@ -184,10 +203,50 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
           </CardHeader>
           <CardContent>
             {streaming.error ? (
-              <InteractiveMarkdown content={formatErrorToMarkdown(streaming.error)} />
+              <div className="space-y-2">
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <p className="text-sm text-destructive">{streaming.error}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={analyzePolicy}>
+                    Try Again
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setUseStreaming(false)}>
+                    Use Non-Streaming
+                  </Button>
+                </div>
+              </div>
             ) : streaming.isStreaming ? (
               <InteractiveMarkdown content={formatLoadingMarkdown()} />
+            ) : streaming.content ? (
+              <InteractiveMarkdown content={streaming.content} />
             ) : null}
+          </CardContent>
+        </Card>
+      )}
+
+      {error && !streaming.error && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Analysis Error
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={analyzePolicy}>
+                  Retry Analysis
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setUseStreaming(!useStreaming)}>
+                  Try {useStreaming ? 'Non-Streaming' : 'Streaming'} Mode
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
