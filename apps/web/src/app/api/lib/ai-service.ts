@@ -1,5 +1,5 @@
 import { formatTimestamp } from '@policydiff/shared'
-import { SYSTEM_PROMPTS, PROMPT_OPTIMIZATION, optimizePromptForModel } from '../../../lib/prompts'
+import { SYSTEM_PROMPTS, ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, optimizePromptForModel, selectBestModel } from '../../../lib/prompts'
 
 export interface AIProvider {
   name: string
@@ -438,10 +438,15 @@ export class PolicyAnalysisService extends AIService {
       changeCount: number
       changeType: string
       htmlDiff: string
+      oldContent?: string
+      newContent?: string
     },
     options: { model?: string; forceRegenerate?: boolean } = {}
   ) {
-    const prompt = `Analyze the following privacy policy changes:
+    // Use the structured differential prompt from the prompts library
+    const prompt = diffData.oldContent && diffData.newContent 
+      ? ANALYSIS_PROMPTS.differential(diffData.oldContent, diffData.newContent)
+      : `Analyze the following privacy policy changes and provide a structured JSON response:
 
 **Change Statistics:**
 - ${diffData.additions} characters added
@@ -452,13 +457,32 @@ export class PolicyAnalysisService extends AIService {
 **HTML Diff:**
 ${diffData.htmlDiff}
 
-Please provide your analysis following the structured format.`
+Provide a JSON response following this format:
+{
+  "change_summary": "Overview of what changed and why it matters",
+  "key_highlights": ["Most significant changes that affect users"],
+  "risk_level": "low/medium/high",
+  "categories": ["affected areas like data_collection, data_sharing, etc."],
+  "user_impact": "How these changes affect user privacy",
+  "recommended_actions": ["What users should do in response"]
+}
+
+Return ONLY valid JSON without markdown formatting.`
+
+    // Get available models and select the best one for differential analysis
+    const availableModels = this.getAvailableModels().map(m => m.id)
+    const selectedModel = options.model || selectBestModel('comprehensive', availableModels)
+    
+    // Define fallback models for reliability
+    const fallbackModels = PROMPT_OPTIMIZATION.modelRecommendations.comprehensive
+      .filter(m => m !== selectedModel && availableModels.includes(m))
 
     const response = await this.generateResponse(prompt, {
-      model: options.model,
-      systemPrompt: this.systemPrompt,
-      maxTokens: 1500,
-      temperature: 0.2
+      model: selectedModel,
+      systemPrompt: SYSTEM_PROMPTS.comparativeAnalyst,
+      maxTokens: PROMPT_OPTIMIZATION.maxTokens.differential,
+      temperature: PROMPT_OPTIMIZATION.temperatures.comparative,
+      fallbackModels
     })
 
     return {
@@ -475,13 +499,33 @@ Please provide your analysis following the structured format.`
     riskLevel: 'low' | 'medium' | 'high'
     categories: string[]
   } {
-    const sections = this.extractSections(content)
-    
-    return {
-      summary: sections.summary || 'Changes detected in the policy document.',
-      highlights: sections.highlights.slice(0, 5),
-      riskLevel: this.parseRiskLevel(sections.risk),
-      categories: this.parseCategories(sections.categories)
+    // First try to parse as JSON
+    try {
+      const cleanedContent = content
+        .replace(/^```json\n?/i, '')
+        .replace(/\n?```$/i, '')
+        .trim()
+      
+      const parsed = JSON.parse(cleanedContent)
+      
+      return {
+        summary: parsed.change_summary || parsed.summary || parsed.user_impact || 'Policy changes detected.',
+        highlights: parsed.key_highlights || parsed.highlights || [],
+        riskLevel: this.parseRiskLevel(parsed.risk_level || parsed.riskLevel || 'low'),
+        categories: Array.isArray(parsed.categories) ? parsed.categories : this.parseCategories(parsed.categories || '')
+      }
+    } catch (parseError) {
+      console.error('Failed to parse JSON response, falling back to text extraction:', parseError)
+      
+      // Fallback to text extraction
+      const sections = this.extractSections(content)
+      
+      return {
+        summary: sections.summary || 'Policy changes have been detected and analyzed.',
+        highlights: sections.highlights.slice(0, 5),
+        riskLevel: this.parseRiskLevel(sections.risk),
+        categories: this.parseCategories(sections.categories)
+      }
     }
   }
 
