@@ -168,7 +168,9 @@ Analyze the changes and provide a JSON response:
   ],
   "overall_impact": "positive/negative/mixed",
   "recommended_actions": ["What users should do in response"]
-}`
+}
+
+Return ONLY valid JSON without markdown formatting.`
 }
 
 export const EXTRACTION_RULES = {

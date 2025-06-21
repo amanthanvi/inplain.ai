@@ -58,23 +58,28 @@ export async function POST(
       )
     }
 
-    // Get the original snapshot content for better analysis
-    const [fromSnapshot, toSnapshot] = await Promise.all([
-      storage.getSnapshot(slug, diff.fromSnapshotId),
-      storage.getSnapshot(slug, diff.toSnapshotId)
-    ])
-
+    // Try to get the original snapshot content for better analysis
     let oldContent: string | undefined
     let newContent: string | undefined
 
-    if (fromSnapshot && toSnapshot) {
-      const [fromContent, toContent] = await Promise.all([
-        storage.getSnapshotContent(fromSnapshot.blobKey),
-        storage.getSnapshotContent(toSnapshot.blobKey)
+    try {
+      const [fromSnapshot, toSnapshot] = await Promise.all([
+        storage.getSnapshot(slug, diff.fromSnapshotId),
+        storage.getSnapshot(slug, diff.toSnapshotId)
       ])
-      
-      oldContent = fromContent || undefined
-      newContent = toContent || undefined
+
+      if (fromSnapshot && toSnapshot) {
+        const [fromContent, toContent] = await Promise.all([
+          storage.getSnapshotContent(fromSnapshot.blobKey),
+          storage.getSnapshotContent(toSnapshot.blobKey)
+        ])
+        
+        oldContent = fromContent || undefined
+        newContent = toContent || undefined
+      }
+    } catch (error) {
+      console.warn('Failed to fetch snapshot content for enhanced analysis:', error)
+      // Continue with diff-only analysis
     }
 
     // Initialize AI service
