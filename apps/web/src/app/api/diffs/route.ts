@@ -37,6 +37,9 @@ export async function GET(request: NextRequest) {
     
     // Sort by creation date and limit results
     const sortedDiffs = recentDiffs
+      .filter((item): item is { diff: NonNullable<typeof item.diff>; company: typeof item.company } => 
+        Boolean(item.diff && item.diff.createdAt)
+      )
       .sort((a, b) => new Date(b.diff.createdAt).getTime() - new Date(a.diff.createdAt).getTime())
       .slice(0, limit)
     

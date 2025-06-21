@@ -86,15 +86,40 @@ export async function POST(
     const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, model || DEFAULT_MODEL)
     
     // Generate analysis with original content when available
-    const analysis = await aiService.analyzePolicyChanges({
-      additions: diff.additions,
-      deletions: diff.deletions,
-      changeCount: diff.changeCount,
-      changeType: diff.changeType,
-      htmlDiff: diffContent.htmlDiff,
-      oldContent,
-      newContent
-    }, { model: model || DEFAULT_MODEL })
+    let analysis
+    try {
+      console.log('Generating analysis for diff:', {
+        diffId,
+        slug,
+        additions: diff.additions,
+        deletions: diff.deletions,
+        changeCount: diff.changeCount,
+        changeType: diff.changeType,
+        hasOldContent: !!oldContent,
+        hasNewContent: !!newContent,
+        htmlDiffLength: diffContent.htmlDiff?.length || 0
+      })
+      
+      analysis = await aiService.analyzePolicyChanges({
+        additions: diff.additions,
+        deletions: diff.deletions,
+        changeCount: diff.changeCount,
+        changeType: diff.changeType,
+        htmlDiff: diffContent.htmlDiff,
+        oldContent,
+        newContent
+      }, { model: model || DEFAULT_MODEL })
+      
+      console.log('Analysis generated successfully:', {
+        model: analysis.model,
+        tokensUsed: analysis.tokensUsed,
+        summaryLength: analysis.summary?.length || 0,
+        highlightsCount: analysis.highlights?.length || 0
+      })
+    } catch (analysisError) {
+      console.error('AI analysis failed:', analysisError)
+      throw new Error(`AI analysis failed: ${analysisError instanceof Error ? analysisError.message : 'Unknown error'}`)
+    }
     
     const summary = SummarySchema.parse({
       id: crypto.randomUUID(),
