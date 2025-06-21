@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useStreamingAnalysis } from '@/hooks/useStreamingAnalysis'
+import { InteractiveMarkdown } from './InteractiveMarkdown'
+import { formatAnalysisToMarkdown, formatErrorToMarkdown, formatLoadingMarkdown } from '@/lib/analysis-formatter'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
