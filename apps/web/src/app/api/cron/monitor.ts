@@ -93,7 +93,11 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
     const content = await fetchPolicyContent(company.url)
     
     if (!content) {
-      throw new Error('Failed to fetch content')
+      throw new Error('Failed to fetch content - received null')
+    }
+    
+    if (content.length < 100) {
+      throw new Error(`Content too short: ${content.length} characters`)
     }
     
     const contentHash = await hashContent(content)
@@ -167,15 +171,26 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
 
 async function fetchPolicyContent(url: string): Promise<string | null> {
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'PolicyDiff/1.0 (https://policydiff.com; contact@policydiff.com)',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Cache-Control': 'no-cache'
-      },
-      signal: AbortSignal.timeout(30000)
-    })
+    // Create a manual timeout using Promise.race for Edge Runtime compatibility
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
+    
+    const response = await Promise.race([
+      fetch(url, {
+        headers: {
+          'User-Agent': 'PolicyDiff/1.0 (https://policydiff.com; contact@policydiff.com)',
+          'Accept': 'text/html,application/xhtml+xml',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'no-cache'
+        },
+        signal: controller.signal
+      }),
+      new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 30000)
+      )
+    ])
+    
+    clearTimeout(timeoutId)
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -186,9 +201,11 @@ async function fetchPolicyContent(url: string): Promise<string | null> {
       throw new Error(`Unsupported content type: ${contentType}`)
     }
     
-    return await response.text()
+    const text = await response.text()
+    console.log(`[Monitor] Successfully fetched ${url} - ${text.length} characters`)
+    return text
   } catch (error) {
-    console.error('[Monitor] Fetch error:', error)
+    console.error(`[Monitor] Fetch error for ${url}:`, error)
     return null
   }
 }
