@@ -41,8 +41,21 @@ export async function getDiff(slug: string): Promise<{
 }
 
 export async function getLatestDiffs(slug: string, limit = 10): Promise<DiffMeta[]> {
-  // This would fetch from the API in production
-  return []
+  try {
+    const response = await fetch(`${API_BASE_URL}/diff/${slug}/history?limit=${limit}`, {
+      next: { revalidate: 300 } // Cache for 5 minutes
+    })
+    
+    if (!response.ok) {
+      return []
+    }
+    
+    const data = await response.json()
+    return data.diffs || []
+  } catch (error) {
+    console.error('Error fetching diff history:', error)
+    return []
+  }
 }
 
 export async function getRecentDiffs(limit = 10): Promise<{
