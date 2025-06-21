@@ -169,7 +169,7 @@ export class ContentExtractor {
 
   private static getContentUntilNextHeading(
     $content: cheerio.CheerioAPI,
-    $heading: cheerio.Cheerio<cheerio.Element>,
+    $heading: cheerio.Cheerio<any>,
     level: number
   ): string {
     const higherLevelSelectors = Array.from({ length: level }, (_, i) => `h${i + 1}`).join(', ')
