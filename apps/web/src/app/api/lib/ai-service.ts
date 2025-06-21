@@ -1,4 +1,5 @@
 import { formatTimestamp } from '@policydiff/shared'
+import { SYSTEM_PROMPTS, PROMPT_OPTIMIZATION, optimizePromptForModel } from '../../../lib/prompts'
 
 export interface AIProvider {
   name: string
@@ -181,6 +182,8 @@ export class AIService {
   private cache: Map<string, CacheEntry> = new Map()
   private readonly maxRequestsPerMinute = 60
   private readonly cacheExpiryMs = 1000 * 60 * 60 * 24 // 24 hours
+  private readonly maxRetries = 3
+  private readonly retryDelay = 1000 // Base delay in ms
 
   constructor(
     apiKey: string, 
@@ -257,10 +260,11 @@ export class AIService {
 
   async generateResponse(
     prompt: string, 
-    options: AIRequestOptions & { model?: string; useCache?: boolean } = {}
+    options: AIRequestOptions & { model?: string; useCache?: boolean; fallbackModels?: string[] } = {}
   ): Promise<AIResponse> {
     const model = options.model || this.defaultModel
     const useCache = options.useCache !== false // Default to true
+    const fallbackModels = options.fallbackModels || []
     
     // Validate input
     this.validatePrompt(prompt)
@@ -279,18 +283,100 @@ export class AIService {
       }
     }
     
+    // Try primary model with retries
     try {
-      const request = this.provider.formatRequest(model, prompt, {
-        ...options,
-        maxTokens: Math.min(options.maxTokens || 1500, 4000), // Cap at 4k tokens
-        temperature: Math.max(0, Math.min(options.temperature || 0.3, 1)) // Clamp 0-1
-      })
+      return await this.generateWithRetries(prompt, model, options, useCache)
+    } catch (primaryError) {
+      console.error(`Primary model ${model} failed:`, primaryError)
       
-      const response = await fetch(this.provider.endpoint, {
-        method: 'POST',
-        headers: this.provider.headers(this.apiKey),
-        body: JSON.stringify(request)
-      })
+      // Try fallback models
+      for (const fallbackModel of fallbackModels) {
+        try {
+          console.log(`Trying fallback model: ${fallbackModel}`)
+          return await this.generateWithRetries(prompt, fallbackModel, options, useCache)
+        } catch (fallbackError) {
+          console.error(`Fallback model ${fallbackModel} failed:`, fallbackError)
+        }
+      }
+      
+      // All models failed
+      throw primaryError
+    }
+  }
+  
+  private async generateWithRetries(
+    prompt: string,
+    model: string,
+    options: AIRequestOptions,
+    useCache: boolean
+  ): Promise<AIResponse> {
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await this.callAPI(prompt, model, options)
+        
+        // Cache successful response
+        if (useCache) {
+          const cacheKey = this.getCacheKey(prompt, model, options)
+          this.cache.set(cacheKey, {
+            response,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + this.cacheExpiryMs
+          })
+        }
+        
+        return response
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error')
+        
+        // Don't retry on certain errors
+        if (this.isNonRetryableError(lastError)) {
+          throw lastError
+        }
+        
+        // Calculate exponential backoff
+        const delay = this.retryDelay * Math.pow(2, attempt - 1)
+        console.log(`Attempt ${attempt} failed, retrying in ${delay}ms...`)
+        
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+    
+    throw lastError || new Error('All retry attempts failed')
+  }
+  
+  private isNonRetryableError(error: Error): boolean {
+    const message = error.message.toLowerCase()
+    return (
+      message.includes('invalid request') ||
+      message.includes('insufficient credits') ||
+      message.includes('unsafe content') ||
+      message.includes('rate limit exceeded')
+    )
+  }
+  
+  private async callAPI(
+    prompt: string,
+    model: string,
+    options: AIRequestOptions
+  ): Promise<AIResponse> {
+    
+    // Optimize prompt for the specific model
+    const optimizedPrompt = optimizePromptForModel(prompt, model)
+    
+    const request = this.provider.formatRequest(model, optimizedPrompt, {
+      ...options,
+      maxTokens: Math.min(options.maxTokens || 1500, 4000), // Cap at 4k tokens
+      temperature: Math.max(0, Math.min(options.temperature || 0.3, 1)) // Clamp 0-1
+    })
+    
+    const response = await fetch(this.provider.endpoint, {
+      method: 'POST',
+      headers: this.provider.headers(this.apiKey),
+      body: JSON.stringify(request),
+      signal: AbortSignal.timeout ? AbortSignal.timeout(30000) : undefined // 30s timeout if supported
+    })
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -310,27 +396,12 @@ export class AIService {
       const data = await response.json()
       const aiResponse = this.provider.parseResponse(data)
       
-      // Validate response
-      if (!aiResponse.content || aiResponse.content.trim().length === 0) {
-        throw new Error('Received empty response from AI model')
-      }
-      
-      // Cache the response
-      if (useCache) {
-        const cacheKey = this.getCacheKey(prompt, model, options)
-        this.cache.set(cacheKey, {
-          response: aiResponse,
-          timestamp: Date.now(),
-          expiresAt: Date.now() + this.cacheExpiryMs
-        })
-      }
-      
-      return aiResponse
-      
-    } catch (error) {
-      console.error(`AI service error with model ${model}:`, error)
-      throw error
+    // Validate response
+    if (!aiResponse.content || aiResponse.content.trim().length === 0) {
+      throw new Error('Received empty response from AI model')
     }
+    
+    return aiResponse
   }
 
   getAvailableModels(): AIModel[] {
@@ -358,30 +429,7 @@ export class AIService {
 
 // Policy analysis specific prompts and parsing
 export class PolicyAnalysisService extends AIService {
-  private systemPrompt = `You are an expert privacy policy analyst. Your role is to analyze changes to privacy policies and terms of service documents, providing clear, accurate assessments of how changes affect user privacy and rights.
-
-When analyzing policy changes:
-1. Focus on practical implications for users
-2. Use clear, non-technical language
-3. Assess privacy risks objectively
-4. Categorize changes appropriately
-5. Highlight the most important changes
-
-Always respond in this structured format:
-
-## Summary
-[2-3 sentence summary of what changed]
-
-## Key Highlights
-- [Most important change 1]
-- [Most important change 2]
-- [etc, up to 5 items]
-
-## Risk Assessment
-[low/medium/high]
-
-## Categories
-[comma-separated list: data_collection, data_sharing, data_retention, user_rights, security, cookies, third_parties, children, other]`
+  private systemPrompt = SYSTEM_PROMPTS.privacyAnalyst
 
   async analyzePolicyChanges(
     diffData: {
