@@ -1,5 +1,4 @@
 import { kv } from '@vercel/kv'
-import { put } from '@vercel/blob'
 import { StorageClient } from '../lib/storage'
 import { SnapshotMetaSchema, CrawlJobSchema } from '@policydiff/shared'
 import { formatTimestamp, hashContent } from '@policydiff/shared'
@@ -132,20 +131,24 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
     console.log(`[Monitor] Changes detected for ${company.name}, saving snapshot`)
     
     const snapshotId = crypto.randomUUID()
-    const blobKey = `snapshots/${company.slug}/${formatTimestamp()}.html`
+    const timestamp = formatTimestamp()
+    const contentKey = `content:${company.slug}:${snapshotId}`
     
-    await put(blobKey, content, {
-      access: 'public',
-      contentType: 'text/html',
-      addRandomSuffix: false
-    })
+    // Store content in KV instead of blob for now
+    // KV has a 512KB limit per value, so we'll store large content in chunks if needed
+    if (content.length > 400000) {
+      console.warn(`[Monitor] Content too large for single KV entry (${content.length} bytes), truncating...`)
+      content = content.substring(0, 400000)
+    }
+    
+    await kv.set(contentKey, content, { ex: 30 * 24 * 60 * 60 }) // 30 days TTL
     
     const snapshot = SnapshotMetaSchema.parse({
       id: snapshotId,
       slug: company.slug,
       url: company.url,
-      capturedAt: formatTimestamp(),
-      blobKey,
+      capturedAt: timestamp,
+      blobKey: contentKey, // Using KV key instead of blob key
       contentHash,
       contentLength: content.length,
       contentType: 'html',
