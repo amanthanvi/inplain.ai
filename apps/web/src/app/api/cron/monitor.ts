@@ -26,6 +26,16 @@ export async function monitorPolicies() {
       companies.map(company => checkCompany(company))
     )
     
+    // Log detailed results
+    results.forEach((result, index) => {
+      const company = companies[index]
+      if (result.status === 'rejected') {
+        console.error(`[Monitor] Failed to check ${company.name}:`, result.reason)
+      } else {
+        console.log(`[Monitor] Successfully checked ${company.name}`)
+      }
+    })
+    
     const successful = results.filter(r => r.status === 'fulfilled').length
     const failed = results.filter(r => r.status === 'rejected').length
     
@@ -36,7 +46,9 @@ export async function monitorPolicies() {
       checked: companies.length,
       successful,
       failed,
-      timestamp: formatTimestamp()
+      timestamp: formatTimestamp(),
+      // Include first error for debugging
+      firstError: results.find(r => r.status === 'rejected')?.reason?.toString()
     }
   } catch (error) {
     console.error('[Monitor] Fatal error:', error)
