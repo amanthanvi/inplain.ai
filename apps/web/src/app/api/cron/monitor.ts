@@ -104,18 +104,18 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
   
   try {
     console.log(`[Monitor] About to fetch content for ${company.name}`)
-    const content = await fetchPolicyContent(company.url)
-    console.log(`[Monitor] Fetch completed for ${company.name}, content: ${content ? content.length + ' chars' : 'null'}`)
+    const fetchedContent = await fetchPolicyContent(company.url)
+    console.log(`[Monitor] Fetch completed for ${company.name}, content: ${fetchedContent ? fetchedContent.length + ' chars' : 'null'}`)
     
-    if (!content) {
+    if (!fetchedContent) {
       throw new Error('Failed to fetch content - received null')
     }
     
-    if (content.length < 100) {
-      throw new Error(`Content too short: ${content.length} characters`)
+    if (fetchedContent.length < 100) {
+      throw new Error(`Content too short: ${fetchedContent.length} characters`)
     }
     
-    const contentHash = await hashContent(content)
+    const contentHash = await hashContent(fetchedContent)
     
     const latestSnapshots = await storage.getLatestSnapshots(company.slug, 1)
     const latestSnapshot = latestSnapshots[0]
@@ -136,12 +136,13 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
     
     // Store content in KV instead of blob for now
     // KV has a 512KB limit per value, so we'll store large content in chunks if needed
-    if (content.length > 400000) {
-      console.warn(`[Monitor] Content too large for single KV entry (${content.length} bytes), truncating...`)
-      content = content.substring(0, 400000)
+    let contentToStore = fetchedContent
+    if (contentToStore.length > 400000) {
+      console.warn(`[Monitor] Content too large for single KV entry (${contentToStore.length} bytes), truncating...`)
+      contentToStore = contentToStore.substring(0, 400000)
     }
     
-    await kv.set(contentKey, content, { ex: 30 * 24 * 60 * 60 }) // 30 days TTL
+    await kv.set(contentKey, contentToStore, { ex: 30 * 24 * 60 * 60 }) // 30 days TTL
     
     const snapshot = SnapshotMetaSchema.parse({
       id: snapshotId,
@@ -150,7 +151,7 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
       capturedAt: timestamp,
       blobKey: contentKey, // Using KV key instead of blob key
       contentHash,
-      contentLength: content.length,
+      contentLength: fetchedContent.length,
       contentType: 'html',
       headers: {},
       status: 'processed'
