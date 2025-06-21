@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { DiffCard } from '@/components/DiffCard'
-import { getCompanies, getDiff } from '@/lib/api'
+import { getRecentDiffs } from '@/lib/api'
 import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
 
 export function RecentDiffs() {
@@ -14,15 +14,8 @@ export function RecentDiffs() {
 
   useEffect(() => {
     async function fetchRecentDiffs() {
-      const companies = await getCompanies()
-      const diffPromises = companies.map(company => 
-        getDiff(company.slug).then(diff => diff ? { ...diff, company } : null)
-      )
-      
-      const results = await Promise.all(diffPromises)
-      const validDiffs = results.filter(Boolean).slice(0, 5)
-      
-      setDiffs(validDiffs)
+      const results = await getRecentDiffs(5)
+      setDiffs(results)
       setLoading(false)
     }
     

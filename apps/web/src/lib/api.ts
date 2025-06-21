@@ -45,6 +45,27 @@ export async function getLatestDiffs(slug: string, limit = 10): Promise<DiffMeta
   return []
 }
 
+export async function getRecentDiffs(limit = 10): Promise<{
+  diff: DiffMeta
+  company: Company
+}[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/diffs?limit=${limit}`, {
+      next: { revalidate: 60 } // Cache for 1 minute
+    })
+    
+    if (!response.ok) {
+      return []
+    }
+    
+    const data = await response.json()
+    return data.diffs
+  } catch (error) {
+    console.error('Error fetching recent diffs:', error)
+    return []
+  }
+}
+
 export async function getSummary(slug: string, diffId: string): Promise<Summary | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/summary/${slug}`, {
