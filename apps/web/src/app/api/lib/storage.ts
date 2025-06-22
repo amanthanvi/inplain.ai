@@ -109,3 +109,5 @@ export class StorageClient {
     await kv.set(key, analysis, { ex: ttl })
   }
 }
+
+export const storageClient = new StorageClient()

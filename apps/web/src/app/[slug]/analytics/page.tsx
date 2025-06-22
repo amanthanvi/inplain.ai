@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { AnalyticsDashboard } from '@/components/analytics-dashboard'
 import { PremiumAnalyticsDashboard } from '@/components/PremiumAnalyticsDashboard'
 import { PremiumDiffViewer } from '@/components/PremiumDiffViewer'
 import { PremiumTimeline } from '@/components/PremiumTimeline'
@@ -207,22 +208,27 @@ export default function AnalyticsPage() {
 
 			{/* Main Content */}
 			<div className="container mx-auto px-4 py-8">
-				<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-					<TabsList className="grid w-full max-w-md grid-cols-4">
-						<TabsTrigger value="overview">Overview</TabsTrigger>
-						<TabsTrigger value="changes">Changes</TabsTrigger>
-						<TabsTrigger value="timeline">Timeline</TabsTrigger>
-						<TabsTrigger value="insights">Insights</TabsTrigger>
-					</TabsList>
+				{/* Use the new comprehensive analytics dashboard */}
+				<AnalyticsDashboard slug={slug} />
+				
+				{/* Keep the existing tabs for additional features */}
+				<div className="mt-8">
+					<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+						<TabsList className="grid w-full max-w-md grid-cols-4">
+							<TabsTrigger value="overview">Overview</TabsTrigger>
+							<TabsTrigger value="changes">Changes</TabsTrigger>
+							<TabsTrigger value="timeline">Timeline</TabsTrigger>
+							<TabsTrigger value="insights">Insights</TabsTrigger>
+						</TabsList>
 
-					<TabsContent value="overview" className="space-y-6">
-						<PremiumAnalyticsDashboard
-							data={data.analytics}
-							companyName={data.company.name}
-							onInsightClick={handleInsightClick}
-							onExport={handleExport}
-						/>
-					</TabsContent>
+						<TabsContent value="overview" className="space-y-6">
+							<PremiumAnalyticsDashboard
+								data={data.analytics}
+								companyName={data.company.name}
+								onInsightClick={handleInsightClick}
+								onExport={handleExport}
+							/>
+						</TabsContent>
 
 					<TabsContent value="changes" className="space-y-6">
 						<PremiumCard>
@@ -291,6 +297,7 @@ export default function AnalyticsPage() {
 						</div>
 					</TabsContent>
 				</Tabs>
+				</div>
 			</div>
 		</div>
 	)
