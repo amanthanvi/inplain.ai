@@ -20,12 +20,20 @@ export interface AIModel {
     output: number
   }
   recommended?: boolean
+  specialization?: 'legal' | 'financial' | 'technical' | 'general' | 'reasoning'
+  supportsStreaming?: boolean
+  supportsWebSearch?: boolean
+  supportsTools?: boolean
 }
 
 export interface AIRequestOptions {
   maxTokens?: number
   temperature?: number
   systemPrompt?: string
+  system?: string // Alias for systemPrompt
+  response_format?: { type: 'json_object' | 'text' }
+  stream?: boolean
+  max_tokens?: number // Alias for maxTokens
 }
 
 export interface AIResponse {
@@ -39,36 +47,42 @@ export interface AIResponse {
   finishReason: string
 }
 
-// Top 10 Legal category models from OpenRouter, sorted by cost-effectiveness
+// Enhanced AI models with specializations for PolicyDiff
 export const AI_MODELS: AIModel[] = [
+  // Free/Low-cost tier models
+  {
+    id: 'google/gemini-2.5-flash-preview-05-20',
+    name: 'Gemini 2.5 Flash Preview',
+    provider: 'Google',
+    contextLength: 1048576,
+    costPer1kTokens: { input: 0.0375, output: 0.15 },
+    recommended: true,
+    specialization: 'general',
+    supportsStreaming: true,
+    supportsWebSearch: false
+  },
   {
     id: 'openai/gpt-4o-mini',
     name: 'GPT-4o Mini',
     provider: 'OpenAI',
     contextLength: 128000,
     costPer1kTokens: { input: 0.15, output: 0.6 },
-    recommended: true
+    recommended: true,
+    specialization: 'general',
+    supportsStreaming: true,
+    supportsWebSearch: false
   },
+  
+  // Standard tier models
   {
     id: 'meta-llama/llama-3.3-70b-instruct',
     name: 'Llama 3.3 70B Instruct',
     provider: 'Meta',
     contextLength: 131000,
-    costPer1kTokens: { input: 0.59, output: 0.79 }
-  },
-  {
-    id: 'openai/gpt-4.1-nano',
-    name: 'GPT-4.1 Nano',
-    provider: 'OpenAI',
-    contextLength: 1047576,
-    costPer1kTokens: { input: 0.8, output: 3.2 }
-  },
-  {
-    id: 'deepseek/deepseek-r1-0528-qwen3-8b',
-    name: 'DeepSeek R1 Qwen3 8B',
-    provider: 'DeepSeek',
-    contextLength: 131072,
-    costPer1kTokens: { input: 1.0, output: 3.0 }
+    costPer1kTokens: { input: 0.59, output: 0.79 },
+    specialization: 'general',
+    supportsStreaming: true,
+    supportsWebSearch: false
   },
   {
     id: 'google/gemini-2.0-flash',
@@ -76,35 +90,89 @@ export const AI_MODELS: AIModel[] = [
     provider: 'Google',
     contextLength: 1048576,
     costPer1kTokens: { input: 0.075, output: 0.3 },
+    recommended: true,
+    specialization: 'technical',
+    supportsStreaming: true,
+    supportsWebSearch: false
+  },
+  
+  // Premium legal-focused models
+  {
+    id: 'anthropic/claude-3.5-sonnet',
+    name: 'Claude 3.5 Sonnet',
+    provider: 'Anthropic',
+    contextLength: 200000,
+    costPer1kTokens: { input: 3.0, output: 15.0 },
+    specialization: 'legal',
+    supportsStreaming: true,
+    supportsWebSearch: false,
     recommended: true
   },
   {
-    id: 'google/gemini-2.5-flash-preview-05-20',
-    name: 'Gemini 2.5 Flash Preview (May 20)',
-    provider: 'Google',
-    contextLength: 1048576,
-    costPer1kTokens: { input: 0.0375, output: 0.15 }
+    id: 'openai/gpt-4-turbo',
+    name: 'GPT-4 Turbo',
+    provider: 'OpenAI',
+    contextLength: 128000,
+    costPer1kTokens: { input: 10.0, output: 30.0 },
+    specialization: 'financial',
+    supportsStreaming: true,
+    supportsWebSearch: false
+  },
+  
+  // Reasoning models
+  {
+    id: 'openai/o1-preview',
+    name: 'O1 Preview',
+    provider: 'OpenAI',
+    contextLength: 128000,
+    costPer1kTokens: { input: 15.0, output: 60.0 },
+    specialization: 'reasoning',
+    supportsStreaming: false,
+    supportsWebSearch: false
   },
   {
-    id: 'google/gemini-2.5-flash-preview-04-17',
-    name: 'Gemini 2.5 Flash Preview (April 17)',
-    provider: 'Google',
-    contextLength: 1048576,
-    costPer1kTokens: { input: 0.0375, output: 0.15 }
+    id: 'deepseek/deepseek-r1',
+    name: 'DeepSeek R1',
+    provider: 'DeepSeek',
+    contextLength: 131072,
+    costPer1kTokens: { input: 1.0, output: 3.0 },
+    specialization: 'reasoning',
+    supportsStreaming: true,
+    supportsWebSearch: false
   },
+  
+  // Web search enabled models
+  {
+    id: 'perplexity/llama-3.1-sonar-large-128k-online',
+    name: 'Perplexity Sonar Large',
+    provider: 'Perplexity',
+    contextLength: 127072,
+    costPer1kTokens: { input: 1.0, output: 1.0 },
+    specialization: 'general',
+    supportsStreaming: true,
+    supportsWebSearch: true
+  },
+  {
+    id: 'openai/gpt-4o:online',
+    name: 'GPT-4o with Web Search',
+    provider: 'OpenAI',
+    contextLength: 128000,
+    costPer1kTokens: { input: 2.5, output: 10.0 },
+    specialization: 'general',
+    supportsStreaming: true,
+    supportsWebSearch: true
+  },
+  
+  // Long context models
   {
     id: 'google/gemini-2.5-pro-preview-05-06',
-    name: 'Gemini 2.5 Pro Preview (May 6)',
+    name: 'Gemini 2.5 Pro Preview',
     provider: 'Google',
     contextLength: 1048576,
-    costPer1kTokens: { input: 3.5, output: 14.0 }
-  },
-  {
-    id: 'google/gemini-2.5-pro-preview-06-05',
-    name: 'Gemini 2.5 Pro Preview (June 5)',
-    provider: 'Google',
-    contextLength: 1048576,
-    costPer1kTokens: { input: 3.5, output: 14.0 }
+    costPer1kTokens: { input: 3.5, output: 14.0 },
+    specialization: 'general',
+    supportsStreaming: true,
+    supportsWebSearch: false
   },
   {
     id: 'openai/gpt-4.1',
@@ -112,7 +180,10 @@ export const AI_MODELS: AIModel[] = [
     provider: 'OpenAI',
     contextLength: 1047576,
     costPer1kTokens: { input: 2.5, output: 10.0 },
-    recommended: true
+    recommended: true,
+    specialization: 'general',
+    supportsStreaming: true,
+    supportsWebSearch: false
   }
 ].sort((a, b) => {
   // Sort by total cost (input + output) for 1K tokens
@@ -134,16 +205,27 @@ export const OPENROUTER_PROVIDER: AIProvider = {
     'X-Title': 'PolicyDiff'
   }),
   
-  formatRequest: (model: string, prompt: string, options: AIRequestOptions = {}) => ({
-    model,
-    messages: [
-      ...(options.systemPrompt ? [{ role: 'system', content: options.systemPrompt }] : []),
-      { role: 'user', content: prompt }
-    ],
-    max_tokens: options.maxTokens || 1000,
-    temperature: options.temperature || 0.3,
-    stream: false
-  }),
+  formatRequest: (model: string, prompt: string, options: AIRequestOptions = {}) => {
+    const systemPrompt = options.systemPrompt || options.system
+    const maxTokens = options.maxTokens || options.max_tokens || 1000
+    
+    const request: any = {
+      model,
+      messages: [
+        ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+        { role: 'user', content: prompt }
+      ],
+      max_tokens: maxTokens,
+      temperature: options.temperature || 0.3,
+      stream: options.stream || false
+    }
+    
+    if (options.response_format) {
+      request.response_format = options.response_format
+    }
+    
+    return request
+  },
   
   parseResponse: (response: any): AIResponse => {
     const choice = response.choices[0]
@@ -424,6 +506,24 @@ export class AIService {
     const outputCost = (outputTokens / 1000) * model.costPer1kTokens.output
     
     return inputCost + outputCost
+  }
+
+  /**
+   * Send a raw request to the AI API with full control over options
+   * This is useful for advanced use cases where you need direct API access
+   */
+  async sendRequest(
+    model: string, 
+    prompt: string, 
+    options: AIRequestOptions = {}
+  ): Promise<string> {
+    const response = await this.generateResponse(prompt, {
+      ...options,
+      model,
+      useCache: false // Disable caching for raw requests
+    })
+    
+    return response.content
   }
 }
 
