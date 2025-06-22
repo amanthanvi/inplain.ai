@@ -28,7 +28,7 @@ export async function POST(
       );
     }
     
-    const snapshot = snapshots[0];
+    const snapshot = snapshots[0]!; // We know it exists because we checked length
 
     // Get and extract content
     const content = await storage.getSnapshotContent(snapshot.blobKey);
