@@ -2,6 +2,8 @@ import { kv } from '@vercel/kv'
 import { StorageClient } from '../lib/storage'
 import { SnapshotMetaSchema, CrawlJobSchema } from '@policydiff/shared'
 import { formatTimestamp, hashContent } from '@policydiff/shared'
+import { WatchlistService } from '@/lib/watchlist'
+import { AIService } from '../lib/ai-service'
 
 const storage = new StorageClient()
 
@@ -166,6 +168,36 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
         toSnapshotId: snapshotId,
         timestamp: formatTimestamp()
       })
+      
+      // Analyze the change and trigger watchlist alerts
+      try {
+        console.log(`[Monitor] Analyzing changes for watchlist alerts...`)
+        const previousContent = await storage.getSnapshotContent(latestSnapshot.id)
+        
+        if (previousContent && previousContent.length > 100) {
+          // Quick analysis to determine change severity
+          const changeType = await analyzeChangeSeverity(previousContent, fetchedContent)
+          const summary = await generateChangeSummary(company.slug, previousContent, fetchedContent)
+          
+          // Process watchlist alerts
+          await WatchlistService.processChangeForWatchlists(
+            company.slug,
+            changeType,
+            summary,
+            {
+              previousSnapshotId: latestSnapshot.id,
+              currentSnapshotId: snapshotId,
+              timestamp: formatTimestamp(),
+              contentLengthChange: fetchedContent.length - previousContent.length
+            }
+          )
+          
+          console.log(`[Monitor] Watchlist alerts processed for ${company.slug}`)
+        }
+      } catch (error) {
+        console.error(`[Monitor] Error processing watchlist alerts:`, error)
+        // Don't throw - we still want to save the snapshot even if alerts fail
+      }
     }
     
     company.lastChecked = formatTimestamp()
@@ -186,6 +218,85 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
     job.completedAt = formatTimestamp()
     await kv.set(`job:${jobId}`, job, { ex: 3600 })
     throw error
+  }
+}
+
+async function analyzeChangeSeverity(
+  previousContent: string,
+  currentContent: string
+): Promise<'minor' | 'significant' | 'critical'> {
+  // Simple heuristic based on content length change
+  const lengthChange = Math.abs(currentContent.length - previousContent.length);
+  const percentChange = lengthChange / previousContent.length;
+  
+  // Look for critical keywords
+  const criticalKeywords = [
+    'data breach', 'security incident', 'third party', 'sell', 'share',
+    'advertising', 'tracking', 'cookies', 'personal information'
+  ];
+  
+  const currentLower = currentContent.toLowerCase();
+  const previousLower = previousContent.toLowerCase();
+  
+  let criticalChanges = 0;
+  for (const keyword of criticalKeywords) {
+    const prevCount = (previousLower.match(new RegExp(keyword, 'g')) || []).length;
+    const currCount = (currentLower.match(new RegExp(keyword, 'g')) || []).length;
+    if (currCount !== prevCount) criticalChanges++;
+  }
+  
+  if (criticalChanges >= 3 || percentChange > 0.5) {
+    return 'critical';
+  } else if (criticalChanges >= 1 || percentChange > 0.2) {
+    return 'significant';
+  } else {
+    return 'minor';
+  }
+}
+
+async function generateChangeSummary(
+  companySlug: string,
+  previousContent: string,
+  currentContent: string
+): Promise<string> {
+  try {
+    // Use AI for smarter summary if available
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (apiKey) {
+      const aiService = new AIService(apiKey);
+      const prompt = `Compare these two privacy policy versions and provide a brief 1-sentence summary of the main change:
+
+Previous (excerpt): ${previousContent.substring(0, 1000)}...
+
+Current (excerpt): ${currentContent.substring(0, 1000)}...
+
+Summary:`;
+
+      const response = await aiService.sendRequest(
+        'google/gemini-2.5-flash-preview-05-20',
+        prompt,
+        { max_tokens: 100 }
+      );
+      
+      if (typeof response === 'object' && response && 'choices' in response) {
+        const res = response as any;
+        if (res.choices?.[0]?.message?.content) {
+          return res.choices[0].message.content.trim();
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error generating AI summary:', error);
+  }
+  
+  // Fallback to simple summary
+  const lengthChange = currentContent.length - previousContent.length;
+  if (lengthChange > 0) {
+    return `Privacy policy expanded by ${Math.abs(lengthChange)} characters`;
+  } else if (lengthChange < 0) {
+    return `Privacy policy shortened by ${Math.abs(lengthChange)} characters`;
+  } else {
+    return `Privacy policy updated with structural changes`;
   }
 }
 
