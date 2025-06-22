@@ -59,6 +59,9 @@ export async function POST(
         );
 
         // Stream the orchestration results
+        if (!aiOrchestrator) {
+          throw new Error('AI orchestrator not initialized');
+        }
         const analysisStream = aiOrchestrator.streamOrchestrationAnalysis(
           extractedText.text,
           slug,
