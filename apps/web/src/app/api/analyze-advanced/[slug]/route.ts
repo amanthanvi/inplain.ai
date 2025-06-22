@@ -7,7 +7,6 @@ import { kv } from '@vercel/kv';
 import { headers } from 'next/headers';
 
 const storage = new StorageClient();
-const contentExtractor = new ContentExtractor();
 
 export const runtime = 'edge';
 export const maxDuration = 300; // 5 minutes for complex analysis
@@ -84,7 +83,7 @@ export async function POST(
       );
     }
 
-    const extractedText = contentExtractor.extractFromHtml(content);
+    const extractedText = ContentExtractor.extract(content);
 
     // Prepare analysis options based on mode
     const analysisOptions = {
@@ -95,7 +94,7 @@ export async function POST(
 
     // Perform orchestrated analysis
     const analysis = await aiOrchestrator.orchestrateAnalysis(
-      extractedText,
+      extractedText.text,
       slug,
       analysisOptions
     );

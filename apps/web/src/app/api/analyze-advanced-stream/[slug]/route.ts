@@ -5,7 +5,6 @@ import { StorageClient } from '../../lib/storage';
 import { kv } from '@vercel/kv';
 
 const storage = new StorageClient();
-const contentExtractor = new ContentExtractor();
 
 export const runtime = 'edge';
 export const maxDuration = 300;
@@ -39,7 +38,7 @@ export async function POST(
       );
     }
 
-    const extractedText = contentExtractor.extractFromHtml(content);
+    const extractedText = ContentExtractor.extract(content);
 
     // Create a TransformStream for SSE
     const encoder = new TextEncoder();
@@ -61,7 +60,7 @@ export async function POST(
 
         // Stream the orchestration results
         const analysisStream = aiOrchestrator.streamOrchestrationAnalysis(
-          extractedText,
+          extractedText.text,
           slug,
           {
             includeWebSearch: body.includeWebSearch,
@@ -76,7 +75,7 @@ export async function POST(
 
         // Perform the full analysis
         const fullAnalysis = await aiOrchestrator.orchestrateAnalysis(
-          extractedText,
+          extractedText.text,
           slug,
           {
             includeWebSearch: body.includeWebSearch,
