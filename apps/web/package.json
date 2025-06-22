@@ -30,17 +30,20 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "diff-match-patch": "^1.0.5",
+    "framer-motion": "^12.18.1",
     "lucide-react": "^0.396.0",
     "next": "15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
+    "recharts": "^2.15.4",
     "remark-gfm": "^4.0.1",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zustand": "^5.0.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.45.0",

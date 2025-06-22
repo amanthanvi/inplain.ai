@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ApiError, ApiErrorType, handleApiError } from '@/lib/api-error';
 import { aiOrchestrator } from '@/lib/ai-orchestrator';
 import { ExpertPromptsLibrary } from '@/lib/expert-prompts';
-import { getLatestSnapshot, getSnapshotContent } from '@/lib/db-queries';
-import { extractTextFromHtml } from '@/lib/content-extractor';
+import { ContentExtractor } from '@/lib/content-extractor';
+import { StorageClient } from '../../lib/storage';
 import { kv } from '@vercel/kv';
 import { headers } from 'next/headers';
+
+const storage = new StorageClient();
+const contentExtractor = new ContentExtractor();
 
 export const runtime = 'edge';
 export const maxDuration = 300; // 5 minutes for complex analysis
@@ -44,20 +46,22 @@ export async function POST(
     };
     
     if (currentCount > limits[userTier]) {
-      throw new ApiError(
-        ApiErrorType.RATE_LIMIT,
-        `Rate limit exceeded. ${userTier} tier allows ${limits[userTier]} analyses per hour.`
+      return NextResponse.json(
+        { error: `Rate limit exceeded. ${userTier} tier allows ${limits[userTier]} analyses per hour.` },
+        { status: 429 }
       );
     }
 
     // Get the latest snapshot
-    const snapshot = await getLatestSnapshot(slug);
-    if (!snapshot) {
-      throw new ApiError(
-        ApiErrorType.NOT_FOUND,
-        `No privacy policy found for ${slug}`
+    const snapshots = await storage.getLatestSnapshots(slug, 1);
+    if (snapshots.length === 0) {
+      return NextResponse.json(
+        { error: `No privacy policy found for ${slug}` },
+        { status: 404 }
       );
     }
+    
+    const snapshot = snapshots[0];
 
     // Check cache for recent analysis
     const cacheKey = `analysis-advanced:${slug}:${snapshot.id}:${body.mode || 'standard'}:${userTier}`;
@@ -72,19 +76,15 @@ export async function POST(
     }
 
     // Get and extract content
-    const content = await getSnapshotContent(slug, snapshot.id);
+    const content = await storage.getSnapshotContent(snapshot.blobKey);
     if (!content) {
-      throw new ApiError(
-        ApiErrorType.SERVER_ERROR,
-        'Failed to retrieve policy content'
+      return NextResponse.json(
+        { error: 'Failed to retrieve policy content' },
+        { status: 500 }
       );
     }
 
-    const extractedText = extractTextFromHtml(content.html, {
-      includeMetadata: true,
-      preserveStructure: true,
-      includeLinks: true
-    });
+    const extractedText = contentExtractor.extractFromHtml(content);
 
     // Prepare analysis options based on mode
     const analysisOptions = {
@@ -95,7 +95,7 @@ export async function POST(
 
     // Perform orchestrated analysis
     const analysis = await aiOrchestrator.orchestrateAnalysis(
-      extractedText.text,
+      extractedText,
       slug,
       analysisOptions
     );
@@ -103,7 +103,7 @@ export async function POST(
     // Add expert prompts analysis if requested
     if (body.promptIds && body.promptIds.length > 0) {
       const expertAnalysis = await performExpertPromptsAnalysis(
-        extractedText.text,
+        content,
         body.promptIds
       );
       analysis.expertAnalysis = expertAnalysis;
@@ -152,7 +152,10 @@ export async function POST(
 
   } catch (error) {
     console.error('Advanced analysis error:', error);
-    return handleApiError(error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Analysis failed' },
+      { status: 500 }
+    );
   }
 }
 
@@ -228,12 +231,8 @@ async function compareWithPreviousVersion(
         return { available: false, message: 'Previous content not available' };
       }
 
-      const extractedText = extractTextFromHtml(previousContent.html);
-      previousAnalysis = await aiOrchestrator.orchestrateAnalysis(
-        extractedText.text,
-        slug,
-        { userTier: 'free' }
-      );
+      // For now, return unavailable for previous content comparison
+      return { available: false, message: 'Previous content comparison not yet implemented' };
     }
 
     // Compare key metrics

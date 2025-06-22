@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ApiError, ApiErrorType, handleApiError } from '@/lib/api-error';
 import { aiOrchestrator } from '@/lib/ai-orchestrator';
-import { getLatestSnapshot, getSnapshotContent } from '@/lib/db-queries';
-import { extractTextFromHtml } from '@/lib/content-extractor';
+import { ContentExtractor } from '@/lib/content-extractor';
+import { StorageClient } from '../../lib/storage';
 import { kv } from '@vercel/kv';
+
+const storage = new StorageClient();
+const contentExtractor = new ContentExtractor();
 
 export const runtime = 'edge';
 export const maxDuration = 300;
@@ -18,27 +20,26 @@ export async function POST(
     const userTier = body.userTier || 'free';
 
     // Get the latest snapshot
-    const snapshot = await getLatestSnapshot(slug);
-    if (!snapshot) {
-      throw new ApiError(
-        ApiErrorType.NOT_FOUND,
-        `No privacy policy found for ${slug}`
+    const snapshots = await storage.getLatestSnapshots(slug, 1);
+    if (snapshots.length === 0) {
+      return NextResponse.json(
+        { error: `No privacy policy found for ${slug}` },
+        { status: 404 }
       );
     }
+    
+    const snapshot = snapshots[0];
 
     // Get and extract content
-    const content = await getSnapshotContent(slug, snapshot.id);
+    const content = await storage.getSnapshotContent(snapshot.blobKey);
     if (!content) {
-      throw new ApiError(
-        ApiErrorType.SERVER_ERROR,
-        'Failed to retrieve policy content'
+      return NextResponse.json(
+        { error: 'Failed to retrieve policy content' },
+        { status: 500 }
       );
     }
 
-    const extractedText = extractTextFromHtml(content.html, {
-      includeMetadata: true,
-      preserveStructure: true
-    });
+    const extractedText = contentExtractor.extractFromHtml(content);
 
     // Create a TransformStream for SSE
     const encoder = new TextEncoder();
@@ -60,7 +61,7 @@ export async function POST(
 
         // Stream the orchestration results
         const analysisStream = aiOrchestrator.streamOrchestrationAnalysis(
-          extractedText.text,
+          extractedText,
           slug,
           {
             includeWebSearch: body.includeWebSearch,
@@ -75,7 +76,7 @@ export async function POST(
 
         // Perform the full analysis
         const fullAnalysis = await aiOrchestrator.orchestrateAnalysis(
-          extractedText.text,
+          extractedText,
           slug,
           {
             includeWebSearch: body.includeWebSearch,
@@ -126,6 +127,9 @@ export async function POST(
 
   } catch (error) {
     console.error('Advanced streaming analysis error:', error);
-    return handleApiError(error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Streaming analysis failed' },
+      { status: 500 }
+    );
   }
 }

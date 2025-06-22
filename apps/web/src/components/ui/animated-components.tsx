@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 // Animation variants
@@ -444,5 +444,3 @@ export function AnimatedFAB({
     </motion.button>
   );
 }
-
-import { useState } from 'react';
