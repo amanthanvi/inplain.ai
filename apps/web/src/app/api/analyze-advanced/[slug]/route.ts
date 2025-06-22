@@ -7,6 +7,7 @@ import { kv } from '@vercel/kv';
 import { headers } from 'next/headers';
 
 const storage = new StorageClient();
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 export const runtime = 'edge';
 export const maxDuration = 300; // 5 minutes for complex analysis
@@ -171,7 +172,10 @@ async function performExpertPromptsAnalysis(
     try {
       // Use the AIService to execute expert prompts
       const { AIService } = await import('@/app/api/lib/ai-service');
-      const aiService = new AIService();
+      if (!OPENROUTER_API_KEY) {
+        throw new Error('AI service not configured');
+      }
+      const aiService = new AIService(OPENROUTER_API_KEY);
       
       const response = await aiService.sendRequest(
         expertPrompt.modelPreferences[0],
@@ -270,7 +274,10 @@ async function performIndustryBenchmark(slug: string, analysis: any): Promise<an
 
   try {
     const { AIService } = await import('@/app/api/lib/ai-service');
-    const aiService = new AIService();
+    if (!OPENROUTER_API_KEY) {
+      return { available: false, error: 'AI service not configured' };
+    }
+    const aiService = new AIService(OPENROUTER_API_KEY);
     
     // Include web search for industry comparison
     const industryContext = await aiOrchestrator.performWebSearchEnrichment(
