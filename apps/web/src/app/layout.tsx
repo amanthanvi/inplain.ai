@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { AppStatus } from '@/components/AppStatus'
+import { Providers } from './providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -37,7 +38,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <div className="relative min-h-screen bg-background">
+        <Providers>
+          <div className="relative min-h-screen bg-background">
           <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-14 items-center">
               <div className="mr-4 flex">
@@ -82,6 +84,7 @@ export default function RootLayout({
         </div>
         <Toaster />
         <AppStatus />
+        </Providers>
       </body>
     </html>
   )

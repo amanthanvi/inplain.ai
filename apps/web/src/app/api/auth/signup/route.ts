@@ -1,21 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { kv } from '@vercel/kv'
-import crypto from 'crypto'
 import type { User } from '@/contexts/auth-context'
 
 export const runtime = 'edge'
 
-function hashPassword(password: string): string {
-	return crypto.createHash('sha256').update(password).digest('hex')
+async function hashPassword(password: string): Promise<string> {
+	const encoder = new TextEncoder()
+	const data = encoder.encode(password)
+	const hash = await crypto.subtle.digest('SHA-256', data)
+	return Array.from(new Uint8Array(hash))
+		.map(b => b.toString(16).padStart(2, '0'))
+		.join('')
 }
 
 function generateSessionToken(): string {
-	return crypto.randomBytes(32).toString('hex')
+	const array = new Uint8Array(32)
+	crypto.getRandomValues(array)
+	return Array.from(array)
+		.map(b => b.toString(16).padStart(2, '0'))
+		.join('')
 }
 
 function generateUserId(): string {
-	return crypto.randomBytes(16).toString('hex')
+	const array = new Uint8Array(16)
+	crypto.getRandomValues(array)
+	return Array.from(array)
+		.map(b => b.toString(16).padStart(2, '0'))
+		.join('')
 }
 
 export async function POST(request: NextRequest) {
@@ -41,7 +53,7 @@ export async function POST(request: NextRequest) {
 
 		// Create new user
 		const userId = generateUserId()
-		const passwordHash = hashPassword(password)
+		const passwordHash = await hashPassword(password)
 		
 		const newUser: User & { passwordHash: string } = {
 			id: userId,

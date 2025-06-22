@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { kv } from '@vercel/kv'
-import crypto from 'crypto'
 import type { User } from '@/contexts/auth-context'
 
 export const runtime = 'edge'
 
-// Simple password hashing (in production, use bcrypt or argon2)
-function hashPassword(password: string): string {
-	return crypto.createHash('sha256').update(password).digest('hex')
+// Simple password hashing using Web Crypto API
+async function hashPassword(password: string): Promise<string> {
+	const encoder = new TextEncoder()
+	const data = encoder.encode(password)
+	const hash = await crypto.subtle.digest('SHA-256', data)
+	return Array.from(new Uint8Array(hash))
+		.map(b => b.toString(16).padStart(2, '0'))
+		.join('')
 }
 
 function generateSessionToken(): string {
-	return crypto.randomBytes(32).toString('hex')
+	const array = new Uint8Array(32)
+	crypto.getRandomValues(array)
+	return Array.from(array)
+		.map(b => b.toString(16).padStart(2, '0'))
+		.join('')
 }
 
 export async function POST(request: NextRequest) {
@@ -46,7 +54,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Verify password
-		const passwordHash = hashPassword(password)
+		const passwordHash = await hashPassword(password)
 		if (passwordHash !== user.passwordHash) {
 			return NextResponse.json(
 				{ message: 'Invalid email or password' },

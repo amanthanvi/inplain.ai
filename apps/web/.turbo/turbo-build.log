@@ -9,33 +9,40 @@
    Linting and checking validity of types ...
    Collecting page data ...
  ⚠ Using edge runtime on a page currently disables static generation for that page
-   Generating static pages (0/10) ...
-   Generating static pages (2/10) 
-   Generating static pages (4/10) 
-   Generating static pages (7/10) 
- ✓ Generating static pages (10/10)
+   Generating static pages (0/11) ...
+   Generating static pages (2/11) 
+   Generating static pages (5/11) 
+   Generating static pages (8/11) 
+ ✓ Generating static pages (11/11)
    Finalizing page optimization ...
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
 ┌ ○ /                                    3.06 kB         133 kB
 ├ ○ /_not-found                          901 B           100 kB
-├ ƒ /[slug]                              283 kB          403 kB
+├ ƒ /[slug]                              279 kB          404 kB
+├ ƒ /[slug]/analytics                    9.1 kB          127 kB
 ├ ○ /about                               173 B           109 kB
-├ ƒ /api/analyze-stream/[slug]           169 B          99.6 kB
-├ ƒ /api/analyze/[slug]                  169 B          99.6 kB
-├ ƒ /api/cron/monitor                    169 B          99.6 kB
-├ ƒ /api/debug                           169 B          99.6 kB
-├ ƒ /api/debug-monitor                   169 B          99.6 kB
-├ ƒ /api/debug/ai-test                   169 B          99.6 kB
-├ ƒ /api/diff/[slug]                     169 B          99.6 kB
-├ ƒ /api/diff/[slug]/history             169 B          99.6 kB
-├ ƒ /api/diffs                           169 B          99.6 kB
-├ ƒ /api/feed                            169 B          99.6 kB
-├ ƒ /api/models                          169 B          99.6 kB
-├ ƒ /api/snapshot/[slug]                 169 B          99.6 kB
-├ ƒ /api/summary/[slug]                  169 B          99.6 kB
-└ ƒ /api/test-fetch                      169 B          99.6 kB
+├ ƒ /api/analytics/[slug]                180 B          99.6 kB
+├ ƒ /api/analyze-stream/[slug]           180 B          99.6 kB
+├ ƒ /api/analyze/[slug]                  180 B          99.6 kB
+├ ƒ /api/auth/login                      180 B          99.6 kB
+├ ƒ /api/auth/session                    180 B          99.6 kB
+├ ƒ /api/auth/signup                     180 B          99.6 kB
+├ ƒ /api/cron/monitor                    180 B          99.6 kB
+├ ƒ /api/debug                           180 B          99.6 kB
+├ ƒ /api/debug-monitor                   180 B          99.6 kB
+├ ƒ /api/debug/ai-test                   180 B          99.6 kB
+├ ƒ /api/diff/[slug]                     180 B          99.6 kB
+├ ƒ /api/diff/[slug]/history             180 B          99.6 kB
+├ ƒ /api/diffs                           180 B          99.6 kB
+├ ƒ /api/feed                            180 B          99.6 kB
+├ ƒ /api/models                          180 B          99.6 kB
+├ ƒ /api/search                          180 B          99.6 kB
+├ ƒ /api/snapshot/[slug]                 180 B          99.6 kB
+├ ƒ /api/summary/[slug]                  180 B          99.6 kB
+├ ƒ /api/test-fetch                      180 B          99.6 kB
+└ ○ /dashboard                           13.5 kB         127 kB
 + First Load JS shared by all            99.4 kB
   ├ chunks/765-f337bc1eebbbea6f.js       44.9 kB
   ├ chunks/87c73c54-62d74556516f2b2a.js  52.6 kB
