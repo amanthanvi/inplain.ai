@@ -57,7 +57,7 @@ export const AI_MODELS: AIModel[] = [
     contextLength: 1048576,
     costPer1kTokens: { input: 0.0375, output: 0.15 },
     recommended: true,
-    specialization: 'general',
+    specialization: 'general' as const,
     supportsStreaming: true,
     supportsWebSearch: false
   },
@@ -68,7 +68,7 @@ export const AI_MODELS: AIModel[] = [
     contextLength: 128000,
     costPer1kTokens: { input: 0.15, output: 0.6 },
     recommended: true,
-    specialization: 'general',
+    specialization: 'general' as const,
     supportsStreaming: true,
     supportsWebSearch: false
   },
@@ -80,7 +80,7 @@ export const AI_MODELS: AIModel[] = [
     provider: 'Meta',
     contextLength: 131000,
     costPer1kTokens: { input: 0.59, output: 0.79 },
-    specialization: 'general',
+    specialization: 'general' as const,
     supportsStreaming: true,
     supportsWebSearch: false
   },
@@ -91,7 +91,7 @@ export const AI_MODELS: AIModel[] = [
     contextLength: 1048576,
     costPer1kTokens: { input: 0.075, output: 0.3 },
     recommended: true,
-    specialization: 'technical',
+    specialization: 'technical' as const,
     supportsStreaming: true,
     supportsWebSearch: false
   },
@@ -103,7 +103,7 @@ export const AI_MODELS: AIModel[] = [
     provider: 'Anthropic',
     contextLength: 200000,
     costPer1kTokens: { input: 3.0, output: 15.0 },
-    specialization: 'legal',
+    specialization: 'legal' as const,
     supportsStreaming: true,
     supportsWebSearch: false,
     recommended: true
@@ -114,7 +114,7 @@ export const AI_MODELS: AIModel[] = [
     provider: 'OpenAI',
     contextLength: 128000,
     costPer1kTokens: { input: 10.0, output: 30.0 },
-    specialization: 'financial',
+    specialization: 'financial' as const,
     supportsStreaming: true,
     supportsWebSearch: false
   },
@@ -126,7 +126,7 @@ export const AI_MODELS: AIModel[] = [
     provider: 'OpenAI',
     contextLength: 128000,
     costPer1kTokens: { input: 15.0, output: 60.0 },
-    specialization: 'reasoning',
+    specialization: 'reasoning' as const,
     supportsStreaming: false,
     supportsWebSearch: false
   },
@@ -136,7 +136,7 @@ export const AI_MODELS: AIModel[] = [
     provider: 'DeepSeek',
     contextLength: 131072,
     costPer1kTokens: { input: 1.0, output: 3.0 },
-    specialization: 'reasoning',
+    specialization: 'reasoning' as const,
     supportsStreaming: true,
     supportsWebSearch: false
   },
@@ -148,7 +148,7 @@ export const AI_MODELS: AIModel[] = [
     provider: 'Perplexity',
     contextLength: 127072,
     costPer1kTokens: { input: 1.0, output: 1.0 },
-    specialization: 'general',
+    specialization: 'general' as const,
     supportsStreaming: true,
     supportsWebSearch: true
   },
@@ -158,7 +158,7 @@ export const AI_MODELS: AIModel[] = [
     provider: 'OpenAI',
     contextLength: 128000,
     costPer1kTokens: { input: 2.5, output: 10.0 },
-    specialization: 'general',
+    specialization: 'general' as const,
     supportsStreaming: true,
     supportsWebSearch: true
   },
@@ -170,7 +170,7 @@ export const AI_MODELS: AIModel[] = [
     provider: 'Google',
     contextLength: 1048576,
     costPer1kTokens: { input: 3.5, output: 14.0 },
-    specialization: 'general',
+    specialization: 'general' as const,
     supportsStreaming: true,
     supportsWebSearch: false
   },
@@ -181,7 +181,7 @@ export const AI_MODELS: AIModel[] = [
     contextLength: 1047576,
     costPer1kTokens: { input: 2.5, output: 10.0 },
     recommended: true,
-    specialization: 'general',
+    specialization: 'general' as const,
     supportsStreaming: true,
     supportsWebSearch: false
   }

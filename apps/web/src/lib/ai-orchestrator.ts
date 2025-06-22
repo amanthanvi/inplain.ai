@@ -1,5 +1,4 @@
 import { AIService, PolicyAnalysisService } from '@/app/api/lib/ai-service';
-import { ApiError, ApiErrorType } from '@/lib/api-error';
 
 interface ModelCapability {
   id: string;
@@ -33,10 +32,15 @@ export class AIOrchestrator {
   private aiService: AIService;
   private policyService: PolicyAnalysisService;
   private modelCapabilities: Map<string, ModelCapability>;
+  private readonly apiKey: string;
 
-  constructor() {
-    this.aiService = new AIService();
-    this.policyService = new PolicyAnalysisService();
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || process.env.OPENROUTER_API_KEY || '';
+    if (!this.apiKey) {
+      throw new Error('OpenRouter API key is required');
+    }
+    this.aiService = new AIService(this.apiKey);
+    this.policyService = new PolicyAnalysisService(this.apiKey);
     this.modelCapabilities = this.initializeModelCapabilities();
   }
 
@@ -270,7 +274,7 @@ export class AIOrchestrator {
     return alternatives[0] || this.modelCapabilities.get('google/gemini-2.5-flash-preview')!;
   }
 
-  private async performWebSearchEnrichment(
+  async performWebSearchEnrichment(
     companySlug: string,
     content: string
   ): Promise<WebSearchResult[]> {
@@ -604,4 +608,6 @@ Return as JSON with clear structure.`;
 }
 
 // Export singleton instance
-export const aiOrchestrator = new AIOrchestrator();
+export const aiOrchestrator = process.env.OPENROUTER_API_KEY 
+  ? new AIOrchestrator(process.env.OPENROUTER_API_KEY)
+  : null;

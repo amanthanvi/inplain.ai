@@ -94,6 +94,9 @@ export async function POST(
     };
 
     // Perform orchestrated analysis
+    if (!aiOrchestrator) {
+      throw new Error('AI orchestrator not initialized');
+    }
     const analysis = await aiOrchestrator.orchestrateAnalysis(
       extractedText.text,
       slug,
@@ -177,8 +180,9 @@ async function performExpertPromptsAnalysis(
       }
       const aiService = new AIService(OPENROUTER_API_KEY);
       
+      const model = expertPrompt.modelPreferences[0] || 'google/gemini-2.5-flash-preview-05-20';
       const response = await aiService.sendRequest(
-        expertPrompt.modelPreferences[0],
+        model,
         expertPrompt.prompt,
         {
           temperature: expertPrompt.temperature,
@@ -225,11 +229,11 @@ async function compareWithPreviousVersion(
     
     // Get previous analysis from cache or generate
     const previousCacheKey = `analysis-advanced:${slug}:${previousSnapshotId}:standard:free`;
-    let previousAnalysis = await kv.get(previousCacheKey);
+    let previousAnalysis = await kv.get(previousCacheKey) as any;
 
     if (!previousAnalysis) {
       // Generate quick analysis for previous version
-      const previousContent = await getSnapshotContent(slug, previousSnapshotId as string);
+      const previousContent = await storage.getSnapshotContent(previousSnapshotId as string);
       if (!previousContent) {
         return { available: false, message: 'Previous content not available' };
       }
@@ -243,14 +247,14 @@ async function compareWithPreviousVersion(
       available: true,
       changes: {
         privacy_score: {
-          previous: previousAnalysis.overallScores?.privacy || 0,
+          previous: previousAnalysis?.overallScores?.privacy || 0,
           current: currentAnalysis.overallScores?.privacy || 0,
-          change: (currentAnalysis.overallScores?.privacy || 0) - (previousAnalysis.overallScores?.privacy || 0)
+          change: (currentAnalysis.overallScores?.privacy || 0) - (previousAnalysis?.overallScores?.privacy || 0)
         },
         compliance_score: {
-          previous: previousAnalysis.overallScores?.compliance || 0,
+          previous: previousAnalysis?.overallScores?.compliance || 0,
           current: currentAnalysis.overallScores?.compliance || 0,
-          change: (currentAnalysis.overallScores?.compliance || 0) - (previousAnalysis.overallScores?.compliance || 0)
+          change: (currentAnalysis.overallScores?.compliance || 0) - (previousAnalysis?.overallScores?.compliance || 0)
         },
         new_data_types: findNewDataTypes(previousAnalysis, currentAnalysis),
         removed_rights: findRemovedRights(previousAnalysis, currentAnalysis),
@@ -280,6 +284,9 @@ async function performIndustryBenchmark(slug: string, analysis: any): Promise<an
     const aiService = new AIService(OPENROUTER_API_KEY);
     
     // Include web search for industry comparison
+    if (!aiOrchestrator) {
+      return { available: false, error: 'AI orchestrator not configured' };
+    }
     const industryContext = await aiOrchestrator.performWebSearchEnrichment(
       slug,
       `${slug} competitors privacy policy comparison industry standards`
@@ -372,9 +379,9 @@ function calculateComprehensiveScores(analysis: any): any {
 function generateExecutiveSummary(analysis: any): any {
   const summary = {
     headline: '',
-    key_findings: [],
+    key_findings: [] as string[],
     risk_level: '',
-    recommended_actions: [],
+    recommended_actions: [] as string[],
     bottom_line: ''
   };
 
@@ -424,14 +431,14 @@ function generateExecutiveSummary(analysis: any): any {
 
 // Helper functions
 function findNewDataTypes(previous: any, current: any): string[] {
-  const prevTypes = new Set(previous.data_practices?.data_types || []);
-  const currTypes = new Set(current.data_practices?.data_types || []);
+  const prevTypes = new Set<string>(previous.data_practices?.data_types || []);
+  const currTypes = new Set<string>(current.data_practices?.data_types || []);
   return Array.from(currTypes).filter(t => !prevTypes.has(t));
 }
 
 function findRemovedRights(previous: any, current: any): string[] {
-  const prevRights = new Set(previous.user_rights?.rights?.map((r: any) => r.name) || []);
-  const currRights = new Set(current.user_rights?.rights?.map((r: any) => r.name) || []);
+  const prevRights = new Set<string>(previous.user_rights?.rights?.map((r: any) => r.name) || []);
+  const currRights = new Set<string>(current.user_rights?.rights?.map((r: any) => r.name) || []);
   return Array.from(prevRights).filter(r => !currRights.has(r));
 }
 
