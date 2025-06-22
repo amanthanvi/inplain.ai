@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { StorageClient } from '../../lib/storage'
+import { OptimizedStorageClient } from '../../lib/storage-optimized'
+import { PerformanceMonitor } from '@/lib/performance'
 
-const storage = new StorageClient()
+const storage = new OptimizedStorageClient()
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const end = PerformanceMonitor.startMeasure('api:snapshot:get');
+  
   try {
     const { slug } = await params
     
     // Get the latest snapshot
-    const snapshots = await storage.getLatestSnapshots(slug, 1)
+    const snapshots = await PerformanceMonitor.measure(
+      'storage:getLatestSnapshots',
+      () => storage.getLatestSnapshots(slug, 1)
+    )
     
     if (snapshots.length === 0) {
       return NextResponse.json(
@@ -64,5 +70,7 @@ export async function GET(
       { error: 'Internal server error' },
       { status: 500 }
     )
+  } finally {
+    end()
   }
 }

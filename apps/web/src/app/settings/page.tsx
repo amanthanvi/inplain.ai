@@ -13,10 +13,16 @@ import {
   AlertCircle,
   Check,
   Copy,
-  RefreshCw
+  RefreshCw,
+  Activity
 } from 'lucide-react';
 import { AnimatedCard, AnimatedButton } from '@/components/ui/animated-components';
 import { useThemeStore } from '@/lib/theme-system';
+import dynamic from 'next/dynamic';
+
+const PerformanceDashboard = dynamic(() => import('@/components/performance-dashboard').then(mod => mod.PerformanceDashboard), {
+  ssr: false
+});
 
 interface UserSettings {
   email: string;
@@ -416,6 +422,18 @@ export default function SettingsPage() {
             </AnimatedButton>
           </div>
         </AnimatedCard>
+
+        {/* Performance Dashboard (Enterprise only) */}
+        {settings.tier === 'enterprise' && (
+          <AnimatedCard className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Activity className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Performance Metrics</h2>
+            </div>
+            
+            <PerformanceDashboard />
+          </AnimatedCard>
+        )}
       </div>
     </div>
   );

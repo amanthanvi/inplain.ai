@@ -7,50 +7,19 @@
    Creating an optimized production build ...
  ✓ Compiled successfully
    Linting and checking validity of types ...
-   Collecting page data ...
- ⚠ Using edge runtime on a page currently disables static generation for that page
-   Generating static pages (0/11) ...
-   Generating static pages (2/11) 
-   Generating static pages (5/11) 
-   Generating static pages (8/11) 
- ✓ Generating static pages (11/11)
-   Finalizing page optimization ...
-   Collecting build traces ...
+Failed to compile.
 
-Route (app)                              Size     First Load JS
-┌ ○ /                                    3.06 kB         133 kB
-├ ○ /_not-found                          901 B           100 kB
-├ ƒ /[slug]                              279 kB          404 kB
-├ ƒ /[slug]/analytics                    9.1 kB          127 kB
-├ ○ /about                               173 B           109 kB
-├ ƒ /api/analytics/[slug]                188 B          99.6 kB
-├ ƒ /api/analyze-advanced-stream/[slug]  188 B          99.6 kB
-├ ƒ /api/analyze-advanced/[slug]         188 B          99.6 kB
-├ ƒ /api/analyze-stream/[slug]           188 B          99.6 kB
-├ ƒ /api/analyze/[slug]                  188 B          99.6 kB
-├ ƒ /api/auth/login                      188 B          99.6 kB
-├ ƒ /api/auth/session                    188 B          99.6 kB
-├ ƒ /api/auth/signup                     188 B          99.6 kB
-├ ƒ /api/cron/monitor                    188 B          99.6 kB
-├ ƒ /api/debug                           188 B          99.6 kB
-├ ƒ /api/debug-monitor                   188 B          99.6 kB
-├ ƒ /api/debug/ai-test                   188 B          99.6 kB
-├ ƒ /api/diff/[slug]                     188 B          99.6 kB
-├ ƒ /api/diff/[slug]/history             188 B          99.6 kB
-├ ƒ /api/diffs                           188 B          99.6 kB
-├ ƒ /api/feed                            188 B          99.6 kB
-├ ƒ /api/models                          188 B          99.6 kB
-├ ƒ /api/search                          188 B          99.6 kB
-├ ƒ /api/snapshot/[slug]                 188 B          99.6 kB
-├ ƒ /api/summary/[slug]                  188 B          99.6 kB
-├ ƒ /api/test-fetch                      188 B          99.6 kB
-└ ○ /dashboard                           13.5 kB         127 kB
-+ First Load JS shared by all            99.4 kB
-  ├ chunks/765-f337bc1eebbbea6f.js       44.9 kB
-  ├ chunks/87c73c54-62d74556516f2b2a.js  52.6 kB
-  └ other shared chunks (total)          1.92 kB
+./src/lib/analytics/industry-benchmark.ts:189:69
+Type error: 'industryStandards' is possibly 'undefined'.
 
-
-○  (Static)   prerendered as static content
-ƒ  (Dynamic)  server-rendered on demand
-
+[0m [90m 187 |[39m     [36mreturn[39m {[0m
+[0m [90m 188 |[39m       overall[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(overallScore[33m,[39m [35m75[39m))[33m,[39m[0m
+[0m[31m[1m>[22m[39m[90m 189 |[39m       privacy[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(metrics[33m.[39mprivacyScore[33m,[39m industryStandards[33m.[39mprivacyScore[33m![39m))[33m,[39m[0m
+[0m [90m     |[39m                                                                     [31m[1m^[22m[39m[0m
+[0m [90m 190 |[39m       transparency[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(metrics[33m.[39mtransparencyScore[33m,[39m industryStandards[33m.[39mtransparencyScore[33m![39m))[33m,[39m[0m
+[0m [90m 191 |[39m       userRights[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(metrics[33m.[39muserRightsScore[33m,[39m industryStandards[33m.[39muserRightsScore[33m![39m))[33m,[39m[0m
+[0m [90m 192 |[39m       dataProtection[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(metrics[33m.[39mdataProtectionScore[33m,[39m industryStandards[33m.[39mdataProtectionScore[33m![39m))[0m
+npm ERR! Lifecycle script `build` failed with error: 
+npm ERR! Error: command failed 
+npm ERR!   in workspace: @policydiff/web@1.0.0 
+npm ERR!   at location: /Users/amanthanvi/GitRepos/my_security_policy_app/apps/web 
