@@ -61,7 +61,7 @@ export async function POST(
       );
     }
     
-    const snapshot = snapshots[0];
+    const snapshot = snapshots[0]!; // We know it exists because we checked length
 
     // Check cache for recent analysis
     const cacheKey = `analysis-advanced:${slug}:${snapshot.id}:${body.mode || 'standard'}:${userTier}`;
