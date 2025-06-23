@@ -84,6 +84,20 @@ const ENV_VARS: Record<string, EnvVarConfig> = {
     clientSafe: false
   },
   
+  // Clerk Authentication
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: {
+    name: 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
+    required: true,
+    description: 'Clerk publishable key for authentication',
+    clientSafe: true
+  },
+  CLERK_SECRET_KEY: {
+    name: 'CLERK_SECRET_KEY',
+    required: true,
+    description: 'Clerk secret key for server-side authentication',
+    clientSafe: false
+  },
+  
   // Public Environment Variables
   NEXT_PUBLIC_API_URL: {
     name: 'NEXT_PUBLIC_API_URL',

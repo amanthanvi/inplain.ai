@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/contexts/auth-context'
 import { cn } from '@/lib/utils'
 import { 
   User, LogOut, Settings, ChevronDown, 
@@ -21,15 +20,23 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { 
+  SignInButton, 
+  SignUpButton, 
+  UserButton, 
+  SignedIn, 
+  SignedOut, 
+  useUser 
+} from '@clerk/nextjs'
 
 export function Navigation() {
   const pathname = usePathname()
-  const { user, isLoading, isAuthenticated, logout } = useAuth()
+  const { user, isLoaded } = useUser()
   const [notifications, setNotifications] = useState<Notification[]>([])
   
   // Simulate real-time notifications (in production, this would connect to WebSocket or SSE)
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!user) return
     
     // Check for new policy changes every 30 seconds
     const checkForUpdates = async () => {
@@ -70,15 +77,7 @@ export function Navigation() {
     const interval = setInterval(checkForUpdates, 30000)
     
     return () => clearInterval(interval)
-  }, [isAuthenticated])
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
-  }
+  }, [user])
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: Home },
@@ -86,7 +85,7 @@ export function Navigation() {
   ]
 
   // Add authenticated-only nav items
-  if (isAuthenticated) {
+  if (user) {
     navItems.push(
       { href: '/watchlist', label: 'My Watchlist', icon: Bell },
       { href: '/settings', label: 'Settings', icon: Settings }
@@ -119,87 +118,43 @@ export function Navigation() {
         </div>
         
         <div className="ml-auto flex items-center space-x-4">
-          {isLoading ? (
+          {!isLoaded ? (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          ) : isAuthenticated && user ? (
-            <>
-              <NotificationCenter 
-                notifications={notifications}
-                onNotificationRead={(id) => {
-                  setNotifications(prev => 
-                    prev.map(n => n.id === id ? { ...n, read: true } : n)
-                  )
-                }}
-                onNotificationDismiss={(id) => {
-                  setNotifications(prev => prev.filter(n => n.id !== id))
-                }}
-              />
-              <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback>
-                      {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                    <Badge variant="outline" className="mt-2 w-fit text-xs">
-                      {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)} Plan
-                    </Badge>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard">
-                    <Home className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/watchlist">
-                    <Bell className="mr-2 h-4 w-4" />
-                    My Watchlist
-                    {user.preferences.watchlist.length > 0 && (
-                      <Badge variant="secondary" className="ml-auto">
-                        {user.preferences.watchlist.length}
-                      </Badge>
-                    )}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={handleLogout}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link href="/signup">Get Started</Link>
-              </Button>
+              <SignedIn>
+                <NotificationCenter 
+                  notifications={notifications}
+                  onNotificationRead={(id) => {
+                    setNotifications(prev => 
+                      prev.map(n => n.id === id ? { ...n, read: true } : n)
+                    )
+                  }}
+                  onNotificationDismiss={(id) => {
+                    setNotifications(prev => prev.filter(n => n.id !== id))
+                  }}
+                />
+                <UserButton 
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8"
+                    }
+                  }}
+                />
+              </SignedIn>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button size="sm">
+                    Get Started
+                  </Button>
+                </SignUpButton>
+              </SignedOut>
             </>
           )}
         </div>

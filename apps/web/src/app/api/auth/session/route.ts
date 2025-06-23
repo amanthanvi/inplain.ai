@@ -1,45 +1,44 @@
 import { NextResponse } from 'next/server'
-import { AuthService } from '@/lib/auth'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
+import { auth, currentUser } from '@clerk/nextjs/server'
 
 export const runtime = 'edge'
 
 export async function GET() {
 	try {
-		const user = await AuthService.getCurrentUser()
-
-		if (!user) {
+		const { userId } = await auth()
+		
+		if (!userId) {
 			return NextResponse.json({ user: null }, { status: 401 })
 		}
+
+		const clerkUser = await currentUser()
 		
-		// Add dev auth headers if enabled
-		const headers = new Headers()
-		if (isDevAuthEnabled() && user.id === 'dev-user-123') {
-			headers.set('X-Dev-Auth-Active', 'true')
-			headers.set('X-Dev-Auth-Warning', 'Authentication bypassed for development')
+		if (!clerkUser) {
+			return NextResponse.json({ user: null }, { status: 401 })
 		}
 
-		// Transform the user object to match the expected format
-		// Map from auth.ts User type to auth-context User type
+		// Transform Clerk user to our app's user format
 		const transformedUser = {
-			id: user.id,
-			email: user.email,
-			name: user.name || user.email.split('@')[0],
-			avatar: null,
-			plan: user.tier || 'free',
-			usage: {
-				policies: user.customWatchlists?.length || 0,
-				alerts: user.emailAlerts ? 1 : 0,
-				aiSummaries: user.usage?.analysisCount || 0
-			},
+			id: clerkUser.id,
+			email: clerkUser.emailAddresses[0]?.emailAddress || '',
+			name: clerkUser.firstName && clerkUser.lastName 
+				? `${clerkUser.firstName} ${clerkUser.lastName}`
+				: clerkUser.firstName || clerkUser.emailAddresses[0]?.emailAddress.split('@')[0] || 'User',
+			avatar: clerkUser.imageUrl,
+			plan: (clerkUser.publicMetadata?.plan as string) || 'free',
 			preferences: {
-				notifications: true,
-				theme: 'system' as const,
-				language: 'en'
-			}
+				watchlist: (clerkUser.publicMetadata?.watchlist as string[]) || [],
+				notifications: {
+					email: (clerkUser.publicMetadata?.emailNotifications as boolean) ?? true,
+					majorChanges: (clerkUser.publicMetadata?.majorChangesOnly as boolean) ?? true,
+					weeklyDigest: (clerkUser.publicMetadata?.weeklyDigest as boolean) ?? false,
+				},
+				theme: (clerkUser.publicMetadata?.theme as 'light' | 'dark' | 'system') || 'system'
+			},
+			createdAt: new Date(clerkUser.createdAt)
 		}
 
-		return NextResponse.json({ user: transformedUser }, { headers })
+		return NextResponse.json({ user: transformedUser })
 
 	} catch (error) {
 		console.error('Session check error:', error)
