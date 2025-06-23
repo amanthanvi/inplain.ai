@@ -212,4 +212,6 @@ declare const CHANGE_TYPES: {
 };
 declare function calculateChangeType(additions: number, deletions: number, total: number): 'minor' | 'moderate' | 'major';
 
-export { CHANGE_TYPES, type Company, CompanySchema, type CrawlJob, CrawlJobSchema, type DiffMeta, DiffMetaSchema, RISK_LEVELS, type SnapshotMeta, SnapshotMetaSchema, type Summary, SummarySchema, calculateChangeType, extractDomain, formatDuration, formatTimestamp, getTimeDiff, hashContent, normalizeUrl, parseTimestamp, slugify, truncate };
+declare const WATCHED_COMPANIES: Company[];
+
+export { CHANGE_TYPES, type Company, CompanySchema, type CrawlJob, CrawlJobSchema, type DiffMeta, DiffMetaSchema, RISK_LEVELS, type SnapshotMeta, SnapshotMetaSchema, type Summary, SummarySchema, WATCHED_COMPANIES, calculateChangeType, extractDomain, formatDuration, formatTimestamp, getTimeDiff, hashContent, normalizeUrl, parseTimestamp, slugify, truncate };

@@ -61,7 +61,7 @@ export async function GET() {
   if (process.env.NODE_ENV === 'development') {
     health.environment = {
       ...health.environment,
-      details: getSafeEnvInfo()
+      ...getSafeEnvInfo()
     };
   }
   

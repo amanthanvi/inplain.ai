@@ -7,7 +7,7 @@ export class StorageClient {
   }
 
   async getLatestSnapshots(slug: string, limit = 2): Promise<SnapshotMeta[]> {
-    const keys = await kv.zrange<string[]>(`snapshots:${slug}`, -limit, -1)
+    const keys = await kv.zrange<string>(`snapshots:${slug}`, -limit, -1)
     if (!keys.length) return []
     
     const snapshots = await Promise.all(
@@ -57,7 +57,7 @@ export class StorageClient {
   }
 
   async getLatestDiffs(slug: string, limit = 10): Promise<DiffMeta[]> {
-    const keys = await kv.zrange<string[]>(`diffs:${slug}`, -limit, -1)
+    const keys = await kv.zrange<string>(`diffs:${slug}`, -limit, -1)
     if (!keys.length) return []
     
     const diffs = await Promise.all(

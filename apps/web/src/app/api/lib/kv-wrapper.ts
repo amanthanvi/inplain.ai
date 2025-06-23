@@ -120,7 +120,7 @@ let configError: string | null = null
  * Get KV client instance with automatic fallback
  */
 export function getKV(): KVClient {
-  if (kvInstance) return kvInstance
+  if (kvInstance) return kvInstance as KVClient
   
   const kvUrl = getEnvVar('KV_REST_API_URL')
   const kvToken = getEnvVar('KV_REST_API_TOKEN')
@@ -137,7 +137,7 @@ export function getKV(): KVClient {
     const { kv } = require('@vercel/kv')
     kvInstance = kv
     isConfigured = true
-    return kvInstance
+    return kvInstance as KVClient
   } catch (error) {
     console.error('Failed to initialize KV client:', error)
     console.warn('Falling back to in-memory mock')
