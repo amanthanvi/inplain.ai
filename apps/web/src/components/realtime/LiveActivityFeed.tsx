@@ -89,11 +89,11 @@ export function LiveActivityFeed({
       }
     }
     
-    const template = activityTemplates[type]
+    const template = activityTemplates[type as keyof typeof activityTemplates] || activityTemplates['system']
     
     return {
       id: `activity-${Date.now()}-${Math.random()}`,
-      type,
+      type: type || 'system',
       timestamp: new Date().toISOString(),
       title: template.title,
       description: template.description,
@@ -102,7 +102,7 @@ export function LiveActivityFeed({
       metadata: {
         company: companies[Math.floor(Math.random() * companies.length)],
         user: showGlobalActivity ? {
-          name: userNames[Math.floor(Math.random() * userNames.length)]
+          name: userNames[Math.floor(Math.random() * userNames.length)] || 'Anonymous User'
         } : undefined,
         changeType: type === 'policy-update' ? ['major', 'moderate', 'minor'][Math.floor(Math.random() * 3)] : undefined,
         riskLevel: type === 'risk-alert' ? 'high' : undefined,

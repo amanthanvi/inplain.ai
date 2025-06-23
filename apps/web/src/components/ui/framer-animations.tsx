@@ -65,7 +65,7 @@ export const springConfig = {
 }
 
 export const smoothSpring = {
-  type: "spring",
+  type: "spring" as const,
   stiffness: 100,
   damping: 20
 }
