@@ -37,6 +37,14 @@ export async function GET(
 
     const [toSnapshot, fromSnapshot] = snapshots
     
+    // Type guard to ensure snapshots are defined
+    if (!fromSnapshot || !toSnapshot) {
+      return NextResponse.json(
+        { error: 'Invalid snapshot data' },
+        { status: 500 }
+      )
+    }
+    
     const [oldContent, newContent] = await Promise.all([
       storage.getSnapshotContent(fromSnapshot.blobKey),
       storage.getSnapshotContent(toSnapshot.blobKey)

@@ -130,13 +130,13 @@ ESM Build start
 
 
 
-CJS dist/index.js     7.78 KB
-CJS dist/index.js.map 15.81 KB
-CJS ⚡️ Build success in 75ms
 ESM dist/index.mjs     7.13 KB
 ESM dist/index.mjs.map 15.75 KB
-ESM ⚡️ Build success in 75ms
+ESM ⚡️ Build success in 72ms
+CJS dist/index.js     7.78 KB
+CJS dist/index.js.map 15.81 KB
+CJS ⚡️ Build success in 72ms
 DTS Build start
-DTS ⚡️ Build success in 1264ms
+DTS ⚡️ Build success in 1263ms
 DTS dist/index.d.ts  6.99 KB
 DTS dist/index.d.mts 6.99 KB
