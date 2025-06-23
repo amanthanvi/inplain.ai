@@ -81,9 +81,11 @@ const nextConfig = {
   // Experimental features for performance
   experimental: {
     // Remove deprecated options
-    optimizePackageImports: ['framer-motion', 'lucide-react', '@vercel/kv'],
-    serverComponentsExternalPackages: ['@vercel/kv', 'resend'],
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
   },
+  
+  // Server external packages
+  serverExternalPackages: ['@vercel/kv', 'resend'],
   
   // Webpack optimizations
   webpack: (config, { isServer }) => {

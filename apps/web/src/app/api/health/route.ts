@@ -1,36 +1,76 @@
 import { NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { kv, isKVConfigured, getKVConfigError } from '../lib/kv-wrapper';
+import { getEnvStatus, getAppMode, getSafeEnvInfo } from '@/lib/env';
+import { isDevAuthEnabled } from '@/lib/dev-auth';
 
 export async function GET() {
+  const envStatus = getEnvStatus();
+  const appMode = getAppMode();
+  
   const health = {
     status: 'ok',
     timestamp: new Date().toISOString(),
+    mode: appMode,
     environment: {
       NODE_ENV: process.env.NODE_ENV,
-      hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
-      hasKVUrl: !!process.env.KV_REST_API_URL,
-      hasKVToken: !!process.env.KV_REST_API_TOKEN,
-      hasCronSecret: !!process.env.CRON_SECRET,
-      defaultModel: process.env.DEFAULT_AI_MODEL || 'not-set'
+      appMode,
+      devAuthEnabled: isDevAuthEnabled(),
+      configured: envStatus.isConfigured,
+      missingRequired: envStatus.missingRequired,
+      missingOptional: envStatus.missingOptional,
+      warnings: envStatus.warnings
     },
     services: {
-      kv: false,
-      ai: false
+      kv: {
+        configured: isKVConfigured(),
+        healthy: false,
+        error: getKVConfigError()
+      },
+      ai: {
+        configured: !!process.env.OPENROUTER_API_KEY,
+        model: process.env.DEFAULT_AI_MODEL || 'google/gemini-2.5-flash-preview-05-20'
+      },
+      storage: {
+        blobConfigured: !!process.env.BLOB_READ_WRITE_TOKEN
+      }
     }
   };
 
-  // Test KV connection
-  try {
-    await kv.ping();
-    health.services.kv = true;
-  } catch (error) {
-    console.error('KV connection failed:', error);
+  // Test KV connection if configured
+  if (isKVConfigured()) {
+    try {
+      // Test basic operation
+      await kv.set('health:check', Date.now(), { ex: 60 });
+      const value = await kv.get('health:check');
+      health.services.kv.healthy = !!value;
+    } catch (error) {
+      console.error('KV health check failed:', error);
+      health.services.kv.error = error instanceof Error ? error.message : 'Unknown error';
+    }
   }
 
-  // Test AI service configuration
-  health.services.ai = !!process.env.OPENROUTER_API_KEY;
-
-  const statusCode = health.services.kv && health.services.ai ? 200 : 503;
+  // Determine overall health status
+  const isHealthy = appMode === 'development' || 
+    (health.services.kv.healthy && health.services.ai.configured) ||
+    appMode === 'demo';
   
-  return NextResponse.json(health, { status: statusCode });
+  health.status = isHealthy ? 'ok' : 'degraded';
+  const statusCode = isHealthy ? 200 : 503;
+  
+  // Add safe environment info in development
+  if (process.env.NODE_ENV === 'development') {
+    health.environment = {
+      ...health.environment,
+      details: getSafeEnvInfo()
+    };
+  }
+  
+  return NextResponse.json(health, { 
+    status: statusCode,
+    headers: {
+      'Cache-Control': 'no-store',
+      'X-App-Mode': appMode,
+      'X-Dev-Auth': isDevAuthEnabled() ? 'enabled' : 'disabled'
+    }
+  });
 }

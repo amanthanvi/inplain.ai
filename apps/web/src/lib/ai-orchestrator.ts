@@ -1,4 +1,5 @@
 import { AIService, PolicyAnalysisService } from '@/app/api/lib/ai-service';
+import { getEnvVar } from '@/lib/env';
 
 interface ModelCapability {
   id: string;
@@ -35,7 +36,7 @@ export class AIOrchestrator {
   private readonly apiKey: string;
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || process.env.OPENROUTER_API_KEY || '';
+    this.apiKey = apiKey || getEnvVar('OPENROUTER_API_KEY') || '';
     if (!this.apiKey) {
       throw new Error('OpenRouter API key is required');
     }
