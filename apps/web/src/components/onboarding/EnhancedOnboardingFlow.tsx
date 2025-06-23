@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useAuth } from '@/contexts/auth-context'
+import { useUser } from '@clerk/nextjs'
 import { useToastContext } from '@/contexts/toast-context'
 import { 
   ArrowRight, ArrowLeft, Check, Sparkles, Shield, Bell, 
@@ -144,7 +144,7 @@ const plans = [
 
 export function EnhancedOnboardingFlow() {
   const router = useRouter()
-  const { user, updatePreferences } = useAuth()
+  const { user } = useUser()
   const { success: showSuccessToast, error: showErrorToast } = useToastContext()
   const [currentStep, setCurrentStep] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -735,13 +735,18 @@ export function EnhancedOnboardingFlow() {
       // Save preferences and redirect
       try {
         if (user) {
-          await updatePreferences({
-            watchlist: selectedCompanies,
-            notifications: {
-              email: preferences.emailAlerts,
-              majorChanges: preferences.majorChangesOnly,
-              weeklyDigest: preferences.weeklyDigest
-            }
+          // Update user preferences via API
+          await fetch('/api/auth/preferences', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              watchlist: selectedCompanies,
+              notifications: {
+                email: preferences.emailAlerts,
+                majorChanges: preferences.majorChangesOnly,
+                weeklyDigest: preferences.weeklyDigest
+              }
+            })
           })
         }
         

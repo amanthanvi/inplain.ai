@@ -7,6 +7,7 @@ import { Providers } from './providers'
 import { DevAuthWarning } from '@/components/dev-auth-warning'
 import { DemoModeBanner } from '@/components/demo-mode-banner'
 import { Navigation } from '@/components/Navigation'
+import { ClerkProvider } from '@clerk/nextjs'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -45,36 +46,38 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body className={`${inter.className} font-sans`}>
-        <Providers>
-          <div className="relative min-h-screen bg-background">
-          <Navigation />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t py-6 md:py-0">
-            <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
-              <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                Built to help you understand privacy policy changes. 
-                {' '}
-                <a
-                  href="https://github.com/policydiff/policydiff"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium underline underline-offset-4"
-                >
-                  Open Source
-                </a>
-                .
-              </p>
-            </div>
-          </footer>
-        </div>
-        <Toaster />
-        <AppStatus />
-        <DevAuthWarning />
-        <DemoModeBanner />
-        </Providers>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning className={inter.variable}>
+        <body className={`${inter.className} font-sans`}>
+          <Providers>
+            <div className="relative min-h-screen bg-background">
+            <Navigation />
+            <main className="flex-1">{children}</main>
+            <footer className="border-t py-6 md:py-0">
+              <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+                <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
+                  Built to help you understand privacy policy changes. 
+                  {' '}
+                  <a
+                    href="https://github.com/policydiff/policydiff"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-4"
+                  >
+                    Open Source
+                  </a>
+                  .
+                </p>
+              </div>
+            </footer>
+          </div>
+          <Toaster />
+          <AppStatus />
+          <DevAuthWarning />
+          <DemoModeBanner />
+          </Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }
