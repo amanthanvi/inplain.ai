@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -179,7 +179,9 @@ export function EnhancedOnboardingFlow() {
       content: (
         <div className="space-y-8">
           <Spotlight className="relative">
-            <GradientBackground className="absolute inset-0 opacity-10 rounded-2xl" />
+            <GradientBackground className="absolute inset-0 opacity-10 rounded-2xl">
+              <div />
+            </GradientBackground>
             <div className="relative space-y-6 text-center p-8">
               <FloatingElement>
                 <div className="mx-auto h-32 w-32 rounded-full bg-gradient-to-br from-primary via-purple-500 to-pink-500 p-1">
@@ -735,9 +737,11 @@ export function EnhancedOnboardingFlow() {
         if (user) {
           await updatePreferences({
             watchlist: selectedCompanies,
-            useCase: selectedUseCase,
-            plan: selectedPlan,
-            notifications: preferences
+            notifications: {
+              email: preferences.emailAlerts,
+              majorChanges: preferences.majorChangesOnly,
+              weeklyDigest: preferences.weeklyDigest
+            }
           })
         }
         
@@ -772,10 +776,14 @@ export function EnhancedOnboardingFlow() {
 
   const canProceed = () => {
     const step = steps[currentStep]
-    return !step.validation || step.validation()
+    return step && (!step.validation || step.validation())
   }
 
   const currentStepData = steps[currentStep]
+  
+  if (!currentStepData) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
