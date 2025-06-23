@@ -1,32 +1,37 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { kv } from '@vercel/kv'
-import type { User } from '@/contexts/auth-context'
+import { AuthService } from '@/lib/auth'
 
 export const runtime = 'edge'
 
 export async function GET() {
 	try {
-		const cookieStore = await cookies()
-		const sessionToken = cookieStore.get('session')?.value
+		const user = await AuthService.getCurrentUser()
 
-		if (!sessionToken) {
-			return NextResponse.json({ user: null }, { status: 401 })
-		}
-
-		// Get user from session
-		const userId = await kv.get<string>(`session:${sessionToken}`)
-		if (!userId) {
-			return NextResponse.json({ user: null }, { status: 401 })
-		}
-
-		// Get user data
-		const user = await kv.get<User>(`user:${userId}`)
 		if (!user) {
 			return NextResponse.json({ user: null }, { status: 401 })
 		}
 
-		return NextResponse.json({ user })
+		// Transform the user object to match the expected format
+		// Map from auth.ts User type to auth-context User type
+		const transformedUser = {
+			id: user.id,
+			email: user.email,
+			name: user.name || user.email.split('@')[0],
+			avatar: null,
+			plan: user.tier || 'free',
+			usage: {
+				policies: user.usage?.policies || 0,
+				alerts: user.usage?.alerts || 0,
+				aiSummaries: user.usage?.aiSummaries || 0
+			},
+			preferences: {
+				notifications: true,
+				theme: 'system' as const,
+				language: 'en'
+			}
+		}
+
+		return NextResponse.json({ user: transformedUser })
 
 	} catch (error) {
 		console.error('Session check error:', error)

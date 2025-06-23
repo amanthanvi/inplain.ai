@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Fonts are loaded via Next.js font optimization */
 
 @tailwind base;
 @tailwind components;
@@ -137,11 +137,10 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-size: var(--font-size-base);
   }
   code, pre {
-    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-family: ui-monospace, SFMono-Regular, Consolas, 'Courier New', monospace;
   }
   
   /* Dynamic font scaling */

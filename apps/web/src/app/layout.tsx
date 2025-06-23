@@ -5,7 +5,12 @@ import { Toaster } from '@/components/ui/toaster'
 import { AppStatus } from '@/components/AppStatus'
 import { Providers } from './providers'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-inter'
+})
 
 export const metadata: Metadata = {
   title: 'PolicyDiff - Track Privacy Policy Changes',
