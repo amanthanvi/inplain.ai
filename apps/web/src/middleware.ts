@@ -16,8 +16,14 @@ const protectedRoutes = [
   '/api/export',
   '/api/user',
   '/api/analytics',
+  '/api/analyze',
+  '/api/analyze-stream',
+  '/api/analyze-advanced',
+  '/api/summary',
   '/dashboard',
-  '/settings'
+  '/settings',
+  '/watchlist',
+  '/onboarding'
 ];
 
 // API routes that require premium tier

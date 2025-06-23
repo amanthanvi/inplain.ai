@@ -4,6 +4,7 @@ import { StorageClient } from '../../lib/storage'
 import { PolicyAnalysisService } from '../../lib/ai-service'
 import { ContentExtractor } from '../../../../lib/content-extractor'
 import { ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, selectBestModel } from '../../../../lib/prompts'
+import { enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
 
 const storage = new StorageClient()
 
@@ -134,10 +135,19 @@ export async function POST(
       .join('\n')
     
     // Use optimized prompt from prompts library
-    const prompt = ANALYSIS_PROMPTS.comprehensive(
+    const basePrompt = ANALYSIS_PROMPTS.comprehensive(
       policyMetadata,
       sectionSummary,
       extractedContent.text.substring(0, 30000)
+    )
+    
+    // Enhance with world-class prompts based on user tier
+    // For now, default to premium tier for all users to showcase capabilities
+    const userTier = 'premium' // TODO: Get from user subscription
+    const enhanced = enhanceAnalysisWithWorldClassPrompts(
+      'comprehensive',
+      basePrompt,
+      userTier
     )
     
     // Get available models and select the best one
@@ -148,11 +158,11 @@ export async function POST(
     const fallbackModels = PROMPT_OPTIMIZATION.modelRecommendations.comprehensive
       .filter(m => m !== selectedModel && availableModels.includes(m))
     
-    const response = await aiService.generateResponse(prompt, {
+    const response = await aiService.generateResponse(enhanced.prompt, {
       model: selectedModel,
-      temperature: PROMPT_OPTIMIZATION.temperatures.structured,
+      temperature: enhanced.temperature,
       maxTokens: PROMPT_OPTIMIZATION.maxTokens.comprehensive,
-      systemPrompt: 'You are a privacy policy expert. Always respond with valid JSON only, no markdown or additional text.',
+      systemPrompt: enhanced.systemPrompt || 'You are a privacy policy expert. Always respond with valid JSON only, no markdown or additional text.',
       fallbackModels
     })
     

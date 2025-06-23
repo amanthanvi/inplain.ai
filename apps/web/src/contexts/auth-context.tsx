@@ -96,7 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 		const data = await response.json()
 		setUser(data.user)
-		router.push('/dashboard')
+		// Redirect new users to onboarding
+		router.push('/onboarding')
 	}
 
 	const logout = async () => {

@@ -6,6 +6,7 @@ import { AppStatus } from '@/components/AppStatus'
 import { Providers } from './providers'
 import { DevAuthWarning } from '@/components/dev-auth-warning'
 import { DemoModeBanner } from '@/components/demo-mode-banner'
+import { Navigation } from '@/components/Navigation'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -48,29 +49,7 @@ export default function RootLayout({
       <body className={`${inter.className} font-sans`}>
         <Providers>
           <div className="relative min-h-screen bg-background">
-          <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container flex h-14 items-center">
-              <div className="mr-4 flex">
-                <a className="mr-6 flex items-center space-x-2" href="/">
-                  <span className="font-bold text-xl">PolicyDiff</span>
-                </a>
-                <nav className="flex items-center space-x-6 text-sm font-medium">
-                  <a
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                    href="/"
-                  >
-                    Dashboard
-                  </a>
-                  <a
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                    href="/about"
-                  >
-                    About
-                  </a>
-                </nav>
-              </div>
-            </div>
-          </header>
+          <Navigation />
           <main className="flex-1">{children}</main>
           <footer className="border-t py-6 md:py-0">
             <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
