@@ -1,25 +1,29 @@
-import { NextResponse } from 'next/server'
-import { getAppMode } from '@/lib/env'
+import { NextResponse } from 'next/server';
+import { getAppMode } from '@/lib/env';
 
-/**
- * Public API endpoint to check application status
- * Returns the current application mode
- */
+export const runtime = 'edge';
+
 export async function GET() {
   try {
-    const mode = getAppMode()
+    const mode = getAppMode();
+    const hasApiKey = !!process.env.OPENROUTER_API_KEY;
+    const hasRedis = !!process.env.KV_REST_API_URL && !!process.env.KV_REST_API_TOKEN;
+    const hasAuth = !!process.env.JWT_SECRET;
     
     return NextResponse.json({
       mode,
-      isDemo: mode === 'demo',
-      isProduction: mode === 'production',
-      isDevelopment: mode === 'development'
-    })
+      services: {
+        ai: hasApiKey,
+        storage: hasRedis,
+        auth: hasAuth
+      },
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
-    console.error('Error getting app status:', error)
+    console.error('Status check error:', error);
     return NextResponse.json(
-      { error: 'Failed to get app status' },
+      { error: 'Status check failed' },
       { status: 500 }
-    )
+    );
   }
 }
