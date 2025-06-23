@@ -14,7 +14,7 @@ const bodySchema = z.object({
 })
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
-const DEFAULT_MODEL = process.env.DEFAULT_AI_MODEL || 'anthropic/claude-3.5-sonnet'
+const DEFAULT_MODEL = process.env.DEFAULT_AI_MODEL || 'google/gemini-2.5-flash-preview-05-20'
 
 export async function POST(
   request: NextRequest,

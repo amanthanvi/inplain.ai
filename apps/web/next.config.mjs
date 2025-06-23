@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable static exports for better CDN caching
-  output: 'standalone',
+  // Use default output for Vercel
+  // output: 'standalone', // Commented out for Vercel deployment
   
   // Optimize images
   images: {
@@ -38,7 +38,7 @@ const nextConfig = {
       },
       {
         // Static assets with long cache
-        source: '/(.*)\\.(.*)$',
+        source: '/:all*\\.(js|css|png|jpg|jpeg|gif|webp|avif|svg|ico|woff|woff2|ttf|eot)',
         headers: [
           {
             key: 'Cache-Control',
@@ -58,7 +58,7 @@ const nextConfig = {
       },
       {
         // HTML pages with short cache
-        source: '/(.*)',
+        source: '/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -75,12 +75,12 @@ const nextConfig = {
   // Production optimizations
   productionBrowserSourceMaps: false,
   
-  // SWC minification
-  swcMinify: true,
+  // SWC minification is default in Next.js 15
+  // swcMinify: true,
   
   // Experimental features for performance
   experimental: {
-    optimizeCss: true,
+    // Remove deprecated options
     optimizePackageImports: ['framer-motion', 'lucide-react', '@vercel/kv'],
     serverComponentsExternalPackages: ['@vercel/kv', 'resend'],
   },

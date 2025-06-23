@@ -8,18 +8,8 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Robots-Tag', 'index, follow');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   
-  // Enable HTTP/2 Server Push for critical resources
-  const pushResources = [
-    '/fonts/inter-var.woff2',
-    '/_next/static/css/app.css',
-    '/_next/static/js/main.js'
-  ];
-  
-  const linkHeader = pushResources
-    .map(resource => `<${resource}>; rel=preload; as=${getAsType(resource)}`)
-    .join(', ');
-  
-  response.headers.set('Link', linkHeader);
+  // Remove hardcoded preload paths as they cause 404s
+  // Vercel/Next.js handles resource preloading automatically
   
   // Add timing headers for performance monitoring
   response.headers.set('Server-Timing', `total;dur=${Date.now()}`);
