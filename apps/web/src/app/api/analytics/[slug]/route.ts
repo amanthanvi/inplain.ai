@@ -28,13 +28,81 @@ export async function GET(
 			}
 		}
 
-		// Initialize AI service
+		// Initialize AI service or use demo mode
 		const apiKey = process.env.OPENROUTER_API_KEY
-		if (!apiKey) {
-			return NextResponse.json(
-				{ error: 'AI service not configured' },
-				{ status: 500 }
-			)
+		const isDemoMode = !apiKey
+		
+		if (isDemoMode) {
+			// Return demo analytics data
+			const demoData = {
+				riskScore: {
+					overall: 72,
+					breakdown: {
+						dataCollection: 65,
+						dataSharing: 78,
+						userRights: 82,
+						security: 70,
+						transparency: 75
+					},
+					trends: {
+						direction: 'improving' as const,
+						change: 5,
+						period: '30 days'
+					}
+				},
+				trendAnalysis: {
+					summary: 'Privacy practices have improved over the last 6 months',
+					keyChanges: [
+						'Enhanced user control options',
+						'Clearer data retention policies',
+						'Better third-party disclosure'
+					],
+					riskTrajectory: 'decreasing' as const,
+					predictedChanges: [
+						'Likely to add AI data usage policies',
+						'May enhance children\'s privacy protections'
+					]
+				},
+				insights: [
+					{
+						type: 'positive' as const,
+						priority: 'medium' as const,
+						title: 'Strong User Rights',
+						description: 'Policy provides comprehensive user rights including access, deletion, and portability',
+						actionable: false
+					},
+					{
+						type: 'concern' as const,
+						priority: 'high' as const,
+						title: 'Broad Data Collection',
+						description: 'Policy allows collection of extensive user data including behavioral patterns',
+						actionable: true,
+						recommendation: 'Review and limit data collection scope'
+					}
+				],
+				historicalScores: [
+					{ date: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000), score: 67 },
+					{ date: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000), score: 68 },
+					{ date: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), score: 70 },
+					{ date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), score: 69 },
+					{ date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), score: 71 },
+					{ date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), score: 72 },
+					{ date: new Date(), score: 72 }
+				],
+				metadata: {
+					analyzedAt: new Date().toISOString(),
+					policyVersion: 'demo-version',
+					dataPoints: 7,
+					demoMode: true
+				}
+			}
+			
+			// Cache demo data too
+			if (useCache) {
+				await kv.set(cacheKey, demoData, { ex: 3600 }) // Cache for 1 hour
+			}
+			
+			return NextResponse.json(demoData)
 		}
 
 		const aiService = new AIAnalyticsService(apiKey)

@@ -4,12 +4,15 @@ import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { AppStatus } from '@/components/AppStatus'
 import { Providers } from './providers'
+import { DevAuthWarning } from '@/components/dev-auth-warning'
+import { DemoModeBanner } from '@/components/demo-mode-banner'
 
 const inter = Inter({ 
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-inter'
+  variable: '--font-inter',
+  preload: true,
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
 })
 
 export const metadata: Metadata = {
@@ -41,8 +44,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
+      <body className={`${inter.className} font-sans`}>
         <Providers>
           <div className="relative min-h-screen bg-background">
           <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -89,6 +92,8 @@ export default function RootLayout({
         </div>
         <Toaster />
         <AppStatus />
+        <DevAuthWarning />
+        <DemoModeBanner />
         </Providers>
       </body>
     </html>

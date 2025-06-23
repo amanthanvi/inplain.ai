@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { kv } from '@vercel/kv';
+import { isDevAuthEnabled, DEV_USER, DEV_SESSION_TOKEN, logDevAuthStatus } from './dev-auth';
 
 export interface User {
   id: string;
@@ -144,6 +145,11 @@ export class AuthService {
   }
 
   static async getUserById(userId: string): Promise<User | null> {
+    // Development bypass
+    if (isDevAuthEnabled() && userId === DEV_USER.id) {
+      return DEV_USER;
+    }
+    
     const user = await kv.hgetall(`user:${userId}`) as User | null;
     return user;
   }
@@ -176,6 +182,9 @@ export class AuthService {
       .setIssuedAt()
       .sign(getJwtSecret());
 
+    // Store session in KV for API access validation
+    await kv.set(`session:${token}`, userId, { ex: SESSION_DURATION / 1000 });
+
     const cookieStore = await cookies();
     cookieStore.set('session', token, {
       httpOnly: true,
@@ -189,6 +198,15 @@ export class AuthService {
   }
 
   static async verifySession(token: string): Promise<Session | null> {
+    // Development bypass
+    if (isDevAuthEnabled() && token === DEV_SESSION_TOKEN) {
+      logDevAuthStatus();
+      return {
+        userId: DEV_USER.id,
+        expiresAt: new Date(Date.now() + SESSION_DURATION)
+      };
+    }
+
     try {
       const { payload } = await jwtVerify(token, getJwtSecret());
       return {
@@ -201,6 +219,31 @@ export class AuthService {
   }
 
   static async getCurrentUser(): Promise<User | null> {
+    // Development bypass
+    if (isDevAuthEnabled()) {
+      const cookieStore = await cookies();
+      const sessionCookie = cookieStore.get('session');
+      
+      // Check for dev session token
+      if (sessionCookie?.value === DEV_SESSION_TOKEN) {
+        logDevAuthStatus();
+        return DEV_USER;
+      }
+      
+      // Auto-login in dev mode if no session
+      if (!sessionCookie?.value) {
+        logDevAuthStatus();
+        cookieStore.set('session', DEV_SESSION_TOKEN, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          maxAge: SESSION_DURATION / 1000,
+          path: '/'
+        });
+        return DEV_USER;
+      }
+    }
+
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get('session');
     
@@ -214,6 +257,13 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('session');
+    
+    // Remove session from KV if it exists
+    if (sessionCookie?.value) {
+      await kv.del(`session:${sessionCookie.value}`);
+    }
+    
     cookieStore.delete('session');
   }
 

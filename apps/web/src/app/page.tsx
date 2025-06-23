@@ -3,6 +3,7 @@ import { DiffCard } from '@/components/DiffCard'
 import { CompanyGrid } from '@/components/CompanyGrid'
 import { RecentDiffs } from '@/components/RecentDiffs'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { AsyncErrorBoundary } from '@/components/error-boundary'
 
 export default function HomePage() {
   return (
@@ -17,16 +18,20 @@ export default function HomePage() {
 
         <section>
           <h2 className="text-2xl font-semibold mb-4">Monitored Companies</h2>
-          <Suspense fallback={<LoadingSpinner />}>
-            <CompanyGrid />
-          </Suspense>
+          <AsyncErrorBoundary>
+            <Suspense fallback={<LoadingSpinner />}>
+              <CompanyGrid />
+            </Suspense>
+          </AsyncErrorBoundary>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-4">Recent Changes</h2>
-          <Suspense fallback={<LoadingSpinner />}>
-            <RecentDiffs />
-          </Suspense>
+          <AsyncErrorBoundary>
+            <Suspense fallback={<LoadingSpinner />}>
+              <RecentDiffs />
+            </Suspense>
+          </AsyncErrorBoundary>
         </section>
       </div>
     </div>

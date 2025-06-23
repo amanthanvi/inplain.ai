@@ -4,8 +4,33 @@ import { StorageClient } from '../../lib/storage'
 import { PolicyAnalysisService } from '../../lib/ai-service'
 import { SummarySchema } from '@policydiff/shared'
 import { formatTimestamp } from '@policydiff/shared'
+import { getEnvVar } from '@/lib/env'
+import { AuthService } from '@/lib/auth'
+import { isDevAuthEnabled } from '@/lib/dev-auth'
 
-const storage = new StorageClient()
+// Initialize storage with error handling
+let storage: StorageClient | null = null
+
+function getStorage(): StorageClient | null {
+  if (storage) return storage
+  
+  // Check if KV is configured
+  const kvUrl = getEnvVar('KV_REST_API_URL')
+  const kvToken = getEnvVar('KV_REST_API_TOKEN')
+  
+  if (!kvUrl || !kvToken) {
+    console.warn('KV storage not configured - summary API will operate in limited mode')
+    return null
+  }
+  
+  try {
+    storage = new StorageClient()
+    return storage
+  } catch (error) {
+    console.error('Failed to initialize storage client:', error)
+    return null
+  }
+}
 
 const bodySchema = z.object({
   diffId: z.string().uuid(),
@@ -13,8 +38,8 @@ const bodySchema = z.object({
   model: z.string().optional()
 })
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
-const DEFAULT_MODEL = process.env.DEFAULT_AI_MODEL || 'google/gemini-2.5-flash-preview-05-20'
+const OPENROUTER_API_KEY = getEnvVar('OPENROUTER_API_KEY')
+const DEFAULT_MODEL = getEnvVar('DEFAULT_AI_MODEL', 'google/gemini-2.5-flash-preview-05-20')
 
 export async function POST(
   request: NextRequest,
@@ -24,6 +49,17 @@ export async function POST(
     const { slug } = await params
     const body = await request.json()
     const { diffId, force, model } = bodySchema.parse(body)
+    
+    // Check authentication in production (skip in dev with auth bypass)
+    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+      const user = await AuthService.getCurrentUser()
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        )
+      }
+    }
 
     if (!OPENROUTER_API_KEY) {
       console.warn('OPENROUTER_API_KEY not configured - returning mock summary for demo')
@@ -50,7 +86,8 @@ export async function POST(
       return NextResponse.json({
         summary: mockSummary,
         cached: false,
-        mockMode: true
+        mockMode: true,
+        warning: 'AI service not configured. Set OPENROUTER_API_KEY environment variable for real analysis.'
       }, {
         headers: {
           'Cache-Control': 'private, s-maxage=60',
@@ -59,8 +96,23 @@ export async function POST(
         }
       })
     }
+    
+    // Get storage client
+    const storageClient = getStorage()
+    
+    // If storage is not configured, we can't fetch diffs
+    if (!storageClient) {
+      return NextResponse.json(
+        { 
+          error: 'Storage service not configured',
+          message: 'Cannot generate summaries without storage. Please configure KV_REST_API_URL and KV_REST_API_TOKEN.',
+          code: 'STORAGE_NOT_CONFIGURED'
+        },
+        { status: 503 }
+      )
+    }
 
-    const diff = await storage.getDiff(slug, diffId)
+    const diff = await storageClient.getDiff(slug, diffId)
     if (!diff) {
       return NextResponse.json(
         { error: 'Diff not found' },
@@ -69,7 +121,7 @@ export async function POST(
     }
 
     if (diff.summaryId && !force) {
-      const existingSummary = await storage.getSummary(diff.summaryId)
+      const existingSummary = await storageClient.getSummary(diff.summaryId)
       if (existingSummary) {
         return NextResponse.json({
           summary: existingSummary,
@@ -78,7 +130,7 @@ export async function POST(
       }
     }
 
-    const diffContent = await storage.getDiffContent(diff.diffBlobKey)
+    const diffContent = await storageClient.getDiffContent(diff.diffBlobKey)
     if (!diffContent) {
       return NextResponse.json(
         { error: 'Diff content not found' },
@@ -92,14 +144,14 @@ export async function POST(
 
     try {
       const [fromSnapshot, toSnapshot] = await Promise.all([
-        storage.getSnapshot(slug, diff.fromSnapshotId),
-        storage.getSnapshot(slug, diff.toSnapshotId)
+        storageClient.getSnapshot(slug, diff.fromSnapshotId),
+        storageClient.getSnapshot(slug, diff.toSnapshotId)
       ])
 
       if (fromSnapshot && toSnapshot) {
         const [fromContent, toContent] = await Promise.all([
-          storage.getSnapshotContent(fromSnapshot.blobKey),
-          storage.getSnapshotContent(toSnapshot.blobKey)
+          storageClient.getSnapshotContent(fromSnapshot.blobKey),
+          storageClient.getSnapshotContent(toSnapshot.blobKey)
         ])
         
         oldContent = fromContent || undefined
@@ -163,10 +215,10 @@ export async function POST(
       cached: false
     })
 
-    await storage.saveSummary(summary)
+    await storageClient.saveSummary(summary)
     
     diff.summaryId = summary.id
-    await storage.saveDiff(diff)
+    await storageClient.saveDiff(diff)
 
     return NextResponse.json({
       summary,
@@ -187,8 +239,21 @@ export async function POST(
       )
     }
     
+    // Provide more detailed error messages
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const isStorageError = errorMessage.includes('KV') || errorMessage.includes('storage') || errorMessage.includes('kv.')
+    const isAIError = errorMessage.includes('AI') || errorMessage.includes('OpenRouter') || errorMessage.includes('analysis')
+    
     return NextResponse.json(
-      { error: 'AI analysis failed', message: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Summary generation failed',
+        message: isStorageError 
+          ? 'Storage service error. Please check KV_REST_API_URL and KV_REST_API_TOKEN configuration.'
+          : isAIError
+          ? 'AI service error. Please check OPENROUTER_API_KEY configuration.'
+          : errorMessage,
+        code: isStorageError ? 'STORAGE_ERROR' : isAIError ? 'AI_SERVICE_ERROR' : 'INTERNAL_ERROR'
+      },
       { status: 500 }
     )
   }

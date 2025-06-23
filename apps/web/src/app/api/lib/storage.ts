@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv'
+import { kv } from './kv-wrapper'
 import type { SnapshotMeta, DiffMeta, Summary } from '@policydiff/shared'
 
 export class StorageClient {

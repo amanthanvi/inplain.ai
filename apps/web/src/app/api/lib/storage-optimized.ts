@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv'
+import { kv } from './kv-wrapper'
 import { SnapshotMeta, DiffMeta, Summary } from '@policydiff/shared'
 import { CacheService, CacheKeys, CacheTags } from '@/lib/cache'
 import { DatabaseOptimizer } from '@/lib/db-optimizer'

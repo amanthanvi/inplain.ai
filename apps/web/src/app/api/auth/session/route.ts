@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { AuthService } from '@/lib/auth'
+import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 export const runtime = 'edge'
 
@@ -9,6 +10,13 @@ export async function GET() {
 
 		if (!user) {
 			return NextResponse.json({ user: null }, { status: 401 })
+		}
+		
+		// Add dev auth headers if enabled
+		const headers = new Headers()
+		if (isDevAuthEnabled() && user.id === 'dev-user-123') {
+			headers.set('X-Dev-Auth-Active', 'true')
+			headers.set('X-Dev-Auth-Warning', 'Authentication bypassed for development')
 		}
 
 		// Transform the user object to match the expected format
@@ -20,9 +28,9 @@ export async function GET() {
 			avatar: null,
 			plan: user.tier || 'free',
 			usage: {
-				policies: user.usage?.policies || 0,
-				alerts: user.usage?.alerts || 0,
-				aiSummaries: user.usage?.aiSummaries || 0
+				policies: user.customWatchlists?.length || 0,
+				alerts: user.emailAlerts ? 1 : 0,
+				aiSummaries: user.usage?.analysisCount || 0
 			},
 			preferences: {
 				notifications: true,
@@ -31,7 +39,7 @@ export async function GET() {
 			}
 		}
 
-		return NextResponse.json({ user: transformedUser })
+		return NextResponse.json({ user: transformedUser }, { headers })
 
 	} catch (error) {
 		console.error('Session check error:', error)

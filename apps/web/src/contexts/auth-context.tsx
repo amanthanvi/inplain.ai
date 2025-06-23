@@ -48,6 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const checkSession = async () => {
 		try {
 			const response = await fetch('/api/auth/session')
+			
+			// Check for dev auth warning
+			if (response.headers.get('X-Dev-Auth-Active') === 'true') {
+				console.warn('🔓 Using development authentication bypass');
+			}
+			
 			if (response.ok) {
 				const data = await response.json()
 				setUser(data.user)

@@ -17,11 +17,46 @@ export async function POST(
   try {
     const { slug } = await params
     
+    // Handle demo mode gracefully
     if (!OPENROUTER_API_KEY) {
-      return NextResponse.json(
-        { error: 'AI service not configured' },
-        { status: 500 }
-      )
+      // Return a mock analysis for demo mode
+      const mockAnalysis = {
+        id: crypto.randomUUID(),
+        snapshotId: 'demo-snapshot',
+        generatedAt: new Date().toISOString(),
+        model: 'demo-model',
+        structured_content: {
+          executive_summary: "This is a demo analysis. To enable real AI analysis, please configure your OpenRouter API key.",
+          data_collection: ["Personal information", "Usage data", "Device information"],
+          data_usage: ["Service improvement", "Marketing", "Analytics"],
+          third_party_sharing: ["Service providers", "Business partners"],
+          user_rights: ["Access", "Deletion", "Correction", "Opt-out"],
+          data_retention: "Data retained as long as necessary for business purposes",
+          security_measures: "Industry-standard security measures in place",
+          cookies_tracking: {
+            uses_cookies: true,
+            tracking_technologies: ["Cookies", "Pixels", "Analytics"],
+            third_party_analytics: true
+          },
+          gdpr_compliant: true,
+          ccpa_compliant: true,
+          contact_info: "privacy@example.com",
+          overall_privacy_score: "good",
+          recommendations: ["Review privacy settings", "Enable two-factor authentication"]
+        },
+        raw_content: "Demo analysis content",
+        metadata: {
+          wordCount: 1000,
+          sections: 10,
+          title: "Privacy Policy"
+        }
+      }
+      
+      return NextResponse.json({
+        analysis: mockAnalysis,
+        cached: false,
+        demo: true
+      })
     }
     
     // Get the latest snapshot
