@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
             
             if (diffs.length > 0) {
               const diff = diffs[0]
+              // Type guard to ensure diff is defined
+              if (!diff) continue
+              
               const summary = diff.summaryId ? await storage.getSummary(diff.summaryId) : null
               
               sendEvent({
