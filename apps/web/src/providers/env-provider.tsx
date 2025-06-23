@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, ReactNode } from 'react'
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 import { getPublicConfig } from '@/lib/env'
 
 type AppMode = 'production' | 'demo' | 'development'
@@ -13,18 +13,42 @@ interface EnvContextType {
   isProduction: boolean
   isDemo: boolean
   isVercel: boolean
+  isLoading: boolean
 }
 
 const EnvContext = createContext<EnvContextType | undefined>(undefined)
 
 export function EnvProvider({ children }: { children: ReactNode }) {
   const config = getPublicConfig()
+  const [mode, setMode] = useState<AppMode>(config.mode)
+  const [isLoading, setIsLoading] = useState(true)
+  
+  useEffect(() => {
+    // Fetch the actual mode from the server
+    async function fetchMode() {
+      try {
+        const response = await fetch('/api/status')
+        if (response.ok) {
+          const data = await response.json()
+          setMode(data.mode)
+        }
+      } catch (error) {
+        console.error('Failed to fetch app mode:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchMode()
+  }, [])
   
   const value: EnvContextType = {
     ...config,
-    isDemo: config.mode === 'demo',
-    isProduction: config.mode === 'production',
-    isDevelopment: config.mode === 'development'
+    mode,
+    isDemo: mode === 'demo',
+    isProduction: mode === 'production',
+    isDevelopment: mode === 'development',
+    isLoading
   }
   
   return (

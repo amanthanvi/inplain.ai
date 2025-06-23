@@ -38,6 +38,18 @@ export function AppStatus() {
     const newChecks = [...checks]
     const publicConfig = getPublicConfig()
     
+    // Fetch actual app mode from server
+    let actualMode = publicConfig.mode
+    try {
+      const statusResponse = await fetch('/api/status')
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json()
+        actualMode = statusData.mode
+      }
+    } catch (error) {
+      console.warn('Failed to fetch app status:', error)
+    }
+    
     // Check environment
     try {
       // In development, always try to check server-side env
@@ -67,8 +79,8 @@ export function AppStatus() {
           // In production, debug endpoint is protected
           newChecks[0] = {
             name: 'Environment',
-            status: publicConfig.mode === 'demo' ? 'warning' : 'success',
-            message: publicConfig.mode === 'demo' 
+            status: actualMode === 'demo' ? 'warning' : 'success',
+            message: actualMode === 'demo' 
               ? 'Running in demo mode'
               : 'Production environment'
           }
@@ -86,10 +98,10 @@ export function AppStatus() {
         // In production, use public config
         newChecks[0] = {
           name: 'Environment',
-          status: publicConfig.mode === 'demo' ? 'warning' : 'success',
-          message: publicConfig.mode === 'demo' 
+          status: actualMode === 'demo' ? 'warning' : 'success',
+          message: actualMode === 'demo' 
             ? 'Running in demo mode - AI features simulated'
-            : publicConfig.mode === 'production'
+            : actualMode === 'production'
               ? 'Production environment'
               : 'Development environment'
         }
@@ -106,8 +118,8 @@ export function AppStatus() {
       console.warn('Failed to check environment status:', error)
       newChecks[0] = {
         name: 'Environment',
-        status: publicConfig.mode === 'demo' ? 'warning' : 'success',
-        message: publicConfig.mode === 'demo' 
+        status: actualMode === 'demo' ? 'warning' : 'success',
+        message: actualMode === 'demo' 
           ? 'Demo mode - limited features'
           : 'Environment ready'
       }
@@ -123,8 +135,8 @@ export function AppStatus() {
     if (newChecks[0].status === 'success' || newChecks[0].status === 'warning') {
       newChecks[1] = {
         name: 'AI Service',
-        status: publicConfig.mode === 'demo' ? 'warning' : 'success',
-        message: publicConfig.mode === 'demo'
+        status: actualMode === 'demo' ? 'warning' : 'success',
+        message: actualMode === 'demo'
           ? 'Using mock AI for demo'
           : 'AI service ready'
       }

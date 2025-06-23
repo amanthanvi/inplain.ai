@@ -80,6 +80,14 @@ curl -X POST https://your-app.vercel.app/api/debug/ai-test?secret=YOUR_CRON_SECR
    - Cause: Cron job hasn't run yet
    - Fix: Wait for daily cron (9 AM UTC) or manually trigger
 
+4. **Demo Mode Banner Still Showing After Setting OPENROUTER_API_KEY**
+   - Cause: The app checks for environment variables server-side
+   - Fix: 
+     1. Ensure OPENROUTER_API_KEY is set in Vercel (not NEXT_PUBLIC_OPENROUTER_API_KEY)
+     2. Redeploy after setting the environment variable
+     3. Clear browser cache and localStorage
+     4. Visit `/api/env-test` to verify the environment is detected correctly
+
 ## Manual Data Seeding
 
 To populate initial data without waiting for cron:

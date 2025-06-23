@@ -9,17 +9,33 @@ import { getPublicConfig } from '@/lib/env'
  */
 export function useEnv() {
   const [config, setConfig] = useState(getPublicConfig())
+  const [isLoading, setIsLoading] = useState(true)
   
   useEffect(() => {
-    // Re-read config in case it changes (shouldn't happen in practice)
-    setConfig(getPublicConfig())
+    // Fetch the actual mode from the server
+    async function fetchMode() {
+      try {
+        const response = await fetch('/api/status')
+        if (response.ok) {
+          const data = await response.json()
+          setConfig(prev => ({ ...prev, mode: data.mode }))
+        }
+      } catch (error) {
+        console.error('Failed to fetch app mode:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchMode()
   }, [])
   
   return {
     ...config,
     isDemo: config.mode === 'demo',
     isProduction: config.mode === 'production',
-    isDevelopment: config.mode === 'development'
+    isDevelopment: config.mode === 'development',
+    isLoading
   }
 }
 

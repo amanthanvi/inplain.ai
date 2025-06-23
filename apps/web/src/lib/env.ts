@@ -244,8 +244,12 @@ export function getAppMode(): 'production' | 'demo' | 'development' {
  * Get public runtime config for client-side usage
  */
 export function getPublicConfig() {
+  // On client side, we can't determine the actual mode since OPENROUTER_API_KEY is server-only
+  // The actual mode will be fetched from the API
+  const defaultMode = process.env.NODE_ENV === 'development' ? 'development' : 'demo'
+  
   return {
-    mode: getAppMode(),
+    mode: isClientSide() ? defaultMode : getAppMode(),
     apiUrl: getEnvVar('NEXT_PUBLIC_API_URL') || getEnvVar('VERCEL_URL') || '',
     appUrl: getEnvVar('NEXT_PUBLIC_APP_URL') || getEnvVar('VERCEL_URL') || '',
     isDevelopment: process.env.NODE_ENV === 'development',
