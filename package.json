@@ -24,7 +24,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "clean": "turbo run clean && rm -rf node_modules",
-    "prepare": "husky install"
+    "prepare": "node -e \"if (process.env.CI !== 'true' && process.env.VERCEL !== '1') { require('child_process').execSync('husky install', { stdio: 'inherit' }); }\""
   },
   "devDependencies": {
     "@turbo/gen": "^1.13.0",
