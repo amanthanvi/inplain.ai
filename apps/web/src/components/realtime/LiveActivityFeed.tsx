@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { 
   Activity, TrendingUp, Shield, Eye, AlertTriangle,
-  Clock, Users, Globe, Zap
+  Clock, Users, Globe, Zap, RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
 import { HoverScale, FloatingElement } from '@/components/ui/framer-animations'
+import { Button } from '@/components/ui/button'
 
 interface ActivityItem {
   id: string
@@ -30,6 +31,7 @@ interface ActivityItem {
     changeType?: string
     riskLevel?: string
     location?: string
+    slug?: string
   }
 }
 
@@ -46,96 +48,85 @@ export function LiveActivityFeed({
 }: LiveActivityFeedProps) {
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [isLive, setIsLive] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
-  // Generate mock activity data
-  const generateActivity = (): ActivityItem => {
-    const types: ActivityItem['type'][] = ['policy-update', 'user-analysis', 'risk-alert', 'new-monitoring', 'system']
-    const companies = ['Google', 'Meta', 'Amazon', 'Microsoft', 'Apple', 'Netflix', 'Spotify', 'Twitter']
-    const locations = ['San Francisco, CA', 'New York, NY', 'London, UK', 'Tokyo, JP', 'Berlin, DE']
-    const userNames = ['Alex Chen', 'Sarah Johnson', 'Mike Wilson', 'Emma Davis', 'John Smith']
-    
-    const type = types[Math.floor(Math.random() * types.length)]
-    
-    const activityTemplates = {
-      'policy-update': {
-        title: `${companies[Math.floor(Math.random() * companies.length)]} updated their privacy policy`,
-        description: 'Changes detected in data collection practices',
-        icon: Shield,
-        color: 'text-blue-600'
-      },
-      'user-analysis': {
-        title: 'New AI analysis requested',
-        description: `Premium analysis for ${companies[Math.floor(Math.random() * companies.length)]}`,
-        icon: Eye,
-        color: 'text-purple-600'
-      },
-      'risk-alert': {
-        title: 'High-risk changes detected',
-        description: `Critical privacy changes in ${companies[Math.floor(Math.random() * companies.length)]} policy`,
-        icon: AlertTriangle,
-        color: 'text-red-600'
-      },
-      'new-monitoring': {
-        title: 'New company added to monitoring',
-        description: `Started tracking ${companies[Math.floor(Math.random() * companies.length)]}`,
-        icon: TrendingUp,
-        color: 'text-green-600'
-      },
-      'system': {
-        title: 'System update',
-        description: 'AI models upgraded for better analysis accuracy',
-        icon: Zap,
-        color: 'text-amber-600'
+  // Fetch real activity data from API
+  const fetchActivities = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      // Build query params
+      const params = new URLSearchParams({
+        limit: maxItems.toString(),
+        includeAI: 'true',
+        includeRisk: 'true',
+        includeUsers: showGlobalActivity ? 'true' : 'false'
+      })
+      
+      const response = await fetch(`/api/activity?${params}`)
+      if (!response.ok) throw new Error('Failed to fetch activities')
+      
+      const data = await response.json()
+      
+      // Map icon types
+      const iconMap: Record<string, any> = {
+        'policy-update': Shield,
+        'risk-alert': AlertTriangle,
+        'user-analysis': Users,
+        'new-monitoring': Eye,
+        'system': Zap
       }
+      
+      // Transform activities with proper icons and enhanced metadata
+      const transformedActivities: ActivityItem[] = data.activities.map((activity: any) => ({
+        ...activity,
+        icon: iconMap[activity.type] || Activity,
+        // Enhance metadata with risk-based styling
+        color: activity.color || (
+          activity.metadata?.riskLevel === 'critical' ? 'text-red-600' :
+          activity.metadata?.riskLevel === 'high' ? 'text-orange-600' :
+          activity.metadata?.riskLevel === 'medium' ? 'text-yellow-600' :
+          activity.type === 'risk-alert' ? 'text-red-600' :
+          activity.type === 'user-analysis' ? 'text-purple-600' :
+          activity.type === 'new-monitoring' ? 'text-green-600' :
+          'text-blue-600'
+        )
+      }))
+      
+      // Apply filters if specified
+      const filteredActivities = filterTypes 
+        ? transformedActivities.filter(a => filterTypes.includes(a.type))
+        : transformedActivities
+      
+      setActivities(filteredActivities)
+    } catch (err) {
+      console.error('Error fetching activities:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load activities')
+    } finally {
+      setIsLoading(false)
     }
-    
-    const template = activityTemplates[type as keyof typeof activityTemplates] || activityTemplates['system']
-    
-    return {
-      id: `activity-${Date.now()}-${Math.random()}`,
-      type: type || 'system',
-      timestamp: new Date().toISOString(),
-      title: template.title,
-      description: template.description,
-      icon: template.icon,
-      color: template.color,
-      metadata: {
-        company: companies[Math.floor(Math.random() * companies.length)],
-        user: showGlobalActivity ? {
-          name: userNames[Math.floor(Math.random() * userNames.length)] || 'Anonymous User'
-        } : undefined,
-        changeType: type === 'policy-update' ? ['major', 'moderate', 'minor'][Math.floor(Math.random() * 3)] : undefined,
-        riskLevel: type === 'risk-alert' ? 'high' : undefined,
-        location: showGlobalActivity ? locations[Math.floor(Math.random() * locations.length)] : undefined
-      }
-    }
-  }
+  }, [maxItems, filterTypes, showGlobalActivity])
   
-  // Simulate real-time activity stream
+  // Fetch initial data and set up polling
   useEffect(() => {
     if (!isLive) return
     
-    // Add initial activities
-    const initialActivities = Array.from({ length: 5 }, generateActivity)
-    setActivities(initialActivities)
+    // Initial fetch
+    fetchActivities()
     
-    // Add new activity every 3-10 seconds
+    // Poll for updates every 30 seconds
     const interval = setInterval(() => {
-      const shouldAddActivity = Math.random() < 0.3 // 30% chance
-      if (shouldAddActivity) {
-        const newActivity = generateActivity()
-        
-        // Apply filters if specified
-        if (filterTypes && !filterTypes.includes(newActivity.type)) {
-          return
-        }
-        
-        setActivities(prev => [newActivity, ...prev].slice(0, maxItems))
-      }
-    }, 3000)
+      fetchActivities()
+    }, 30000)
     
     return () => clearInterval(interval)
-  }, [isLive, maxItems, showGlobalActivity, filterTypes])
+  }, [isLive, fetchActivities])
+  
+  const handleRefresh = () => {
+    fetchActivities()
+  }
   
   const getActivityStats = () => {
     const last24h = activities.filter(a => {
@@ -169,6 +160,16 @@ export function LiveActivityFeed({
               </Badge>
             )}
           </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="h-8 px-2"
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+          </Button>
           
           {/* Activity stats */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -206,7 +207,33 @@ export function LiveActivityFeed({
         {/* Activity stream */}
         <div className="max-h-[400px] overflow-y-auto">
           <AnimatePresence mode="popLayout">
-            {activities.length === 0 ? (
+            {isLoading ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-8 text-center"
+              >
+                <RefreshCw className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3 animate-spin" />
+                <p className="text-muted-foreground">Loading activities...</p>
+              </motion.div>
+            ) : error ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-8 text-center"
+              >
+                <AlertTriangle className="h-12 w-12 text-red-500/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">{error}</p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={handleRefresh}
+                  className="mt-2"
+                >
+                  Try again
+                </Button>
+              </motion.div>
+            ) : activities.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -262,8 +289,39 @@ export function LiveActivityFeed({
                                 {activity.description}
                               </p>
                               
+                              {/* AI Summary if available */}
+                              {activity.metadata?.aiSummary && (
+                                <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                                  <p className="text-xs text-muted-foreground">
+                                    <span className="font-medium">AI Analysis:</span> {activity.metadata.aiSummary}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Key highlights */}
+                              {activity.metadata?.highlights && activity.metadata.highlights.length > 0 && (
+                                <ul className="mt-2 space-y-0.5">
+                                  {activity.metadata.highlights.slice(0, 2).map((highlight, idx) => (
+                                    <li key={idx} className="text-xs text-muted-foreground flex items-start gap-1">
+                                      <span className="text-primary mt-0.5">•</span>
+                                      <span>{highlight}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                              
+                              {/* View Details Link */}
+                              {activity.metadata?.slug && (
+                                <a 
+                                  href={`/${activity.metadata.slug}`}
+                                  className="text-xs text-primary hover:underline mt-1 inline-block"
+                                >
+                                  View details →
+                                </a>
+                              )}
+                              
                               {/* Metadata */}
-                              <div className="flex items-center gap-3 mt-2">
+                              <div className="flex items-center gap-3 mt-2 flex-wrap">
                                 {activity.metadata?.user && showGlobalActivity && (
                                   <div className="flex items-center gap-1.5">
                                     <Avatar className="h-4 w-4">
@@ -284,6 +342,19 @@ export function LiveActivityFeed({
                                   </span>
                                 )}
                                 
+                                {activity.metadata?.riskScore !== undefined && (
+                                  <Badge 
+                                    variant={
+                                      activity.metadata.riskScore >= 75 ? 'destructive' :
+                                      activity.metadata.riskScore >= 50 ? 'warning' : 
+                                      'secondary'
+                                    } 
+                                    className="text-xs h-5"
+                                  >
+                                    Risk: {activity.metadata.riskScore}/100
+                                  </Badge>
+                                )}
+                                
                                 {activity.metadata?.changeType && (
                                   <Badge 
                                     variant={
@@ -295,6 +366,16 @@ export function LiveActivityFeed({
                                   >
                                     {activity.metadata.changeType}
                                   </Badge>
+                                )}
+                                
+                                {activity.metadata?.categories && activity.metadata.categories.length > 0 && (
+                                  <div className="flex gap-1">
+                                    {activity.metadata.categories.slice(0, 2).map((category, idx) => (
+                                      <Badge key={idx} variant="outline" className="text-xs h-5">
+                                        {category.replace(/_/g, ' ')}
+                                      </Badge>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
                             </div>
