@@ -38,7 +38,7 @@ function HomePage() {
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90 min-w-[200px] h-14 text-lg">
-                <Link href="/auth/signup">
+                <Link href="/signup">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -146,7 +146,7 @@ function HomePage() {
             
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Button asChild size="lg" variant="secondary" className="min-w-[200px] h-14 text-lg">
-                <Link href="/auth/signup">
+                <Link href="/signup">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

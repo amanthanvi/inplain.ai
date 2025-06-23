@@ -10,18 +10,31 @@ import type { Company } from '@policydiff/shared'
 
 interface CompanyGridProps {
   limit?: number
+  searchQuery?: string
 }
 
-export function CompanyGrid({ limit }: CompanyGridProps = {}) {
+export function CompanyGrid({ limit, searchQuery = '' }: CompanyGridProps = {}) {
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     getCompanies().then(data => {
-      setCompanies(limit ? data.slice(0, limit) : data)
+      let filteredData = data
+      
+      // Filter by search query if provided
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        filteredData = data.filter(company => 
+          company.name.toLowerCase().includes(query) ||
+          company.url.toLowerCase().includes(query)
+        )
+      }
+      
+      // Apply limit if provided
+      setCompanies(limit ? filteredData.slice(0, limit) : filteredData)
       setLoading(false)
     })
-  }, [limit])
+  }, [limit, searchQuery])
 
   if (loading) {
     return (
@@ -34,6 +47,16 @@ export function CompanyGrid({ limit }: CompanyGridProps = {}) {
             </CardHeader>
           </Card>
         ))}
+      </div>
+    )
+  }
+
+  if (companies.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">
+          {searchQuery ? 'No companies found matching your search.' : 'No companies available.'}
+        </p>
       </div>
     )
   }
