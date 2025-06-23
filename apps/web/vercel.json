@@ -1,9 +1,9 @@
 {
   "framework": "nextjs",
   "regions": ["iad1"],
-  "buildCommand": "cd ../.. && npm install && npm run build",
+  "buildCommand": "cd ../.. && npm run build -- --filter=@policydiff/web",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "npm install",
+  "installCommand": "cd ../.. && npm install",
   "crons": [
     {
       "path": "/api/cron/monitor",
