@@ -3,21 +3,36 @@
 import { useState, useEffect } from 'react'
 import { AlertCircle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { getPublicConfig } from '@/lib/env'
 
 export function DemoModeBanner() {
   const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check if we're in demo mode
-    const config = getPublicConfig()
-    const isDemo = config.mode === 'demo' || !process.env.NEXT_PUBLIC_OPENROUTER_API_KEY
+    async function checkStatus() {
+      try {
+        // Fetch the actual app status from the server
+        const response = await fetch('/api/status')
+        if (response.ok) {
+          const data = await response.json()
+          const isDemo = data.mode === 'demo'
+          
+          // Check if user has dismissed the banner
+          const dismissed = localStorage.getItem('demo-banner-dismissed')
+          
+          setIsVisible(isDemo && !dismissed)
+        }
+      } catch (error) {
+        console.error('Failed to check app status:', error)
+        // Default to not showing the banner on error
+        setIsVisible(false)
+      } finally {
+        setIsLoading(false)
+      }
+    }
     
-    // Check if user has dismissed the banner
-    const dismissed = localStorage.getItem('demo-banner-dismissed')
-    
-    setIsVisible(isDemo && !dismissed)
+    checkStatus()
   }, [])
 
   const handleDismiss = () => {
@@ -26,7 +41,7 @@ export function DemoModeBanner() {
     setTimeout(() => setIsVisible(false), 300)
   }
 
-  if (!isVisible) return null
+  if (isLoading || !isVisible) return null
 
   return (
     <div 
