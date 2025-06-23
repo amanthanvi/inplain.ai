@@ -229,8 +229,9 @@ export function getAppMode(): 'production' | 'demo' | 'development' {
     return 'development'
   }
   
-  // Check if AI is configured
-  const hasAI = !!getEnvVar('OPENROUTER_API_KEY')
+  // Check if AI is configured - access env var directly
+  // This is important for Edge runtime compatibility
+  const hasAI = !!process.env.OPENROUTER_API_KEY
   
   // In production without AI, run in demo mode
   if (process.env.NODE_ENV === 'production' && !hasAI) {
