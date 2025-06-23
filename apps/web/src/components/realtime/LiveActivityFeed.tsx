@@ -30,8 +30,13 @@ interface ActivityItem {
     }
     changeType?: string
     riskLevel?: string
+    riskScore?: number
     location?: string
     slug?: string
+    diffId?: string
+    aiSummary?: string
+    highlights?: string[]
+    categories?: string[]
   }
 }
 
