@@ -7,18 +7,19 @@
    Creating an optimized production build ...
  ✓ Compiled successfully
    Linting and checking validity of types ...
-Failed to compile.
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/27) ...
 
-./src/lib/analytics/industry-benchmark.ts:189:69
-Type error: 'industryStandards' is possibly 'undefined'.
-
-[0m [90m 187 |[39m     [36mreturn[39m {[0m
-[0m [90m 188 |[39m       overall[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(overallScore[33m,[39m [35m75[39m))[33m,[39m[0m
-[0m[31m[1m>[22m[39m[90m 189 |[39m       privacy[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(metrics[33m.[39mprivacyScore[33m,[39m industryStandards[33m.[39mprivacyScore[33m![39m))[33m,[39m[0m
-[0m [90m     |[39m                                                                     [31m[1m^[22m[39m[0m
-[0m [90m 190 |[39m       transparency[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(metrics[33m.[39mtransparencyScore[33m,[39m industryStandards[33m.[39mtransparencyScore[33m![39m))[33m,[39m[0m
-[0m [90m 191 |[39m       userRights[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(metrics[33m.[39muserRightsScore[33m,[39m industryStandards[33m.[39muserRightsScore[33m![39m))[33m,[39m[0m
-[0m [90m 192 |[39m       dataProtection[33m:[39m [33mMath[39m[33m.[39mround(calculatePercentile(metrics[33m.[39mdataProtectionScore[33m,[39m industryStandards[33m.[39mdataProtectionScore[33m![39m))[0m
+> Build error occurred
+Error: Export encountered an error on /login/page: /login, exiting the build.
+    at exportPageWithRetry (/Users/amanthanvi/GitRepos/my_security_policy_app/node_modules/next/dist/export/worker.js:289:31)
+    at async Promise.all (index 7)
+    at async /Users/amanthanvi/GitRepos/my_security_policy_app/node_modules/next/dist/export/worker.js:319:35
+    at async Object.exportPages (/Users/amanthanvi/GitRepos/my_security_policy_app/node_modules/next/dist/export/worker.js:314:5) {
+  type: 'ExportPageError',
+  code: 'NEXT_EXPORT_PAGE_ERROR'
+}
 npm ERR! Lifecycle script `build` failed with error: 
 npm ERR! Error: command failed 
 npm ERR!   in workspace: @policydiff/web@1.0.0 

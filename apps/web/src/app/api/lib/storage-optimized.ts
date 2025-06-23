@@ -18,7 +18,7 @@ export class OptimizedStorageClient {
     return CacheService.wrap(
       CacheKeys.latestSnapshots(slug),
       async () => {
-        const snapshotIds = await kv.zrange<string[]>(`snapshots:${slug}`, -limit, -1)
+        const snapshotIds = await kv.zrange<string>(`snapshots:${slug}`, -limit, -1)
         
         if (!snapshotIds?.length) return []
         
@@ -100,7 +100,7 @@ export class OptimizedStorageClient {
     return CacheService.wrap(
       `diffs:latest:${slug}:${limit}`,
       async () => {
-        const keys = await kv.zrange<string[]>(`diffs:${slug}`, -limit, -1)
+        const keys = await kv.zrange<string>(`diffs:${slug}`, -limit, -1)
         if (!keys?.length) return []
         
         const diffs = await DatabaseOptimizer.batchGet<DiffMeta>(keys)
@@ -157,16 +157,10 @@ export class OptimizedStorageClient {
     return CacheService.wrap(
       'companies:slugs',
       async () => {
-        const pattern = 'snapshots:*'
-        const keys = await kv.keys(pattern)
-        
-        if (!keys) return []
-        
-        const slugs = keys
-          .map(key => key.match(/^snapshots:(.+)$/)?.[1])
-          .filter(Boolean) as string[]
-        
-        return [...new Set(slugs)]
+        // In production, this would come from a database query or maintained index
+        // For now, return the known companies from WATCHED_COMPANIES
+        const { WATCHED_COMPANIES } = await import('@policydiff/shared')
+        return WATCHED_COMPANIES.map(company => company.slug)
       },
       { ttl: 3600 } // 1 hour
     )
