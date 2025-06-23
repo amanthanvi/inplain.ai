@@ -95,22 +95,19 @@ export async function GET(request: NextRequest) {
         }
         
         // Enrich with AI analysis if available and requested
-        if (includeAI && diff.analysis) {
+        if (includeAI && diff.summaryId) {
           try {
-            const analysisData = typeof diff.analysis === 'string' 
-              ? JSON.parse(diff.analysis) 
-              : diff.analysis
-            
-            baseActivity.metadata!.aiSummary = analysisData.summary || analysisData.change_summary
-            baseActivity.metadata!.highlights = analysisData.highlights || analysisData.key_highlights
-            baseActivity.metadata!.categories = analysisData.categories
-            
-            // Update description with AI insights
-            if (analysisData.summary) {
-              baseActivity.description = analysisData.summary.substring(0, 150) + '...'
+            const summary = await storage.getSummary(diff.summaryId)
+            if (summary) {
+              baseActivity.metadata!.aiSummary = summary.summary
+              baseActivity.metadata!.highlights = summary.highlights
+              baseActivity.metadata!.categories = summary.categories
+              
+              // Update description with AI insights
+              baseActivity.description = summary.summary.substring(0, 150) + '...'
             }
           } catch (e) {
-            console.warn('Failed to parse AI analysis:', e)
+            console.warn('Failed to fetch AI summary:', e)
           }
         }
         
@@ -120,7 +117,16 @@ export async function GET(request: NextRequest) {
             // Get diff content for risk scoring
             const diffContent = await optimizedStorage.getDiffContent(diff.diffBlobKey)
             if (diffContent) {
-              const riskScore = await RiskScorer.scoreChanges(diffContent)
+              // Extract the diff result data
+              const diffResult = {
+                additions: diffContent.additions || '',
+                removals: diffContent.deletions || diffContent.removals || '',
+                modifications: diffContent.modifications || '',
+                changeCount: diffContent.changeCount || diff.changeCount,
+                changeType: diffContent.changeType || diff.changeType
+              }
+              
+              const riskScore = await RiskScorer.scoreChanges(diffResult)
               
               baseActivity.metadata!.riskScore = riskScore.overall
               baseActivity.metadata!.riskLevel = riskScore.recommendation
@@ -256,9 +262,10 @@ function generateUserActivities(count: number): ActivityItem[] {
   const locations = ['San Francisco, CA', 'New York, NY', 'Austin, TX', 'Seattle, WA', 'Chicago, IL']
   
   for (let i = 0; i < count; i++) {
-    const user = sampleUsers[Math.floor(Math.random() * sampleUsers.length)]
-    const company = companies[Math.floor(Math.random() * companies.length)]
-    const location = locations[Math.floor(Math.random() * locations.length)]
+    const userIndex = Math.floor(Math.random() * sampleUsers.length)
+    const user = sampleUsers[userIndex]!
+    const company = companies[Math.floor(Math.random() * companies.length)]!
+    const location = locations[Math.floor(Math.random() * locations.length)]!
     
     activities.push({
       id: `user-analysis-${Date.now()}-${i}`,
