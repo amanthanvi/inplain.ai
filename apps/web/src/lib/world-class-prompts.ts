@@ -719,7 +719,12 @@ export function enhanceAnalysisWithWorldClassPrompts(
   const promptIds = WorldClassPromptsLibrary.getOptimalPromptCombination(useCase as any, basePrompt.length)
   
   // Get the primary prompt
-  const primaryPrompt = WorldClassPromptsLibrary.getPrompt(promptIds[0])
+  const primaryPromptId = promptIds[0]
+  if (!primaryPromptId) {
+    return { prompt: basePrompt, systemPrompt: '', temperature: 0.3 }
+  }
+  
+  const primaryPrompt = WorldClassPromptsLibrary.getPrompt(primaryPromptId)
   if (!primaryPrompt) {
     return { prompt: basePrompt, systemPrompt: '', temperature: 0.3 }
   }

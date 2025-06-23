@@ -7,22 +7,82 @@
    Creating an optimized production build ...
  ✓ Compiled successfully
    Linting and checking validity of types ...
-Failed to compile.
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/30) ...
+   Generating static pages (7/30) 
+   Generating static pages (14/30) 
+   Generating static pages (22/30) 
+ ✓ Generating static pages (30/30)
+   Finalizing page optimization ...
+   Collecting build traces ...
 
-./src/components/ui/framer-animations.tsx:127:7
-Type error: Type '{ type: string; stiffness: number; damping: number; duration: number; delay: number; }' is not assignable to type 'Transition<any>'.
-  Type '{ type: string; stiffness: number; damping: number; duration: number; delay: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
-    Types of property 'type' are incompatible.
-      Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
+Route (app)                              Size     First Load JS
+┌ ○ /                                    5.66 kB         373 kB
+├ ○ /_not-found                          198 B           360 kB
+├ ƒ /[slug]                              6.91 kB         374 kB
+├ ƒ /[slug]/analytics                    9.68 kB         377 kB
+├ ○ /about                               171 B           360 kB
+├ ƒ /api/alerts                          135 B           368 kB
+├ ƒ /api/alerts/[id]                     135 B           368 kB
+├ ƒ /api/analytics/[slug]                135 B           368 kB
+├ ƒ /api/analytics/benchmark             135 B           368 kB
+├ ƒ /api/analytics/compliance            135 B           368 kB
+├ ƒ /api/analytics/risk-score            135 B           368 kB
+├ ƒ /api/analytics/trends                135 B           368 kB
+├ ƒ /api/analyze-advanced-stream/[slug]  135 B           368 kB
+├ ƒ /api/analyze-advanced/[slug]         135 B           368 kB
+├ ƒ /api/analyze-premium/[slug]          135 B           368 kB
+├ ƒ /api/analyze-stream/[slug]           135 B           368 kB
+├ ƒ /api/analyze/[slug]                  135 B           368 kB
+├ ƒ /api/auth/login                      135 B           368 kB
+├ ƒ /api/auth/logout                     135 B           368 kB
+├ ƒ /api/auth/register                   135 B           368 kB
+├ ƒ /api/auth/session                    135 B           368 kB
+├ ƒ /api/auth/signup                     135 B           368 kB
+├ ƒ /api/cache                           135 B           368 kB
+├ ƒ /api/companies/[slug]                134 B           368 kB
+├ ƒ /api/cron/monitor                    135 B           368 kB
+├ ƒ /api/cron/process-alerts             134 B           368 kB
+├ ƒ /api/debug                           135 B           368 kB
+├ ƒ /api/debug-monitor                   135 B           368 kB
+├ ƒ /api/debug/ai-test                   135 B           368 kB
+├ ƒ /api/debug/auth                      135 B           368 kB
+├ ƒ /api/debug/dev-auth                  135 B           368 kB
+├ ƒ /api/debug/env                       134 B           368 kB
+├ ƒ /api/diff/[slug]                     135 B           368 kB
+├ ƒ /api/diff/[slug]/history             135 B           368 kB
+├ ƒ /api/diffs                           135 B           368 kB
+├ ƒ /api/env-test                        135 B           368 kB
+├ ƒ /api/export                          135 B           368 kB
+├ ƒ /api/feed                            134 B           368 kB
+├ ƒ /api/feed-optimized                  135 B           368 kB
+├ ƒ /api/health                          135 B           368 kB
+├ ƒ /api/metrics                         135 B           368 kB
+├ ƒ /api/models                          135 B           368 kB
+├ ƒ /api/search                          134 B           368 kB
+├ ƒ /api/snapshot/[slug]                 135 B           368 kB
+├ ƒ /api/status                          135 B           368 kB
+├ ƒ /api/summary/[slug]                  135 B           368 kB
+├ ƒ /api/test-fetch                      135 B           368 kB
+├ ƒ /api/user/api-key                    135 B           368 kB
+├ ƒ /api/user/settings                   135 B           368 kB
+├ ƒ /api/watchlists                      135 B           368 kB
+├ ƒ /api/watchlists/[id]                 134 B           368 kB
+├ ƒ /api/watchlists/[id]/sites           135 B           368 kB
+├ ƒ /api/webhooks                        135 B           368 kB
+├ ○ /dashboard                           13.5 kB         381 kB
+├ ○ /login                               1.3 kB          369 kB
+├ ○ /onboarding                          6.58 kB         374 kB
+├ ○ /settings                            3.4 kB          371 kB
+└ ○ /signup                              1.85 kB         369 kB
++ First Load JS shared by all            359 kB
+  └ chunks/vendor-bd8594bb9e375bca.js    357 kB
+  └ other shared chunks (total)          2 kB
 
-[0m [90m 125 |[39m       initial[33m=[39m[32m"initial"[39m[0m
-[0m [90m 126 |[39m       animate[33m=[39m[32m"animate"[39m[0m
-[0m[31m[1m>[22m[39m[90m 127 |[39m       transition[33m=[39m{{ duration[33m,[39m delay[33m,[39m [33m...[39mspringConfig }}[0m
-[0m [90m     |[39m       [31m[1m^[22m[39m[0m
-[0m [90m 128 |[39m       className[33m=[39m{className}[0m
-[0m [90m 129 |[39m     [33m>[39m[0m
-[0m [90m 130 |[39m       {children}[0m
-npm ERR! Lifecycle script `build` failed with error: 
-npm ERR! Error: command failed 
-npm ERR!   in workspace: @policydiff/web@1.0.0 
-npm ERR!   at location: /Users/amanthanvi/GitRepos/my_security_policy_app/apps/web 
+
+ƒ Middleware                             38.8 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

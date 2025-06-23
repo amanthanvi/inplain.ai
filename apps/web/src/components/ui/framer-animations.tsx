@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { ReactNode } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 
 // Animation variants
 export const fadeIn = {
@@ -59,7 +59,7 @@ export const staggerContainer = {
 
 // Spring configurations
 export const springConfig = {
-  type: "spring",
+  type: "spring" as const,
   stiffness: 300,
   damping: 30
 }
@@ -270,19 +270,32 @@ interface CounterProps {
 }
 
 export function Counter({ from = 0, to, duration = 2, className }: CounterProps) {
+  const [count, setCount] = useState(from)
+  
+  useEffect(() => {
+    const startTime = Date.now()
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / (duration * 1000), 1)
+      const current = from + (to - from) * progress
+      
+      setCount(current)
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      }
+    }
+    
+    requestAnimationFrame(animate)
+  }, [to, from, duration])
+  
   return (
     <motion.span
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={className}
     >
-      <motion.span
-        initial={{ count: from }}
-        animate={{ count: to }}
-        transition={{ duration, ease: "easeOut" }}
-      >
-        {(props: any) => Math.floor(props.count)}
-      </motion.span>
+      {to % 1 === 0 ? Math.floor(count) : count.toFixed(1)}
     </motion.span>
   )
 }
