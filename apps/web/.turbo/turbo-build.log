@@ -7,19 +7,18 @@
    Creating an optimized production build ...
  ✓ Compiled successfully
    Linting and checking validity of types ...
-   Collecting page data ...
- ⚠ Using edge runtime on a page currently disables static generation for that page
-   Generating static pages (0/27) ...
+Failed to compile.
 
-> Build error occurred
-Error: Export encountered an error on /login/page: /login, exiting the build.
-    at exportPageWithRetry (/Users/amanthanvi/GitRepos/my_security_policy_app/node_modules/next/dist/export/worker.js:289:31)
-    at async Promise.all (index 7)
-    at async /Users/amanthanvi/GitRepos/my_security_policy_app/node_modules/next/dist/export/worker.js:319:35
-    at async Object.exportPages (/Users/amanthanvi/GitRepos/my_security_policy_app/node_modules/next/dist/export/worker.js:314:5) {
-  type: 'ExportPageError',
-  code: 'NEXT_EXPORT_PAGE_ERROR'
-}
+./src/components/onboarding/OnboardingFlow.tsx:375:18
+Type error: 'React' refers to a UMD global, but the current file is a module. Consider adding an import instead.
+
+[0m [90m 373 |[39m             [33m<[39m[33mCardHeader[39m className[33m=[39m[32m"text-center pb-2"[39m[33m>[39m[0m
+[0m [90m 374 |[39m               [33m<[39m[33mdiv[39m className[33m=[39m[32m"mx-auto mb-4 h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center"[39m[33m>[39m[0m
+[0m[31m[1m>[22m[39m[90m 375 |[39m                 {[33mReact[39m[33m.[39mcreateElement(steps[currentStep][33m.[39micon[33m,[39m {[0m
+[0m [90m     |[39m                  [31m[1m^[22m[39m[0m
+[0m [90m 376 |[39m                   className[33m:[39m [32m"h-6 w-6 text-primary"[39m[0m
+[0m [90m 377 |[39m                 })}[0m
+[0m [90m 378 |[39m               [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
 npm ERR! Lifecycle script `build` failed with error: 
 npm ERR! Error: command failed 
 npm ERR!   in workspace: @policydiff/web@1.0.0 

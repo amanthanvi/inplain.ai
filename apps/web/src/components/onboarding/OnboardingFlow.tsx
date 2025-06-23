@@ -345,7 +345,10 @@ export function OnboardingFlowLegacy() {
   }
 
   const canProceed = () => {
-    switch (steps[currentStep].id) {
+    const currentStepObj = steps[currentStep]
+    if (!currentStepObj) return false
+    
+    switch (currentStepObj.id) {
       case 'use-case':
         return selectedUseCase !== ''
       case 'companies':
