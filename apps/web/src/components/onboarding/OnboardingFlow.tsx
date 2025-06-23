@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -358,6 +358,12 @@ export function OnboardingFlowLegacy() {
     }
   }
 
+  const currentStepData = steps[currentStep]
+  
+  if (!currentStepData) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-subtle">
       <div className="w-full max-w-2xl">
@@ -372,16 +378,16 @@ export function OnboardingFlowLegacy() {
             
             <CardHeader className="text-center pb-2">
               <div className="mx-auto mb-4 h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                {React.createElement(steps[currentStep].icon, {
+                {React.createElement(currentStepData.icon, {
                   className: "h-6 w-6 text-primary"
                 })}
               </div>
-              <CardTitle className="text-2xl">{steps[currentStep].title}</CardTitle>
-              <CardDescription>{steps[currentStep].description}</CardDescription>
+              <CardTitle className="text-2xl">{currentStepData.title}</CardTitle>
+              <CardDescription>{currentStepData.description}</CardDescription>
             </CardHeader>
             
             <CardContent className="pt-6">
-              {steps[currentStep].content}
+              {currentStepData.content}
               
               <div className="flex items-center justify-between mt-8">
                 <Button

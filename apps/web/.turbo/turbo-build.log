@@ -9,16 +9,19 @@
    Linting and checking validity of types ...
 Failed to compile.
 
-./src/components/onboarding/OnboardingFlow.tsx:375:18
-Type error: 'React' refers to a UMD global, but the current file is a module. Consider adding an import instead.
+./src/components/ui/framer-animations.tsx:127:7
+Type error: Type '{ type: string; stiffness: number; damping: number; duration: number; delay: number; }' is not assignable to type 'Transition<any>'.
+  Type '{ type: string; stiffness: number; damping: number; duration: number; delay: number; }' is not assignable to type 'ValueAnimationTransition<any>'.
+    Types of property 'type' are incompatible.
+      Type 'string' is not assignable to type 'AnimationGeneratorType | undefined'.
 
-[0m [90m 373 |[39m             [33m<[39m[33mCardHeader[39m className[33m=[39m[32m"text-center pb-2"[39m[33m>[39m[0m
-[0m [90m 374 |[39m               [33m<[39m[33mdiv[39m className[33m=[39m[32m"mx-auto mb-4 h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center"[39m[33m>[39m[0m
-[0m[31m[1m>[22m[39m[90m 375 |[39m                 {[33mReact[39m[33m.[39mcreateElement(steps[currentStep][33m.[39micon[33m,[39m {[0m
-[0m [90m     |[39m                  [31m[1m^[22m[39m[0m
-[0m [90m 376 |[39m                   className[33m:[39m [32m"h-6 w-6 text-primary"[39m[0m
-[0m [90m 377 |[39m                 })}[0m
-[0m [90m 378 |[39m               [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
+[0m [90m 125 |[39m       initial[33m=[39m[32m"initial"[39m[0m
+[0m [90m 126 |[39m       animate[33m=[39m[32m"animate"[39m[0m
+[0m[31m[1m>[22m[39m[90m 127 |[39m       transition[33m=[39m{{ duration[33m,[39m delay[33m,[39m [33m...[39mspringConfig }}[0m
+[0m [90m     |[39m       [31m[1m^[22m[39m[0m
+[0m [90m 128 |[39m       className[33m=[39m{className}[0m
+[0m [90m 129 |[39m     [33m>[39m[0m
+[0m [90m 130 |[39m       {children}[0m
 npm ERR! Lifecycle script `build` failed with error: 
 npm ERR! Error: command failed 
 npm ERR!   in workspace: @policydiff/web@1.0.0 
