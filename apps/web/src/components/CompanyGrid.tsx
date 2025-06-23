@@ -8,16 +8,20 @@ import { useEffect, useState } from 'react'
 import { getCompanies } from '@/lib/api'
 import type { Company } from '@policydiff/shared'
 
-export function CompanyGrid() {
+interface CompanyGridProps {
+  limit?: number
+}
+
+export function CompanyGrid({ limit }: CompanyGridProps = {}) {
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     getCompanies().then(data => {
-      setCompanies(data)
+      setCompanies(limit ? data.slice(0, limit) : data)
       setLoading(false)
     })
-  }, [])
+  }, [limit])
 
   if (loading) {
     return (

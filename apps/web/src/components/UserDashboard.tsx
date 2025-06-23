@@ -7,9 +7,13 @@ import { PremiumBadge } from '@/components/ui/premium-badge'
 import { Button } from '@/components/ui/button'
 import { PremiumTimeline } from './PremiumTimeline'
 import { GlobalSearchBar } from './GlobalSearchBar'
+import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard'
+import { RiskScoreCard } from '@/components/analytics/RiskScoreCard'
+import { PolicyTimeline } from '@/components/analytics/PolicyTimeline'
 import { 
 	Settings, Star, TrendingUp, Shield, Clock, 
-	ChevronRight, Plus, X, Mail, Moon, Sun, Monitor 
+	ChevronRight, Plus, X, Mail, Moon, Sun, Monitor,
+	BarChart3, AlertTriangle, Eye
 } from 'lucide-react'
 import { type TimelineEvent } from './PremiumTimeline'
 
@@ -26,7 +30,23 @@ export function UserDashboard() {
 	const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
 	const [recentActivity, setRecentActivity] = useState<TimelineEvent[]>([])
 	const [showSettings, setShowSettings] = useState(false)
+	const [showAnalytics, setShowAnalytics] = useState(false)
 	const [theme, setTheme] = useState(user?.preferences.theme || 'system')
+	
+	// Mock risk data for demo
+	const mockRiskData = {
+		overall: 6.8,
+		categories: {
+			dataCollection: 7.2,
+			thirdPartySharing: 5.4,
+			dataRetention: 6.1,
+			userRights: 8.3,
+			transparency: 7.8
+		},
+		trend: 'up' as const,
+		lastUpdated: '2 hours ago',
+		alerts: 2
+	}
 
 	useEffect(() => {
 		if (user) {
@@ -132,13 +152,13 @@ export function UserDashboard() {
 				</div>
 			</header>
 
-			<div className="container mx-auto px-4 py-8">
-				<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+			<div className="container mx-auto px-4 py-4 md:py-8">
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
 					{/* Main Content */}
-					<div className="lg:col-span-2 space-y-6">
+					<div className="lg:col-span-2 space-y-4 md:space-y-6">
 						{/* Welcome Card */}
 						<PremiumCard variant="gradient">
-							<PremiumCardContent className="p-6">
+							<PremiumCardContent className="p-4 md:p-6">
 								<h2 className="text-2xl font-bold mb-2">
 									Welcome back, {user.name.split(' ')[0]}!
 								</h2>
@@ -146,10 +166,14 @@ export function UserDashboard() {
 									You're tracking {watchlist.length} companies. 
 									{recentActivity.length > 0 && ` ${recentActivity.length} updates since your last visit.`}
 								</p>
-								<div className="flex gap-3">
-									<Button variant="premium" size="sm">
-										<TrendingUp className="h-4 w-4 mr-2" />
-										View Analytics
+								<div className="flex flex-col sm:flex-row gap-3">
+									<Button 
+										variant="premium" 
+										size="sm"
+										onClick={() => setShowAnalytics(!showAnalytics)}
+									>
+										<BarChart3 className="h-4 w-4 mr-2" />
+										{showAnalytics ? 'Hide Analytics' : 'View Analytics'}
 									</Button>
 									<Button variant="outline" size="sm">
 										<Plus className="h-4 w-4 mr-2" />
@@ -221,6 +245,26 @@ export function UserDashboard() {
 							</PremiumCardContent>
 						</PremiumCard>
 
+						{/* Analytics Dashboard - Conditionally shown */}
+						{showAnalytics && (
+							<PremiumCard className="animate-slide-up">
+								<PremiumCardHeader>
+									<PremiumCardTitle className="flex items-center gap-2">
+										<BarChart3 className="h-5 w-5" />
+										Advanced Analytics
+									</PremiumCardTitle>
+								</PremiumCardHeader>
+								<PremiumCardContent>
+									<AnalyticsDashboard />
+								</PremiumCardContent>
+							</PremiumCard>
+						)}
+
+						{/* Policy Timeline */}
+						{showAnalytics && (
+							<PolicyTimeline />
+						)}
+
 						{/* Recent Activity */}
 						<PremiumCard>
 							<PremiumCardHeader>
@@ -239,7 +283,16 @@ export function UserDashboard() {
 					</div>
 
 					{/* Sidebar */}
-					<div className="space-y-6">
+					<div className="space-y-4 md:space-y-6">
+						{/* Risk Score Card */}
+						{showAnalytics && (
+							<RiskScoreCard 
+								company="Overall Portfolio" 
+								riskData={mockRiskData}
+								className="animate-slide-up"
+							/>
+						)}
+
 						{/* Quick Stats */}
 						<PremiumCard variant="glass">
 							<PremiumCardHeader>

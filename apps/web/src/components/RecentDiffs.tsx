@@ -8,19 +8,23 @@ import { DiffCard } from '@/components/DiffCard'
 import { getRecentDiffs } from '@/lib/api'
 import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
 
-export function RecentDiffs() {
+interface RecentDiffsProps {
+  limit?: number
+}
+
+export function RecentDiffs({ limit = 5 }: RecentDiffsProps) {
   const [diffs, setDiffs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchRecentDiffs() {
-      const results = await getRecentDiffs(5)
+      const results = await getRecentDiffs(limit)
       setDiffs(results)
       setLoading(false)
     }
     
     fetchRecentDiffs()
-  }, [])
+  }, [limit])
 
   if (loading) {
     return (

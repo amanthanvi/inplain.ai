@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { StorageClient } from '../../lib/storage'
 import { ContentExtractor } from '../../../../lib/content-extractor'
 import { ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, SYSTEM_PROMPTS, selectBestModel } from '../../../../lib/prompts'
+import { enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
 import { MockAIService } from '../../../../lib/mock-ai-service'
 
 const storage = new StorageClient()
