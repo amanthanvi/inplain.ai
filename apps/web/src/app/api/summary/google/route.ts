@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { StorageClient } from '../../../lib/storage'
-import { PolicyAnalysisService } from '../../../lib/ai-service'
+import { StorageClient } from '../../lib/storage'
+import { PolicyAnalysisService } from '../../lib/ai-service'
 import { SummarySchema } from '@inplain.ai/shared'
 import { formatTimestamp } from '@inplain.ai/shared'
 import { getEnvVar } from '@/lib/env'
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     // Check if we already have a summary for this diff
     if (!force) {
       const cacheKey = `summary:${diffId}`
-      const cachedSummary = await storageClient.getCachedSummary(cacheKey)
+      const cachedSummary = await storageClient.getCachedAnalysis(cacheKey)
       
       if (cachedSummary) {
         return NextResponse.json({
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Get the diff
-    const diff = await storageClient.getDiff(diffId)
+    const diff = await storageClient.getDiff(slug, diffId)
     
     if (!diff) {
       return NextResponse.json(
@@ -145,14 +145,48 @@ export async function POST(request: NextRequest) {
     const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY)
     
     // Generate the summary
-    const summary = await aiService.generateSummary(diff, model || DEFAULT_MODEL)
+    const summaryPrompt = `Analyze this privacy policy diff and provide a summary:
     
-    // Validate the summary
+    Company: ${slug}
+    Created on: ${diff.createdAt}
+    Change Type: ${diff.changeType}
+    Additions: ${diff.additions}
+    Deletions: ${diff.deletions}
+    Total Changes: ${diff.changeCount}
+    
+    Provide a JSON response with:
+    - summary: A clear explanation of what changed
+    - highlights: Array of key changes (max 5)
+    - riskLevel: "low", "medium", or "high"
+    - categories: Array of categories affected
+    `
+    
+    const response = await aiService.generateResponse(summaryPrompt, {
+      model: model || DEFAULT_MODEL,
+      systemPrompt: 'You are a privacy policy expert. Analyze changes and provide clear summaries.',
+      response_format: { type: 'json_object' }
+    })
+    
+    // Parse and validate the response
+    const parsedResponse = JSON.parse(response.content)
+    const summary = {
+      id: crypto.randomUUID(),
+      diffId,
+      createdAt: formatTimestamp(),
+      model: response.model,
+      prompt: summaryPrompt,
+      summary: parsedResponse.summary || 'No summary generated',
+      highlights: parsedResponse.highlights || [],
+      riskLevel: parsedResponse.riskLevel || 'medium',
+      categories: parsedResponse.categories || [],
+      tokensUsed: response.tokensUsed.total
+    }
+    
     const validatedSummary = SummarySchema.parse(summary)
     
     // Cache the summary
     const cacheKey = `summary:${diffId}`
-    await storageClient.setCachedSummary(cacheKey, validatedSummary, 86400) // 24 hours
+    await storageClient.setCachedAnalysis(cacheKey, validatedSummary, 86400) // 24 hours
     
     return NextResponse.json({
       summary: validatedSummary,

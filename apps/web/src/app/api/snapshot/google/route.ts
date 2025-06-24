@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { OptimizedStorageClient } from '../../../lib/storage-optimized'
+import { OptimizedStorageClient } from '../../lib/storage-optimized'
 import { PerformanceMonitor } from '@/lib/performance'
 import { getEnvVar } from '@/lib/env'
 import { getClerkAuth } from '@/lib/auth-clerk'
