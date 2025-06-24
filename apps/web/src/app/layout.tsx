@@ -8,6 +8,7 @@ import { DevAuthWarning } from '@/components/dev-auth-warning'
 import { DemoModeBanner } from '@/components/demo-mode-banner'
 import { Navigation } from '@/components/Navigation'
 import { ClerkProvider } from '@clerk/nextjs'
+import { Analytics } from '@vercel/analytics/next'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -91,6 +92,7 @@ export default function RootLayout({
           <AppStatus />
           <DevAuthWarning />
           <DemoModeBanner />
+          <Analytics />
           </Providers>
         </body>
       </html>
