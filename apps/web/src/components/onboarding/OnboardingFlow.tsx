@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { useAuth } from '@/contexts/auth-context'
+import { useUser } from '@clerk/nextjs'
 import { 
   ArrowRight, ArrowLeft, Check, Sparkles, Shield, Bell, 
   BarChart3, Search, Users, Zap, Star, ChevronRight,
@@ -67,7 +67,11 @@ export { EnhancedOnboardingFlow as OnboardingFlow } from './EnhancedOnboardingFl
 
 export function OnboardingFlowLegacy() {
   const router = useRouter()
-  const { user, updatePreferences } = useAuth()
+  const { user } = useUser()
+  const updatePreferences = async (prefs: any) => {
+    // TODO: Implement with Clerk metadata
+    console.log('Update preferences:', prefs)
+  }
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
   const [selectedUseCase, setSelectedUseCase] = useState<string>('')

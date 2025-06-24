@@ -1,6 +1,5 @@
 'use client'
 
-import { AuthProvider } from '@/contexts/auth-context'
 import { ToastProvider } from '@/contexts/toast-context'
 import { EnvProvider } from '@/providers/env-provider'
 import { GlobalErrorBoundary } from '@/components/error/GlobalErrorBoundary'
@@ -11,9 +10,7 @@ export function Providers({ children }: { children: ReactNode }) {
 		<GlobalErrorBoundary>
 			<EnvProvider>
 				<ToastProvider>
-					<AuthProvider>
-						{children}
-					</AuthProvider>
+					{children}
 				</ToastProvider>
 			</EnvProvider>
 		</GlobalErrorBoundary>
