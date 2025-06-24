@@ -48,7 +48,7 @@ interface LiveActivityFeedProps {
 
 export function LiveActivityFeed({
   maxItems = 10,
-  showGlobalActivity = true,
+  showGlobalActivity = false,
   filterTypes
 }: LiveActivityFeedProps) {
   const [activities, setActivities] = useState<ActivityItem[]>([])
