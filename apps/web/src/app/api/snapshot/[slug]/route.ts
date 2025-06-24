@@ -22,10 +22,10 @@ const getCompanyBySlug = (slug: string): Company | null => {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const slug = params.slug
+    const { slug } = await params
     
     // Log request for debugging
     console.log('Snapshot API called', { slug })
@@ -139,7 +139,7 @@ export async function GET(
   } catch (error) {
     console.error('Snapshot API error', { 
       error: error instanceof Error ? error.message : 'Unknown error',
-      slug: params.slug 
+      slug
     })
     
     return NextResponse.json(

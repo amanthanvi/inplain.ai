@@ -318,3 +318,10 @@ export function getSafeEnvInfo(): Record<string, any> {
   
   return info
 }
+
+/**
+ * Check if running in demo mode (no AI configured)
+ */
+export function isDemoMode(): boolean {
+  return getAppMode() === 'demo'
+}
