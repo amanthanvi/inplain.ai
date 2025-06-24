@@ -2,8 +2,14 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function getClerkAuth() {
-  const { userId, sessionId } = await auth()
-  return { userId, sessionId }
+  try {
+    const { userId, sessionId } = await auth()
+    return { userId, sessionId }
+  } catch (error) {
+    console.error('Clerk auth error:', error)
+    // Return null values to allow the API to handle the error
+    return { userId: null, sessionId: null }
+  }
 }
 
 export async function requireClerkAuth() {
