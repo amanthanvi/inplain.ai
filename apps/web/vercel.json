@@ -1,7 +1,7 @@
 {
   "framework": "nextjs",
   "regions": ["iad1"],
-  "buildCommand": "cd ../.. && npm run build -- --filter=@policydiff/web",
+  "buildCommand": "cd ../.. && npm run build -- --filter=@inplain.ai/web",
   "outputDirectory": ".next",
   "installCommand": "cd ../.. && npm install",
   "crons": [
