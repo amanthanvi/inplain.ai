@@ -24,8 +24,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  let slug: string
+  
   try {
-    const { slug } = await params
+    const resolvedParams = await params
+    slug = resolvedParams.slug
     
     // Log request for debugging
     console.log('Snapshot API called', { slug })
