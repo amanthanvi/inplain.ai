@@ -3,6 +3,8 @@ import { aiOrchestrator } from '@/lib/ai-orchestrator';
 import { ContentExtractor } from '@/lib/content-extractor';
 import { StorageClient } from '../../lib/storage';
 import { kv } from '@vercel/kv';
+import { getClerkAuth } from '@/lib/auth-clerk';
+import { isDevAuthEnabled } from '@/lib/dev-auth';
 
 const storage = new StorageClient();
 
@@ -17,6 +19,17 @@ export async function POST(
     const { slug } = await params;
     const body = await request.json();
     const userTier = body.userTier || 'free';
+    
+    // Check authentication in production (skip in dev with auth bypass)
+    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+      const { userId } = await getClerkAuth()
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        )
+      }
+    }
 
     // Get the latest snapshot
     const snapshots = await storage.getLatestSnapshots(slug, 1);

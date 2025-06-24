@@ -6,24 +6,104 @@
   - Environments: .env.local
 
    Creating an optimized production build ...
-(node:87321) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (149kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
  ✓ Compiled successfully
    Linting and checking validity of types ...
-Failed to compile.
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/31) ...
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /signup. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /companies. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+   Generating static pages (7/31) 
+   Generating static pages (15/31) 
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /about. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /login. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /settings. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+   Generating static pages (23/31) 
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /onboarding. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /signup/verify. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Generating static pages (31/31)
+   Finalizing page optimization ...
+   Collecting build traces ...
 
-./src/app/signup/verify/page.tsx:23:17
-Type error: Cannot invoke an object which is possibly 'undefined'.
+Route (app)                              Size     First Load JS
+┌ ○ /                                    5.13 kB         413 kB
+├ ○ /_not-found                          198 B           400 kB
+├ ƒ /[slug]                              6.91 kB         415 kB
+├ ƒ /[slug]/analytics                    9.68 kB         418 kB
+├ ○ /about                               171 B           400 kB
+├ ƒ /api/activity                        135 B           408 kB
+├ ƒ /api/alerts                          135 B           408 kB
+├ ƒ /api/alerts/[id]                     135 B           408 kB
+├ ƒ /api/analytics/[slug]                135 B           408 kB
+├ ƒ /api/analytics/benchmark             135 B           408 kB
+├ ƒ /api/analytics/compliance            135 B           408 kB
+├ ƒ /api/analytics/risk-score            135 B           408 kB
+├ ƒ /api/analytics/trends                135 B           408 kB
+├ ƒ /api/analyze-advanced-stream/[slug]  135 B           408 kB
+├ ƒ /api/analyze-advanced/[slug]         135 B           408 kB
+├ ƒ /api/analyze-premium/[slug]          135 B           408 kB
+├ ƒ /api/analyze-stream/[slug]           135 B           408 kB
+├ ƒ /api/analyze/[slug]                  135 B           408 kB
+├ ƒ /api/auth/preferences                133 B           408 kB
+├ ƒ /api/auth/session                    135 B           408 kB
+├ ƒ /api/cache                           135 B           408 kB
+├ ƒ /api/companies/[slug]                134 B           408 kB
+├ ƒ /api/cron/monitor                    135 B           408 kB
+├ ƒ /api/cron/process-alerts             134 B           408 kB
+├ ƒ /api/debug                           135 B           408 kB
+├ ƒ /api/debug-monitor                   135 B           408 kB
+├ ƒ /api/debug/ai-test                   135 B           408 kB
+├ ƒ /api/debug/auth                      135 B           408 kB
+├ ƒ /api/debug/dev-auth                  135 B           408 kB
+├ ƒ /api/debug/env                       134 B           408 kB
+├ ƒ /api/diff/[slug]                     135 B           408 kB
+├ ƒ /api/diff/[slug]/history             135 B           408 kB
+├ ƒ /api/diffs                           135 B           408 kB
+├ ƒ /api/env-test                        135 B           408 kB
+├ ƒ /api/export                          135 B           408 kB
+├ ƒ /api/feed                            134 B           408 kB
+├ ƒ /api/feed-optimized                  135 B           408 kB
+├ ƒ /api/health                          135 B           408 kB
+├ ƒ /api/metrics                         135 B           408 kB
+├ ƒ /api/models                          135 B           408 kB
+├ ƒ /api/search                          134 B           408 kB
+├ ƒ /api/snapshot/[slug]                 135 B           408 kB
+├ ƒ /api/status                          135 B           408 kB
+├ ƒ /api/summary/[slug]                  135 B           408 kB
+├ ƒ /api/test-fetch                      135 B           408 kB
+├ ƒ /api/user/api-key                    135 B           408 kB
+├ ƒ /api/user/settings                   135 B           408 kB
+├ ƒ /api/watchlists                      135 B           408 kB
+├ ƒ /api/watchlists/[id]                 134 B           408 kB
+├ ƒ /api/watchlists/[id]/sites           135 B           408 kB
+├ ƒ /api/webhooks                        135 B           408 kB
+├ ○ /companies                           657 B           409 kB
+├ ○ /dashboard                           9.73 kB         418 kB
+├ ○ /login                               135 B           408 kB
+├ ○ /onboarding                          6.66 kB         415 kB
+├ ○ /settings                            3.4 kB          412 kB
+├ ○ /signup                              135 B           408 kB
+└ ○ /signup/verify                       536 B           409 kB
++ First Load JS shared by all            400 kB
+  └ chunks/vendor-a2a9ec008d9e36f9.js    397 kB
+  └ other shared chunks (total)          2.07 kB
 
-[0m [90m 21 |[39m         [90m// Check if sign up exists and has a created session[39m[0m
-[0m [90m 22 |[39m         [36mif[39m (signUp[33m?[39m[33m.[39mstatus [33m===[39m [32m'complete'[39m [33m&&[39m signUp[33m.[39mcreatedSessionId) {[0m
-[0m[31m[1m>[22m[39m[90m 23 |[39m           [36mawait[39m setActive({ session[33m:[39m signUp[33m.[39mcreatedSessionId })[0m
-[0m [90m    |[39m                 [31m[1m^[22m[39m[0m
-[0m [90m 24 |[39m           router[33m.[39mpush([32m'/onboarding'[39m)[0m
-[0m [90m 25 |[39m         } [36melse[39m {[0m
-[0m [90m 26 |[39m           [90m// If we're here but signup isn't complete, redirect to signup[39m[0m
-npm ERR! Lifecycle script `build` failed with error: 
-npm ERR! Error: command failed 
-npm ERR!   in workspace: @inplain.ai/web@1.0.0 
-npm ERR!   at location: /Users/amanthanvi/GitRepos/my_security_policy_app/apps/web 
+
+ƒ Middleware                             75.9 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

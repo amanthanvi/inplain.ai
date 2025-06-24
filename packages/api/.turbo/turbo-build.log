@@ -1,5 +1,5 @@
 
-> @policydiff/api@1.0.0 build
+> @inplain.ai/api@1.0.0 build
 > echo 'Skipping TypeScript build for API package'
 
 Skipping TypeScript build for API package
