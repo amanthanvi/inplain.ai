@@ -52,7 +52,8 @@ export async function GET(
     
     try {
       // Get the latest snapshot for this company
-      const latestSnapshot = await storage.getLatestSnapshot(slug)
+      const snapshots = await storage.getLatestSnapshots(slug, 1)
+      const latestSnapshot = snapshots[0]
       
       if (!latestSnapshot) {
         // Return a meaningful response even if no snapshot exists yet
@@ -72,7 +73,7 @@ export async function GET(
       let content = null
       if (latestSnapshot.blobKey) {
         try {
-          const blob = await storage.getBlob(latestSnapshot.blobKey)
+          const blob = await storage.getSnapshotContent(latestSnapshot.blobKey)
           if (blob) {
             content = {
               text: blob,
