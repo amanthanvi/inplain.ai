@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { HoverScale, FadeIn, SlideIn } from '@/components/ui/framer-animations'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
 
 interface AIAnalysisPanelProps {
@@ -74,7 +74,7 @@ export function AIAnalysisPanel({
 }: AIAnalysisPanelProps) {
   const [selectedPrompt, setSelectedPrompt] = useState('summary')
   const [showGuidance, setShowGuidance] = useState(true)
-  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { userId, isLoaded } = useAuth()
 
   const handleAnalyze = async (promptId: string) => {
     setSelectedPrompt(promptId)
@@ -84,7 +84,7 @@ export function AIAnalysisPanel({
 
   if (!analysis && !isAnalyzing && showGuidance) {
     // Show authentication prompt if not logged in
-    if (!authLoading && !isAuthenticated) {
+    if (isLoaded && !userId) {
       return (
         <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50">
           <CardHeader className="relative">

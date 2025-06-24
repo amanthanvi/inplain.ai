@@ -18,7 +18,7 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { FadeIn, SlideIn, HoverScale } from '@/components/ui/framer-animations'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@clerk/nextjs'
 
 interface EnhancedCurrentPolicyProps {
   slug: string
@@ -40,7 +40,7 @@ export function EnhancedCurrentPolicy({ slug }: EnhancedCurrentPolicyProps) {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('overview')
   const streaming = useStreamingAnalysis()
-  const { isAuthenticated } = useAuth()
+  const { userId, isLoaded } = useAuth()
 
   useEffect(() => {
     fetchSnapshot()

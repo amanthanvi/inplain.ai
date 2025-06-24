@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/contexts/auth-context'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { PremiumCard, PremiumCardContent, PremiumCardHeader, PremiumCardTitle } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
@@ -14,7 +14,7 @@ interface SignupFormProps {
 }
 
 export function SignupForm({ onSuccess, onLoginClick }: SignupFormProps) {
-	const { signup } = useAuth()
+	const router = useRouter()
 	const [name, setName] = useState('')
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
@@ -46,14 +46,10 @@ export function SignupForm({ onSuccess, onLoginClick }: SignupFormProps) {
 
 		setIsLoading(true)
 
-		try {
-			await signup(email, password, name)
-			onSuccess?.()
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Signup failed')
-		} finally {
-			setIsLoading(false)
-		}
+		// Since Clerk handles signup through its own components,
+		// redirect to the Clerk signup page with the form data
+		setIsLoading(false)
+		router.push('/signup')
 	}
 
 	return (
