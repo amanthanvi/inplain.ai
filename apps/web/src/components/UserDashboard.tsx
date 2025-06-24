@@ -81,8 +81,8 @@ export function UserDashboard() {
 				type: 'minor',
 				title: 'Google updated data retention policy',
 				description: 'Extended data retention period from 18 to 24 months',
-				company: 'Google',
-				icon: '🔒'
+				impact: 'medium',
+				tags: ['Google', 'Data Retention']
 			},
 			{
 				id: '2',
@@ -90,8 +90,8 @@ export function UserDashboard() {
 				type: 'major',
 				title: 'Facebook added new data sharing partners',
 				description: 'Added 5 new third-party data sharing agreements',
-				company: 'Facebook',
-				icon: '⚠️'
+				impact: 'high',
+				tags: ['Facebook', 'Data Sharing']
 			}
 		]
 		setRecentActivity(mockActivity)
@@ -235,7 +235,7 @@ export function UserDashboard() {
 				{/* Analytics Dashboard */}
 				{showAnalytics && (
 					<div className="mb-8 space-y-6">
-						<RiskScoreCard {...mockRiskData} />
+						<RiskScoreCard company="Overall Portfolio" riskData={mockRiskData} />
 						<AnalyticsDashboard />
 					</div>
 				)}
