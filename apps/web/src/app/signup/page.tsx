@@ -18,8 +18,6 @@ export default function SignupPage() {
               headerSubtitle: "hidden"
             }
           }}
-          fallbackRedirectUrl="/onboarding"
-          forceRedirectUrl="/onboarding"
           signInUrl="/login"
         />
       </div>

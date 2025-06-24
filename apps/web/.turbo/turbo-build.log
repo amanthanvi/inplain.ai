@@ -1,26 +1,29 @@
 
-> @policydiff/web@1.0.0 build
+> @inplain.ai/web@1.0.0 build
 > next build
 
   ▲ Next.js 15.0.0
   - Environments: .env.local
 
    Creating an optimized production build ...
+(node:87321) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (149kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
  ✓ Compiled successfully
    Linting and checking validity of types ...
 Failed to compile.
 
-./src/app/api/activity/route.ts:273:17
-Type error: 'user' is possibly 'undefined'.
+./src/app/signup/verify/page.tsx:23:17
+Type error: Cannot invoke an object which is possibly 'undefined'.
 
-[0m [90m 271 |[39m       type[33m:[39m [32m'user-analysis'[39m[33m,[39m[0m
-[0m [90m 272 |[39m       timestamp[33m:[39m [36mnew[39m [33mDate[39m([33mDate[39m[33m.[39mnow() [33m-[39m [33mMath[39m[33m.[39mrandom() [33m*[39m [35m3600000[39m [33m*[39m [35m4[39m)[33m.[39mtoISOString()[33m,[39m [90m// Random time in last 4 hours[39m[0m
-[0m[31m[1m>[22m[39m[90m 273 |[39m       title[33m:[39m [32m`${user.name} analyzed ${company}'s policy changes`[39m[33m,[39m[0m
-[0m [90m     |[39m                 [31m[1m^[22m[39m[0m
-[0m [90m 274 |[39m       description[33m:[39m [32m'Generated detailed privacy impact report'[39m[33m,[39m[0m
-[0m [90m 275 |[39m       color[33m:[39m [32m'text-purple-600'[39m[33m,[39m[0m
-[0m [90m 276 |[39m       metadata[33m:[39m {[0m
+[0m [90m 21 |[39m         [90m// Check if sign up exists and has a created session[39m[0m
+[0m [90m 22 |[39m         [36mif[39m (signUp[33m?[39m[33m.[39mstatus [33m===[39m [32m'complete'[39m [33m&&[39m signUp[33m.[39mcreatedSessionId) {[0m
+[0m[31m[1m>[22m[39m[90m 23 |[39m           [36mawait[39m setActive({ session[33m:[39m signUp[33m.[39mcreatedSessionId })[0m
+[0m [90m    |[39m                 [31m[1m^[22m[39m[0m
+[0m [90m 24 |[39m           router[33m.[39mpush([32m'/onboarding'[39m)[0m
+[0m [90m 25 |[39m         } [36melse[39m {[0m
+[0m [90m 26 |[39m           [90m// If we're here but signup isn't complete, redirect to signup[39m[0m
 npm ERR! Lifecycle script `build` failed with error: 
 npm ERR! Error: command failed 
-npm ERR!   in workspace: @policydiff/web@1.0.0 
+npm ERR!   in workspace: @inplain.ai/web@1.0.0 
 npm ERR!   at location: /Users/amanthanvi/GitRepos/my_security_policy_app/apps/web 

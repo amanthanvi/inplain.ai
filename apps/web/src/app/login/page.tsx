@@ -18,8 +18,6 @@ export default function LoginPage() {
               headerSubtitle: "hidden"
             }
           }}
-          fallbackRedirectUrl="/dashboard"
-          forceRedirectUrl="/dashboard"
           signUpUrl="/signup"
         />
       </div>
