@@ -5,6 +5,8 @@ import { ContentExtractor } from '@/lib/content-extractor';
 import { StorageClient } from '../../lib/storage';
 import { kv } from '@vercel/kv';
 import { headers } from 'next/headers';
+import { getClerkAuth } from '@/lib/auth-clerk';
+import { isDevAuthEnabled } from '@/lib/dev-auth';
 
 const storage = new StorageClient();
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -28,6 +30,17 @@ export async function POST(
   try {
     const { slug } = await params;
     const body: AnalysisRequest = await request.json();
+    
+    // Check authentication in production (skip in dev with auth bypass)
+    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+      const { userId } = await getClerkAuth()
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        )
+      }
+    }
     
     // Determine user tier from headers or auth
     const userTier = body.userTier || 'free';

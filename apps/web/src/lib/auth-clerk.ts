@@ -30,9 +30,9 @@ export async function isAuthenticated(): Promise<boolean> {
 }
 
 // Helper for API routes that returns user ID or error response
-export async function withAuth<T>(
-  handler: (userId: string) => Promise<NextResponse<T>>
-): Promise<NextResponse<T | { error: string }>> {
+export async function withAuth(
+  handler: (userId: string) => Promise<NextResponse>
+): Promise<NextResponse> {
   const { userId } = await auth()
   
   if (!userId) {

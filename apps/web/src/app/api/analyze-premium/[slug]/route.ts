@@ -5,6 +5,8 @@ import { ContentExtractor } from '../../../../lib/content-extractor'
 import { PROMPT_OPTIMIZATION } from '../../../../lib/prompts'
 import { WorldClassPromptsLibrary, enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
 import { ExpertPromptsLibrary } from '../../../../lib/expert-prompts'
+import { getClerkAuth } from '@/lib/auth-clerk'
+import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 const storage = new StorageClient()
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
@@ -26,6 +28,17 @@ export async function POST(
   try {
     const { slug } = await params
     const body: PremiumAnalysisRequest = await request.json().catch(() => ({}))
+    
+    // Check authentication in production (skip in dev with auth bypass)
+    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+      const { userId } = await getClerkAuth()
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        )
+      }
+    }
     
     const analysisType = body.analysisType || 'comprehensive'
     const userTier = body.userTier || 'premium'
