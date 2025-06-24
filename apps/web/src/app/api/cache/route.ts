@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CacheService, CacheTags } from '@/lib/cache';
-import { AuthService } from '@/lib/auth';
+import { getClerkAuth, getClerkUser } from '@/lib/auth-clerk';
 
 export async function DELETE(request: NextRequest) {
   try {
     // Check authentication - only allow admins
-    const sessionToken = request.cookies.get('session')?.value;
-    if (!sessionToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await AuthService.verifySession(sessionToken);
-    if (!session) {
+    const { userId } = await getClerkAuth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const user = await AuthService.getUserById(session.userId);
-    if (!user || user.tier !== 'enterprise') {
+    const user = await getClerkUser();
+    const tier = (user?.publicMetadata as any)?.tier || 'free';
+    if (!user || tier !== 'enterprise') {
       return NextResponse.json(
         { error: 'Cache management requires enterprise access' },
         { status: 403 }
@@ -101,18 +97,14 @@ export async function DELETE(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const sessionToken = request.cookies.get('session')?.value;
-    if (!sessionToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await AuthService.verifySession(sessionToken);
-    if (!session) {
+    const { userId } = await getClerkAuth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const user = await AuthService.getUserById(session.userId);
-    if (!user || user.tier === 'free') {
+    const user = await getClerkUser();
+    const tier = (user?.publicMetadata as any)?.tier || 'free';
+    if (!user || tier === 'free') {
       return NextResponse.json(
         { error: 'Cache stats require premium access' },
         { status: 403 }

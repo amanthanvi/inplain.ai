@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { getClerkAuth, getClerkUser } from '@/lib/auth-clerk';
 import { ExportService, ExportOptions } from '@/lib/export';
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const { userId } = await getClerkAuth();
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    const user = await getClerkUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
     const body = await request.json();
     const options: ExportOptions = {
       format: body.format || 'json',
@@ -27,7 +41,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user has access to advanced export formats
-    if (user.tier === 'free' && ['pdf', 'zip'].includes(options.format)) {
+    // TODO: Implement tier check with Clerk metadata
+    const userTier = 'free'; // Default for now
+    if (userTier === 'free' && ['pdf', 'zip'].includes(options.format)) {
       return NextResponse.json(
         { error: 'PDF and ZIP exports are only available for premium users' },
         { status: 403 }
@@ -35,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const exportService = new ExportService();
-    const exportData = await exportService.exportUserData(user.id, options);
+    const exportData = await exportService.exportUserData(userId, options);
 
     // Set appropriate headers based on format
     const headers: Record<string, string> = {

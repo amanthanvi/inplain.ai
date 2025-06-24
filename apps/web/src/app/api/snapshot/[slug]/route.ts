@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { OptimizedStorageClient } from '../../lib/storage-optimized'
 import { PerformanceMonitor } from '@/lib/performance'
 import { getEnvVar } from '@/lib/env'
-import { AuthService } from '@/lib/auth'
+import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 // Initialize storage with error handling
@@ -40,8 +40,8 @@ export async function GET(
     
     // Check authentication in production (skip in dev with auth bypass)
     if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const user = await AuthService.getCurrentUser()
-      if (!user) {
+      const { userId } = await getClerkAuth()
+      if (!userId) {
         return NextResponse.json(
           { error: 'Authentication required' },
           { status: 401 }
