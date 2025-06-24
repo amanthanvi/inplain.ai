@@ -5,6 +5,8 @@ import { PolicyAnalysisService } from '../../lib/ai-service'
 import { ContentExtractor } from '../../../../lib/content-extractor'
 import { ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, selectBestModel } from '../../../../lib/prompts'
 import { enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
+import { getClerkAuth } from '@/lib/auth-clerk'
+import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 const storage = new StorageClient()
 
@@ -17,6 +19,17 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
+    
+    // Check authentication in production (skip in dev with auth bypass)
+    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+      const { userId } = await getClerkAuth()
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        )
+      }
+    }
     
     // Handle demo mode gracefully
     if (!OPENROUTER_API_KEY) {

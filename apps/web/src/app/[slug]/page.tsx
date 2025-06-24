@@ -77,30 +77,46 @@ export default async function CompanyPage({ params }: PageProps) {
           </div>
         </section>
         
-        <div className="space-y-8">
-          {/* Enhanced Current Policy Section */}
-          <section>
+        <div className="space-y-12">
+          {/* Primary: Enhanced Current Policy Section */}
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Current Privacy Policy</h2>
+              <p className="text-muted-foreground">
+                View and analyze the current privacy policy with AI-powered insights
+              </p>
+            </div>
             <Suspense fallback={<LoadingSpinner />}>
               <EnhancedCurrentPolicy slug={slug} />
             </Suspense>
           </section>
           
-          {/* Changes and History Grid */}
-          <div className="grid gap-8 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <h2 className="text-2xl font-semibold mb-4">Latest Changes</h2>
-              <Suspense fallback={<LoadingSpinner />}>
-                <DiffViewer slug={slug} />
-              </Suspense>
+          {/* Secondary: Policy Changes Section */}
+          <section className="space-y-4 pt-8 border-t">
+            <div>
+              <h2 className="text-2xl font-semibold mb-2">Policy Change Tracking</h2>
+              <p className="text-muted-foreground text-sm">
+                Monitor how the privacy policy has evolved over time
+              </p>
             </div>
             
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Change History</h2>
-              <Suspense fallback={<LoadingSpinner />}>
-                <Timeline slug={slug} />
-              </Suspense>
+            {/* Changes and History Grid */}
+            <div className="grid gap-8 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <h3 className="text-lg font-medium mb-4">Recent Changes</h3>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <DiffViewer slug={slug} />
+                </Suspense>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-4">Change Timeline</h3>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Timeline slug={slug} />
+                </Suspense>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>

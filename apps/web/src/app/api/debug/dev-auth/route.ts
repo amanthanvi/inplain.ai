@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth';
+import { getClerkUser } from '@/lib/auth-clerk';
 import { isDevAuthEnabled, DEV_USER, DEV_AUTH_WARNING } from '@/lib/dev-auth';
 
 export async function GET() {
@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   const devAuthEnabled = isDevAuthEnabled();
-  const currentUser = await AuthService.getCurrentUser();
+  const clerkUser = await getClerkUser();
   
   const response = {
     devAuth: {
@@ -24,11 +24,11 @@ export async function GET() {
         tier: DEV_USER.tier
       } : null
     },
-    currentUser: currentUser ? {
-      id: currentUser.id,
-      email: currentUser.email,
-      tier: currentUser.tier,
-      isDevUser: currentUser.id === DEV_USER.id
+    currentUser: clerkUser ? {
+      id: clerkUser.id,
+      email: clerkUser.emailAddresses[0]?.emailAddress || '',
+      tier: (clerkUser.publicMetadata as any)?.tier || 'free',
+      isDevUser: clerkUser.id === DEV_USER.id
     } : null,
     environment: {
       NODE_ENV: process.env.NODE_ENV,

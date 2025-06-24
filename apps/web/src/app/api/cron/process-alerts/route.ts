@@ -3,7 +3,6 @@ import { kv } from '@vercel/kv';
 import { EmailService } from '@/lib/email';
 import { WebhookService } from '@/lib/webhook';
 import { WatchlistService } from '@/lib/watchlist';
-import { AuthService } from '@/lib/auth';
 
 export const runtime = 'edge';
 export const maxDuration = 300; // 5 minutes

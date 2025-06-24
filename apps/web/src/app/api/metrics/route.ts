@@ -1,28 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PerformanceMonitor } from '@/lib/performance';
 import { CacheService } from '@/lib/cache';
-import { AuthService } from '@/lib/auth';
+import { getClerkAuth, getClerkUser } from '@/lib/auth-clerk';
 
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const sessionToken = request.cookies.get('session')?.value;
-    if (!sessionToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const session = await AuthService.verifySession(sessionToken);
-    if (!session) {
+    const { userId } = await getClerkAuth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const user = await AuthService.getUserById(session.userId);
+    const user = await getClerkUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Only allow premium users or admins to view metrics
-    if (user.tier === 'free') {
+    // Check tier from Clerk user metadata
+    const tier = (user.publicMetadata as any)?.tier || 'free';
+    if (tier === 'free') {
       return NextResponse.json(
         { error: 'Metrics access requires premium subscription' },
         { status: 403 }
