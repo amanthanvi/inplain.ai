@@ -18,9 +18,10 @@ export default function LoginPage() {
               headerSubtitle: "hidden"
             }
           }}
+          routing="path"
+          path="/login"
           signUpUrl="/signup"
           fallbackRedirectUrl="/dashboard"
-          forceRedirectUrl="/dashboard"
         />
       </div>
     </div>

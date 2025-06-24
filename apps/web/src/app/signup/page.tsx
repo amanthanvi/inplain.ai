@@ -18,9 +18,10 @@ export default function SignupPage() {
               headerSubtitle: "hidden"
             }
           }}
+          routing="path"
+          path="/signup"
           signInUrl="/login"
           fallbackRedirectUrl="/onboarding"
-          forceRedirectUrl="/onboarding"
         />
       </div>
     </div>
