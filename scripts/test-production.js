@@ -130,7 +130,7 @@ async function testCaching() {
 
 // Run all tests
 async function runTests() {
-  console.log(`\n🚀 Testing PolicyDiff Production at ${PRODUCTION_URL}\n`);
+  console.log(`\n🚀 Testing Inplain.AI Production at ${PRODUCTION_URL}\n`);
   
   try {
     await testHealth();

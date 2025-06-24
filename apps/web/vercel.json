@@ -35,10 +35,10 @@
       "has": [
         {
           "type": "host",
-          "value": "www.policydiff.com"
+          "value": "www.inplain.ai"
         }
       ],
-      "destination": "https://policydiff.com/:path*"
+      "destination": "https://inplain.ai/:path*"
     }
   ]
 }

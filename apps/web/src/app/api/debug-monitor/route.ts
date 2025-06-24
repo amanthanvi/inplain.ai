@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { formatTimestamp, hashContent } from '@policydiff/shared'
+import { formatTimestamp, hashContent } from '@inplain.ai/shared'
 
 export const runtime = 'edge'
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     try {
       const response = await fetch(company.url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; PolicyDiff/1.0; +https://policydiff.com)',
+          'User-Agent': 'Mozilla/5.0 (compatible; Inplain.AI/1.0; +https://inplain.ai)',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
           'Cache-Control': 'no-cache',

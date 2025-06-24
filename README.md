@@ -1,13 +1,13 @@
-# PolicyDiff
+# Inplain.AI
 
 > Track, diff, and understand privacy policy changes with AI-powered summaries
 
-[![CI](https://github.com/yourusername/policydiff/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/policydiff/actions/workflows/ci.yml)
+[![CI](https://github.com/amanthanvi/inplain-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/amanthanvi/inplain-ai/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 ## 🎯 Overview
 
-PolicyDiff monitors public privacy policies and terms of service pages, automatically tracking changes and providing plain-language summaries of what changed and why it matters. Built on Vercel Edge Functions with Next.js 15 and OpenRouter AI models for intelligent analysis.
+Inplain.AI monitors public privacy policies and terms of service pages, automatically tracking changes and providing plain-language summaries of what changed and why it matters. Built on Vercel Edge Functions with Next.js 15 and OpenRouter AI models for intelligent analysis.
 
 ## 🏗️ Architecture
 
@@ -21,7 +21,7 @@ PolicyDiff monitors public privacy policies and terms of service pages, automati
 ## 📁 Repository Structure
 
 ```
-policydiff/
+inplain-ai/
 ├─ apps/
 │   └─ web/            # Next.js 15 UI
 ├─ packages/
@@ -38,7 +38,7 @@ policydiff/
 
 ### Prerequisites
 
-- Node.js 20+ & pnpm 8+
+- Node.js 20+
 - Python 3.12+
 - Docker & Docker Compose
 - Vercel CLI (`npm i -g vercel`)
@@ -47,11 +47,11 @@ policydiff/
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/policydiff.git
-cd policydiff
+git clone https://github.com/amanthanvi/inplain-ai.git
+cd inplain-ai
 
 # Install dependencies
-pnpm install
+npm install
 pip install -r packages/scraper/requirements.txt
 
 # Start development environment
@@ -79,16 +79,16 @@ code .
 make test
 
 # Unit tests only
-pnpm test
+npm test
 
 # Python tests
 pytest
 
 # E2E tests
-pnpm e2e
+npm e2e
 
 # Coverage report
-pnpm test:coverage
+npm test:coverage
 ```
 
 ## 🛠️ Make Targets

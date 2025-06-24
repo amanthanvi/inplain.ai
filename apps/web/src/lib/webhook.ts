@@ -100,9 +100,9 @@ export class WebhookService {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-PolicyDiff-Signature': `sha256=${signature}`,
-            'X-PolicyDiff-Event': event.type,
-            'X-PolicyDiff-Delivery': deliveryId
+            'X-Inplain-AI-Signature': `sha256=${signature}`,
+            'X-Inplain-AI-Event': event.type,
+            'X-Inplain-AI-Delivery': deliveryId
           },
           body: payload,
           signal: AbortSignal.timeout(30000) // 30 second timeout
@@ -312,7 +312,7 @@ export class WebhookService {
 
     const event = await this.createEvent('policy.change', userId, {
       test: true,
-      message: 'This is a test webhook from PolicyDiff',
+      message: 'This is a test webhook from Inplain.AI',
       timestamp: new Date().toISOString()
     });
 

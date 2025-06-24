@@ -18,21 +18,37 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'PolicyDiff - Track Privacy Policy Changes',
-  description: 'Monitor and understand changes to privacy policies and terms of service with AI-powered summaries',
+  title: 'Inplain.AI - Privacy policies made simple',
+  description: 'AI-powered privacy policy monitoring and analysis. Understand privacy policies and terms of service with clear, intelligent summaries.',
   keywords: ['privacy policy', 'terms of service', 'policy tracking', 'gdpr', 'data privacy'],
-  authors: [{ name: 'PolicyDiff' }],
+  authors: [{ name: 'Inplain.AI' }],
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      { rel: 'mask-icon', url: '/favicon.ico', color: '#6366f1' },
+      { rel: 'msapplication-config', url: '/browserconfig.xml' },
+    ],
+  },
+  manifest: '/site.webmanifest',
+  themeColor: '#6366f1',
   openGraph: {
-    title: 'PolicyDiff - Track Privacy Policy Changes',
-    description: 'Monitor and understand changes to privacy policies and terms of service',
-    url: 'https://policydiff.com',
-    siteName: 'PolicyDiff',
+    title: 'Inplain.AI - Privacy policies made simple',
+    description: 'AI-powered privacy policy monitoring and analysis',
+    url: 'https://inplain.ai',
+    siteName: 'Inplain.AI',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PolicyDiff - Track Privacy Policy Changes',
-    description: 'Monitor and understand changes to privacy policies and terms of service',
+    title: 'Inplain.AI - Privacy policies made simple',
+    description: 'AI-powered privacy policy monitoring and analysis',
   },
   robots: {
     index: true,
@@ -59,7 +75,7 @@ export default function RootLayout({
                   Built to help you understand privacy policy changes. 
                   {' '}
                   <a
-                    href="https://github.com/policydiff/policydiff"
+                    href="https://github.com/inplain-ai/inplain.ai"
                     target="_blank"
                     rel="noreferrer"
                     className="font-medium underline underline-offset-4"

@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { extractDomain } from '@policydiff/shared/utils'
+import { extractDomain } from '@inplain.ai/shared/utils'
 import { useEffect, useState } from 'react'
 import { getCompanies } from '@/lib/api'
-import type { Company } from '@policydiff/shared'
+import type { Company } from '@inplain.ai/shared'
 
 interface CompanyGridProps {
   limit?: number

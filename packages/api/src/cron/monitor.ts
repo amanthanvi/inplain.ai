@@ -1,8 +1,8 @@
 import { kv } from '@vercel/kv'
 import { put } from '@vercel/blob'
 import { StorageClient } from '../lib/storage'
-import { SnapshotMetaSchema, CrawlJobSchema } from '@policydiff/shared'
-import { formatTimestamp, hashContent } from '@policydiff/shared'
+import { SnapshotMetaSchema, CrawlJobSchema } from '@inplain.ai/shared'
+import { formatTimestamp, hashContent } from '@inplain.ai/shared'
 
 const storage = new StorageClient()
 
@@ -169,7 +169,7 @@ async function fetchPolicyContent(url: string): Promise<string | null> {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'PolicyDiff/1.0 (https://policydiff.com; contact@policydiff.com)',
+        'User-Agent': 'Inplain.AI/1.0 (https://inplain.ai; contact@inplain.ai)',
         'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'en-US,en;q=0.9',
         'Cache-Control': 'no-cache'

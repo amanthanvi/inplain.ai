@@ -1,5 +1,5 @@
 import { kv } from './kv-wrapper'
-import { SnapshotMeta, DiffMeta, Summary } from '@policydiff/shared'
+import { SnapshotMeta, DiffMeta, Summary } from '@inplain.ai/shared'
 import { CacheService, CacheKeys, CacheTags } from '@/lib/cache'
 import { DatabaseOptimizer } from '@/lib/db-optimizer'
 
@@ -159,7 +159,7 @@ export class OptimizedStorageClient {
       async () => {
         // In production, this would come from a database query or maintained index
         // For now, return the known companies from WATCHED_COMPANIES
-        const { WATCHED_COMPANIES } = await import('@policydiff/shared')
+        const { WATCHED_COMPANIES } = await import('@inplain.ai/shared')
         return WATCHED_COMPANIES.map(company => company.slug)
       },
       { ttl: 3600 } // 1 hour

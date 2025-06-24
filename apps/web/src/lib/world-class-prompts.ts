@@ -1,5 +1,5 @@
 /**
- * World-Class AI Prompts for PolicyDiff
+ * World-Class AI Prompts for Inplain.AI
  * These prompts are designed to maximize the capabilities of modern LLMs
  * with expert-level analysis, nuanced understanding, and actionable insights
  */

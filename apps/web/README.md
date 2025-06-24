@@ -1,4 +1,4 @@
-# PolicyDiff Web Application
+# Inplain.AI Web Application
 
 Track and understand privacy policy changes with AI-powered analysis.
 

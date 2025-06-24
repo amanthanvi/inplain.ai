@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const fetchOptions = {
       method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; PolicyDiff/1.0; +https://policydiff.com)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Inplain.AI/1.0; +https://inplain.ai)',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
         'Cache-Control': 'no-cache',

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { HoverScale } from '@/components/ui/framer-animations'
 import { cn } from '@/lib/utils'
-import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
+import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
 
 export interface Notification {
   id: string

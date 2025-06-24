@@ -140,8 +140,8 @@ export async function POST(
             headers: {
               'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
               'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://policydiff.com',
-              'X-Title': 'PolicyDiff'
+              'HTTP-Referer': 'https://inplain.ai',
+              'X-Title': 'Inplain.AI'
             },
             body: JSON.stringify({
               model: selectedModel,

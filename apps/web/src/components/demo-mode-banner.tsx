@@ -56,7 +56,7 @@ export function DemoModeBanner() {
             Demo Mode Active
           </h3>
           <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-3">
-            You're viewing PolicyDiff in demo mode. AI analysis features are simulated. 
+            You're viewing Inplain.AI in demo mode. AI analysis features are simulated. 
             To enable full functionality, configure your OpenRouter API key.
           </p>
           <div className="flex items-center gap-2">

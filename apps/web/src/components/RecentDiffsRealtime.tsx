@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getRecentDiffs } from '@/lib/api'
-import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
+import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
 import { 
   FadeIn, SlideIn, ScaleIn, HoverScale, 
   FloatingElement, PulseAnimation 

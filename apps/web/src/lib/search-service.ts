@@ -1,4 +1,4 @@
-import type { Company, DiffMeta, Summary } from '@policydiff/shared'
+import type { Company, DiffMeta, Summary } from '@inplain.ai/shared'
 
 export interface SearchFilters {
 	query?: string

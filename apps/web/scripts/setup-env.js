@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Interactive setup script for PolicyDiff environment configuration
+ * Interactive setup script for Inplain.AI environment configuration
  */
 
 const fs = require('fs')
@@ -38,7 +38,7 @@ function generateSecret() {
 }
 
 async function main() {
-  console.log(`${colors.bright}${colors.blue}PolicyDiff Environment Setup${colors.reset}\n`)
+  console.log(`${colors.bright}${colors.blue}Inplain.AI Environment Setup${colors.reset}\n`)
 
   // Check if .env.local already exists
   if (fs.existsSync(ENV_PATH)) {
@@ -51,7 +51,7 @@ async function main() {
     }
   }
 
-  console.log('\nThis setup will help you configure PolicyDiff for:\n')
+  console.log('\nThis setup will help you configure Inplain.AI for:\n')
   console.log('  1. Demo Mode (no API keys required)')
   console.log('  2. Full Mode (with AI features)\n')
 
@@ -101,7 +101,7 @@ async function main() {
   envVars.NODE_ENV = 'development'
 
   // Create .env.local content
-  let envContent = '# PolicyDiff Environment Configuration\n'
+  let envContent = '# Inplain.AI Environment Configuration\n'
   envContent += `# Generated on ${new Date().toISOString()}\n\n`
 
   if (mode === '1') {

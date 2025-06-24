@@ -1,5 +1,5 @@
 import DiffMatchPatch from 'diff-match-patch'
-import { calculateChangeType } from '@policydiff/shared'
+import { calculateChangeType } from '@inplain.ai/shared'
 
 export interface DiffResult {
   patches: any[]

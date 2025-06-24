@@ -80,7 +80,7 @@ export function OnboardingFlowLegacy() {
   const steps: OnboardingStep[] = [
     {
       id: 'welcome',
-      title: 'Welcome to PolicyDiff!',
+      title: 'Welcome to Inplain.AI!',
       description: 'Let\'s get you set up in just a few steps',
       icon: Rocket,
       content: (
@@ -93,7 +93,7 @@ export function OnboardingFlowLegacy() {
               Your Privacy Intelligence Platform
             </h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              PolicyDiff helps you track privacy policy changes with AI-powered insights.
+              Inplain.AI helps you track privacy policy changes with AI-powered insights.
               Let's personalize your experience.
             </p>
           </div>
@@ -120,7 +120,7 @@ export function OnboardingFlowLegacy() {
     },
     {
       id: 'use-case',
-      title: 'How will you use PolicyDiff?',
+      title: 'How will you use Inplain.AI?',
       description: 'This helps us tailor the experience for you',
       icon: Target,
       content: (

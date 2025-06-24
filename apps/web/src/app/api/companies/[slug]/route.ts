@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { WATCHED_COMPANIES } from '@policydiff/shared'
+import { WATCHED_COMPANIES } from '@inplain.ai/shared'
 
 export async function GET(
   request: NextRequest,

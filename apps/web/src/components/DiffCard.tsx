@@ -1,8 +1,8 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
+import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
 import { ModelInfo } from '@/components/ModelSelector'
-import type { DiffMeta, Summary } from '@policydiff/shared'
+import type { DiffMeta, Summary } from '@inplain.ai/shared'
 
 interface DiffCardProps {
   diff: DiffMeta

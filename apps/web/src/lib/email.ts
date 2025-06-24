@@ -38,7 +38,7 @@ export class EmailService {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PolicyDiff Alert</title>
+  <title>Inplain.AI Alert</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
     .container { max-width: 600px; margin: 0 auto; background: white; }
@@ -57,7 +57,7 @@ export class EmailService {
 <body>
   <div class="container">
     <div class="header">
-      <h1>PolicyDiff Alert</h1>
+      <h1>Inplain.AI Alert</h1>
     </div>
     <div class="content">
       <div class="alert-badge">${label}</div>
@@ -85,7 +85,7 @@ export class EmailService {
         <a href="${process.env.NEXT_PUBLIC_APP_URL}/settings/notifications">Manage your notification preferences</a>
       </p>
       <p style="margin-top: 20px;">
-        © ${new Date().getFullYear()} PolicyDiff. Making privacy policies transparent.
+        © ${new Date().getFullYear()} Inplain.AI. Privacy policies made simple.
       </p>
     </div>
   </div>
@@ -93,7 +93,7 @@ export class EmailService {
 </html>`;
 
     const text = `
-PolicyDiff Alert: ${label}
+Inplain.AI Alert: ${label}
 
 Privacy Policy Update Detected
 
@@ -112,11 +112,11 @@ This alert was triggered because you're monitoring ${alert.companySlug} in your 
 You're receiving this email because you have email alerts enabled for your watchlist.
 Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/settings/notifications
 
-© ${new Date().getFullYear()} PolicyDiff. Making privacy policies transparent.
+© ${new Date().getFullYear()} Inplain.AI. Privacy policies made simple.
 `;
 
     return {
-      subject: `[PolicyDiff Alert] ${label} detected for ${alert.companySlug}`,
+      subject: `[Inplain.AI Alert] ${label} detected for ${alert.companySlug}`,
       html,
       text
     };
@@ -198,7 +198,7 @@ Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/setting
       }
       
       const { data, error } = await resend.emails.send({
-        from: 'PolicyDiff Alerts <alerts@policydiff.com>',
+        from: 'Inplain.AI Alerts <alerts@inplain.ai>',
         to: user.email,
         subject: email.subject,
         html: email.html,
@@ -233,21 +233,21 @@ Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/setting
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}`;
 
     const { data, error } = await resend.emails.send({
-      from: 'PolicyDiff <noreply@policydiff.com>',
+      from: 'Inplain.AI <noreply@inplain.ai>',
       to: user.email,
-      subject: 'Verify your PolicyDiff account',
+      subject: 'Verify your Inplain.AI account',
       html: `
-        <h1>Welcome to PolicyDiff!</h1>
+        <h1>Welcome to Inplain.AI!</h1>
         <p>Hi ${user.name},</p>
         <p>Please verify your email address by clicking the link below:</p>
         <a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">Verify Email</a>
         <p>Or copy and paste this URL into your browser:</p>
         <p>${verificationUrl}</p>
         <p>This link will expire in 24 hours.</p>
-        <p>Best regards,<br>The PolicyDiff Team</p>
+        <p>Best regards,<br>The Inplain.AI Team</p>
       `,
       text: `
-Welcome to PolicyDiff!
+Welcome to Inplain.AI!
 
 Hi ${user.name},
 
@@ -257,7 +257,7 @@ ${verificationUrl}
 This link will expire in 24 hours.
 
 Best regards,
-The PolicyDiff Team
+The Inplain.AI Team
       `
     });
 
@@ -273,9 +273,9 @@ The PolicyDiff Team
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
 
     const { data, error } = await resend.emails.send({
-      from: 'PolicyDiff <noreply@policydiff.com>',
+      from: 'Inplain.AI <noreply@inplain.ai>',
       to: user.email,
-      subject: 'Reset your PolicyDiff password',
+      subject: 'Reset your Inplain.AI password',
       html: `
         <h1>Password Reset Request</h1>
         <p>Hi ${user.name},</p>
@@ -284,7 +284,7 @@ The PolicyDiff Team
         <p>Or copy and paste this URL into your browser:</p>
         <p>${resetUrl}</p>
         <p>This link will expire in 1 hour. If you didn't request this, please ignore this email.</p>
-        <p>Best regards,<br>The PolicyDiff Team</p>
+        <p>Best regards,<br>The Inplain.AI Team</p>
       `,
       text: `
 Password Reset Request
@@ -297,7 +297,7 @@ ${resetUrl}
 This link will expire in 1 hour. If you didn't request this, please ignore this email.
 
 Best regards,
-The PolicyDiff Team
+The Inplain.AI Team
       `
     });
 
@@ -319,9 +319,9 @@ The PolicyDiff Team
     if (unreadAlerts.length === 0) return true; // No alerts to send
 
     const { data, error } = await resend.emails.send({
-      from: 'PolicyDiff <digest@policydiff.com>',
+      from: 'Inplain.AI <digest@inplain.ai>',
       to: user.email,
-      subject: `Your PolicyDiff Weekly Digest - ${unreadAlerts.length} updates`,
+      subject: `Your Inplain.AI Weekly Digest - ${unreadAlerts.length} updates`,
       html: this.generateDigestEmail(user, unreadAlerts),
       text: this.generateDigestEmailText(user, unreadAlerts)
     });
@@ -350,7 +350,7 @@ The PolicyDiff Team
   </style>
 </head>
 <body>
-  <h1>Your PolicyDiff Weekly Digest</h1>
+  <h1>Your Inplain.AI Weekly Digest</h1>
   <p>Hi ${user.name},</p>
   <p>Here's a summary of privacy policy changes detected this week:</p>
   
@@ -381,7 +381,7 @@ The PolicyDiff Team
   }
 
   static generateDigestEmailText(user: User, alerts: WatchlistAlert[]): string {
-    return `Your PolicyDiff Weekly Digest
+    return `Your Inplain.AI Weekly Digest
 
 Hi ${user.name},
 

@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { getLatestDiffs } from '@/lib/api'
-import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
-import type { DiffMeta } from '@policydiff/shared'
+import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
+import type { DiffMeta } from '@inplain.ai/shared'
 
 interface TimelineProps {
   slug: string

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Seed script to populate initial data for PolicyDiff
+ * Seed script to populate initial data for Inplain.AI
  * This helps test the application without waiting for cron jobs
  */
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { SearchService, type SearchFilters } from '@/lib/search-service'
 import { getCompanies, getLatestDiffs } from '@/lib/api'
-import type { DiffMeta, Summary } from '@policydiff/shared'
+import type { DiffMeta, Summary } from '@inplain.ai/shared'
 
 export const runtime = 'edge'
 

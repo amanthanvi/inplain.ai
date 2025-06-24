@@ -1,4 +1,4 @@
-import type { Company, DiffMeta, Summary } from '@policydiff/shared'
+import type { Company, DiffMeta, Summary } from '@inplain.ai/shared'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
 

@@ -173,7 +173,7 @@ export class ExportService {
   private async exportAsPDF(data: any): Promise<Buffer> {
     // This would use a PDF generation library like puppeteer or pdfkit
     // For now, we'll create a simple text representation
-    let pdfContent = `PolicyDiff Data Export\n`;
+    let pdfContent = `Inplain.AI Data Export\n`;
     pdfContent += `Generated: ${data.metadata.exportDate}\n\n`;
 
     if (data.data.watchlists) {
