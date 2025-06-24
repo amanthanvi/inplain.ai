@@ -20,6 +20,14 @@ export async function POST(
   try {
     const { slug } = await params
     
+    // Parse request body if provided
+    let requestBody = {}
+    try {
+      requestBody = await request.json()
+    } catch {
+      // Body might be empty, which is fine
+    }
+    
     // Check authentication in production (skip in dev with auth bypass)
     if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
       const { userId } = await getClerkAuth()

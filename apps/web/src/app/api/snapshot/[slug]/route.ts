@@ -1,47 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { OptimizedStorageClient } from '../../lib/storage-optimized'
-import { PerformanceMonitor } from '@/lib/performance'
-import { getEnvVar } from '@/lib/env'
+import { StorageClient } from '../../lib/storage'
 import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
+import { isDemoMode } from '@/lib/env'
+import { Company } from '@inplain.ai/shared'
+import { logger } from '@/lib/logging'
 
-// Initialize storage with error handling
-let storage: OptimizedStorageClient | null = null
+// Initialize storage client
+const storage = new StorageClient()
 
-function getStorage(): OptimizedStorageClient | null {
-  if (storage) return storage
+// Static company data - in production this would come from database
+const getCompanyBySlug = (slug: string): Company | null => {
+  const companies: Company[] = [
+    { slug: 'google', name: 'Google', url: 'https://policies.google.com/privacy', active: true, checkInterval: 86400 },
+    { slug: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/privacy/policy', active: true, checkInterval: 86400 },
+    { slug: 'amazon', name: 'Amazon', url: 'https://www.amazon.com/gp/help/customer/display.html?nodeId=468496', active: true, checkInterval: 86400 },
+    { slug: 'microsoft', name: 'Microsoft', url: 'https://privacy.microsoft.com/en-us/privacystatement', active: true, checkInterval: 86400 },
+    { slug: 'apple', name: 'Apple', url: 'https://www.apple.com/legal/privacy/', active: true, checkInterval: 86400 }
+  ]
   
-  // Check if KV is configured
-  const kvUrl = getEnvVar('KV_REST_API_URL')
-  const kvToken = getEnvVar('KV_REST_API_TOKEN')
-  
-  if (!kvUrl || !kvToken) {
-    console.warn('KV storage not configured - snapshot API will return mock data')
-    return null
-  }
-  
-  try {
-    storage = new OptimizedStorageClient()
-    return storage
-  } catch (error) {
-    console.error('Failed to initialize storage client:', error)
-    return null
-  }
+  return companies.find(c => c.slug === slug) || null
 }
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
-  const end = PerformanceMonitor.startMeasure('api:snapshot:get');
-  
   try {
-    const { slug } = await params
+    const slug = params.slug
     
-    // Check authentication in production (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
-      if (!userId) {
+    // Log request for debugging
+    logger.info('Snapshot API called', { slug })
+    
+    // Check authentication (skip in demo mode)
+    if (!isDemoMode()) {
+      const auth = await getClerkAuth()
+      if (!auth?.userId) {
         return NextResponse.json(
           { error: 'Authentication required' },
           { status: 401 }
@@ -49,103 +42,113 @@ export async function GET(
       }
     }
     
-    // Get storage client
-    const storageClient = getStorage()
+    // Validate company exists
+    const company = getCompanyBySlug(slug)
+    if (!company) {
+      return NextResponse.json(
+        { error: 'Company not found' },
+        { status: 404 }
+      )
+    }
     
-    // If storage is not configured, return mock data
-    if (!storageClient) {
-      const mockSnapshot = {
-        snapshot: {
-          id: 'mock-snapshot-1',
-          capturedAt: new Date().toISOString(),
-          url: `https://example.com/${slug}/privacy`,
-          contentHash: 'mock-hash-12345'
-        },
-        content: {
-          text: `This is a mock privacy policy snapshot for ${slug}. In production with proper storage configuration, this would contain the actual privacy policy content.\n\nStorage Configuration Required:\n- KV_REST_API_URL: Vercel KV store URL\n- KV_REST_API_TOKEN: Vercel KV authentication token\n\nThe snapshot API captures and stores privacy policy content for tracking changes over time.`,
-          wordCount: 42,
-          characterCount: 328
-        },
-        _mock: true
+    try {
+      // Get the latest snapshot for this company
+      const latestSnapshot = await storage.getLatestSnapshot(slug)
+      
+      if (!latestSnapshot) {
+        // Return a meaningful response even if no snapshot exists yet
+        return NextResponse.json({
+          snapshot: null,
+          content: null,
+          message: 'No policy snapshots available yet. Check back later.'
+        }, {
+          status: 200,
+          headers: {
+            'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+          }
+        })
       }
       
-      return NextResponse.json(mockSnapshot, {
+      // Get the content from blob storage if available
+      let content = null
+      if (latestSnapshot.blobKey) {
+        try {
+          const blob = await storage.getBlob(latestSnapshot.blobKey)
+          if (blob) {
+            content = {
+              text: blob,
+              wordCount: blob.split(/\s+/).length,
+              characterCount: blob.length
+            }
+          }
+        } catch (contentError) {
+          logger.warn('Failed to fetch blob content', { 
+            error: contentError instanceof Error ? contentError.message : 'Unknown error',
+            blobKey: latestSnapshot.blobKey 
+          })
+        }
+      }
+      
+      // Return snapshot data with content
+      return NextResponse.json({
+        snapshot: {
+          id: latestSnapshot.id,
+          capturedAt: latestSnapshot.capturedAt,
+          url: latestSnapshot.url,
+          contentHash: latestSnapshot.contentHash
+        },
+        content: content || {
+          text: 'Policy content is being processed. Please check back in a few moments.',
+          wordCount: 0,
+          characterCount: 0
+        }
+      }, {
         headers: {
-          'Cache-Control': 'no-store',
-          'Content-Type': 'application/json',
-          'X-Mock-Data': 'true'
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
         }
       })
-    }
-    
-    // Get the latest snapshot
-    const snapshots = await PerformanceMonitor.measure(
-      'storage:getLatestSnapshots',
-      () => storageClient.getLatestSnapshots(slug, 1)
-    )
-    
-    if (snapshots.length === 0) {
-      return NextResponse.json(
-        { error: 'No snapshots found for this policy' },
-        { status: 404 }
-      )
-    }
-    
-    const snapshot = snapshots[0]
-    
-    if (!snapshot) {
-      return NextResponse.json(
-        { error: 'No snapshots found for this policy' },
-        { status: 404 }
-      )
-    }
-    
-    // Get the snapshot content
-    const content = await storageClient.getSnapshotContent(snapshot.blobKey)
-    
-    if (!content) {
-      return NextResponse.json(
-        { error: 'Snapshot content not found' },
-        { status: 404 }
-      )
-    }
-    
-    return NextResponse.json({
-      snapshot: {
-        id: snapshot.id,
-        capturedAt: snapshot.capturedAt,
-        url: snapshot.url,
-        contentHash: snapshot.contentHash
-      },
-      content: {
-        text: content,
-        wordCount: content.split(/\s+/).length,
-        characterCount: content.length
+      
+    } catch (storageError) {
+      // If storage fails, return mock data in development
+      if (process.env.NODE_ENV === 'development') {
+        logger.warn('Storage error in development, returning mock data', { 
+          error: storageError instanceof Error ? storageError.message : 'Unknown error' 
+        })
+        
+        return NextResponse.json({
+          snapshot: {
+            id: `mock-${slug}-${Date.now()}`,
+            capturedAt: new Date().toISOString(),
+            url: company.url,
+            contentHash: 'mock-hash-' + slug
+          },
+          content: {
+            text: `This is mock privacy policy content for ${company.name}. In production, this would contain the actual privacy policy text scraped from ${company.url}.`,
+            wordCount: 15,
+            characterCount: 120
+          }
+        }, {
+          headers: {
+            'Cache-Control': 'no-store'
+          }
+        })
       }
-    }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-        'Content-Type': 'application/json'
-      }
-    })
+      
+      throw storageError
+    }
+    
   } catch (error) {
-    console.error('Snapshot fetch error:', error)
-    
-    // Provide more detailed error messages
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    const isStorageError = errorMessage.includes('KV') || errorMessage.includes('storage')
+    logger.error('Snapshot API error', { 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      slug: params.slug 
+    })
     
     return NextResponse.json(
       { 
         error: 'Failed to fetch snapshot',
-        message: isStorageError 
-          ? 'Storage service is not configured. Please set up KV_REST_API_URL and KV_REST_API_TOKEN environment variables.'
-          : errorMessage,
-        code: isStorageError ? 'STORAGE_NOT_CONFIGURED' : 'INTERNAL_ERROR'
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
-  } finally {
-    end()
   }
 }
