@@ -3,7 +3,6 @@ import { StorageClient } from '../../lib/storage'
 import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDemoMode } from '@/lib/env'
 import { Company } from '@inplain.ai/shared'
-import { logger } from '@/lib/logging'
 
 // Initialize storage client
 const storage = new StorageClient()
@@ -29,7 +28,7 @@ export async function GET(
     const slug = params.slug
     
     // Log request for debugging
-    logger.info('Snapshot API called', { slug })
+    console.log('Snapshot API called', { slug })
     
     // Check authentication (skip in demo mode)
     if (!isDemoMode()) {
@@ -82,7 +81,7 @@ export async function GET(
             }
           }
         } catch (contentError) {
-          logger.warn('Failed to fetch blob content', { 
+          console.warn('Failed to fetch blob content', { 
             error: contentError instanceof Error ? contentError.message : 'Unknown error',
             blobKey: latestSnapshot.blobKey 
           })
@@ -111,7 +110,7 @@ export async function GET(
     } catch (storageError) {
       // If storage fails, return mock data in development
       if (process.env.NODE_ENV === 'development') {
-        logger.warn('Storage error in development, returning mock data', { 
+        console.warn('Storage error in development, returning mock data', { 
           error: storageError instanceof Error ? storageError.message : 'Unknown error' 
         })
         
@@ -138,7 +137,7 @@ export async function GET(
     }
     
   } catch (error) {
-    logger.error('Snapshot API error', { 
+    console.error('Snapshot API error', { 
       error: error instanceof Error ? error.message : 'Unknown error',
       slug: params.slug 
     })
