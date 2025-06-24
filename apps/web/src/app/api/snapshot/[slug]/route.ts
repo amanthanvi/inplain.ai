@@ -24,7 +24,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  let slug: string
+  let slug: string = 'unknown'
   
   try {
     const resolvedParams = await params
