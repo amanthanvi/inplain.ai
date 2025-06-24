@@ -2,22 +2,22 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@clerk/nextjs'
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { user, isLoading } = useAuth()
+  const { userId, isLoaded } = useAuth()
 
   useEffect(() => {
     // Redirect if user is not authenticated
-    if (!isLoading && !user) {
+    if (isLoaded && !userId) {
       router.push('/login?redirect=/onboarding')
     }
-  }, [user, isLoading, router])
+  }, [userId, isLoaded, router])
 
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />
@@ -25,7 +25,7 @@ export default function OnboardingPage() {
     )
   }
 
-  if (!user) {
+  if (!userId) {
     return null // Will redirect
   }
 

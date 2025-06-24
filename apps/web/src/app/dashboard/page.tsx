@@ -2,39 +2,26 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@clerk/nextjs'
 import { UserDashboard } from '@/components/UserDashboard'
-import { LoginForm } from '@/components/auth/LoginForm'
-import { SignupForm } from '@/components/auth/SignupForm'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 
 export default function DashboardPage() {
-	const { isAuthenticated, isLoading } = useAuth()
-	const [showSignup, setShowSignup] = useState(false)
+	const { isLoaded, userId } = useAuth()
+	const router = useRouter()
 
-	if (isLoading) {
+	useEffect(() => {
+		if (isLoaded && !userId) {
+			router.push('/login')
+		}
+	}, [isLoaded, userId, router])
+
+	if (!isLoaded || !userId) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<Loader2 className="h-8 w-8 animate-spin text-primary" />
-			</div>
-		)
-	}
-
-	if (!isAuthenticated) {
-		return (
-			<div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
-				{showSignup ? (
-					<SignupForm
-						onSuccess={() => window.location.reload()}
-						onLoginClick={() => setShowSignup(false)}
-					/>
-				) : (
-					<LoginForm
-						onSuccess={() => window.location.reload()}
-						onSignupClick={() => setShowSignup(true)}
-					/>
-				)}
 			</div>
 		)
 	}
