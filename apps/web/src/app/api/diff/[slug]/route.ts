@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { StorageClient } from '../../lib/storage'
 import { DiffEngine } from '../../lib/diff-engine'
-import { DiffMetaSchema } from '@policydiff/shared'
-import { formatTimestamp } from '@policydiff/shared'
+import { DiffMetaSchema } from '@inplain.ai/shared'
+import { formatTimestamp } from '@inplain.ai/shared'
 
 const storage = new StorageClient()
 const diffEngine = new DiffEngine()

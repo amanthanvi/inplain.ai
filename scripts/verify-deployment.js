@@ -51,7 +51,7 @@ const checks = {
   }
 };
 
-console.log('🔍 PolicyDiff Deployment Verification\n');
+console.log('🔍 Inplain.AI Deployment Verification\n');
 
 // Check files
 console.log('📁 Checking critical files...');

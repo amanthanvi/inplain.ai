@@ -50,7 +50,7 @@ const sampleHTML = `
 </html>
 `
 
-console.log('🧪 Testing PolicyDiff AI Enhancements\n')
+console.log('🧪 Testing Inplain.AI AI Enhancements\n')
 
 // Test 1: Content Extraction
 console.log('1️⃣ Testing Content Extraction...')

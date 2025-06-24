@@ -2,7 +2,7 @@
 
 # Default target
 help:
-	@echo "PolicyDiff Development Commands:"
+	@echo "Inplain.AI Development Commands:"
 	@echo "  make install        - Install all dependencies"
 	@echo "  make dev           - Start development servers"
 	@echo "  make lint          - Run all linters"
@@ -57,7 +57,7 @@ build:
 	@echo "🏗️  Building for production..."
 	pnpm run build
 	@echo "🐍 Building scraper image..."
-	cd packages/scraper && docker build -t policydiff-scraper:latest .
+	cd packages/scraper && docker build -t inplain-ai-scraper:latest .
 	@echo "✅ Build complete!"
 
 # Clean build artifacts

@@ -1,7 +1,7 @@
 import { kv } from '@vercel/kv'
 import { StorageClient } from '../lib/storage'
-import { SnapshotMetaSchema, CrawlJobSchema } from '@policydiff/shared'
-import { formatTimestamp, hashContent } from '@policydiff/shared'
+import { SnapshotMetaSchema, CrawlJobSchema } from '@inplain.ai/shared'
+import { formatTimestamp, hashContent } from '@inplain.ai/shared'
 import { WatchlistService } from '@/lib/watchlist'
 import { AIService } from '../lib/ai-service'
 
@@ -308,7 +308,7 @@ async function fetchPolicyContent(url: string): Promise<string | null> {
     const fetchOptions = {
       method: 'GET',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; PolicyDiff/1.0; +https://policydiff.com)',
+        'User-Agent': 'Mozilla/5.0 (compatible; Inplain.AI/1.0; +https://inplain.ai)',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
         'Cache-Control': 'no-cache',

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
 import { AIAnalyticsService } from '@/lib/ai-analytics'
-import type { DiffMeta, Summary } from '@policydiff/shared'
+import type { DiffMeta, Summary } from '@inplain.ai/shared'
 
 export const runtime = 'edge'
 

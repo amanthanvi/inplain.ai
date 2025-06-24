@@ -2,15 +2,15 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 
 export const metadata = {
-  title: 'About PolicyDiff',
-  description: 'Learn about PolicyDiff and how it helps track privacy policy changes',
+  title: 'About Inplain.AI',
+  description: 'Learn about Inplain.AI and how it helps track privacy policy changes',
 }
 
 export default function AboutPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold">About PolicyDiff</h1>
+        <h1 className="text-4xl font-bold">About Inplain.AI</h1>
         <p className="text-xl text-muted-foreground">
           Transparency in privacy policy changes
         </p>
@@ -18,9 +18,9 @@ export default function AboutPage() {
 
       <Card>
         <CardContent className="prose prose-lg max-w-none pt-6">
-          <h2>What is PolicyDiff?</h2>
+          <h2>What is Inplain.AI?</h2>
           <p>
-            PolicyDiff is an open-source tool that automatically monitors and tracks changes 
+            Inplain.AI is an open-source tool that automatically monitors and tracks changes 
             to privacy policies and terms of service across major platforms. We believe in 
             transparency and helping users understand how their data is being used.
           </p>
@@ -49,7 +49,7 @@ export default function AboutPage() {
           <p>
             Privacy policies are legal documents that define how companies collect, use, and 
             share your personal data. These documents are often long, complex, and change 
-            frequently without notice. PolicyDiff makes it easy to:
+            frequently without notice. Inplain.AI makes it easy to:
           </p>
           <ul>
             <li>Stay informed about privacy policy changes</li>
@@ -60,10 +60,10 @@ export default function AboutPage() {
 
           <h2>Open Source</h2>
           <p>
-            PolicyDiff is fully open source. You can contribute, report issues, or run your 
+            Inplain.AI is fully open source. You can contribute, report issues, or run your 
             own instance by visiting our{' '}
             <a 
-              href="https://github.com/policydiff/policydiff" 
+              href="https://github.com/inplain-ai/inplain.ai" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-primary hover:underline"
@@ -74,7 +74,7 @@ export default function AboutPage() {
 
           <h2>Privacy First</h2>
           <p>
-            We practice what we preach. PolicyDiff:
+            We practice what we preach. Inplain.AI:
           </p>
           <ul>
             <li>Does not collect personal data</li>

@@ -21,12 +21,12 @@ export async function generateMetadata({ params }: PageProps) {
   
   if (!company) {
     return {
-      title: 'Company Not Found - PolicyDiff'
+      title: 'Company Not Found - Inplain.AI'
     }
   }
   
   return {
-    title: `${company.name} Policy Changes - PolicyDiff`,
+    title: `${company.name} Policy Changes - Inplain.AI`,
     description: `Track privacy policy and terms of service changes for ${company.name}`
   }
 }

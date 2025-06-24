@@ -390,7 +390,7 @@ export default function SettingsPage() {
                 <div className="text-center py-8">
                   <Key className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground mb-4">
-                    Generate an API key to access PolicyDiff programmatically
+                    Generate an API key to access Inplain.AI programmatically
                   </p>
                   <AnimatedButton onClick={generateApiKey}>
                     Generate API Key

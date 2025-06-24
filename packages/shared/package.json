@@ -1,7 +1,7 @@
 {
-  "name": "@policydiff/shared",
+  "name": "@inplain.ai/shared",
   "version": "1.0.0",
-  "description": "Shared types and utilities for PolicyDiff",
+  "description": "Shared types and utilities for Inplain.AI",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

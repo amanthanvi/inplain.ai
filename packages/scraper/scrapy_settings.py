@@ -6,7 +6,7 @@ BOT_NAME = 'policydiff'
 SPIDER_MODULES = ['spiders']
 NEWSPIDER_MODULE = 'spiders'
 
-USER_AGENT = 'PolicyDiff/1.0 (+https://policydiff.com)'
+USER_AGENT = 'Inplain.AI/1.0 (+https://inplain.ai)'
 
 ROBOTSTXT_OBEY = True
 
@@ -28,11 +28,11 @@ DEFAULT_REQUEST_HEADERS = {
 }
 
 SPIDER_MIDDLEWARES = {
-    'middlewares.PolicyDiffSpiderMiddleware': 543,
+    'middlewares.Inplain.AISpiderMiddleware': 543,
 }
 
 DOWNLOADER_MIDDLEWARES = {
-    'middlewares.PolicyDiffDownloaderMiddleware': 543,
+    'middlewares.Inplain.AIDownloaderMiddleware': 543,
     'middlewares.PlaywrightMiddleware': 585,
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
     'middlewares.RotateUserAgentMiddleware': 400,

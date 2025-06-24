@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { DiffCard } from '@/components/DiffCard'
 import { getRecentDiffs } from '@/lib/api'
-import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
+import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
 
 interface RecentDiffsProps {
   limit?: number

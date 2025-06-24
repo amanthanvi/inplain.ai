@@ -5,4 +5,4 @@ Disallow: /_next/
 Disallow: /dashboard/
 Disallow: /settings/
 
-Sitemap: https://policydiff.com/sitemap.xml
+Sitemap: https://inplain.ai/sitemap.xml

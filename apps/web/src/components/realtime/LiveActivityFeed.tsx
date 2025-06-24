@@ -10,7 +10,7 @@ import {
   Clock, Users, Globe, Zap, RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatDuration, getTimeDiff } from '@policydiff/shared/utils'
+import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
 import { HoverScale, FloatingElement } from '@/components/ui/framer-animations'
 import { Button } from '@/components/ui/button'
 

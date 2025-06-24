@@ -171,7 +171,7 @@ export function EnhancedOnboardingFlow() {
   const steps: OnboardingStep[] = [
     {
       id: 'welcome',
-      title: 'Welcome to PolicyDiff Pro',
+      title: 'Welcome to Inplain.AI Pro',
       subtitle: 'Your AI-Powered Privacy Intelligence Platform',
       description: 'Let\'s create your personalized privacy monitoring experience',
       icon: Rocket,
@@ -194,7 +194,7 @@ export function EnhancedOnboardingFlow() {
               <div className="space-y-3">
                 <TextReveal text="Your Privacy, Protected by AI" className="text-3xl font-bold" />
                 <p className="text-muted-foreground max-w-lg mx-auto text-lg">
-                  Join thousands who trust PolicyDiff to monitor privacy policies, 
+                  Join thousands who trust Inplain.AI to monitor privacy policies, 
                   detect changes, and understand their impact with cutting-edge AI analysis.
                 </p>
               </div>
@@ -232,7 +232,7 @@ export function EnhancedOnboardingFlow() {
     },
     {
       id: 'use-case',
-      title: 'How will you use PolicyDiff?',
+      title: 'How will you use Inplain.AI?',
       subtitle: 'We\'ll customize your experience',
       description: 'Select your primary use case to get tailored features and insights',
       icon: Target,
@@ -639,7 +639,7 @@ export function EnhancedOnboardingFlow() {
     },
     {
       id: 'complete',
-      title: 'Welcome to PolicyDiff Pro!',
+      title: 'Welcome to Inplain.AI Pro!',
       subtitle: 'Your privacy command center is ready',
       description: 'Let\'s dive into your personalized dashboard',
       icon: Check,
@@ -751,7 +751,7 @@ export function EnhancedOnboardingFlow() {
         }
         
         showSuccessToast(
-          'Welcome to PolicyDiff!',
+          'Welcome to Inplain.AI!',
           'Your account has been set up successfully.'
         )
         

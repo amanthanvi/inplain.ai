@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Comprehensive test runner for PolicyDiff Web App
+ * Comprehensive test runner for Inplain.AI Web App
  * Runs unit tests, integration tests, and e2e tests with proper reporting
  */
 
@@ -14,7 +14,7 @@ const isCI = process.env.CI === 'true'
 const isVerbose = args.includes('--verbose') || args.includes('-v')
 const testType = args.find(arg => ['unit', 'integration', 'e2e', 'all'].includes(arg)) || 'all'
 
-console.log('🧪 PolicyDiff Test Runner')
+console.log('🧪 Inplain.AI Test Runner')
 console.log('========================')
 console.log(`Test type: ${testType}`)
 console.log(`Environment: ${isCI ? 'CI' : 'Local'}`)

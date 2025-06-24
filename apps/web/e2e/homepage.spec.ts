@@ -157,7 +157,7 @@ test.describe('Homepage', () => {
   })
 
   test('should have proper SEO elements', async ({ page }) => {
-    await expect(page).toHaveTitle(/PolicyDiff/i)
+    await expect(page).toHaveTitle(/Inplain.AI/i)
     
     const metaDescription = page.locator('meta[name="description"]')
     await expect(metaDescription).toHaveAttribute('content', /.+/)

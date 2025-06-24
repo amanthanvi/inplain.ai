@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { StorageClient } from '../lib/storage'
-import type { SnapshotMeta, DiffMeta, Summary } from '@policydiff/shared'
+import type { SnapshotMeta, DiffMeta, Summary } from '@inplain.ai/shared'
 
 vi.mock('@vercel/kv', () => ({
   kv: {

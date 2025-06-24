@@ -58,7 +58,7 @@ function HomePage() {
         <div className="container relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
-              See PolicyDiff in action
+              See Inplain.AI in action
             </h2>
             <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
               Explore recent policy changes from major companies and see how our 
@@ -140,7 +140,7 @@ function HomePage() {
             </h2>
             
             <p className="mx-auto mb-10 max-w-2xl text-xl text-white/90">
-              Join thousands of privacy-conscious users who trust PolicyDiff 
+              Join thousands of privacy-conscious users who trust Inplain.AI 
               to keep them informed about policy changes that matter.
             </p>
             

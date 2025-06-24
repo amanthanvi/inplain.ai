@@ -36,7 +36,7 @@ variable "aws_region" {
 variable "domain_name" {
   description = "Domain name for the application"
   type        = string
-  default     = "policydiff.com"
+  default     = "inplain.ai"
 }
 
 variable "alert_email" {

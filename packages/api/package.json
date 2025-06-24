@@ -1,7 +1,7 @@
 {
-  "name": "@policydiff/api",
+  "name": "@inplain.ai/api",
   "version": "1.0.0",
-  "description": "Edge API routes for PolicyDiff",
+  "description": "Edge API routes for Inplain.AI",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@policydiff/shared": "*",
+    "@inplain.ai/shared": "*",
     "@vercel/blob": "^0.19.0",
     "@vercel/kv": "^1.0.1",
     "diff-match-patch": "^1.0.5",

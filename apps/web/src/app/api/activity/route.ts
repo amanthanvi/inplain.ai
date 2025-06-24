@@ -3,7 +3,7 @@ import { StorageClient } from '../lib/storage'
 import { OptimizedStorageClient } from '../lib/storage-optimized'
 import { PolicyAnalysisService, AI_MODELS } from '../lib/ai-service'
 import { RiskScorer } from '@/lib/analytics/risk-scorer'
-import { formatTimestamp } from '@policydiff/shared'
+import { formatTimestamp } from '@inplain.ai/shared'
 
 // Initialize storage clients
 const storage = new StorageClient()

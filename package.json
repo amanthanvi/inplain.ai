@@ -1,12 +1,12 @@
 {
-  "name": "policydiff",
+  "name": "inplain.ai",
   "version": "2.0.0",
   "private": true,
-  "description": "Track privacy policy and terms of service changes with AI-powered summaries",
-  "homepage": "https://policydiff.com",
+  "description": "AI-powered privacy policy monitoring and analysis",
+  "homepage": "https://inplain.ai",
   "repository": {
     "type": "git",
-    "url": "https://github.com/policydiff/policydiff.git"
+    "url": "https://github.com/inplain-ai/inplain.ai.git"
   },
   "license": "Apache-2.0",
   "engines": {

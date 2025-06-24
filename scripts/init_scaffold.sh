@@ -1,7 +1,7 @@
 #!/bin/bash
-# PolicyDiff v2 Scaffold Initialization Script
+# Inplain.AI v2 Scaffold Initialization Script
 
-echo "🚀 Initializing PolicyDiff v2 repository structure..."
+echo "🚀 Initializing Inplain.AI v2 repository structure..."
 
 # Create main directories
 mkdir -p apps/web
@@ -26,7 +26,7 @@ echo "📝 Creating README.md..."
 
 # Create README.md
 cat > README.md << 'EOF'
-# PolicyDiff
+# Inplain.AI
 
 > Track, diff, and understand privacy policy changes with AI-powered summaries
 
@@ -35,7 +35,7 @@ cat > README.md << 'EOF'
 
 ## 🎯 Overview
 
-PolicyDiff monitors public privacy policies and terms of service pages, automatically tracking changes and providing plain-language summaries of what changed and why it matters. Built on Vercel Edge Functions with Next.js 15 and Claude 4 Opus for intelligent analysis.
+Inplain.AI monitors public privacy policies and terms of service pages, automatically tracking changes and providing plain-language summaries of what changed and why it matters. Built on Vercel Edge Functions with Next.js 15 and Claude 4 Opus for intelligent analysis.
 
 ## 🏗️ Architecture
 
@@ -189,9 +189,9 @@ This project is licensed under the Apache License 2.0 - see [LICENSE](LICENSE) f
 EOF
 
 echo "✅ README.md created!"
-echo "🎉 PolicyDiff v2 scaffold initialization complete!"
+echo "🎉 Inplain.AI v2 scaffold initialization complete!"
 echo ""
 echo "Next steps:"
 echo "1. Run 'chmod +x scripts/init_scaffold.sh' to make this script executable"
-echo "2. Commit the changes: git add . && git commit -m 'chore: 🛠 PolicyDiff v2 scaffold'"
+echo "2. Commit the changes: git add . && git commit -m 'chore: 🛠 Inplain.AI v2 scaffold'"
 echo "3. Continue with PROMPT 04 to set up the development environment"

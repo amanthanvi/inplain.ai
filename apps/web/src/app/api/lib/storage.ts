@@ -1,5 +1,5 @@
 import { kv } from './kv-wrapper'
-import type { SnapshotMeta, DiffMeta, Summary } from '@policydiff/shared'
+import type { SnapshotMeta, DiffMeta, Summary } from '@inplain.ai/shared'
 
 export class StorageClient {
   async getSnapshot(slug: string, snapshotId: string): Promise<SnapshotMeta | null> {

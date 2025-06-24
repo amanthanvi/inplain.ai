@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 @click.option('--continuous', is_flag=True, help='Run continuously, checking queue')
 @click.option('--interval', type=int, default=3600, help='Check interval in seconds (for continuous mode)')
 def main(sources: str, urls: str, continuous: bool, interval: int):
-    """PolicyDiff Scraper - Fetches and stores policy pages"""
+    """Inplain.AI Scraper - Fetches and stores policy pages"""
     
     if not sources and not urls and not continuous:
         click.echo("Error: Provide either --sources, --urls, or --continuous flag")

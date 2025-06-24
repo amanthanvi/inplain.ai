@@ -1,2 +1,2 @@
-# Python dependencies for PolicyDiff V2
+# Python dependencies for Inplain.AI V2
 # Scraper service dependencies are in packages/scraper/requirements.txt

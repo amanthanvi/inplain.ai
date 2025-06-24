@@ -1,4 +1,4 @@
-import { formatTimestamp } from '@policydiff/shared'
+import { formatTimestamp } from '@inplain.ai/shared'
 
 export interface AIProvider {
   name: string
@@ -129,8 +129,8 @@ export const OPENROUTER_PROVIDER: AIProvider = {
   headers: (apiKey: string) => ({
     'Authorization': `Bearer ${apiKey}`,
     'Content-Type': 'application/json',
-    'HTTP-Referer': 'https://policydiff.com',
-    'X-Title': 'PolicyDiff'
+    'HTTP-Referer': 'https://inplain.ai',
+    'X-Title': 'Inplain.AI'
   }),
   
   formatRequest: (model: string, prompt: string, options: AIRequestOptions = {}) => ({

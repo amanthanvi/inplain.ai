@@ -1,4 +1,4 @@
-import { SnapshotMeta, DiffMeta } from '@policydiff/shared';
+import { SnapshotMeta, DiffMeta } from '@inplain.ai/shared';
 import { RiskScorer, RiskScore } from './risk-scorer';
 
 export interface TrendData {

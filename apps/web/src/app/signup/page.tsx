@@ -5,7 +5,7 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Join PolicyDiff</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Join Inplain.AI</h1>
           <p className="text-gray-600 mt-2">Start tracking privacy policy changes today</p>
         </div>
         <SignUp 
