@@ -39,8 +39,23 @@ export async function getCompanies(options?: {
 }
 
 export async function getCompanyBySlug(slug: string): Promise<Company | null> {
-  const companies = await getCompanies()
-  return companies.find(c => c.slug === slug) || null
+  try {
+    const response = await fetch(`${API_BASE_URL}/companies/${slug}`, {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch company')
+    }
+    
+    const company = await response.json()
+    return company
+  } catch (error) {
+    console.error('Error fetching company:', error)
+    // Fallback to searching in the basic companies list
+    const companies = await getCompanies()
+    return companies.find(c => c.slug === slug) || null
+  }
 }
 
 export async function getDiff(slug: string): Promise<{
