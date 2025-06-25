@@ -21,7 +21,7 @@ export async function POST(
     const { slug } = await params
     
     // Parse request body if provided
-    let requestBody = {}
+    let requestBody: { model?: string; analysisType?: string; includeRiskScore?: boolean } = {}
     try {
       requestBody = await request.json()
     } catch {
@@ -139,7 +139,8 @@ export async function POST(
     }
     
     // Generate new analysis with enhanced prompt
-    const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, DEFAULT_MODEL)
+    const modelToUse = requestBody.model || DEFAULT_MODEL
+    const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, modelToUse)
     
     // Create a structured prompt with metadata
     const policyMetadata = [
@@ -212,7 +213,7 @@ export async function POST(
       id: crypto.randomUUID(),
       snapshotId: snapshot.id,
       generatedAt: new Date().toISOString(),
-      model: DEFAULT_MODEL,
+      model: modelToUse,
       structured_content: parsedAnalysis,
       raw_content: response.content,
       tokensUsed: response.tokensUsed || 0,
