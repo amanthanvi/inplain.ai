@@ -61,33 +61,31 @@ export function CompanyGrid({ limit, searchQuery = '', category }: CompanyGridPr
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {companies.map((company) => (
-        <Link key={company.slug} href={`/${company.slug}`} passHref legacyBehavior>
-          <a className="block">
-            <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer h-full group hover:scale-[1.02] hover:border-primary/50">
-              <CardHeader>
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                      {company.name}
-                    </CardTitle>
-                    {company.active && (
-                      <Badge variant="success" className="ml-2 text-xs">Active</Badge>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <CardDescription className="text-sm">
-                      {extractDomain(company.url)}
-                    </CardDescription>
-                    {company.category && (
-                      <Badge variant="secondary" className="text-xs">
-                        {company.category}
-                      </Badge>
-                    )}
-                  </div>
+        <Link key={company.slug} href={`/${company.slug}`}>
+          <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer h-full group hover:scale-[1.02] hover:border-primary/50">
+            <CardHeader>
+              <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                    {company.name}
+                  </CardTitle>
+                  {company.active && (
+                    <Badge variant="success" className="ml-2 text-xs">Active</Badge>
+                  )}
                 </div>
-              </CardHeader>
-            </Card>
-          </a>
+                <div className="space-y-2">
+                  <CardDescription className="text-sm">
+                    {extractDomain(company.url)}
+                  </CardDescription>
+                  {company.category && (
+                    <Badge variant="secondary" className="text-xs">
+                      {company.category}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
         </Link>
       ))}
     </div>
