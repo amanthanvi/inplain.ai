@@ -78,11 +78,7 @@ export async function GET(
         try {
           const blob = await storage.getSnapshotContent(latestSnapshot.blobKey)
           if (blob) {
-            content = {
-              text: blob,
-              wordCount: blob.split(/\s+/).length,
-              characterCount: blob.length
-            }
+            content = blob
           }
         } catch (contentError) {
           console.warn('Failed to fetch blob content', { 
@@ -92,7 +88,7 @@ export async function GET(
         }
       }
       
-      // Return snapshot data with content
+      // Return snapshot data with content in the expected format
       return NextResponse.json({
         snapshot: {
           id: latestSnapshot.id,
@@ -100,7 +96,11 @@ export async function GET(
           url: latestSnapshot.url,
           contentHash: latestSnapshot.contentHash
         },
-        content: content || {
+        content: content ? {
+          text: content,
+          wordCount: content.split(/\s+/).length,
+          characterCount: content.length
+        } : {
           text: 'Policy content is being processed. Please check back in a few moments.',
           wordCount: 0,
           characterCount: 0
@@ -118,6 +118,7 @@ export async function GET(
           error: storageError instanceof Error ? storageError.message : 'Unknown error' 
         })
         
+        const mockText = `This is mock privacy policy content for ${company.name}. In production, this would contain the actual privacy policy text scraped from ${company.url}.`
         return NextResponse.json({
           snapshot: {
             id: `mock-${slug}-${Date.now()}`,
@@ -126,9 +127,9 @@ export async function GET(
             contentHash: 'mock-hash-' + slug
           },
           content: {
-            text: `This is mock privacy policy content for ${company.name}. In production, this would contain the actual privacy policy text scraped from ${company.url}.`,
-            wordCount: 15,
-            characterCount: 120
+            text: mockText,
+            wordCount: mockText.split(/\s+/).length,
+            characterCount: mockText.length
           }
         }, {
           headers: {

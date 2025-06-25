@@ -7,6 +7,7 @@ import { Providers } from './providers'
 import { DevAuthWarning } from '@/components/dev-auth-warning'
 import { DemoModeBanner } from '@/components/demo-mode-banner'
 import { Navigation } from '@/components/Navigation'
+import { MobileNavigation, MobileBottomNav } from '@/components/MobileNavigation'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 
@@ -68,9 +69,18 @@ export default function RootLayout({
         <body className={`${inter.className} font-sans`}>
           <Providers>
             <div className="relative min-h-screen bg-background">
-            <Navigation />
-            <main className="flex-1">{children}</main>
-            <footer className="border-t py-6 md:py-0">
+            {/* Desktop Navigation */}
+            <div className="hidden md:block">
+              <Navigation />
+            </div>
+            {/* Mobile Navigation */}
+            <div className="md:hidden">
+              <MobileNavigation />
+            </div>
+            <main className="flex-1 pb-16 md:pb-0">{children}</main>
+            {/* Mobile Bottom Navigation */}
+            <MobileBottomNav />
+            <footer className="border-t py-6 md:py-0 hidden md:block">
               <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
                 <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
                   Built to help you understand privacy policy changes. 

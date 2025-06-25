@@ -11,30 +11,27 @@ import type { Company } from '@inplain.ai/shared'
 interface CompanyGridProps {
   limit?: number
   searchQuery?: string
+  category?: string
 }
 
-export function CompanyGrid({ limit, searchQuery = '' }: CompanyGridProps = {}) {
+export function CompanyGrid({ limit, searchQuery = '', category }: CompanyGridProps = {}) {
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getCompanies().then(data => {
-      let filteredData = data
-      
-      // Filter by search query if provided
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase()
-        filteredData = data.filter(company => 
-          company.name.toLowerCase().includes(query) ||
-          company.url.toLowerCase().includes(query)
-        )
-      }
-      
-      // Apply limit if provided
-      setCompanies(limit ? filteredData.slice(0, limit) : filteredData)
+    getCompanies({
+      search: searchQuery || undefined,
+      category: category || undefined,
+      limit: limit || undefined,
+      active: true
+    }).then(data => {
+      setCompanies(data)
+      setLoading(false)
+    }).catch(error => {
+      console.error('Failed to load companies:', error)
       setLoading(false)
     })
-  }, [limit, searchQuery])
+  }, [limit, searchQuery, category])
 
   if (loading) {
     return (
@@ -62,20 +59,31 @@ export function CompanyGrid({ limit, searchQuery = '' }: CompanyGridProps = {}) 
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {companies.map((company) => (
         <Link key={company.slug} href={`/${company.slug}`}>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+          <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer h-full group hover:scale-[1.02] hover:border-primary/50">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">{company.name}</CardTitle>
-                {company.active && (
-                  <Badge variant="success" className="ml-2">Active</Badge>
-                )}
+              <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                    {company.name}
+                  </CardTitle>
+                  {company.active && (
+                    <Badge variant="success" className="ml-2 text-xs">Active</Badge>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <CardDescription className="text-sm">
+                    {extractDomain(company.url)}
+                  </CardDescription>
+                  {company.category && (
+                    <Badge variant="secondary" className="text-xs">
+                      {company.category}
+                    </Badge>
+                  )}
+                </div>
               </div>
-              <CardDescription className="text-sm">
-                {extractDomain(company.url)}
-              </CardDescription>
             </CardHeader>
           </Card>
         </Link>

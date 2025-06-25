@@ -7,6 +7,7 @@ import { formatTimestamp } from '@inplain.ai/shared'
 import { getEnvVar } from '@/lib/env'
 import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDevAuthEnabled } from '@/lib/dev-auth'
+import { withErrorHandler, APIError, checkRateLimit, withAPIMonitoring } from '@/lib/api-error-handler'
 
 // Initialize storage with error handling
 let storage: StorageClient | null = null
@@ -201,7 +202,7 @@ export async function POST(
       throw new Error(`AI analysis failed: ${analysisError instanceof Error ? analysisError.message : 'Unknown error'}`)
     }
     
-    const summary = SummarySchema.parse({
+    const summary = {
       id: crypto.randomUUID(),
       diffId,
       createdAt: formatTimestamp(),
@@ -213,15 +214,18 @@ export async function POST(
       categories: analysis.categories,
       tokensUsed: analysis.tokensUsed,
       cached: false
-    })
-
-    await storageClient.saveSummary(summary)
+    }
     
-    diff.summaryId = summary.id
+    // Validate the summary matches the schema
+    const validatedSummary = SummarySchema.parse(summary)
+
+    await storageClient.saveSummary(validatedSummary)
+    
+    diff.summaryId = validatedSummary.id
     await storageClient.saveDiff(diff)
 
     return NextResponse.json({
-      summary,
+      summary: validatedSummary,
       cached: false
     }, {
       headers: {

@@ -135,7 +135,6 @@ export function Navigation() {
                   }}
                 />
                 <UserButton 
-                  afterSignOutUrl="/"
                   appearance={{
                     elements: {
                       avatarBox: "w-8 h-8"
