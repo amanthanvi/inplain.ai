@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { 
   User, LogOut, Settings, ChevronDown, 
-  Home, Info, FileText, Bell, Loader2
+  Home, Info, FileText, Bell, Loader2,
+  Building2, LayoutDashboard
 } from 'lucide-react'
 import { NotificationCenter, type Notification } from '@/components/realtime/NotificationCenter'
 import {
@@ -79,18 +80,18 @@ export function Navigation() {
     return () => clearInterval(interval)
   }, [user])
 
-  const navItems = [
-    { href: '/', label: 'Dashboard', icon: Home },
+  // Dynamic navigation items based on auth state
+  const navItems = user ? [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/companies', label: 'Companies', icon: Building2 },
+    { href: '/watchlist', label: 'My Watchlist', icon: Bell },
+    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/about', label: 'About', icon: Info },
+  ] : [
+    { href: '/', label: 'Home', icon: Home },
+    { href: '/companies', label: 'Companies', icon: Building2 },
     { href: '/about', label: 'About', icon: Info },
   ]
-
-  // Add authenticated-only nav items
-  if (user) {
-    navItems.push(
-      { href: '/watchlist', label: 'My Watchlist', icon: Bell },
-      { href: '/settings', label: 'Settings', icon: Settings }
-    )
-  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
