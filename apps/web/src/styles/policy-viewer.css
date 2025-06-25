@@ -1,6 +1,13 @@
 /* Custom styles for privacy policy content */
 .policy-viewer {
-  @apply prose prose-sm max-w-none dark:prose-invert;
+  @apply max-w-none;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  color: rgb(75 85 99);
+}
+
+.dark .policy-viewer {
+  color: rgb(209 213 219);
 }
 
 /* Microsoft-style policy formatting */

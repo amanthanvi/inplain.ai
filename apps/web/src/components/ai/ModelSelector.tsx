@@ -128,11 +128,11 @@ export function ModelSelector({ value, onChange, disabled, className }: ModelSel
                     <span className="text-xs text-muted-foreground">by {model.provider}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">{model.description}</p>
-                  {model.features && (
+                  {model.features && model.features.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {model.features.map((feature, i) => (
                         <span key={i} className="text-xs text-muted-foreground">
-                          {feature}{i < model.features.length - 1 && ' •'}
+                          {feature}{i < (model.features?.length || 0) - 1 && ' •'}
                         </span>
                       ))}
                     </div>

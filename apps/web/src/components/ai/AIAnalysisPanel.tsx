@@ -294,7 +294,7 @@ export function AIAnalysisPanel({
 }: AIAnalysisPanelProps) {
   const [selectedPrompt, setSelectedPrompt] = useState('summary')
   const [showGuidance, setShowGuidance] = useState(true)
-  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].id)
+  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0]?.id || 'google/gemini-2.0-flash-preview-05-20:free')
   const [showSettings, setShowSettings] = useState(false)
   const { userId, isLoaded } = useAuth()
 

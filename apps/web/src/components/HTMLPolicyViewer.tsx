@@ -109,7 +109,9 @@ export function HTMLPolicyViewer({ htmlContent, metadata }: HTMLPolicyViewerProp
   const highlightSearchTerm = (text: string) => {
     if (!searchTerm) return text
     
-    const regex = new RegExp(`(${searchTerm})`, 'gi')
+    // Escape special regex characters in search term
+    const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escapedSearchTerm})`, 'gi')
     return text.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800">$1</mark>')
   }
 
