@@ -84,7 +84,6 @@ export function Navigation() {
   const navItems = user ? [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/companies', label: 'Companies', icon: Building2 },
-    { href: '/watchlist', label: 'My Watchlist', icon: Bell },
     { href: '/settings', label: 'Settings', icon: Settings },
     { href: '/about', label: 'About', icon: Info },
   ] : [
