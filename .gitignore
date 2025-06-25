@@ -215,3 +215,4 @@ yarn.lock
 # Generated files
 auto-generated/
 generated/
+.dccache
