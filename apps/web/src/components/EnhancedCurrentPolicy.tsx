@@ -70,7 +70,7 @@ export function EnhancedCurrentPolicy({ slug }: EnhancedCurrentPolicyProps) {
     }
   }
 
-  const analyzePolicy = async () => {
+  const analyzePolicy = async (options?: { model?: string }) => {
     setAnalyzing(true)
     setError(null)
     try {
@@ -79,7 +79,8 @@ export function EnhancedCurrentPolicy({ slug }: EnhancedCurrentPolicyProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           analysisType: 'comprehensive',
-          includeRiskScore: true 
+          includeRiskScore: true,
+          model: options?.model
         })
       })
       

@@ -218,7 +218,7 @@ export function HTMLPolicyViewer({ htmlContent, metadata }: HTMLPolicyViewerProp
               {viewMode === 'formatted' && (
                 <ScrollArea className="h-[600px] w-full rounded-md border p-4">
                   <div 
-                    className="prose prose-sm max-w-none dark:prose-invert"
+                    className="policy-viewer"
                     dangerouslySetInnerHTML={{ 
                       __html: searchTerm ? highlightSearchTerm(sanitizedContent) : sanitizedContent 
                     }}
@@ -261,7 +261,7 @@ export function HTMLPolicyViewer({ htmlContent, metadata }: HTMLPolicyViewerProp
                             {sections.find(s => s.id === selectedSection)?.title}
                           </h2>
                           <div 
-                            className="prose prose-sm max-w-none dark:prose-invert"
+                            className="policy-viewer"
                             dangerouslySetInnerHTML={{ 
                               __html: searchTerm 
                                 ? highlightSearchTerm(sections.find(s => s.id === selectedSection)?.content || '')

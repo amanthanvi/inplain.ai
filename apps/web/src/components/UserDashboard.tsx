@@ -13,8 +13,9 @@ import { PolicyTimeline } from '@/components/analytics/PolicyTimeline'
 import { 
 	Settings, Star, TrendingUp, Shield, Clock, 
 	ChevronRight, Plus, X, Mail, Moon, Sun, Monitor,
-	BarChart3, AlertTriangle, Eye
+	BarChart3, AlertTriangle, Eye, Loader2
 } from 'lucide-react'
+import Link from 'next/link'
 import { type TimelineEvent } from './PremiumTimeline'
 
 interface WatchlistItem {
@@ -48,8 +49,8 @@ export function UserDashboard() {
 		alerts: 2
 	}
 
-	// Mock watchlist data
-	const mockWatchlist = ['google', 'facebook', 'amazon']
+	const [loading, setLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
 		if (isLoaded && user) {
@@ -61,45 +62,74 @@ export function UserDashboard() {
 	}, [isLoaded, user])
 
 	const fetchWatchlistData = async () => {
-		// In a real app, this would fetch from API
-		const mockData: WatchlistItem[] = mockWatchlist.map(slug => ({
-			slug,
-			name: slug.charAt(0).toUpperCase() + slug.slice(1),
-			lastChecked: new Date(),
-			changeCount: Math.floor(Math.random() * 10),
-			riskLevel: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as any
-		}))
-		setWatchlist(mockData)
+		try {
+			setLoading(true)
+			const response = await fetch('/api/user/watchlist')
+			
+			if (!response.ok) {
+				throw new Error('Failed to fetch watchlist')
+			}
+			
+			const data = await response.json()
+			const formattedWatchlist: WatchlistItem[] = data.watchlist.map((item: any) => ({
+				slug: item.slug,
+				name: item.name,
+				lastChecked: new Date(item.lastChecked || item.addedAt),
+				changeCount: item.changeCount || 0,
+				riskLevel: item.riskLevel || 'medium'
+			}))
+			setWatchlist(formattedWatchlist)
+		} catch (err) {
+			console.error('Failed to fetch watchlist:', err)
+			setError('Failed to load watchlist')
+		} finally {
+			setLoading(false)
+		}
 	}
 
 	const fetchRecentActivity = async () => {
-		// In a real app, this would fetch from API
-		const mockActivity: TimelineEvent[] = [
-			{
-				id: '1',
-				date: new Date(),
-				type: 'minor',
-				title: 'Google updated data retention policy',
-				description: 'Extended data retention period from 18 to 24 months',
-				impact: 'medium',
-				tags: ['Google', 'Data Retention']
-			},
-			{
-				id: '2',
-				date: new Date(Date.now() - 86400000),
-				type: 'major',
-				title: 'Facebook added new data sharing partners',
-				description: 'Added 5 new third-party data sharing agreements',
-				impact: 'high',
-				tags: ['Facebook', 'Data Sharing']
+		try {
+			const response = await fetch('/api/user/activity')
+			
+			if (!response.ok) {
+				throw new Error('Failed to fetch activity')
 			}
-		]
-		setRecentActivity(mockActivity)
+			
+			const data = await response.json()
+			const formattedActivities: TimelineEvent[] = data.activities.map((activity: any) => ({
+				id: activity.id,
+				date: new Date(activity.date),
+				type: activity.type,
+				title: activity.title,
+				description: activity.description,
+				impact: activity.impact,
+				tags: activity.tags || [],
+				companySlug: activity.companySlug,
+				diffId: activity.diffId
+			}))
+			setRecentActivity(formattedActivities)
+		} catch (err) {
+			console.error('Failed to fetch activity:', err)
+			// Don't set error for activity, it's not critical
+		}
 	}
 
 	const handleRemoveFromWatchlist = async (slug: string) => {
-		// In a real app, this would call an API
-		setWatchlist(prev => prev.filter(item => item.slug !== slug))
+		try {
+			const response = await fetch(`/api/user/watchlist?slug=${slug}`, {
+				method: 'DELETE'
+			})
+			
+			if (!response.ok) {
+				throw new Error('Failed to remove from watchlist')
+			}
+			
+			setWatchlist(prev => prev.filter(item => item.slug !== slug))
+		} catch (err) {
+			console.error('Failed to remove from watchlist:', err)
+			// Revert on error
+			fetchWatchlistData()
+		}
 	}
 
 	const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
@@ -258,11 +288,23 @@ export function UserDashboard() {
 								</div>
 							</PremiumCardHeader>
 							<PremiumCardContent>
-								{watchlist.length === 0 ? (
+								{loading ? (
+									<div className="flex items-center justify-center py-12">
+										<Loader2 className="h-8 w-8 animate-spin text-primary" />
+									</div>
+								) : error ? (
+									<div className="text-center py-12">
+										<AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+										<p className="text-destructive mb-4">{error}</p>
+										<Button size="sm" onClick={fetchWatchlistData}>Retry</Button>
+									</div>
+								) : watchlist.length === 0 ? (
 									<div className="text-center py-12">
 										<Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
 										<p className="text-muted-foreground mb-4">No companies in your watchlist yet</p>
-										<Button size="sm">Browse Companies</Button>
+										<Button size="sm" asChild>
+											<Link href="/companies">Browse Companies</Link>
+										</Button>
 									</div>
 								) : (
 									<div className="space-y-3">
@@ -282,8 +324,10 @@ export function UserDashboard() {
 													</div>
 												</div>
 												<div className="flex items-center gap-2">
-													<Button variant="ghost" size="sm">
-														<ChevronRight className="h-4 w-4" />
+													<Button variant="ghost" size="sm" asChild>
+														<Link href={`/${item.slug}`}>
+															<ChevronRight className="h-4 w-4" />
+														</Link>
 													</Button>
 													<Button
 														variant="ghost"

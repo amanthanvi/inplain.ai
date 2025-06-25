@@ -8,16 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Sparkles, Loader2, AlertCircle, CheckCircle, Info, 
   TrendingUp, Shield, Eye, Brain, Zap, ChevronRight,
-  MessageSquare, FileText, BarChart3, AlertTriangle, LogIn
+  MessageSquare, FileText, BarChart3, AlertTriangle, LogIn,
+  Settings
 } from 'lucide-react'
 import { HoverScale, FadeIn, SlideIn } from '@/components/ui/framer-animations'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
+import { ModelSelector, AI_MODELS } from '@/components/ai/ModelSelector'
 
 interface AIAnalysisPanelProps {
   slug: string
-  onAnalyze: () => Promise<void>
+  onAnalyze: (options?: { model?: string }) => Promise<void>
   isAnalyzing: boolean
   analysis?: any
   error?: string
@@ -292,12 +294,14 @@ export function AIAnalysisPanel({
 }: AIAnalysisPanelProps) {
   const [selectedPrompt, setSelectedPrompt] = useState('summary')
   const [showGuidance, setShowGuidance] = useState(true)
+  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0].id)
+  const [showSettings, setShowSettings] = useState(false)
   const { userId, isLoaded } = useAuth()
 
   const handleAnalyze = async (promptId: string) => {
     setSelectedPrompt(promptId)
     setShowGuidance(false)
-    await onAnalyze()
+    await onAnalyze({ model: selectedModel })
   }
 
   if (!analysis && !isAnalyzing && showGuidance) {
@@ -385,6 +389,30 @@ export function AIAnalysisPanel({
           </div>
         </CardHeader>
         <CardContent className="relative space-y-6">
+          {/* Model Selection */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium">Choose your model:</h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowSettings(!showSettings)}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {showSettings && (
+              <FadeIn>
+                <ModelSelector
+                  value={selectedModel}
+                  onChange={setSelectedModel}
+                  disabled={isAnalyzing}
+                />
+              </FadeIn>
+            )}
+          </div>
+
           {/* AI Capabilities */}
           <div className="grid grid-cols-2 gap-3">
             {aiCapabilities.map((capability, index) => {
@@ -549,7 +577,7 @@ export function AIAnalysisPanel({
 
             <div className="flex items-center justify-between pt-2 border-t">
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>Model: {analysis.model}</span>
+                <span>Model: {AI_MODELS.find(m => m.id === (analysis.model || selectedModel))?.name || analysis.model}</span>
                 {analysis.cached && <Badge variant="secondary">Cached</Badge>}
               </div>
               <Button
