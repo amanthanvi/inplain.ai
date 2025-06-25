@@ -1,2 +1,2 @@
 // Re-export the enhanced loading spinner
-export { LoadingSpinner } from '@/components/ui/enhanced-loading'
+export { LoadingSpinner } from '@/components/ui/loading-states'

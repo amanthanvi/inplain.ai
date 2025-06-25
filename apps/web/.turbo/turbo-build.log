@@ -7,22 +7,20 @@
 
    Creating an optimized production build ...
 <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (149kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
-(node:4536) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ Compiled successfully
-   Linting and checking validity of types ...
 Failed to compile.
 
-./src/app/api/user/activity/route.ts:35:37
-Type error: Property 'getRecentDiffs' does not exist on type 'StorageClient'.
+./src/components/MobileNavigation.tsx
+Module not found: Can't resolve '@/components/ui/sheet'
 
-[0m [90m 33 |[39m       [36mtry[39m {[0m
-[0m [90m 34 |[39m         [90m// Get recent diffs for this company[39m[0m
-[0m[31m[1m>[22m[39m[90m 35 |[39m         [36mconst[39m diffs [33m=[39m [36mawait[39m storage[33m.[39mgetRecentDiffs(company[33m.[39mslug[33m,[39m [35m5[39m)[0m
-[0m [90m    |[39m                                     [31m[1m^[22m[39m[0m
-[0m [90m 36 |[39m         [0m
-[0m [90m 37 |[39m         [36mfor[39m ([36mconst[39m diff [36mof[39m diffs) {[0m
-[0m [90m 38 |[39m           [36mconst[39m changeCount [33m=[39m (diff[33m.[39madditions [33m||[39m [35m0[39m) [33m+[39m (diff[33m.[39mdeletions [33m||[39m [35m0[39m)[0m
+https://nextjs.org/docs/messages/module-not-found
+
+./src/components/MobileNavigation.tsx
+Module not found: Can't resolve '@/components/ui/separator'
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+> Build failed because of webpack errors
 npm ERR! Lifecycle script `build` failed with error: 
 npm ERR! Error: command failed 
 npm ERR!   in workspace: @inplain.ai/web@1.0.0 

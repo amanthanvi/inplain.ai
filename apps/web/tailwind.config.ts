@@ -93,6 +93,18 @@ const config: Config = {
           from: { transform: "rotate(0deg)" },
           to: { transform: "rotate(360deg)" },
         },
+        "shimmer": {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(100%)" },
+        },
+        "bounce": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-25%)" },
+        },
+        "pulse": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -101,6 +113,9 @@ const config: Config = {
         "slide-up": "slide-up 0.3s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
         "spin": "spin 1s linear infinite",
+        "shimmer": "shimmer 2s linear infinite",
+        "bounce": "bounce 1s ease-in-out infinite",
+        "pulse": "pulse 2s ease-in-out infinite",
       },
     },
   },
