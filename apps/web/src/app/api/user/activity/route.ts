@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     for (const company of watchlist) {
       try {
         // Get recent diffs for this company
-        const diffs = await storage.getRecentDiffs(company.slug, 5)
+        const diffs = await storage.getLatestDiffs(company.slug, 5)
         
         for (const diff of diffs) {
           const changeCount = (diff.additions || 0) + (diff.deletions || 0)
@@ -51,8 +51,7 @@ export async function GET(request: NextRequest) {
             diffId: diff.id,
             metadata: {
               additions: diff.additions,
-              deletions: diff.deletions,
-              sections: diff.sections || []
+              deletions: diff.deletions
             }
           })
         }
