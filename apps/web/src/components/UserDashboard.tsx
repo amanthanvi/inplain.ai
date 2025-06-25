@@ -331,14 +331,13 @@ export function UserDashboard() {
 												</div>
 												<div className="flex items-center gap-2">
 													<Button 
+														asChild
 														variant="ghost" 
-														size="sm" 
-														onClick={() => {
-															console.log('Navigating to:', `/${item.slug}`)
-															router.push(`/${item.slug}`)
-														}}
+														size="sm"
 													>
-														<ChevronRight className="h-4 w-4" />
+														<Link href={`/${item.slug}`}>
+															<ChevronRight className="h-4 w-4" />
+														</Link>
 													</Button>
 													<Button
 														variant="ghost"
