@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import { PremiumCard, PremiumCardContent, PremiumCardHeader, PremiumCardTitle } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ interface WatchlistItem {
 
 export function UserDashboard() {
 	const { user, isLoaded } = useUser()
+	const router = useRouter()
 	const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
 	const [recentActivity, setRecentActivity] = useState<TimelineEvent[]>([])
 	const [showSettings, setShowSettings] = useState(false)
@@ -281,7 +283,11 @@ export function UserDashboard() {
 										<Eye className="h-5 w-5 text-primary" />
 										Your Watchlist
 									</PremiumCardTitle>
-									<Button size="sm" className="gap-2">
+									<Button 
+										size="sm" 
+										className="gap-2"
+										onClick={() => router.push('/companies')}
+									>
 										<Plus className="h-4 w-4" />
 										Add Company
 									</Button>
@@ -324,10 +330,15 @@ export function UserDashboard() {
 													</div>
 												</div>
 												<div className="flex items-center gap-2">
-													<Button variant="ghost" size="sm" asChild>
-														<Link href={`/${item.slug}`}>
-															<ChevronRight className="h-4 w-4" />
-														</Link>
+													<Button 
+														variant="ghost" 
+														size="sm" 
+														onClick={() => {
+															console.log('Navigating to:', `/${item.slug}`)
+															router.push(`/${item.slug}`)
+														}}
+													>
+														<ChevronRight className="h-4 w-4" />
 													</Button>
 													<Button
 														variant="ghost"
