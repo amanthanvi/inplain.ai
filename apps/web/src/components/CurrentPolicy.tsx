@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useStreamingAnalysis } from '@/hooks/useStreamingAnalysis'
 import { InteractiveMarkdown } from './InteractiveMarkdown'
+import { HTMLPolicyViewer } from './HTMLPolicyViewer'
 import { formatAnalysisToMarkdown, formatErrorToMarkdown, formatLoadingMarkdown } from '@/lib/analysis-formatter'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, FileText, Calendar, Hash, Sparkles, Shield, AlertCircle, CheckCircle2, Info, Users, Lock, Cookie, Clock, Mail } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Loader2, FileText, Calendar, Hash, Sparkles, Shield, AlertCircle, CheckCircle2, Info, Users, Lock, Cookie, Clock, Mail, Eye, FileCode } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 interface CurrentPolicyProps {
@@ -120,70 +122,103 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Current Policy Version</CardTitle>
-            <Badge variant="secondary">
-              {formatDistanceToNow(new Date(snapshot.snapshot.capturedAt), { addSuffix: true })}
-            </Badge>
-          </div>
-          <CardDescription>
-            Last captured on {new Date(snapshot.snapshot.capturedAt).toLocaleDateString()}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Words:</span>
-              <span className="font-medium">{snapshot.content.wordCount.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Hash className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Characters:</span>
-              <span className="font-medium">{snapshot.content.characterCount.toLocaleString()}</span>
-            </div>
-          </div>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">
+            <Info className="mr-2 h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="content">
+            <Eye className="mr-2 h-4 w-4" />
+            View Policy
+          </TabsTrigger>
+          <TabsTrigger value="analysis">
+            <Sparkles className="mr-2 h-4 w-4" />
+            AI Analysis
+          </TabsTrigger>
+        </TabsList>
 
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              asChild
-            >
-              <a href={snapshot.snapshot.url} target="_blank" rel="noopener noreferrer">
-                View Original
-              </a>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={analyzePolicy}
-              disabled={analyzing || streaming.isStreaming || !!currentAnalysis}
-            >
-              {(analyzing || streaming.isStreaming) ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing...
-                </>
-              ) : currentAnalysis ? (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Analysis Ready
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Analyze with AI
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="overview" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Current Policy Version</CardTitle>
+                <Badge variant="secondary">
+                  {formatDistanceToNow(new Date(snapshot.snapshot.capturedAt), { addSuffix: true })}
+                </Badge>
+              </div>
+              <CardDescription>
+                Last captured on {new Date(snapshot.snapshot.capturedAt).toLocaleDateString()}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Words:</span>
+                  <span className="font-medium">{snapshot.content.wordCount.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Characters:</span>
+                  <span className="font-medium">{snapshot.content.characterCount.toLocaleString()}</span>
+                </div>
+              </div>
 
-      {(streaming.isStreaming || streaming.content || streaming.error) && (
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  asChild
+                >
+                  <a href={snapshot.snapshot.url} target="_blank" rel="noopener noreferrer">
+                    View Original
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={analyzePolicy}
+                  disabled={analyzing || streaming.isStreaming || !!currentAnalysis}
+                >
+                  {(analyzing || streaming.isStreaming) ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : currentAnalysis ? (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Analysis Ready
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Analyze with AI
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="content">
+          {snapshot.content.text && (
+            <HTMLPolicyViewer 
+              htmlContent={snapshot.content.text}
+              metadata={{
+                capturedAt: snapshot.snapshot.capturedAt,
+                url: snapshot.snapshot.url,
+                wordCount: snapshot.content.wordCount,
+                characterCount: snapshot.content.characterCount
+              }}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="analysis" className="space-y-4">
+          {(streaming.isStreaming || streaming.content || streaming.error) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -225,7 +260,7 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
         </Card>
       )}
 
-      {error && !streaming.error && (
+          {error && !streaming.error && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
@@ -251,7 +286,7 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
         </Card>
       )}
 
-      {currentAnalysis && !streaming.isStreaming && (
+          {currentAnalysis && !streaming.isStreaming && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -277,6 +312,8 @@ export function CurrentPolicy({ slug }: CurrentPolicyProps) {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

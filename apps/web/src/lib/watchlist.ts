@@ -286,8 +286,30 @@ export class WatchlistService {
   ): Promise<void> {
     const watchlists = await this.getWatchlistsForSite(companySlug);
     
+    // Check if we've already processed alerts for this specific change
+    // Using snapshot IDs as a unique identifier for the change
+    const changeKey = `alert:processed:${companySlug}:${details.currentSnapshotId}`;
+    const alreadyProcessed = await kv.get(changeKey);
+    
+    if (alreadyProcessed) {
+      console.log(`[WatchlistService] Alerts already processed for ${companySlug} snapshot ${details.currentSnapshotId}`);
+      return;
+    }
+    
+    // Mark this change as processed with a 7-day TTL
+    await kv.set(changeKey, true, { ex: 7 * 24 * 60 * 60 });
+    
     for (const watchlist of watchlists) {
       if (await this.shouldSendAlert(watchlist, changeType)) {
+        // Check if this specific user already has an alert for this change
+        const userAlertKey = `alert:user:${watchlist.userId}:${companySlug}:${details.currentSnapshotId}`;
+        const userAlreadyAlerted = await kv.get(userAlertKey);
+        
+        if (userAlreadyAlerted) {
+          console.log(`[WatchlistService] User ${watchlist.userId} already alerted for ${companySlug} change`);
+          continue;
+        }
+        
         const alert = await this.createAlert(
           watchlist.id,
           companySlug,
@@ -295,6 +317,9 @@ export class WatchlistService {
           summary,
           details
         );
+        
+        // Mark this user as alerted for this change
+        await kv.set(userAlertKey, true, { ex: 30 * 24 * 60 * 60 }); // 30 days TTL
 
         // Queue email and webhook notifications
         if (watchlist.emailAlerts) {
