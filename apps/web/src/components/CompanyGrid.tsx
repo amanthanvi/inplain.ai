@@ -61,7 +61,7 @@ export function CompanyGrid({ limit, searchQuery = '', category }: CompanyGridPr
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {companies.map((company) => (
-        <Link key={company.slug} href={`/${company.slug}`}>
+        <Link key={company.slug} href={`/${company.slug}`} className="block">
           <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer h-full group hover:scale-[1.02] hover:border-primary/50">
             <CardHeader>
               <div className="space-y-3">

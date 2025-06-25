@@ -2,6 +2,7 @@
 
 import React, { Suspense } from 'react'
 import Link from 'next/link'
+import { useUser } from '@clerk/nextjs'
 import { CompanyGrid } from '@/components/CompanyGrid'
 import { RecentDiffs } from '@/components/RecentDiffs'
 import { RecentDiffsRealtime } from '@/components/RecentDiffsRealtime'
@@ -15,7 +16,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   Shield, Bot, Zap, Bell, TrendingUp, Search, 
   CheckCircle, ArrowRight, Sparkles, Eye, Lock,
-  BarChart3, Users, Globe, ChevronRight, Activity
+  BarChart3, Users, Globe, ChevronRight, Activity,
+  LayoutDashboard, Building2
 } from 'lucide-react'
 
 const features = [
@@ -46,13 +48,149 @@ const features = [
 ]
 
 const stats = [
-  { label: 'Companies Tracked', value: '2,500+' },
+  { label: 'Companies Tracked', value: '60+' },
   { label: 'Policy Changes Detected', value: '10,000+' },
   { label: 'Active Users', value: '50,000+' },
   { label: 'Daily Checks', value: '100,000+' }
 ]
 
 function HomePage() {
+  const { user, isLoaded } = useUser()
+
+  // Show logged-in user experience
+  if (isLoaded && user) {
+    return (
+      <PageTransition>
+        <div className="flex flex-col">
+          {/* Logged-in User Hero Section */}
+          <section className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+            <div className="container relative py-16 sm:py-20">
+              <AnimatedContainer animation="slideUp" className="mx-auto max-w-4xl text-center">
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
+                  Welcome back, {user.firstName || 'there'}!
+                </h1>
+                <p className="mx-auto mb-8 max-w-2xl text-lg text-muted-foreground">
+                  Your privacy monitoring dashboard is ready. Check out the latest policy updates from companies you're tracking.
+                </p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+                  <AnimatedContainer delay={0.2}>
+                    <Button asChild size="lg" className="bg-primary hover:bg-primary/90 min-w-[200px] h-14 text-lg group">
+                      <Link href="/dashboard">
+                        <LayoutDashboard className="mr-2 h-5 w-5" />
+                        Go to Dashboard
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </Link>
+                    </Button>
+                  </AnimatedContainer>
+                  <AnimatedContainer delay={0.3}>
+                    <Button asChild size="lg" variant="outline" className="min-w-[200px] h-14 text-lg">
+                      <Link href="/watchlist">
+                        <Bell className="mr-2 h-5 w-5" />
+                        View Watchlist
+                      </Link>
+                    </Button>
+                  </AnimatedContainer>
+                </div>
+              </AnimatedContainer>
+            </div>
+          </section>
+
+          {/* Quick Stats for Logged-in Users */}
+          <section className="py-12 border-y bg-muted/30">
+            <div className="container">
+              <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+                <AnimatedContainer animation="scale" className="text-center">
+                  <div className="text-3xl font-bold text-primary">12</div>
+                  <div className="text-sm text-muted-foreground">Companies Watched</div>
+                </AnimatedContainer>
+                <AnimatedContainer delay={0.1} animation="scale" className="text-center">
+                  <div className="text-3xl font-bold text-primary">3</div>
+                  <div className="text-sm text-muted-foreground">New Updates Today</div>
+                </AnimatedContainer>
+                <AnimatedContainer delay={0.2} animation="scale" className="text-center">
+                  <div className="text-3xl font-bold text-primary">24</div>
+                  <div className="text-sm text-muted-foreground">Alerts This Month</div>
+                </AnimatedContainer>
+                <AnimatedContainer delay={0.3} animation="scale" className="text-center">
+                  <div className="text-3xl font-bold text-primary">Active</div>
+                  <div className="text-sm text-muted-foreground">Monitoring Status</div>
+                </AnimatedContainer>
+              </div>
+            </div>
+          </section>
+
+          {/* Recent Activity Section */}
+          <section className="py-16">
+            <div className="container">
+              <AnimatedContainer animation="fade" className="text-center mb-12">
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+                  Recent Policy Updates
+                </h2>
+                <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+                  Stay informed about the latest changes from companies you're monitoring
+                </p>
+              </AnimatedContainer>
+              
+              <div className="grid gap-8 lg:grid-cols-2">
+                <AnimatedContainer delay={0.2} animation="slide">
+                  <Card className="h-full">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Activity className="h-5 w-5 text-primary" />
+                        Latest Changes
+                      </CardTitle>
+                      <CardDescription>
+                        Real-time updates from your watchlist
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <AsyncErrorBoundary>
+                        <Suspense fallback={<PolicyLoadingSkeleton />}>
+                          <RecentDiffsRealtime />
+                        </Suspense>
+                      </AsyncErrorBoundary>
+                    </CardContent>
+                  </Card>
+                </AnimatedContainer>
+                
+                <AnimatedContainer delay={0.3} animation="slide">
+                  <Card className="h-full">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Building2 className="h-5 w-5 text-primary" />
+                        Suggested Companies
+                      </CardTitle>
+                      <CardDescription>
+                        Popular companies you might want to track
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <AsyncErrorBoundary>
+                        <Suspense fallback={<LoadingSpinner label="Loading companies..." />}>
+                          <CompanyGrid limit={4} />
+                        </Suspense>
+                      </AsyncErrorBoundary>
+                      <div className="mt-4 text-center">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href="/companies">
+                            Browse All Companies
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </AnimatedContainer>
+              </div>
+            </div>
+          </section>
+        </div>
+      </PageTransition>
+    )
+  }
+
+  // Show public homepage for non-authenticated users
   return (
     <PageTransition>
       <div className="flex flex-col">
@@ -69,7 +207,7 @@ function HomePage() {
                 Never Miss a Privacy Update
               </h1>
               <p className="mx-auto mb-10 max-w-2xl text-xl text-muted-foreground sm:text-2xl">
-                Track privacy policy changes across thousands of companies with AI-powered insights, 
+                Track privacy policy changes across 60+ companies with AI-powered insights, 
                 real-time alerts, and comprehensive analytics.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
@@ -131,10 +269,10 @@ function HomePage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-primary" />
-                      Recently Tracked Companies
+                      Popular Companies
                     </CardTitle>
                     <CardDescription>
-                      Live monitoring across major platforms
+                      Track privacy policies from leading tech companies
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
