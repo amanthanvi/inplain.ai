@@ -65,6 +65,224 @@ const aiCapabilities = [
   { icon: MessageSquare, text: 'Plain English explanations' }
 ]
 
+function renderFormattedAnalysis(analysis: any) {
+  // If we have structured content, render it nicely
+  if (analysis.structured_content) {
+    const content = analysis.structured_content;
+    
+    return (
+      <div className="space-y-6">
+        {/* Executive Summary */}
+        {content.executive_summary && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Executive Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">{content.executive_summary}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Privacy Score */}
+        {content.overall_privacy_score && (
+          <div className="flex items-center justify-center">
+            <div className="text-center space-y-2">
+              <h4 className="text-sm font-medium text-muted-foreground">Privacy Score</h4>
+              <div className={cn(
+                "text-3xl font-bold uppercase",
+                content.overall_privacy_score === 'excellent' && "text-green-600",
+                content.overall_privacy_score === 'good' && "text-yellow-600",
+                content.overall_privacy_score === 'fair' && "text-orange-600",
+                content.overall_privacy_score === 'poor' && "text-red-600"
+              )}>
+                {content.overall_privacy_score}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Key Highlights */}
+        {content.key_highlights && content.key_highlights.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Key Highlights
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {content.key_highlights.map((highlight: string, index: number) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
+                    <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>{highlight}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Data Collection */}
+        {content.data_collected && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Data Collection
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {content.data_collected.personal_info?.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium mb-1">Personal Information</h5>
+                  <div className="flex flex-wrap gap-1">
+                    {content.data_collected.personal_info.map((item: string, i: number) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{item}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {content.data_collected.usage_data?.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium mb-1">Usage Data</h5>
+                  <div className="flex flex-wrap gap-1">
+                    {content.data_collected.usage_data.map((item: string, i: number) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{item}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {content.data_collected.device_data?.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium mb-1">Device Data</h5>
+                  <div className="flex flex-wrap gap-1">
+                    {content.data_collected.device_data.map((item: string, i: number) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{item}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* User Rights */}
+        {content.user_rights && content.user_rights.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Your Rights
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {content.user_rights.map((right: string, index: number) => (
+                  <li key={index} className="flex items-start gap-2 text-sm">
+                    <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>{right}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Concerns and Recommendations */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {content.notable_concerns && content.notable_concerns.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  Notable Concerns
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {content.notable_concerns.map((concern: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <span>{concern}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          {content.recommendations && content.recommendations.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  Recommendations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {content.recommendations.map((rec: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <span className="text-blue-600 font-medium">{index + 1}.</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Compliance */}
+        {(content.gdpr_compliant !== undefined || content.ccpa_compliant !== undefined) && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Regulatory Compliance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                {content.gdpr_compliant !== undefined && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">GDPR:</span>
+                    <Badge variant={content.gdpr_compliant === true ? "success" : content.gdpr_compliant === false ? "destructive" : "secondary"}>
+                      {content.gdpr_compliant === true ? "Compliant" : content.gdpr_compliant === false ? "Non-compliant" : "Unclear"}
+                    </Badge>
+                  </div>
+                )}
+                {content.ccpa_compliant !== undefined && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">CCPA:</span>
+                    <Badge variant={content.ccpa_compliant === true ? "success" : content.ccpa_compliant === false ? "destructive" : "secondary"}>
+                      {content.ccpa_compliant === true ? "Compliant" : content.ccpa_compliant === false ? "Non-compliant" : "Unclear"}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback to simple text display
+  return (
+    <div className="prose prose-sm max-w-none">
+      <div className="whitespace-pre-wrap">
+        {analysis.content || analysis.raw_content || "No analysis content available."}
+      </div>
+    </div>
+  );
+}
+
 export function AIAnalysisPanel({ 
   slug, 
   onAnalyze, 
@@ -320,28 +538,7 @@ export function AIAnalysisPanel({
               </TabsList>
               <TabsContent value="formatted" className="space-y-4">
                 {/* Render formatted analysis based on type */}
-                <div className="prose prose-sm max-w-none">
-                  {analysis.structured_content ? (
-                    <div>
-                      {/* Render structured content */}
-                      {analysis.structured_content.summary && (
-                        <div className="space-y-2">
-                          <h4 className="font-medium flex items-center gap-2">
-                            <Info className="h-4 w-4" />
-                            Summary
-                          </h4>
-                          <p className="text-muted-foreground">
-                            {analysis.structured_content.summary}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="whitespace-pre-wrap">
-                      {analysis.content || analysis.raw_content}
-                    </div>
-                  )}
-                </div>
+                {renderFormattedAnalysis(analysis)}
               </TabsContent>
               <TabsContent value="raw">
                 <pre className="text-xs bg-muted p-3 rounded-lg overflow-x-auto">
@@ -358,7 +555,7 @@ export function AIAnalysisPanel({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigator.clipboard.writeText(analysis.content || analysis.raw_content)}
+                onClick={() => navigator.clipboard.writeText(analysis.content || analysis.raw_content || JSON.stringify(analysis.structured_content, null, 2))}
               >
                 Copy
               </Button>

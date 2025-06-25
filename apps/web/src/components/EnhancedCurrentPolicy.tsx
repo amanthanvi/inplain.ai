@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AIAnalysisPanel } from '@/components/ai/AIAnalysisPanel'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { HTMLPolicyViewer } from './HTMLPolicyViewer'
 import { useStreamingAnalysis } from '@/hooks/useStreamingAnalysis'
 import { InteractiveMarkdown } from './InteractiveMarkdown'
 import { formatAnalysisToMarkdown } from '@/lib/analysis-formatter'
@@ -280,25 +281,29 @@ export function EnhancedCurrentPolicy({ slug }: EnhancedCurrentPolicyProps) {
           </TabsContent>
 
           <TabsContent value="details" className="space-y-4">
-            <div className="prose prose-sm max-w-none">
-              <h4 className="flex items-center gap-2">
-                <Info className="h-4 w-4" />
-                Policy Content Preview
-              </h4>
-              <div className="mt-3 p-4 bg-muted/50 rounded-lg max-h-96 overflow-y-auto">
-                <p className="text-sm text-muted-foreground line-clamp-10">
-                  {snapshot.content.text?.substring(0, 1000)}...
-                </p>
+            {snapshot.content.text ? (
+              <HTMLPolicyViewer 
+                htmlContent={snapshot.content.text}
+                metadata={{
+                  capturedAt: snapshot.snapshot.capturedAt,
+                  url: snapshot.snapshot.url,
+                  wordCount: snapshot.content.wordCount,
+                  characterCount: snapshot.content.characterCount
+                }}
+              />
+            ) : (
+              <div className="prose prose-sm max-w-none">
+                <h4 className="flex items-center gap-2">
+                  <Info className="h-4 w-4" />
+                  Policy Content
+                </h4>
+                <div className="mt-3 p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    Policy content is not available yet.
+                  </p>
+                </div>
               </div>
-              <Button 
-                variant="outline" 
-                className="mt-4 w-full"
-                onClick={() => setActiveTab('ai-analysis')}
-              >
-                Get AI Analysis
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
+            )}
           </TabsContent>
         </CardContent>
       </Card>

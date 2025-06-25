@@ -172,7 +172,7 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
       // Analyze the change and trigger watchlist alerts
       try {
         console.log(`[Monitor] Analyzing changes for watchlist alerts...`)
-        const previousContent = await storage.getSnapshotContent(latestSnapshot.id)
+        const previousContent = await storage.getSnapshotContent(latestSnapshot.blobKey)
         
         if (previousContent && previousContent.length > 100) {
           // Quick analysis to determine change severity
