@@ -363,9 +363,11 @@ export function AdvancedInsights({
       fullValue: value
     }))
 
-    if (insight.visualData.type === 'chart' && insight.visualData.data.type === 'gauge') {
+    if (insight.visualData.type === 'chart' && insight.visualData.data.type === 'gauge' && metrics.length > 0) {
       // Render gauge chart for single metric
-      const value = animatedMetrics[`${insight.id}-${metrics[0][0]}`] || 0
+      const firstMetric = metrics[0]
+      if (!firstMetric) return null
+      const value = animatedMetrics[`${insight.id}-${firstMetric[0]}`] || 0
       const percentage = (value / insight.visualData.data.max) * 100
 
       return (
@@ -373,14 +375,14 @@ export function AdvancedInsights({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <div className="text-3xl font-bold">{Math.round(value)}</div>
-              <div className="text-sm text-muted-foreground">{metrics[0][0]}</div>
+              <div className="text-sm text-muted-foreground">{firstMetric[0]}</div>
             </div>
           </div>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={[
-                  { value: percentage, fill: percentage > 70 ? '#ef4444' : percentage > 30 ? '#f59e0b' : '#10b981' },
+                  { value: percentage, fill: percentage > 70 ? '#10b981' : percentage > 30 ? '#f59e0b' : '#ef4444' },
                   { value: 100 - percentage, fill: '#e5e7eb' }
                 ]}
                 cx="50%"
@@ -392,7 +394,10 @@ export function AdvancedInsights({
                 paddingAngle={0}
                 dataKey="value"
               >
-                {data.map((entry, index) => (
+                {[
+                  { value: percentage, fill: percentage > 70 ? '#10b981' : percentage > 30 ? '#f59e0b' : '#ef4444' },
+                  { value: 100 - percentage, fill: '#e5e7eb' }
+                ].map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>

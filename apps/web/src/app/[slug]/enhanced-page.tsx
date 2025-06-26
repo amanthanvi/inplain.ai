@@ -15,7 +15,8 @@ import {
   FileText, History, TrendingUp, ChevronRight,
   Building2, Clock, AlertCircle, Sparkles,
   BarChart3, Brain, Zap, Eye, Download,
-  Share2, RefreshCw, Gauge, Target, Award
+  Share2, RefreshCw, Gauge, Target, Award,
+  CheckCircle
 } from 'lucide-react'
 import { AdvancedInsights } from '@/components/insights/AdvancedInsights'
 import { AnimatedContainer } from '@/components/ui/animations'
@@ -322,7 +323,7 @@ export function EnhancedCompanyPage({ company }: EnhancedCompanyPageProps) {
                   {isWatched ? 'Watching' : 'Watch'}
                 </Button>
                 <Button variant="outline" asChild>
-                  <a href={company.privacyPolicyUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={company.url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     View Policy
                   </a>
