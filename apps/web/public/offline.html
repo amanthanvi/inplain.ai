@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Inplain.AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 48px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background-color: #f3e8ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .icon svg {
+            width: 40px;
+            height: 40px;
+            color: #7c3aed;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #111827;
+        }
+        
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #6b7280;
+            margin-bottom: 32px;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #7c3aed;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+        }
+        
+        .button:hover {
+            background-color: #6d28d9;
+        }
+        
+        .secondary-button {
+            background-color: transparent;
+            color: #7c3aed;
+            border: 1px solid #e5e7eb;
+            margin-left: 12px;
+        }
+        
+        .secondary-button:hover {
+            background-color: #f9fafb;
+        }
+        
+        .status {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ef4444;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #111827;
+                color: #f3f4f6;
+            }
+            
+            .container {
+                background: #1f2937;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            }
+            
+            h1 {
+                color: #f9fafb;
+            }
+            
+            p {
+                color: #d1d5db;
+            }
+            
+            .secondary-button {
+                border-color: #374151;
+            }
+            
+            .secondary-button:hover {
+                background-color: #374151;
+            }
+            
+            .status {
+                border-top-color: #374151;
+            }
+            
+            .status-item {
+                color: #9ca3af;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+            </svg>
+        </div>
+        
+        <h1>You're Offline</h1>
+        <p>
+            It looks like you've lost your internet connection. 
+            Don't worry, you can still view cached content or try again when you're back online.
+        </p>
+        
+        <div>
+            <button class="button" onclick="window.location.reload()">
+                Try Again
+            </button>
+            <button class="button secondary-button" onclick="history.back()">
+                Go Back
+            </button>
+        </div>
+        
+        <div class="status">
+            <div class="status-item">
+                <span class="status-dot"></span>
+                <span>No internet connection</span>
+            </div>
+            <div class="status-item" id="last-online">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Show when the user was last online
+        const lastOnline = localStorage.getItem('lastOnline');
+        if (lastOnline) {
+            const date = new Date(parseInt(lastOnline));
+            const timeAgo = getTimeAgo(date);
+            document.getElementById('last-online').innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>Last online ${timeAgo}</span>
+            `;
+        }
+        
+        // Update last online time when online
+        window.addEventListener('online', () => {
+            localStorage.setItem('lastOnline', Date.now());
+            window.location.reload();
+        });
+        
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            const intervals = {
+                year: 31536000,
+                month: 2592000,
+                week: 604800,
+                day: 86400,
+                hour: 3600,
+                minute: 60
+            };
+            
+            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secondsInUnit);
+                if (interval >= 1) {
+                    return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
+                }
+            }
+            
+            return 'just now';
+        }
+    </script>
+</body>
+</html>
