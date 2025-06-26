@@ -322,8 +322,8 @@ export function UserDashboard() {
 														item.riskLevel === 'medium' ? 'bg-yellow-500' :
 														'bg-green-500'
 													}`} />
-													<div>
-														<h3 className="font-medium">{item.name}</h3>
+													<div className="flex-1 min-w-0">
+														<h3 className="font-medium truncate">{item.name}</h3>
 														<p className="text-sm text-muted-foreground">
 															{item.changeCount} changes • Last checked {item.lastChecked.toLocaleDateString()}
 														</p>

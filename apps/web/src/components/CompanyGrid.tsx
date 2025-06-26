@@ -63,18 +63,18 @@ export function CompanyGrid({ limit, searchQuery = '', category }: CompanyGridPr
       {companies.map((company) => (
         <Link key={company.slug} href={`/${company.slug}`}>
           <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer h-full group hover:scale-[1.02] hover:border-primary/50">
-            <CardHeader>
+            <CardHeader className="p-6">
               <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2 flex-1">
                     {company.name}
                   </CardTitle>
                   {company.active && (
-                    <Badge variant="success" className="ml-2 text-xs">Active</Badge>
+                    <Badge variant="success" className="text-xs shrink-0">Active</Badge>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <CardDescription className="text-sm">
+                  <CardDescription className="text-sm truncate" title={extractDomain(company.url)}>
                     {extractDomain(company.url)}
                   </CardDescription>
                   {company.category && (

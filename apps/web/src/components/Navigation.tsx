@@ -53,7 +53,7 @@ export function Navigation() {
           read: false,
           action: {
             label: 'View Changes',
-            href: '/meta'
+            onClick: () => window.location.href = '/meta'
           },
           metadata: {
             company: 'Meta',
@@ -84,6 +84,8 @@ export function Navigation() {
   const navItems = user ? [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/companies', label: 'Companies', icon: Building2 },
+    { href: '/watchlist', label: 'Watchlist', icon: Bell },
+    { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/settings', label: 'Settings', icon: Settings },
     { href: '/about', label: 'About', icon: Info },
   ] : [

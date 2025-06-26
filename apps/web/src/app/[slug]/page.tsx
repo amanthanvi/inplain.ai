@@ -57,12 +57,13 @@ export default async function CompanyPage({ params }: PageProps) {
     notFound()
   }
 
-  // Simulate company stats - in production these would come from API
+  // For now, use simulated metrics until we have real data in storage
+  // In production, this would fetch from the metrics API
   const stats = {
     checkInterval: company.checkInterval / 3600, // Convert to hours
-    totalChanges: 15,
-    privacyScore: 'Good',
-    riskLevel: 'Low'
+    totalChanges: Math.floor(Math.random() * 30) + 5,
+    privacyScore: ['Excellent', 'Good', 'Fair'][Math.floor(Math.random() * 3)] as 'Excellent' | 'Good' | 'Fair',
+    riskLevel: ['Low', 'Medium'][Math.floor(Math.random() * 2)] as 'Low' | 'Medium'
   }
   
   return (
