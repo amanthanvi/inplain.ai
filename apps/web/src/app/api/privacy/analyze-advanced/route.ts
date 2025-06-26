@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
               // Get industry peers for comparison
               const industryPeers = await kv.zrange(`industry:${industry}:scores`, 0, 9, {
                 withScores: true
-              })
+              }) as Array<[string, number]>
 
               const comparison = {
                 rank: industryPeers.filter(([_, score]) => score > scoreResult.overallScore).length + 1,
@@ -190,16 +190,16 @@ export async function POST(request: NextRequest) {
     if (includeComparison && industry) {
       const industryPeers = await kv.zrange(`industry:${industry}:scores`, 0, -1, {
         withScores: true
-      })
+      }) as Array<[string, number]>
 
       comparison = {
         rank: industryPeers.filter(([_, score]) => score > scoreResult.overallScore).length + 1,
         totalCompanies: industryPeers.length + 1,
         betterThan: Math.round(((industryPeers.length - industryPeers.filter(([_, score]) => score > scoreResult.overallScore).length) / (industryPeers.length + 1)) * 100),
-        distribution: generateDistribution(industryPeers.map(([_, score]) => score as number)),
+        distribution: generateDistribution(industryPeers.map(([_, score]) => score)),
         topPerformers: industryPeers.slice(0, 5).map(([company, score]) => ({ 
-          company: company as string, 
-          score: score as number 
+          company, 
+          score
         }))
       }
     }
@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
         modelRecommendations: isDemo ? undefined : modelRecommendations
       },
       limits: isDemo ? {
-        remaining: 5 - (await kv.get(`demo:analyze:${request.headers.get('x-forwarded-for') || 'demo'}:${new Date().toISOString().slice(0, 10)}`) || 0),
+        remaining: 5 - ((await kv.get(`demo:analyze:${request.headers.get('x-forwarded-for') || 'demo'}:${new Date().toISOString().slice(0, 10)}`) as number) || 0),
         resetAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString()
       } : undefined
     })
@@ -269,11 +269,11 @@ function generateDistribution(scores: number[]): Record<string, number> {
   }
 
   scores.forEach(score => {
-    if (score <= 20) distribution['0-20']++
-    else if (score <= 40) distribution['21-40']++
-    else if (score <= 60) distribution['41-60']++
-    else if (score <= 80) distribution['61-80']++
-    else distribution['81-100']++
+    if (score <= 20) distribution['0-20']!++
+    else if (score <= 40) distribution['21-40']!++
+    else if (score <= 60) distribution['41-60']!++
+    else if (score <= 80) distribution['61-80']!++
+    else distribution['81-100']!++
   })
 
   return distribution

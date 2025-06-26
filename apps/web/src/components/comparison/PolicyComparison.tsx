@@ -253,10 +253,12 @@ export function PolicyComparison({
     let bestValue = -1
 
     Object.entries(comparisonData).forEach(([slug, data]) => {
-      const dimValue = getDimensionValue(data, dimension)
-      if (dimValue.value > bestValue) {
-        bestValue = dimValue.value
-        bestCompany = slug
+      if (data) {
+        const dimValue = getDimensionValue(data, dimension)
+        if (dimValue.value > bestValue) {
+          bestValue = dimValue.value
+          bestCompany = slug
+        }
       }
     })
 
@@ -271,10 +273,10 @@ export function PolicyComparison({
           company: data?.company.name,
           overallScore: data?.score?.overallScore,
           grade: data?.score?.grade,
-          dimensions: COMPARISON_DIMENSIONS.map(dim => ({
+          dimensions: data ? COMPARISON_DIMENSIONS.map(dim => ({
             dimension: dim.label,
             ...getDimensionValue(data, dim.key)
-          }))
+          })) : []
         }
       }),
       generatedAt: new Date().toISOString()
@@ -412,7 +414,7 @@ export function PolicyComparison({
                               </TableCell>
                               {selectedCompanies.map(slug => {
                                 const data = comparisonData[slug]
-                                const dimValue = getDimensionValue(data, dimension.key)
+                                const dimValue = data ? getDimensionValue(data, dimension.key) : { value: 0, status: 'unknown' as const }
                                 const isBest = slug === bestCompany && highlightDifferences
                                 
                                 return (
@@ -504,7 +506,7 @@ export function PolicyComparison({
                       ) : (
                         <div className="space-y-3">
                           {COMPARISON_DIMENSIONS.map(dimension => {
-                            const dimValue = getDimensionValue(data, dimension.key)
+                            const dimValue = data ? getDimensionValue(data, dimension.key) : { value: 0, status: 'unknown' as const }
                             
                             return (
                               <div key={dimension.key} className="space-y-1">

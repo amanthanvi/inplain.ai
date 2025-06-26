@@ -556,7 +556,7 @@ export class EnhancedAIService {
 
           return {
             perspective,
-            content: response.choices[0].message.content,
+            content: response.choices[0]?.message?.content || '',
             usage: response.usage
           }
         })
@@ -582,7 +582,7 @@ export class EnhancedAIService {
       // Generate enhanced insights
       const insights = await this.generateEnhancedInsights(
         policyText,
-        synthesisResponse.choices[0].message.content || '',
+        synthesisResponse.choices[0]?.message?.content || '',
         options.insightConfig || { depth: 'standard', focus: ['risks', 'opportunities'] }
       )
 
@@ -593,7 +593,7 @@ export class EnhancedAIService {
       this.modelUsage.set(model.primary, (this.modelUsage.get(model.primary) || 0) + tokensUsed)
 
       return {
-        analysis: JSON.parse(synthesisResponse.choices[0].message.content || '{}'),
+        analysis: JSON.parse(synthesisResponse.choices[0]?.message?.content || '{}'),
         insights,
         metadata: {
           model: model.primary,
@@ -624,12 +624,12 @@ export class EnhancedAIService {
 
       const insights = await this.generateEnhancedInsights(
         policyText,
-        fallbackResponse.choices[0].message.content || '',
+        fallbackResponse.choices[0]?.message?.content || '',
         options.insightConfig || { depth: 'standard', focus: ['risks'] }
       )
 
       return {
-        analysis: JSON.parse(fallbackResponse.choices[0].message.content || '{}'),
+        analysis: JSON.parse(fallbackResponse.choices[0]?.message?.content || '{}'),
         insights,
         metadata: {
           model: model.fallback,
@@ -703,7 +703,7 @@ ${config.comparisons ? '- Compare against industry best practices' : ''}`
       response_format: { type: 'json_object' }
     })
 
-    const result = JSON.parse(response.choices[0].message.content || '{"insights": []}')
+    const result = JSON.parse(response.choices[0]?.message?.content || '{"insights": []}')
     
     // Enhance insights with visual data where applicable
     return result.insights.map((insight: EnhancedInsight) => ({
@@ -719,7 +719,7 @@ ${config.comparisons ? '- Compare against industry best practices' : ''}`
     if (insight.details.metrics && Object.keys(insight.details.metrics).length > 0) {
       const metricKeys = Object.keys(insight.details.metrics)
       
-      if (metricKeys.length === 1) {
+      if (metricKeys.length === 1 && metricKeys[0]) {
         // Single metric - use gauge
         return {
           type: 'chart',
@@ -772,12 +772,13 @@ ${config.comparisons ? '- Compare against industry best practices' : ''}`
       .filter(i => i.id !== insight.id)
       .filter(i => {
         // Same type or complementary types
-        const relatedTypes = {
+        const relatedTypes: Record<string, string[]> = {
           risk: ['recommendation', 'prediction'],
           opportunity: ['recommendation', 'trend'],
           trend: ['prediction', 'opportunity'],
           prediction: ['risk', 'recommendation'],
-          recommendation: ['risk', 'opportunity']
+          recommendation: ['risk', 'opportunity'],
+          comparison: ['trend', 'opportunity']
         }
         
         return i.type === insight.type || relatedTypes[insight.type]?.includes(i.type)

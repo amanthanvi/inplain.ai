@@ -89,7 +89,8 @@ export class AdvancedPrivacyScorer {
     const flags = this.detectPrivacyFlags()
     
     // Calculate industry comparison
-    const industryData = INDUSTRY_BENCHMARKS[options?.industry || 'technology']
+    const industryKey = options?.industry || 'technology'
+    const industryData = INDUSTRY_BENCHMARKS[industryKey] || { average: 65, topQuartile: 80 }
     const percentile = this.calculatePercentile(overallScore, industryData)
     const trend = this.calculateTrend(overallScore, options?.previousScores)
 
