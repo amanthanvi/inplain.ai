@@ -1,0 +1,364 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { 
+  Building2, FileText, Clock, TrendingUp, AlertTriangle, 
+  Shield, ChevronRight, Filter, Sparkles
+} from 'lucide-react'
+import { WATCHED_COMPANIES } from '@inplain.ai/shared'
+import { AnimatedContainer } from '@/components/ui/animations'
+import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
+
+interface SearchResult {
+  type: 'company' | 'policy' | 'change' | 'insight'
+  id: string
+  title: string
+  description: string
+  url: string
+  metadata: {
+    company?: string
+    category?: string
+    riskLevel?: string
+    changeType?: string
+    date?: string
+    relevanceScore?: number
+  }
+}
+
+export function SearchResults() {
+  const searchParams = useSearchParams()
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('all')
+  
+  const query = searchParams.get('q') || ''
+  const categories = searchParams.get('categories')?.split(',') || []
+  const riskLevels = searchParams.get('risks')?.split(',') || []
+  const timeRange = searchParams.get('time') || 'all'
+  const changeTypes = searchParams.get('changes')?.split(',') || []
+  const sortBy = searchParams.get('sort') || 'relevance'
+
+  useEffect(() => {
+    performSearch()
+  }, [query, categories, riskLevels, timeRange, changeTypes, sortBy])
+
+  const performSearch = async () => {
+    setLoading(true)
+    
+    try {
+      // In production, this would be an API call
+      // For now, simulate search results
+      const mockResults: SearchResult[] = []
+      
+      // Search companies
+      const companyResults = WATCHED_COMPANIES
+        .filter(company => {
+          if (query && !company.name.toLowerCase().includes(query.toLowerCase())) {
+            return false
+          }
+          if (categories.length && !categories.includes(company.category || '')) {
+            return false
+          }
+          return true
+        })
+        .map(company => ({
+          type: 'company' as const,
+          id: company.slug,
+          title: company.name,
+          description: `Monitor privacy policy changes for ${company.name}`,
+          url: `/${company.slug}`,
+          metadata: {
+            category: company.category,
+            relevanceScore: query ? 
+              (company.name.toLowerCase().includes(query.toLowerCase()) ? 1 : 0.5) : 
+              0.8
+          }
+        }))
+      
+      mockResults.push(...companyResults)
+      
+      // Simulate policy change results
+      if (query || changeTypes.length || riskLevels.length) {
+        const changeResults: SearchResult[] = [
+          {
+            type: 'change',
+            id: 'change-1',
+            title: 'Google Updates Data Retention Policy',
+            description: 'Major changes to how long user data is stored and processed',
+            url: '/google#changes',
+            metadata: {
+              company: 'Google',
+              changeType: 'major',
+              riskLevel: 'high',
+              date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              relevanceScore: 0.9
+            }
+          },
+          {
+            type: 'change',
+            id: 'change-2',
+            title: 'Meta Introduces New AI Data Usage Terms',
+            description: 'Updated terms for using user data in AI model training',
+            url: '/meta#changes',
+            metadata: {
+              company: 'Meta',
+              changeType: 'major',
+              riskLevel: 'critical',
+              date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+              relevanceScore: 0.85
+            }
+          },
+          {
+            type: 'change',
+            id: 'change-3',
+            title: 'Apple Enhances Privacy Controls',
+            description: 'New user controls for data sharing and tracking prevention',
+            url: '/apple#changes',
+            metadata: {
+              company: 'Apple',
+              changeType: 'moderate',
+              riskLevel: 'low',
+              date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+              relevanceScore: 0.7
+            }
+          }
+        ]
+        
+        // Filter change results based on filters
+        const filteredChanges = changeResults.filter(result => {
+          if (changeTypes.length && !changeTypes.includes(result.metadata.changeType || '')) {
+            return false
+          }
+          if (riskLevels.length && !riskLevels.includes(result.metadata.riskLevel || '')) {
+            return false
+          }
+          return true
+        })
+        
+        mockResults.push(...filteredChanges)
+      }
+      
+      // Add AI insights if query contains certain keywords
+      if (query && (query.includes('ai') || query.includes('data') || query.includes('privacy'))) {
+        mockResults.push({
+          type: 'insight',
+          id: 'insight-1',
+          title: 'AI Data Collection Trends Across Tech Companies',
+          description: 'Analysis of how major tech companies are updating their policies for AI data usage',
+          url: '/insights/ai-data-trends',
+          metadata: {
+            relevanceScore: 0.95
+          }
+        })
+      }
+      
+      // Sort results
+      const sortedResults = mockResults.sort((a, b) => {
+        if (sortBy === 'relevance') {
+          return (b.metadata.relevanceScore || 0) - (a.metadata.relevanceScore || 0)
+        } else if (sortBy === 'date') {
+          const dateA = new Date(a.metadata.date || 0).getTime()
+          const dateB = new Date(b.metadata.date || 0).getTime()
+          return dateB - dateA
+        }
+        return 0
+      })
+      
+      setResults(sortedResults)
+    } catch (error) {
+      console.error('Search failed:', error)
+      setResults([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'company': return Building2
+      case 'policy': return FileText
+      case 'change': return AlertTriangle
+      case 'insight': return Sparkles
+      default: return FileText
+    }
+  }
+
+  const getRiskBadgeVariant = (risk?: string) => {
+    switch (risk) {
+      case 'critical': return 'destructive'
+      case 'high': return 'destructive'
+      case 'medium': return 'warning'
+      case 'low': return 'secondary'
+      default: return 'secondary'
+    }
+  }
+
+  const filteredResults = activeTab === 'all' 
+    ? results 
+    : results.filter(r => r.type === activeTab)
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      {/* Results Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold">
+              {loading ? 'Searching...' : `${results.length} results`}
+              {query && <span className="font-normal text-muted-foreground"> for "{query}"</span>}
+            </h2>
+            {!loading && results.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Showing {filteredResults.length} of {results.length} results
+              </p>
+            )}
+          </div>
+          
+          {results.length > 0 && (
+            <Badge variant="outline">
+              <Filter className="h-3 w-3 mr-1" />
+              {sortBy === 'relevance' ? 'Most Relevant' : 'Most Recent'}
+            </Badge>
+          )}
+        </div>
+
+        {/* Result Type Tabs */}
+        {results.length > 0 && (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="all">
+                All ({results.length})
+              </TabsTrigger>
+              <TabsTrigger value="company">
+                Companies ({results.filter(r => r.type === 'company').length})
+              </TabsTrigger>
+              <TabsTrigger value="change">
+                Changes ({results.filter(r => r.type === 'change').length})
+              </TabsTrigger>
+              <TabsTrigger value="insight">
+                Insights ({results.filter(r => r.type === 'insight').length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+      </div>
+
+      {/* Results List */}
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-6 bg-muted rounded w-3/4 mb-2" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      ) : filteredResults.length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No results found</h3>
+            <p className="text-muted-foreground">
+              Try adjusting your search terms or filters
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <AnimatedContainer animation="fade" className="space-y-4">
+          {filteredResults.map((result, index) => {
+            const Icon = getIcon(result.type)
+            
+            return (
+              <AnimatedContainer
+                key={result.id}
+                animation="slideUp"
+                delay={index * 0.05}
+              >
+                <Link href={result.url}>
+                  <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-3">
+                          <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            result.type === 'insight' ? 'bg-primary/10' : 'bg-muted'
+                          }`}>
+                            <Icon className={`h-5 w-5 ${
+                              result.type === 'insight' ? 'text-primary' : 'text-muted-foreground'
+                            }`} />
+                          </div>
+                          
+                          <div className="flex-1">
+                            <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                              {result.title}
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                              {result.description}
+                            </CardDescription>
+                            
+                            {/* Metadata */}
+                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                              {result.metadata.company && (
+                                <Badge variant="outline">
+                                  <Building2 className="h-3 w-3 mr-1" />
+                                  {result.metadata.company}
+                                </Badge>
+                              )}
+                              
+                              {result.metadata.category && (
+                                <Badge variant="secondary">
+                                  {result.metadata.category.replace('-', ' ')}
+                                </Badge>
+                              )}
+                              
+                              {result.metadata.changeType && (
+                                <Badge variant={getRiskBadgeVariant(result.metadata.riskLevel)}>
+                                  {result.metadata.changeType} change
+                                </Badge>
+                              )}
+                              
+                              {result.metadata.riskLevel && (
+                                <Badge variant={getRiskBadgeVariant(result.metadata.riskLevel)}>
+                                  {result.metadata.riskLevel} risk
+                                </Badge>
+                              )}
+                              
+                              {result.metadata.date && (
+                                <span className="text-xs text-muted-foreground">
+                                  <Clock className="h-3 w-3 inline mr-1" />
+                                  {formatDuration(getTimeDiff(result.metadata.date))} ago
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              </AnimatedContainer>
+            )
+          })}
+        </AnimatedContainer>
+      )}
+
+      {/* Load More */}
+      {!loading && results.length > 10 && (
+        <div className="text-center mt-8">
+          <Button variant="outline">
+            Load More Results
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

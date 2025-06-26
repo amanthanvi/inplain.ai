@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { useNotifications } from '@/hooks/useNotifications'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { 
@@ -33,52 +34,21 @@ import {
 export function Navigation() {
   const pathname = usePathname()
   const { user, isLoaded } = useUser()
-  const [notifications, setNotifications] = useState<Notification[]>([])
   
-  // Simulate real-time notifications (in production, this would connect to WebSocket or SSE)
-  useEffect(() => {
-    if (!user) return
-    
-    // Check for new policy changes every 30 seconds
-    const checkForUpdates = async () => {
-      try {
-        // In production, this would be a real API call
-        const mockNewNotification: Notification = {
-          id: `notif-${Date.now()}`,
-          type: 'policy-change',
-          severity: Math.random() > 0.7 ? 'critical' : 'warning',
-          title: 'Privacy Policy Updated',
-          message: 'Meta has updated their privacy policy with changes to data retention.',
-          timestamp: new Date().toISOString(),
-          read: false,
-          action: {
-            label: 'View Changes',
-            onClick: () => window.location.href = '/meta'
-          },
-          metadata: {
-            company: 'Meta',
-            changeType: 'major',
-            riskLevel: 'high'
-          }
-        }
-        
-        // Only add notification 10% of the time to simulate realistic frequency
-        if (Math.random() < 0.1) {
-          setNotifications(prev => [mockNewNotification, ...prev].slice(0, 20))
-        }
-      } catch (error) {
-        console.error('Failed to check for updates:', error)
-      }
-    }
-    
-    // Initial check
-    checkForUpdates()
-    
-    // Set up interval
-    const interval = setInterval(checkForUpdates, 30000)
-    
-    return () => clearInterval(interval)
-  }, [user])
+  // Use real-time notifications hook
+  const {
+    notifications,
+    unreadCount,
+    isConnected,
+    markAsRead,
+    dismiss,
+    testNotification
+  } = useNotifications({
+    enableSound: true,
+    enableDesktop: true,
+    enableToast: true,
+    maxNotifications: 50
+  })
 
   // Dynamic navigation items based on auth state
   const navItems = user ? [
@@ -125,24 +95,26 @@ export function Navigation() {
           ) : (
             <>
               <SignedIn>
-                <NotificationCenter 
-                  notifications={notifications}
-                  onNotificationRead={(id) => {
-                    setNotifications(prev => 
-                      prev.map(n => n.id === id ? { ...n, read: true } : n)
-                    )
-                  }}
-                  onNotificationDismiss={(id) => {
-                    setNotifications(prev => prev.filter(n => n.id !== id))
-                  }}
-                />
-                <UserButton 
-                  appearance={{
-                    elements: {
-                      avatarBox: "w-8 h-8"
-                    }
-                  }}
-                />
+                <div className="flex items-center gap-2">
+                  {isConnected && (
+                    <Badge variant="outline" className="text-xs">
+                      <div className="h-2 w-2 bg-green-500 rounded-full mr-1 animate-pulse" />
+                      Live
+                    </Badge>
+                  )}
+                  <NotificationCenter 
+                    notifications={notifications}
+                    onNotificationRead={markAsRead}
+                    onNotificationDismiss={dismiss}
+                  />
+                  <UserButton 
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-8 h-8"
+                      }
+                    }}
+                  />
+                </div>
               </SignedIn>
               <SignedOut>
                 <SignInButton mode="modal">

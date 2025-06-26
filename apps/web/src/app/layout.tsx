@@ -10,6 +10,7 @@ import { Navigation } from '@/components/Navigation'
 import { MobileNavigation, MobileBottomNav } from '@/components/MobileNavigation'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
+import { PWAProvider } from '@/components/providers/PWAProvider'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
       { rel: 'msapplication-config', url: '/browserconfig.xml' },
     ],
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.json',
   themeColor: '#6366f1',
   openGraph: {
     title: 'Inplain.AI - Privacy policies made simple',
@@ -68,7 +69,8 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning className={inter.variable}>
         <body className={`${inter.className} font-sans`}>
           <Providers>
-            <div className="relative min-h-screen bg-background">
+            <PWAProvider>
+              <div className="relative min-h-screen bg-background">
             {/* Desktop Navigation */}
             <div className="hidden md:block">
               <Navigation />
@@ -103,6 +105,7 @@ export default function RootLayout({
           <DevAuthWarning />
           <DemoModeBanner />
           <Analytics />
+            </PWAProvider>
           </Providers>
         </body>
       </html>
