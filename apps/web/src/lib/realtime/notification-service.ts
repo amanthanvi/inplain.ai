@@ -10,7 +10,7 @@ export interface NotificationServiceConfig {
 
 export interface NotificationSubscription {
   companySlug: string
-  types: ('critical' | 'warning' | 'info')[]
+  types: ('critical' | 'warning' | 'info' | 'success')[]
   channels: ('email' | 'push' | 'in-app')[]
 }
 
@@ -23,7 +23,7 @@ class NotificationService extends EventEmitter {
   private reconnectDelay = 1000
   private subscriptions: Map<string, NotificationSubscription> = new Map()
   private notificationQueue: Notification[] = []
-  private isOnline = true
+  private isOnline = typeof window !== 'undefined' ? navigator.onLine : true
 
   private constructor() {
     super()
@@ -42,7 +42,7 @@ class NotificationService extends EventEmitter {
     this.config = config
     
     // Request notification permission if needed
-    if (config.enableDesktop && 'Notification' in window) {
+    if (config.enableDesktop && typeof window !== 'undefined' && 'Notification' in window) {
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
         console.warn('Desktop notifications permission denied')
@@ -201,7 +201,7 @@ class NotificationService extends EventEmitter {
   }
 
   private showDesktopNotification(notification: Notification): void {
-    if (!('Notification' in window) || Notification.permission !== 'granted') {
+    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
       return
     }
     
@@ -225,12 +225,16 @@ class NotificationService extends EventEmitter {
   }
 
   private playNotificationSound(): void {
+    if (typeof window === 'undefined' || typeof Audio === 'undefined') return
+    
     const audio = new Audio('/notification.mp3')
     audio.volume = 0.5
     audio.play().catch(e => console.log('Failed to play notification sound:', e))
   }
 
   private setupNetworkListeners(): void {
+    if (typeof window === 'undefined') return
+    
     window.addEventListener('online', () => {
       this.isOnline = true
       console.log('Network connection restored')
@@ -247,6 +251,8 @@ class NotificationService extends EventEmitter {
   }
 
   private setupVisibilityListeners(): void {
+    if (typeof document === 'undefined') return
+    
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         // Reduce connection frequency when tab is hidden

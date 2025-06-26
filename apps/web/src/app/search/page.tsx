@@ -21,7 +21,9 @@ export default function SearchPage() {
             <p className="text-muted-foreground mb-8">
               Find companies, policy changes, and get AI-powered insights
             </p>
-            <AdvancedSearch />
+            <Suspense fallback={<LoadingSpinner label="Loading search..." />}>
+              <AdvancedSearch />
+            </Suspense>
           </div>
         </div>
       </div>
