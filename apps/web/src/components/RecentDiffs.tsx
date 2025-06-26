@@ -60,12 +60,15 @@ export function RecentDiffs({ limit = 5 }: RecentDiffsProps) {
         <Link key={item.diff.id} href={`/${item.company.slug}`}>
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">{item.company.name}</CardTitle>
-                <Badge variant={
-                  item.diff.changeType === 'major' ? 'destructive' :
-                  item.diff.changeType === 'moderate' ? 'warning' : 'secondary'
-                }>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-xl truncate flex-1">{item.company.name}</CardTitle>
+                <Badge 
+                  variant={
+                    item.diff.changeType === 'major' ? 'destructive' :
+                    item.diff.changeType === 'moderate' ? 'warning' : 'secondary'
+                  }
+                  className="shrink-0"
+                >
                   {item.diff.changeType}
                 </Badge>
               </div>

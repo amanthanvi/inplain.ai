@@ -2,22 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { StorageClient } from '../../lib/storage'
 import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDemoMode } from '@/lib/env'
-import { Company } from '@inplain.ai/shared'
+import { WATCHED_COMPANIES } from '@inplain.ai/shared'
 
 // Initialize storage client
 const storage = new StorageClient()
 
-// Static company data - in production this would come from database
-const getCompanyBySlug = (slug: string): Company | null => {
-  const companies: Company[] = [
-    { slug: 'google', name: 'Google', url: 'https://policies.google.com/privacy', active: true, checkInterval: 86400 },
-    { slug: 'facebook', name: 'Facebook', url: 'https://www.facebook.com/privacy/policy', active: true, checkInterval: 86400 },
-    { slug: 'amazon', name: 'Amazon', url: 'https://www.amazon.com/gp/help/customer/display.html?nodeId=468496', active: true, checkInterval: 86400 },
-    { slug: 'microsoft', name: 'Microsoft', url: 'https://privacy.microsoft.com/en-us/privacystatement', active: true, checkInterval: 86400 },
-    { slug: 'apple', name: 'Apple', url: 'https://www.apple.com/legal/privacy/', active: true, checkInterval: 86400 }
-  ]
-  
-  return companies.find(c => c.slug === slug) || null
+// Get company by slug from shared data
+const getCompanyBySlug = (slug: string) => {
+  return WATCHED_COMPANIES.find(c => c.slug === slug) || null
 }
 
 export async function GET(

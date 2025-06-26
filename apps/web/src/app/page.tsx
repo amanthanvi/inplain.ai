@@ -48,10 +48,10 @@ const features = [
 ]
 
 const stats = [
-  { label: 'Companies Tracked', value: '60+' },
+  { label: 'Companies Tracked', value: '100+' },
   { label: 'Policy Changes Detected', value: '10,000+' },
   { label: 'Active Users', value: '50,000+' },
-  { label: 'Daily Checks', value: '100,000+' }
+  { label: 'Daily Checks', value: '500,000+' }
 ]
 
 function HomePage() {
@@ -207,7 +207,7 @@ function HomePage() {
                 Never Miss a Privacy Update
               </h1>
               <p className="mx-auto mb-10 max-w-2xl text-xl text-muted-foreground sm:text-2xl">
-                Track privacy policy changes across 60+ companies with AI-powered insights, 
+                Track privacy policy changes across 100+ companies with AI-powered insights, 
                 real-time alerts, and comprehensive analytics.
               </p>
               <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">

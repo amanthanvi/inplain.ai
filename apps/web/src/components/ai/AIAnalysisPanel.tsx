@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
 import { ModelSelector, AI_MODELS } from '@/components/ai/ModelSelector'
+import { useEffect, useState as useStateHook } from 'react'
 
 interface AIAnalysisPanelProps {
   slug: string
@@ -297,6 +298,21 @@ export function AIAnalysisPanel({
   const [selectedModel, setSelectedModel] = useState(AI_MODELS[0]?.id || 'google/gemini-2.0-flash-preview-05-20:free')
   const [showSettings, setShowSettings] = useState(false)
   const { userId, isLoaded } = useAuth()
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  
+  // Check if running in demo mode
+  useEffect(() => {
+    fetch('/api/status')
+      .then(res => res.json())
+      .then(data => {
+        if (data.mode === 'demo') {
+          setIsDemoMode(true)
+        }
+      })
+      .catch(() => {
+        // Ignore errors, assume not demo mode
+      })
+  }, [])
 
   const handleAnalyze = async (promptId: string) => {
     setSelectedPrompt(promptId)
@@ -305,8 +321,8 @@ export function AIAnalysisPanel({
   }
 
   if (!analysis && !isAnalyzing && showGuidance) {
-    // Show authentication prompt if not logged in
-    if (isLoaded && !userId) {
+    // Show authentication prompt if not logged in and not in demo mode
+    if (isLoaded && !userId && !isDemoMode) {
       return (
         <Card className="relative overflow-hidden border-amber-200 bg-amber-50/50">
           <CardHeader className="relative">
