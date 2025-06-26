@@ -198,7 +198,10 @@ function unsubscribeFromUpdates(userId: string) {
 }
 
 // Utility function to broadcast to all connected clients
-export async function broadcastToUser(userId: string, event: any) {
+// Note: This function is internal to this module and not exported
+// In a production system, you would use a proper pub/sub system
+// or a separate notification service
+function broadcastToUser(userId: string, event: any) {
   for (const [clientId, client] of activeClients) {
     if (client.userId === userId) {
       try {
