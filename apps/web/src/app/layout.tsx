@@ -11,6 +11,8 @@ import { MobileNavigation, MobileBottomNav } from '@/components/MobileNavigation
 import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import { PWAProvider } from '@/components/providers/PWAProvider'
+import { SkipLinks } from '@/components/accessibility/SkipLinks'
+import { AccessibilityAudit } from '@/components/accessibility/AccessibilityAudit'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -70,6 +72,7 @@ export default function RootLayout({
         <body className={`${inter.className} font-sans`}>
           <Providers>
             <PWAProvider>
+              <SkipLinks />
               <div className="relative min-h-screen bg-background">
             {/* Desktop Navigation */}
             <div className="hidden md:block">
@@ -79,7 +82,9 @@ export default function RootLayout({
             <div className="md:hidden">
               <MobileNavigation />
             </div>
-            <main className="flex-1 pb-16 md:pb-0">{children}</main>
+            <main id="main-content" className="flex-1 pb-16 md:pb-0" tabIndex={-1}>
+              {children}
+            </main>
             {/* Mobile Bottom Navigation */}
             <MobileBottomNav />
             <footer className="border-t py-6 md:py-0 hidden md:block">
@@ -104,6 +109,7 @@ export default function RootLayout({
           <AppStatus />
           <DevAuthWarning />
           <DemoModeBanner />
+          <AccessibilityAudit />
           <Analytics />
             </PWAProvider>
           </Providers>
