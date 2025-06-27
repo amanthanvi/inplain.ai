@@ -68,24 +68,30 @@ export function Navigation() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex">
-          <Link className="mr-6 flex items-center space-x-2" href="/">
+          <Link className="mr-6 flex items-center space-x-2" href="/" aria-label="Inplain.AI home">
             <span className="font-bold text-xl">Inplain.AI</span>
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "transition-colors hover:text-foreground/80",
-                  pathname === item.href 
-                    ? "text-foreground" 
-                    : "text-foreground/60"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="flex items-center space-x-6 text-sm font-medium" aria-label="Main navigation" id="main-navigation">
+            {navItems.map((item) => {
+              const isCurrentPage = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "transition-colors hover:text-foreground/80",
+                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded px-2 py-1",
+                    isCurrentPage 
+                      ? "text-foreground" 
+                      : "text-foreground/60"
+                  )}
+                  aria-current={isCurrentPage ? "page" : undefined}
+                >
+                  <span className="sr-only">{isCurrentPage ? "Current page: " : ""}</span>
+                  {item.label}
+                </Link>
+              )
+            })}
           </nav>
         </div>
         
