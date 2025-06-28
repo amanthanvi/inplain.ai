@@ -459,8 +459,19 @@ export class MemoryMonitor {
     }
     
     const recent = this.measurements.slice(-10)
-    const oldest = recent[0].usage.usedJSHeapSize
-    const newest = recent[recent.length - 1].usage.usedJSHeapSize
+    if (recent.length === 0) {
+      return false
+    }
+    
+    const firstMeasurement = recent[0]
+    const lastMeasurement = recent[recent.length - 1]
+    
+    if (!firstMeasurement || !lastMeasurement) {
+      return false
+    }
+    
+    const oldest = firstMeasurement.usage.usedJSHeapSize
+    const newest = lastMeasurement.usage.usedJSHeapSize
     
     return (newest - oldest) > threshold
   }
