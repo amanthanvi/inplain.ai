@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { PerformanceOptimizer } from '@/lib/performance'
 
 /**
  * Hook for lazy loading images
@@ -139,7 +138,11 @@ export function usePrefetch(routes: string[]) {
     // Use requestIdleCallback to prefetch when browser is idle
     const prefetchRoutes = () => {
       routes.forEach(route => {
-        PerformanceOptimizer.prefetchRoute(route)
+        // Prefetch route
+        const link = document.createElement('link')
+        link.rel = 'prefetch'
+        link.href = route
+        document.head.appendChild(link)
       })
     }
 
