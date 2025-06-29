@@ -1,14 +1,43 @@
-import { Metadata } from 'next'
+'use client'
+
 import { PerformanceMonitor } from '@/components/performance/PerformanceMonitor'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Activity } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
-export const metadata: Metadata = {
-  title: 'Performance Dashboard | Inplain.AI',
-  description: 'Monitor and optimize application performance'
-}
+// Opt out of static generation for this page
+export const dynamic = 'force-dynamic'
 
 export default function PerformancePage() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Performance Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Monitor real-time performance metrics and optimize user experience
+          </p>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Performance Monitor
+            </CardTitle>
+            <CardDescription>
+              Loading performance metrics...
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">

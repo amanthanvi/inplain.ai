@@ -4,13 +4,22 @@ import Link from 'next/link'
 import { FileQuestion, Home, Search, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AnimatedContainer } from '@/components/ui/animations'
+// import { AnimatedContainer } from '@/components/ui/animations'
+// import { useEffect, useState } from 'react'
+
+// Opt out of static generation for this page
+export const dynamic = 'force-dynamic'
 
 export default function NotFound() {
+  // const [mounted, setMounted] = useState(false)
+
+  // useEffect(() => {
+  //   setMounted(true)
+  // }, [])
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <AnimatedContainer animation="scale">
-        <Card className="w-full max-w-lg text-center">
+    <Card className="w-full max-w-lg text-center">
           <CardHeader>
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
               <FileQuestion className="h-10 w-10 text-muted-foreground" />
@@ -39,8 +48,17 @@ export default function NotFound() {
               <Button 
                 variant="ghost" 
                 size="lg" 
-                onClick={() => window.history.back()}
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    if (window.history.length > 1) {
+                      window.history.back()
+                    } else {
+                      window.location.href = '/'
+                    }
+                  }
+                }}
                 className="w-full"
+                suppressHydrationWarning
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Go Back
@@ -58,7 +76,6 @@ export default function NotFound() {
             </div>
           </CardContent>
         </Card>
-      </AnimatedContainer>
     </div>
   )
 }

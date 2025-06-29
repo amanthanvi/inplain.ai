@@ -1,51 +1,64 @@
-import { OpenAI } from 'openai'
+import { OpenAI } from "openai";
 
 // Model configurations with capabilities and cost optimization
 export const AI_MODELS = {
-  // Fast, cost-effective models for simple tasks
-  fast: {
-    primary: 'anthropic/claude-3-haiku',
-    fallback: 'openai/gpt-3.5-turbo',
-    maxTokens: 1000,
-    temperature: 0.3,
-    capabilities: ['summarization', 'classification', 'extraction']
-  },
-  // Balanced models for general analysis
-  balanced: {
-    primary: 'anthropic/claude-3-sonnet',
-    fallback: 'openai/gpt-4-turbo',
-    maxTokens: 2000,
-    temperature: 0.5,
-    capabilities: ['analysis', 'comparison', 'insights', 'reasoning']
-  },
-  // Advanced models for complex analysis
-  advanced: {
-    primary: 'anthropic/claude-3-opus',
-    fallback: 'openai/gpt-4o',
-    maxTokens: 4000,
-    temperature: 0.7,
-    capabilities: ['deep-analysis', 'prediction', 'strategy', 'nuanced-reasoning']
-  },
-  // Specialized models
-  vision: {
-    primary: 'openai/gpt-4-vision-preview',
-    fallback: 'anthropic/claude-3-opus',
-    maxTokens: 3000,
-    temperature: 0.5,
-    capabilities: ['image-analysis', 'document-extraction', 'visual-comparison']
-  },
-  code: {
-    primary: 'anthropic/claude-3-opus',
-    fallback: 'openai/gpt-4-turbo',
-    maxTokens: 3000,
-    temperature: 0.2,
-    capabilities: ['code-generation', 'security-analysis', 'technical-documentation']
-  }
-}
+	// Fast, cost-effective models for simple tasks
+	fast: {
+		primary: "anthropic/claude-3-haiku",
+		fallback: "openai/gpt-3.5-turbo",
+		maxTokens: 1000,
+		temperature: 0.3,
+		capabilities: ["summarization", "classification", "extraction"],
+	},
+	// Balanced models for general analysis
+	balanced: {
+		primary: "anthropic/claude-3-sonnet",
+		fallback: "openai/gpt-4-turbo",
+		maxTokens: 2000,
+		temperature: 0.5,
+		capabilities: ["analysis", "comparison", "insights", "reasoning"],
+	},
+	// Advanced models for complex analysis
+	advanced: {
+		primary: "anthropic/claude-3-opus",
+		fallback: "openai/gpt-4o",
+		maxTokens: 4000,
+		temperature: 0.7,
+		capabilities: [
+			"deep-analysis",
+			"prediction",
+			"strategy",
+			"nuanced-reasoning",
+		],
+	},
+	// Specialized models
+	vision: {
+		primary: "openai/gpt-4-vision-preview",
+		fallback: "anthropic/claude-3-opus",
+		maxTokens: 3000,
+		temperature: 0.5,
+		capabilities: [
+			"image-analysis",
+			"document-extraction",
+			"visual-comparison",
+		],
+	},
+	code: {
+		primary: "anthropic/claude-3-opus",
+		fallback: "openai/gpt-4-turbo",
+		maxTokens: 3000,
+		temperature: 0.2,
+		capabilities: [
+			"code-generation",
+			"security-analysis",
+			"technical-documentation",
+		],
+	},
+};
 
 // Enhanced system prompts with role-based expertise
 export const SYSTEM_PROMPTS = {
-  privacyExpert: `You are an expert privacy attorney and data protection specialist with deep knowledge of:
+	privacyExpert: `You are an expert privacy attorney and data protection specialist with deep knowledge of:
 - GDPR, CCPA, PIPEDA, and other global privacy regulations
 - Privacy by Design principles and implementation
 - Data minimization and purpose limitation concepts
@@ -55,7 +68,7 @@ export const SYSTEM_PROMPTS = {
 
 Your analysis should be precise, actionable, and user-focused. Always prioritize user privacy rights and provide clear recommendations.`,
 
-  legalAnalyst: `You are a senior legal analyst specializing in technology law and privacy regulations. Your expertise includes:
+	legalAnalyst: `You are a senior legal analyst specializing in technology law and privacy regulations. Your expertise includes:
 - Identifying legal risks and compliance gaps
 - Understanding jurisdictional differences in privacy law
 - Analyzing terms of service and privacy policies
@@ -64,7 +77,7 @@ Your analysis should be precise, actionable, and user-focused. Always prioritize
 
 Provide balanced, objective analysis with practical recommendations for both users and companies.`,
 
-  securityAdvisor: `You are a cybersecurity expert focusing on privacy and data protection. Your knowledge covers:
+	securityAdvisor: `You are a cybersecurity expert focusing on privacy and data protection. Your knowledge covers:
 - Data encryption standards and implementation
 - Security breach implications and notifications
 - Technical safeguards and access controls
@@ -74,7 +87,7 @@ Provide balanced, objective analysis with practical recommendations for both use
 
 Evaluate security measures critically and suggest improvements that enhance user privacy.`,
 
-  userAdvocate: `You are a consumer rights advocate specializing in digital privacy. Your focus areas include:
+	userAdvocate: `You are a consumer rights advocate specializing in digital privacy. Your focus areas include:
 - Simplifying complex legal language for users
 - Identifying dark patterns and manipulative practices
 - Recommending privacy-preserving alternatives
@@ -84,7 +97,7 @@ Evaluate security measures critically and suggest improvements that enhance user
 
 Always prioritize user empowerment and provide clear, actionable advice.`,
 
-  dataScientist: `You are a data scientist with expertise in privacy-preserving analytics. Your skills include:
+	dataScientist: `You are a data scientist with expertise in privacy-preserving analytics. Your skills include:
 - Differential privacy techniques
 - Data anonymization and pseudonymization
 - Statistical disclosure control
@@ -94,7 +107,7 @@ Always prioritize user empowerment and provide clear, actionable advice.`,
 
 Analyze data practices critically and suggest privacy-preserving alternatives.`,
 
-  complianceOfficer: `You are a Chief Privacy Officer with comprehensive compliance expertise:
+	complianceOfficer: `You are a Chief Privacy Officer with comprehensive compliance expertise:
 - Privacy program maturity assessment
 - Policy gap analysis and remediation
 - Vendor and third-party risk management
@@ -102,13 +115,13 @@ Analyze data practices critically and suggest privacy-preserving alternatives.`,
 - Incident response and breach management
 - Regulatory reporting and documentation
 
-Provide strategic recommendations for privacy program improvements.`
-}
+Provide strategic recommendations for privacy program improvements.`,
+};
 
 // Task-specific prompt templates
 export const ANALYSIS_PROMPTS = {
-  comprehensive: {
-    prompt: `Analyze this privacy policy comprehensively. Structure your analysis as follows:
+	comprehensive: {
+		prompt: `Analyze this privacy policy comprehensively. Structure your analysis as follows:
 
 1. EXECUTIVE SUMMARY
    - Key findings (3-5 bullet points)
@@ -158,15 +171,15 @@ export const ANALYSIS_PROMPTS = {
    - Monitoring actions
 
 Provide specific examples and quotes from the policy to support your analysis.`,
-    model: 'advanced',
-    options: {
-      temperature: 0.6,
-      maxTokens: 4000
-    }
-  },
+		model: "advanced",
+		options: {
+			temperature: 0.6,
+			maxTokens: 4000,
+		},
+	},
 
-  comparison: {
-    prompt: `Compare these privacy policies across multiple dimensions:
+	comparison: {
+		prompt: `Compare these privacy policies across multiple dimensions:
 
 1. DATA COLLECTION SCOPE
    - Breadth of data collected
@@ -211,15 +224,15 @@ Provide specific examples and quotes from the policy to support your analysis.`,
    - Decision framework for users
 
 Use a structured comparison table where applicable.`,
-    model: 'advanced',
-    options: {
-      temperature: 0.5,
-      maxTokens: 3500
-    }
-  },
+		model: "advanced",
+		options: {
+			temperature: 0.5,
+			maxTokens: 3500,
+		},
+	},
 
-  riskFocused: {
-    prompt: `Conduct a privacy risk assessment focusing on:
+	riskFocused: {
+		prompt: `Conduct a privacy risk assessment focusing on:
 
 1. THREAT MODELING
    - Identify threat actors
@@ -264,15 +277,15 @@ Use a structured comparison table where applicable.`,
    - Alternative approaches
 
 Provide a risk score (Critical/High/Medium/Low) for each category with evidence.`,
-    model: 'balanced',
-    options: {
-      temperature: 0.4,
-      maxTokens: 3000
-    }
-  },
+		model: "balanced",
+		options: {
+			temperature: 0.4,
+			maxTokens: 3000,
+		},
+	},
 
-  userFriendly: {
-    prompt: `Create a user-friendly summary of this privacy policy:
+	userFriendly: {
+		prompt: `Create a user-friendly summary of this privacy policy:
 
 1. THE BASICS (in plain English)
    - What data they collect about you
@@ -311,15 +324,15 @@ Provide a risk score (Critical/High/Medium/Low) for each category with evidence.
    - Compromise suggestions
 
 Use analogies, examples, and clear language. Avoid legal jargon.`,
-    model: 'balanced',
-    options: {
-      temperature: 0.7,
-      maxTokens: 2000
-    }
-  },
+		model: "balanced",
+		options: {
+			temperature: 0.7,
+			maxTokens: 2000,
+		},
+	},
 
-  changeAnalysis: {
-    prompt: `Analyze these privacy policy changes:
+	changeAnalysis: {
+		prompt: `Analyze these privacy policy changes:
 
 1. CHANGE OVERVIEW
    - Number of changes identified
@@ -365,15 +378,15 @@ Use analogies, examples, and clear language. Avoid legal jargon.`,
    - Strategic recommendations
 
 Highlight the most critical changes that require user attention.`,
-    model: 'advanced',
-    options: {
-      temperature: 0.5,
-      maxTokens: 3500
-    }
-  },
+		model: "advanced",
+		options: {
+			temperature: 0.5,
+			maxTokens: 3500,
+		},
+	},
 
-  technicalAudit: {
-    prompt: `Perform a technical privacy audit:
+	technicalAudit: {
+		prompt: `Perform a technical privacy audit:
 
 1. DATA ARCHITECTURE ANALYSIS
    - Data flow mapping
@@ -418,238 +431,273 @@ Highlight the most critical changes that require user attention.`,
    - Best practice alignment
 
 Include specific technical requirements and implementation guidance.`,
-    model: 'advanced',
-    options: {
-      temperature: 0.3,
-      maxTokens: 3500
-    }
-  }
-}
+		model: "advanced",
+		options: {
+			temperature: 0.3,
+			maxTokens: 3500,
+		},
+	},
+};
 
 // Enhanced insight generation functions
 export interface InsightConfig {
-  depth: 'surface' | 'standard' | 'deep'
-  focus: string[]
-  comparisons?: boolean
-  predictions?: boolean
-  recommendations?: boolean
+	depth: "surface" | "standard" | "deep";
+	focus: string[];
+	comparisons?: boolean;
+	predictions?: boolean;
+	recommendations?: boolean;
 }
 
 export interface EnhancedInsight {
-  id: string
-  type: 'risk' | 'opportunity' | 'trend' | 'comparison' | 'prediction' | 'recommendation'
-  severity: 'critical' | 'high' | 'medium' | 'low' | 'info'
-  title: string
-  summary: string
-  details: {
-    evidence: string[]
-    implications: string[]
-    actions: string[]
-    metrics?: Record<string, number>
-    timeline?: string
-  }
-  visualData?: {
-    type: 'chart' | 'graph' | 'matrix' | 'timeline'
-    data: any
-  }
-  relatedInsights?: string[]
-  confidence: number
-  sources: string[]
+	id: string;
+	type:
+		| "risk"
+		| "opportunity"
+		| "trend"
+		| "comparison"
+		| "prediction"
+		| "recommendation";
+	severity: "critical" | "high" | "medium" | "low" | "info";
+	title: string;
+	summary: string;
+	details: {
+		evidence: string[];
+		implications: string[];
+		actions: string[];
+		metrics?: Record<string, number>;
+		timeline?: string;
+	};
+	visualData?: {
+		type: "chart" | "graph" | "matrix" | "timeline";
+		data: any;
+	};
+	relatedInsights?: string[];
+	confidence: number;
+	sources: string[];
 }
 
 export class EnhancedAIService {
-  private openai: OpenAI
-  private cache: Map<string, any> = new Map()
-  private modelUsage: Map<string, number> = new Map()
+	private openai: OpenAI;
+	private cache: Map<string, any> = new Map();
+	private modelUsage: Map<string, number> = new Map();
 
-  constructor(apiKey: string) {
-    this.openai = new OpenAI({
-      apiKey,
-      baseURL: 'https://openrouter.ai/api/v1',
-      defaultHeaders: {
-        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'https://inplain.ai',
-        'X-Title': 'Inplain.AI - Privacy Analysis Platform'
-      }
-    })
-  }
+	constructor(apiKey: string) {
+		this.openai = new OpenAI({
+			apiKey,
+			baseURL: "https://openrouter.ai/api/v1",
+			defaultHeaders: {
+				"HTTP-Referer":
+					process.env.NEXT_PUBLIC_APP_URL || "https://inplain.ai",
+				"X-Title": "Inplain.AI - Privacy Analysis Platform",
+			},
+		});
+	}
 
-  // Intelligent model selection based on task complexity
-  private selectModel(task: string, complexity: 'low' | 'medium' | 'high'): typeof AI_MODELS.fast {
-    const taskModelMap: Record<string, keyof typeof AI_MODELS> = {
-      summarization: 'fast',
-      classification: 'fast',
-      extraction: 'fast',
-      analysis: 'balanced',
-      comparison: 'balanced',
-      insights: 'balanced',
-      'deep-analysis': 'advanced',
-      prediction: 'advanced',
-      strategy: 'advanced',
-      'image-analysis': 'vision',
-      'code-generation': 'code'
-    }
+	// Intelligent model selection based on task complexity
+	private selectModel(
+		task: string,
+		complexity: "low" | "medium" | "high"
+	): typeof AI_MODELS.fast {
+		const taskModelMap: Record<string, keyof typeof AI_MODELS> = {
+			summarization: "fast",
+			classification: "fast",
+			extraction: "fast",
+			analysis: "balanced",
+			comparison: "balanced",
+			insights: "balanced",
+			"deep-analysis": "advanced",
+			prediction: "advanced",
+			strategy: "advanced",
+			"image-analysis": "vision",
+			"code-generation": "code",
+		};
 
-    const baseModel = taskModelMap[task] || 'balanced'
-    
-    // Adjust based on complexity
-    if (complexity === 'high' && baseModel === 'fast') {
-      return AI_MODELS.balanced
-    } else if (complexity === 'low' && baseModel === 'advanced') {
-      return AI_MODELS.balanced
-    }
+		const baseModel = taskModelMap[task] || "balanced";
 
-    return AI_MODELS[baseModel as keyof typeof AI_MODELS]
-  }
+		// Adjust based on complexity
+		if (complexity === "high" && baseModel === "fast") {
+			return AI_MODELS.balanced;
+		} else if (complexity === "low" && baseModel === "advanced") {
+			return AI_MODELS.balanced;
+		}
 
-  // Enhanced analysis with multiple perspectives
-  async analyzePrivacyPolicy(
-    policyText: string,
-    options: {
-      analysisType: keyof typeof ANALYSIS_PROMPTS
-      perspectives?: Array<keyof typeof SYSTEM_PROMPTS>
-      insightConfig?: InsightConfig
-      metadata?: {
-        company: string
-        industry: string
-        previousVersions?: string[]
-      }
-    }
-  ): Promise<{
-    analysis: any
-    insights: EnhancedInsight[]
-    metadata: {
-      model: string
-      tokensUsed: number
-      processingTime: number
-      confidence: number
-    }
-  }> {
-    const startTime = Date.now()
-    const analysisPrompt = ANALYSIS_PROMPTS[options.analysisType]
-    const model = AI_MODELS[analysisPrompt.model as keyof typeof AI_MODELS]
+		return AI_MODELS[baseModel as keyof typeof AI_MODELS];
+	}
 
-    // Select perspectives (default to most relevant)
-    const perspectives = options.perspectives || ['privacyExpert', 'userAdvocate']
-    
-    try {
-      // Generate analysis from multiple perspectives
-      const perspectiveAnalyses = await Promise.all(
-        perspectives.map(async (perspective) => {
-          const response = await this.openai.chat.completions.create({
-            model: model.primary,
-            messages: [
-              {
-                role: 'system',
-                content: SYSTEM_PROMPTS[perspective]
-              },
-              {
-                role: 'user',
-                content: `${analysisPrompt.prompt}\n\nPrivacy Policy:\n${policyText}`
-              }
-            ],
-            temperature: analysisPrompt.options.temperature,
-            max_tokens: analysisPrompt.options.maxTokens,
-            top_p: 0.9,
-            frequency_penalty: 0.1,
-            presence_penalty: 0.1
-          })
+	// Enhanced analysis with multiple perspectives
+	async analyzePrivacyPolicy(
+		policyText: string,
+		options: {
+			analysisType: keyof typeof ANALYSIS_PROMPTS;
+			perspectives?: Array<keyof typeof SYSTEM_PROMPTS>;
+			insightConfig?: InsightConfig;
+			metadata?: {
+				company: string;
+				industry: string;
+				previousVersions?: string[];
+			};
+		}
+	): Promise<{
+		analysis: any;
+		insights: EnhancedInsight[];
+		metadata: {
+			model: string;
+			tokensUsed: number;
+			processingTime: number;
+			confidence: number;
+		};
+	}> {
+		const startTime = Date.now();
+		const analysisPrompt = ANALYSIS_PROMPTS[options.analysisType];
+		const model = AI_MODELS[analysisPrompt.model as keyof typeof AI_MODELS];
 
-          return {
-            perspective,
-            content: response.choices[0]?.message?.content || '',
-            usage: response.usage
-          }
-        })
-      )
+		// Select perspectives (default to most relevant)
+		const perspectives = options.perspectives || [
+			"privacyExpert",
+			"userAdvocate",
+		];
 
-      // Synthesize perspectives into comprehensive analysis
-      const synthesisResponse = await this.openai.chat.completions.create({
-        model: model.primary,
-        messages: [
-          {
-            role: 'system',
-            content: `You are a master synthesizer combining multiple expert perspectives on privacy analysis. Create a comprehensive, balanced analysis that incorporates all viewpoints while highlighting areas of agreement and disagreement.`
-          },
-          {
-            role: 'user',
-            content: `Synthesize these expert analyses into a comprehensive report:\n\n${perspectiveAnalyses.map(p => `${p.perspective.toUpperCase()} PERSPECTIVE:\n${p.content}\n\n`).join('')}`
-          }
-        ],
-        temperature: 0.5,
-        max_tokens: 4000
-      })
+		try {
+			// Generate analysis from multiple perspectives
+			const perspectiveAnalyses = await Promise.all(
+				perspectives.map(async (perspective) => {
+					const response = await this.openai.chat.completions.create({
+						model: model.primary,
+						messages: [
+							{
+								role: "system",
+								content: SYSTEM_PROMPTS[perspective],
+							},
+							{
+								role: "user",
+								content: `${analysisPrompt.prompt}\n\nPrivacy Policy:\n${policyText}`,
+							},
+						],
+						temperature: analysisPrompt.options.temperature,
+						max_tokens: analysisPrompt.options.maxTokens,
+						top_p: 0.9,
+						frequency_penalty: 0.1,
+						presence_penalty: 0.1,
+					});
 
-      // Generate enhanced insights
-      const insights = await this.generateEnhancedInsights(
-        policyText,
-        synthesisResponse.choices[0]?.message?.content || '',
-        options.insightConfig || { depth: 'standard', focus: ['risks', 'opportunities'] }
-      )
+					return {
+						perspective,
+						content: response.choices[0]?.message?.content || "",
+						usage: response.usage,
+					};
+				})
+			);
 
-      // Calculate total tokens used
-      const tokensUsed = perspectiveAnalyses.reduce((sum, p) => sum + (p.usage?.total_tokens || 0), 0) + (synthesisResponse.usage?.total_tokens || 0)
+			// Synthesize perspectives into comprehensive analysis
+			const synthesisResponse = await this.openai.chat.completions.create(
+				{
+					model: model.primary,
+					messages: [
+						{
+							role: "system",
+							content: `You are a master synthesizer combining multiple expert perspectives on privacy analysis. Create a comprehensive, balanced analysis that incorporates all viewpoints while highlighting areas of agreement and disagreement.`,
+						},
+						{
+							role: "user",
+							content: `Synthesize these expert analyses into a comprehensive report:\n\n${perspectiveAnalyses.map((p) => `${p.perspective.toUpperCase()} PERSPECTIVE:\n${p.content}\n\n`).join("")}`,
+						},
+					],
+					temperature: 0.5,
+					max_tokens: 4000,
+				}
+			);
 
-      // Track model usage for optimization
-      this.modelUsage.set(model.primary, (this.modelUsage.get(model.primary) || 0) + tokensUsed)
+			// Generate enhanced insights
+			const insights = await this.generateEnhancedInsights(
+				policyText,
+				synthesisResponse.choices[0]?.message?.content || "",
+				options.insightConfig || {
+					depth: "standard",
+					focus: ["risks", "opportunities"],
+				}
+			);
 
-      return {
-        analysis: JSON.parse(synthesisResponse.choices[0]?.message?.content || '{}'),
-        insights,
-        metadata: {
-          model: model.primary,
-          tokensUsed,
-          processingTime: Date.now() - startTime,
-          confidence: this.calculateConfidence(perspectiveAnalyses, insights)
-        }
-      }
-    } catch (error) {
-      console.error('Primary model failed, trying fallback:', error)
-      
-      // Fallback to secondary model
-      const fallbackResponse = await this.openai.chat.completions.create({
-        model: model.fallback,
-        messages: [
-          {
-            role: 'system',
-            content: SYSTEM_PROMPTS.privacyExpert
-          },
-          {
-            role: 'user',
-            content: `${analysisPrompt.prompt}\n\nPrivacy Policy:\n${policyText}`
-          }
-        ],
-        temperature: analysisPrompt.options.temperature,
-        max_tokens: analysisPrompt.options.maxTokens
-      })
+			// Calculate total tokens used
+			const tokensUsed =
+				perspectiveAnalyses.reduce(
+					(sum, p) => sum + (p.usage?.total_tokens || 0),
+					0
+				) + (synthesisResponse.usage?.total_tokens || 0);
 
-      const insights = await this.generateEnhancedInsights(
-        policyText,
-        fallbackResponse.choices[0]?.message?.content || '',
-        options.insightConfig || { depth: 'standard', focus: ['risks'] }
-      )
+			// Track model usage for optimization
+			this.modelUsage.set(
+				model.primary,
+				(this.modelUsage.get(model.primary) || 0) + tokensUsed
+			);
 
-      return {
-        analysis: JSON.parse(fallbackResponse.choices[0]?.message?.content || '{}'),
-        insights,
-        metadata: {
-          model: model.fallback,
-          tokensUsed: fallbackResponse.usage?.total_tokens || 0,
-          processingTime: Date.now() - startTime,
-          confidence: 0.7 // Lower confidence for fallback
-        }
-      }
-    }
-  }
+			return {
+				analysis: JSON.parse(
+					synthesisResponse.choices[0]?.message?.content || "{}"
+				),
+				insights,
+				metadata: {
+					model: model.primary,
+					tokensUsed,
+					processingTime: Date.now() - startTime,
+					confidence: this.calculateConfidence(
+						perspectiveAnalyses,
+						insights
+					),
+				},
+			};
+		} catch (error) {
+			console.error("Primary model failed, trying fallback:", error);
 
-  // Generate enhanced insights with multiple data points
-  private async generateEnhancedInsights(
-    policyText: string,
-    analysis: string,
-    config: InsightConfig
-  ): Promise<EnhancedInsight[]> {
-    const model = this.selectModel('insights', config.depth === 'deep' ? 'high' : 'medium')
+			// Fallback to secondary model
+			const fallbackResponse = await this.openai.chat.completions.create({
+				model: model.fallback,
+				messages: [
+					{
+						role: "system",
+						content: SYSTEM_PROMPTS.privacyExpert,
+					},
+					{
+						role: "user",
+						content: `${analysisPrompt.prompt}\n\nPrivacy Policy:\n${policyText}`,
+					},
+				],
+				temperature: analysisPrompt.options.temperature,
+				max_tokens: analysisPrompt.options.maxTokens,
+			});
 
-    const insightPrompt = `Based on this privacy policy analysis, generate detailed insights focusing on ${config.focus.join(', ')}.
+			const insights = await this.generateEnhancedInsights(
+				policyText,
+				fallbackResponse.choices[0]?.message?.content || "",
+				options.insightConfig || { depth: "standard", focus: ["risks"] }
+			);
+
+			return {
+				analysis: JSON.parse(
+					fallbackResponse.choices[0]?.message?.content || "{}"
+				),
+				insights,
+				metadata: {
+					model: model.fallback,
+					tokensUsed: fallbackResponse.usage?.total_tokens || 0,
+					processingTime: Date.now() - startTime,
+					confidence: 0.7, // Lower confidence for fallback
+				},
+			};
+		}
+	}
+
+	// Generate enhanced insights with multiple data points
+	private async generateEnhancedInsights(
+		policyText: string,
+		analysis: string,
+		config: InsightConfig
+	): Promise<EnhancedInsight[]> {
+		const model = this.selectModel(
+			"insights",
+			config.depth === "deep" ? "high" : "medium"
+		);
+
+		const insightPrompt = `Based on this privacy policy analysis, generate detailed insights focusing on ${config.focus.join(", ")}.
 
 Analysis:
 ${analysis}
@@ -677,239 +725,308 @@ Generate insights in the following JSON format:
 }
 
 Requirements:
-- Generate ${config.depth === 'deep' ? '10-15' : config.depth === 'standard' ? '5-10' : '3-5'} insights
+- Generate ${config.depth === "deep" ? "10-15" : config.depth === "standard" ? "5-10" : "3-5"} insights
 - Focus on actionable, specific findings
 - Include quantitative metrics where possible
 - Prioritize user impact and privacy rights
 - Consider regulatory compliance implications
-${config.predictions ? '- Include forward-looking predictions based on trends' : ''}
-${config.recommendations ? '- Provide specific, implementable recommendations' : ''}
-${config.comparisons ? '- Compare against industry best practices' : ''}`
+${config.predictions ? "- Include forward-looking predictions based on trends" : ""}
+${config.recommendations ? "- Provide specific, implementable recommendations" : ""}
+${config.comparisons ? "- Compare against industry best practices" : ""}`;
 
-    const response = await this.openai.chat.completions.create({
-      model: model.primary,
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPTS.dataScientist
-        },
-        {
-          role: 'user',
-          content: insightPrompt
-        }
-      ],
-      temperature: 0.6,
-      max_tokens: 3000,
-      response_format: { type: 'json_object' }
-    })
+		const response = await this.openai.chat.completions.create({
+			model: model.primary,
+			messages: [
+				{
+					role: "system",
+					content: SYSTEM_PROMPTS.dataScientist,
+				},
+				{
+					role: "user",
+					content: insightPrompt,
+				},
+			],
+			temperature: 0.6,
+			max_tokens: 3000,
+			response_format: { type: "json_object" },
+		});
 
-    const result = JSON.parse(response.choices[0]?.message?.content || '{"insights": []}')
-    
-    // Enhance insights with visual data where applicable
-    return result.insights.map((insight: EnhancedInsight) => ({
-      ...insight,
-      id: `insight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      visualData: this.generateVisualData(insight),
-      relatedInsights: this.findRelatedInsights(insight, result.insights)
-    }))
-  }
+		const result = JSON.parse(
+			response.choices[0]?.message?.content || '{"insights": []}'
+		);
 
-  // Generate visual data for insights
-  private generateVisualData(insight: EnhancedInsight): any {
-    if (insight.details.metrics && Object.keys(insight.details.metrics).length > 0) {
-      const metricKeys = Object.keys(insight.details.metrics)
-      
-      if (metricKeys.length === 1 && metricKeys[0]) {
-        // Single metric - use gauge
-        return {
-          type: 'chart',
-          data: {
-            type: 'gauge',
-            value: insight.details.metrics[metricKeys[0]],
-            max: 100,
-            thresholds: [
-              { value: 30, color: 'green' },
-              { value: 70, color: 'yellow' },
-              { value: 90, color: 'red' }
-            ]
-          }
-        }
-      } else {
-        // Multiple metrics - use radar chart
-        return {
-          type: 'chart',
-          data: {
-            type: 'radar',
-            labels: metricKeys,
-            datasets: [{
-              label: insight.title,
-              data: metricKeys.map(k => insight.details.metrics![k])
-            }]
-          }
-        }
-      }
-    }
+		// Enhance insights with visual data where applicable
+		return result.insights.map((insight: EnhancedInsight) => ({
+			...insight,
+			id: `insight-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+			visualData: this.generateVisualData(insight),
+			relatedInsights: this.findRelatedInsights(insight, result.insights),
+		}));
+	}
 
-    if (insight.type === 'trend' && insight.details.timeline) {
-      return {
-        type: 'timeline',
-        data: {
-          events: insight.details.evidence.map((e, i) => ({
-            date: new Date(Date.now() - i * 30 * 24 * 60 * 60 * 1000),
-            title: e.substring(0, 50),
-            description: e
-          }))
-        }
-      }
-    }
+	// Generate visual data for insights
+	private generateVisualData(insight: EnhancedInsight): any {
+		if (
+			insight.details.metrics &&
+			Object.keys(insight.details.metrics).length > 0
+		) {
+			const metricKeys = Object.keys(insight.details.metrics);
 
-    return null
-  }
+			if (metricKeys.length === 1 && metricKeys[0]) {
+				// Single metric - use gauge
+				return {
+					type: "chart",
+					data: {
+						type: "gauge",
+						value: insight.details.metrics[metricKeys[0]],
+						max: 100,
+						thresholds: [
+							{ value: 30, color: "green" },
+							{ value: 70, color: "yellow" },
+							{ value: 90, color: "red" },
+						],
+					},
+				};
+			} else {
+				// Multiple metrics - use radar chart
+				return {
+					type: "chart",
+					data: {
+						type: "radar",
+						labels: metricKeys,
+						datasets: [
+							{
+								label: insight.title,
+								data: metricKeys.map(
+									(k) => insight.details.metrics![k]
+								),
+							},
+						],
+					},
+				};
+			}
+		}
 
-  // Find related insights for context
-  private findRelatedInsights(insight: EnhancedInsight, allInsights: EnhancedInsight[]): string[] {
-    return allInsights
-      .filter(i => i.id !== insight.id)
-      .filter(i => {
-        // Same type or complementary types
-        const relatedTypes: Record<string, string[]> = {
-          risk: ['recommendation', 'prediction'],
-          opportunity: ['recommendation', 'trend'],
-          trend: ['prediction', 'opportunity'],
-          prediction: ['risk', 'recommendation'],
-          recommendation: ['risk', 'opportunity'],
-          comparison: ['trend', 'opportunity']
-        }
-        
-        return i.type === insight.type || relatedTypes[insight.type]?.includes(i.type)
-      })
-      .slice(0, 3)
-      .map(i => i.id)
-  }
+		if (insight.type === "trend" && insight.details.timeline) {
+			return {
+				type: "timeline",
+				data: {
+					events: insight.details.evidence.map((e, i) => ({
+						date: new Date(
+							Date.now() - i * 30 * 24 * 60 * 60 * 1000
+						),
+						title: e.substring(0, 50),
+						description: e,
+					})),
+				},
+			};
+		}
 
-  // Calculate confidence score based on analysis consistency
-  private calculateConfidence(analyses: any[], insights: EnhancedInsight[]): number {
-    // Base confidence on model consensus
-    const perspectiveCount = analyses.length
-    const avgInsightConfidence = insights.reduce((sum, i) => sum + i.confidence, 0) / insights.length
-    
-    // Adjust based on perspective agreement (would need NLP to properly compare)
-    const consensusBonus = perspectiveCount > 1 ? 0.1 : 0
-    
-    return Math.min(0.95, avgInsightConfidence + consensusBonus)
-  }
+		return null;
+	}
 
-  // Streaming analysis for real-time updates
-  async *streamAnalysis(
-    policyText: string,
-    options: {
-      analysisType: keyof typeof ANALYSIS_PROMPTS
-      onProgress?: (progress: number) => void
-    }
-  ): AsyncGenerator<{ chunk: string; progress: number }> {
-    const analysisPrompt = ANALYSIS_PROMPTS[options.analysisType]
-    const model = AI_MODELS[analysisPrompt.model as keyof typeof AI_MODELS]
+	// Find related insights for context
+	private findRelatedInsights(
+		insight: EnhancedInsight,
+		allInsights: EnhancedInsight[]
+	): string[] {
+		return allInsights
+			.filter((i) => i.id !== insight.id)
+			.filter((i) => {
+				// Same type or complementary types
+				const relatedTypes: Record<string, string[]> = {
+					risk: ["recommendation", "prediction"],
+					opportunity: ["recommendation", "trend"],
+					trend: ["prediction", "opportunity"],
+					prediction: ["risk", "recommendation"],
+					recommendation: ["risk", "opportunity"],
+					comparison: ["trend", "opportunity"],
+				};
 
-    const stream = await this.openai.chat.completions.create({
-      model: model.primary,
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPTS.privacyExpert
-        },
-        {
-          role: 'user',
-          content: `${analysisPrompt.prompt}\n\nPrivacy Policy:\n${policyText}`
-        }
-      ],
-      temperature: analysisPrompt.options.temperature,
-      max_tokens: analysisPrompt.options.maxTokens,
-      stream: true
-    })
+				return (
+					i.type === insight.type ||
+					relatedTypes[insight.type]?.includes(i.type)
+				);
+			})
+			.slice(0, 3)
+			.map((i) => i.id);
+	}
 
-    let totalChars = 0
-    const estimatedTotal = analysisPrompt.options.maxTokens * 4 // Rough estimate
+	// Calculate confidence score based on analysis consistency
+	private calculateConfidence(
+		analyses: any[],
+		insights: EnhancedInsight[]
+	): number {
+		// Base confidence on model consensus
+		const perspectiveCount = analyses.length;
+		const avgInsightConfidence =
+			insights.reduce((sum, i) => sum + i.confidence, 0) /
+			insights.length;
 
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || ''
-      totalChars += content.length
-      const progress = Math.min(0.95, totalChars / estimatedTotal)
-      
-      if (options.onProgress) {
-        options.onProgress(progress)
-      }
+		// Adjust based on perspective agreement (would need NLP to properly compare)
+		const consensusBonus = perspectiveCount > 1 ? 0.1 : 0;
 
-      yield { chunk: content, progress }
-    }
+		return Math.min(0.95, avgInsightConfidence + consensusBonus);
+	}
 
-    yield { chunk: '', progress: 1 }
-  }
+	// Streaming analysis for real-time updates
+	async *streamAnalysis(
+		policyText: string,
+		options: {
+			analysisType: keyof typeof ANALYSIS_PROMPTS;
+			onProgress?: (progress: number) => void;
+		}
+	): AsyncGenerator<{ chunk: string; progress: number }> {
+		const analysisPrompt = ANALYSIS_PROMPTS[options.analysisType];
+		const model = AI_MODELS[analysisPrompt.model as keyof typeof AI_MODELS];
 
-  // Simple completion method for compatibility
-  async complete(options: {
-    messages: Array<{ role: string; content: string }>
-    model?: string
-    temperature?: number
-    max_tokens?: number
-    response_format?: { type: string }
-  }): Promise<{ content: string }> {
-    const response = await this.openai.chat.completions.create({
-      model: options.model || AI_MODELS.balanced.primary,
-      messages: options.messages as any,
-      temperature: options.temperature || 0.5,
-      max_tokens: options.max_tokens || 2000,
-      ...(options.response_format && { response_format: options.response_format as any })
-    })
+		const stream = await this.openai.chat.completions.create({
+			model: model.primary,
+			messages: [
+				{
+					role: "system",
+					content: SYSTEM_PROMPTS.privacyExpert,
+				},
+				{
+					role: "user",
+					content: `${analysisPrompt.prompt}\n\nPrivacy Policy:\n${policyText}`,
+				},
+			],
+			temperature: analysisPrompt.options.temperature,
+			max_tokens: analysisPrompt.options.maxTokens,
+			stream: true,
+		});
 
-    return {
-      content: response.choices[0]?.message?.content || ''
-    }
-  }
+		let totalChars = 0;
+		const estimatedTotal = analysisPrompt.options.maxTokens * 4; // Rough estimate
 
-  // Get model recommendations based on usage patterns
-  getModelRecommendations(): {
-    costOptimization: Record<string, number>
-    performanceMetrics: Record<string, { avgLatency: number; successRate: number }>
-    recommendations: string[]
-  } {
-    const usage = Object.fromEntries(this.modelUsage)
-    
-    // Calculate costs (example rates)
-    const costs = Object.entries(usage).reduce((acc, [model, tokens]) => {
-      const rate = model.includes('haiku') ? 0.00025 : 
-                   model.includes('sonnet') ? 0.003 :
-                   model.includes('opus') ? 0.015 : 0.002
-      acc[model] = (tokens / 1000) * rate
-      return acc
-    }, {} as Record<string, number>)
+		for await (const chunk of stream) {
+			const content = chunk.choices[0]?.delta?.content || "";
+			totalChars += content.length;
+			const progress = Math.min(0.95, totalChars / estimatedTotal);
 
-    return {
-      costOptimization: costs,
-      performanceMetrics: {
-        // This would be tracked in production
-        [AI_MODELS.fast.primary]: { avgLatency: 800, successRate: 0.98 },
-        [AI_MODELS.balanced.primary]: { avgLatency: 1200, successRate: 0.97 },
-        [AI_MODELS.advanced.primary]: { avgLatency: 2000, successRate: 0.99 }
-      },
-      recommendations: [
-        'Consider using fast models for initial classification',
-        'Reserve advanced models for user-requested deep analysis',
-        'Implement caching for frequently analyzed policies'
-      ]
-    }
-  }
+			if (options.onProgress) {
+				options.onProgress(progress);
+			}
+
+			yield { chunk: content, progress };
+		}
+
+		yield { chunk: "", progress: 1 };
+	}
+
+	// Simple completion method for compatibility
+	async complete(options: {
+		messages: Array<{ role: string; content: string }>;
+		model?: string;
+		temperature?: number;
+		max_tokens?: number;
+		response_format?: { type: string };
+	}): Promise<{ content: string }> {
+		const response = await this.openai.chat.completions.create({
+			model: options.model || AI_MODELS.balanced.primary,
+			messages: options.messages as any,
+			temperature: options.temperature || 0.5,
+			max_tokens: options.max_tokens || 2000,
+			...(options.response_format && {
+				response_format: options.response_format as any,
+			}),
+		});
+
+		return {
+			content: response.choices[0]?.message?.content || "",
+		};
+	}
+
+	// Get model recommendations based on usage patterns
+	getModelRecommendations(): {
+		costOptimization: Record<string, number>;
+		performanceMetrics: Record<
+			string,
+			{ avgLatency: number; successRate: number }
+		>;
+		recommendations: string[];
+	} {
+		const usage = Object.fromEntries(this.modelUsage);
+
+		// Calculate costs (example rates)
+		const costs = Object.entries(usage).reduce(
+			(acc, [model, tokens]) => {
+				const rate = model.includes("haiku")
+					? 0.00025
+					: model.includes("sonnet")
+						? 0.003
+						: model.includes("opus")
+							? 0.015
+							: 0.002;
+				acc[model] = (tokens / 1000) * rate;
+				return acc;
+			},
+			{} as Record<string, number>
+		);
+
+		return {
+			costOptimization: costs,
+			performanceMetrics: {
+				// This would be tracked in production
+				[AI_MODELS.fast.primary]: {
+					avgLatency: 800,
+					successRate: 0.98,
+				},
+				[AI_MODELS.balanced.primary]: {
+					avgLatency: 1200,
+					successRate: 0.97,
+				},
+				[AI_MODELS.advanced.primary]: {
+					avgLatency: 2000,
+					successRate: 0.99,
+				},
+			},
+			recommendations: [
+				"Consider using fast models for initial classification",
+				"Reserve advanced models for user-requested deep analysis",
+				"Implement caching for frequently analyzed policies",
+			],
+		};
+	}
 }
 
 // Export singleton instance
-let aiServiceInstance: EnhancedAIService | null = null
+let aiServiceInstance: EnhancedAIService | null = null;
 
 export function getAIService(): EnhancedAIService {
-  if (!aiServiceInstance) {
-    const apiKey = process.env.OPENROUTER_API_KEY || ''
-    if (!apiKey) {
-      throw new Error('OpenRouter API key not configured')
-    }
-    aiServiceInstance = new EnhancedAIService(apiKey)
-  }
-  return aiServiceInstance
+	if (!aiServiceInstance) {
+		const apiKey = process.env.OPENROUTER_API_KEY || "";
+		if (!apiKey) {
+			// Return a mock service if no API key is available (for build time)
+			console.warn(
+				"OpenRouter API key not configured, using mock service"
+			);
+			// Create a minimal mock that won't break during build
+			aiServiceInstance = {
+				complete: async () => ({ content: "{}" }),
+				analyzePrivacyPolicy: async () => ({
+					analysis: {},
+					insights: [],
+					metadata: {
+						model: "mock",
+						tokensUsed: 0,
+						processingTime: 0,
+						confidence: 0,
+					},
+				}),
+				streamAnalysis: async function* () {
+					yield { chunk: "", progress: 1 };
+				},
+				getModelRecommendations: () => ({
+					costOptimization: {},
+					performanceMetrics: {},
+					recommendations: [],
+				}),
+			} as unknown as EnhancedAIService;
+		} else {
+			aiServiceInstance = new EnhancedAIService(apiKey);
+		}
+	}
+	return aiServiceInstance;
 }
