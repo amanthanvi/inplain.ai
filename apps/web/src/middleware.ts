@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { rateLimiters, getRateLimitHeaders, createRateLimitResponse } from '@/lib/middleware/rate-limiter'
 import { securityMiddleware, checkIPAccess } from '@/lib/middleware/security'
+import * as Sentry from '@sentry/nextjs'
+import { logger } from '@/lib/monitoring'
 
 // Define protected routes that require authentication
 const isProtectedRoute = createRouteMatcher([
@@ -42,13 +44,22 @@ const isPublicAPIRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, req) => {
+  const start = Date.now()
   const response = NextResponse.next()
+  
+  // Add request ID for tracking
+  const requestId = crypto.randomUUID()
+  response.headers.set('X-Request-ID', requestId)
   
   // Apply security headers to all responses
   try {
     await securityMiddleware.applySecurityHeaders(req as NextRequest, response)
   } catch (error) {
-    console.error('Security middleware error:', error)
+    logger.error('Security middleware error', { error, requestId })
+    Sentry.captureException(error, {
+      tags: { type: 'middleware_security' },
+      extra: { url: req.url, method: req.method }
+    })
   }
 
   // Check IP access for admin routes
@@ -91,6 +102,12 @@ export default clerkMiddleware(async (auth, req) => {
       const result = await rateLimiter.checkLimit(req as NextRequest, userId)
       
       if (!result.success) {
+        logger.warn('Rate limit exceeded', { 
+          path: req.url, 
+          userId, 
+          requestId,
+          ip: req.headers.get('x-forwarded-for') || 'unknown'
+        })
         return createRateLimitResponse(result)
       }
 
@@ -100,15 +117,40 @@ export default clerkMiddleware(async (auth, req) => {
         response.headers.set(key, value)
       })
     } catch (error) {
-      console.error('Rate limiting error:', error)
+      logger.error('Rate limiting error', { error, requestId })
+      Sentry.captureException(error, {
+        tags: { type: 'middleware_ratelimit' },
+        extra: { url: req.url, userId }
+      })
       // Continue without rate limiting if there's an error
     }
   }
 
   // Protect specific routes with Clerk authentication
   if (isProtectedRoute(req)) {
-    await auth.protect()
+    try {
+      await auth.protect()
+    } catch (error) {
+      logger.error('Authentication error', { error, requestId, path: req.url })
+      Sentry.captureException(error, {
+        tags: { type: 'middleware_auth' },
+        extra: { url: req.url }
+      })
+      throw error
+    }
   }
+
+  // Add performance timing
+  response.headers.set('X-Response-Time', `${Date.now() - start}ms`)
+  
+  // Log successful request
+  logger.info('Request processed', {
+    requestId,
+    method: req.method,
+    path: req.url,
+    userId,
+    duration: Date.now() - start
+  })
 
   return response
 })
