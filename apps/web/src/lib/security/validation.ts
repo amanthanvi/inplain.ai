@@ -83,12 +83,14 @@ const PATH_TRAVERSAL_PATTERNS = [
  * Sanitize HTML content
  */
 export function sanitizeHTML(html: string, options?: any): string {
-  return DOMPurify.sanitize(html, {
+  const sanitized = DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre'],
     ALLOWED_ATTR: ['href', 'target', 'rel'],
     ALLOW_DATA_ATTR: false,
     ...options
   })
+  // DOMPurify returns TrustedHTML in some environments, convert to string
+  return typeof sanitized === 'string' ? sanitized : sanitized.toString()
 }
 
 /**

@@ -329,15 +329,15 @@ export class RedisCache {
 
   private async updateTagIndices(key: string, tags: string[]): Promise<void> {
     // Vercel KV doesn't support sets, use arrays
-    const promises = []
+    const promises: Promise<void>[] = []
     for (const tag of tags) {
       const tagKey = this.getTagKey(tag)
       promises.push(
-        kv.get<string[]>(tagKey).then(existing => {
+        kv.get<string[]>(tagKey).then(async (existing) => {
           const keys = existing || []
           if (!keys.includes(key)) {
             keys.push(key)
-            return kv.set(tagKey, keys, { ex: 86400 }) // 24 hour TTL for tag indices
+            await kv.set(tagKey, keys, { ex: 86400 }) // 24 hour TTL for tag indices
           }
         })
       )
@@ -347,17 +347,17 @@ export class RedisCache {
 
   private async removeFromTagIndices(key: string, tags: string[]): Promise<void> {
     // Vercel KV doesn't support sets, use arrays
-    const promises = []
+    const promises: Promise<void>[] = []
     for (const tag of tags) {
       const tagKey = this.getTagKey(tag)
       promises.push(
-        kv.get<string[]>(tagKey).then(existing => {
+        kv.get<string[]>(tagKey).then(async (existing) => {
           if (existing) {
             const keys = existing.filter(k => k !== key)
             if (keys.length > 0) {
-              return kv.set(tagKey, keys, { ex: 86400 })
+              await kv.set(tagKey, keys, { ex: 86400 })
             } else {
-              return kv.del(tagKey)
+              await kv.del(tagKey)
             }
           }
         })
