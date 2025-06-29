@@ -48,11 +48,8 @@ class PerformanceMonitor {
 
     // Start Sentry transaction if available
     if (typeof window === 'undefined') {
-      const sentryTransaction = Sentry.startTransaction({
-        name,
-        tags,
-      })
-      transaction.data.sentryTransaction = sentryTransaction
+      // Sentry transaction API not available in current version
+      // Will be added when upgrading Sentry SDK
     }
 
     return transactionId
@@ -69,9 +66,7 @@ class PerformanceMonitor {
     const duration = transaction.endTime - transaction.startTime
 
     // End Sentry transaction
-    if (transaction.data.sentryTransaction) {
-      transaction.data.sentryTransaction.finish()
-    }
+    // Not available in current SDK version
 
     // Log performance data
     logger.info('Performance transaction completed', {
@@ -142,13 +137,8 @@ class PerformanceMonitor {
     // Send to monitoring service
     logger.info('Performance metric', metric)
 
-    // Report to Sentry
-    if (typeof window === 'undefined') {
-      Sentry.metrics.gauge(metric.name, metric.value, {
-        unit: metric.unit,
-        tags: metric.tags,
-      })
-    }
+    // Report to Sentry when metrics API is available
+    // Not available in current SDK version
 
     // Clean up old metrics (keep last 1000)
     if (this.metrics.length > 1000) {
@@ -270,11 +260,14 @@ export function trackWebVitals() {
   // First Input Delay
   const fidObserver = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      performanceMonitor.recordMetric({
-        name: 'web_vitals.fid',
-        value: entry.processingStart - entry.startTime,
-        unit: 'ms',
-      })
+      const firstInputEntry = entry as any // PerformanceEventTiming
+      if (firstInputEntry.processingStart) {
+        performanceMonitor.recordMetric({
+          name: 'web_vitals.fid',
+          value: firstInputEntry.processingStart - firstInputEntry.startTime,
+          unit: 'ms',
+        })
+      }
     }
   })
 
@@ -284,8 +277,9 @@ export function trackWebVitals() {
   let clsValue = 0
   const clsObserver = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      if (!entry.hadRecentInput) {
-        clsValue += entry.value
+      const layoutShiftEntry = entry as any // LayoutShift
+      if (!layoutShiftEntry.hadRecentInput) {
+        clsValue += layoutShiftEntry.value
         performanceMonitor.recordMetric({
           name: 'web_vitals.cls',
           value: clsValue,

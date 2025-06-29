@@ -1,6 +1,26 @@
 import { caches } from './redis-cache'
-import { Company, Policy } from '@/types/types'
 import { logger } from '@/lib/monitoring'
+
+// Type definitions (should match your actual types)
+interface Company {
+  id?: string
+  name: string
+  slug: string
+  url: string
+  category?: string
+  description?: string
+  lastChecked?: string | null
+  status?: string
+}
+
+interface Policy {
+  id: string
+  companyId: string
+  name: string
+  url: string
+  content?: string
+  lastUpdated?: string
+}
 
 const COMPANY_TTL = 3600 // 1 hour
 const POLICY_TTL = 3600 // 1 hour

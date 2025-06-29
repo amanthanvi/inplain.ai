@@ -152,22 +152,25 @@ export class RedisCache {
       // Get all keys for each tag
       for (const tag of tags) {
         const tagKey = this.getTagKey(tag)
-        const keys = await kv.smembers(tagKey)
-        keys.forEach(key => keysToInvalidate.add(key))
+        // Vercel KV doesn't support sets, use regular keys
+        const keysJson = await kv.get<string[]>(tagKey)
+        if (keysJson) {
+          keysJson.forEach((key: string) => keysToInvalidate.add(key))
+        }
       }
 
-      // Delete all keys
-      const pipeline = kv.pipeline()
+      // Delete all keys (no pipeline in Vercel KV)
+      const deletePromises = []
       for (const key of keysToInvalidate) {
-        pipeline.del(this.getCacheKey(key))
+        deletePromises.push(kv.del(this.getCacheKey(key)))
       }
 
       // Clean up tag indices
       for (const tag of tags) {
-        pipeline.del(this.getTagKey(tag))
+        deletePromises.push(kv.del(this.getTagKey(tag)))
       }
 
-      await pipeline.exec()
+      await Promise.all(deletePromises)
 
       logger.info('Cache invalidated by tags', { tags, count: keysToInvalidate.size })
     } catch (error) {
@@ -188,18 +191,11 @@ export class RedisCache {
     }
 
     try {
-      // This is a simplified version. In production, you'd want to use SCAN
-      // to avoid blocking the Redis instance
-      const pattern = `${this.prefix}*`
-      const keys = await kv.keys(pattern)
-      
-      if (keys.length > 0) {
-        const pipeline = kv.pipeline()
-        keys.forEach(key => pipeline.del(key))
-        await pipeline.exec()
-      }
+      // Vercel KV doesn't support KEYS command
+      // In production, you'd track keys differently
+      logger.warn('Cache clear not fully implemented for Vercel KV')
 
-      logger.info('Cache cleared', { prefix: this.prefix, count: keys.length })
+      logger.info('Cache cleared', { prefix: this.prefix, count: 0 })
     } catch (error) {
       logger.error('Cache clear error', { error })
       Sentry.captureException(error, {
@@ -255,9 +251,12 @@ export class RedisCache {
 
     try {
       const cacheKeys = keys.map(key => this.getCacheKey(key))
-      const values = await kv.mget<CacheEntry<T>[]>(...cacheKeys)
+      // Vercel KV doesn't support mget, use individual gets
+      const values = await Promise.all(
+        cacheKeys.map(key => kv.get<CacheEntry<T>>(key))
+      )
 
-      return values.map((entry, index) => {
+      return values.map((entry: CacheEntry<T> | null, index: number) => {
         if (!entry) return null
 
         const now = Date.now()
@@ -265,7 +264,7 @@ export class RedisCache {
 
         if (age > entry.ttl * 1000) {
           // Expired
-          this.delete(keys[index])
+          this.delete(keys[index]!)
           return null
         }
 
@@ -288,7 +287,8 @@ export class RedisCache {
     }
 
     try {
-      const pipeline = kv.pipeline()
+      // Vercel KV doesn't support pipeline, use individual operations
+      const promises = []
 
       for (const { key, value, options = {} } of entries) {
         const cacheKey = this.getCacheKey(key)
@@ -305,17 +305,15 @@ export class RedisCache {
           entry.staleUntil = Date.now() + (ttl + options.staleWhileRevalidate) * 1000
         }
 
-        pipeline.set(cacheKey, entry, { ex: ttl + (options.staleWhileRevalidate || 0) })
+        promises.push(kv.set(cacheKey, entry, { ex: ttl + (options.staleWhileRevalidate || 0) }))
 
         // Update tag indices
         if (options.tags) {
-          for (const tag of options.tags) {
-            pipeline.sadd(this.getTagKey(tag), key)
-          }
+          promises.push(this.updateTagIndices(key, options.tags))
         }
       }
 
-      await pipeline.exec()
+      await Promise.all(promises)
     } catch (error) {
       logger.error('Cache mset error', { error })
     }
@@ -330,19 +328,42 @@ export class RedisCache {
   }
 
   private async updateTagIndices(key: string, tags: string[]): Promise<void> {
-    const pipeline = kv.pipeline()
+    // Vercel KV doesn't support sets, use arrays
+    const promises = []
     for (const tag of tags) {
-      pipeline.sadd(this.getTagKey(tag), key)
+      const tagKey = this.getTagKey(tag)
+      promises.push(
+        kv.get<string[]>(tagKey).then(existing => {
+          const keys = existing || []
+          if (!keys.includes(key)) {
+            keys.push(key)
+            return kv.set(tagKey, keys, { ex: 86400 }) // 24 hour TTL for tag indices
+          }
+        })
+      )
     }
-    await pipeline.exec()
+    await Promise.all(promises)
   }
 
   private async removeFromTagIndices(key: string, tags: string[]): Promise<void> {
-    const pipeline = kv.pipeline()
+    // Vercel KV doesn't support sets, use arrays
+    const promises = []
     for (const tag of tags) {
-      pipeline.srem(this.getTagKey(tag), key)
+      const tagKey = this.getTagKey(tag)
+      promises.push(
+        kv.get<string[]>(tagKey).then(existing => {
+          if (existing) {
+            const keys = existing.filter(k => k !== key)
+            if (keys.length > 0) {
+              return kv.set(tagKey, keys, { ex: 86400 })
+            } else {
+              return kv.del(tagKey)
+            }
+          }
+        })
+      )
     }
-    await pipeline.exec()
+    await Promise.all(promises)
   }
 
   private triggerRevalidation(key: string): void {

@@ -69,7 +69,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Get AI service with circuit breaker
     const aiService = await circuitBreakers.openrouter.execute(
-      () => getAIService(),
+      () => Promise.resolve(getAIService()),
       async () => {
         // Fallback: return cached response or error
         logger.warn('AI service circuit breaker open, using fallback')

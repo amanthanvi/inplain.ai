@@ -294,7 +294,7 @@ if (typeof window !== 'undefined') {
           if (entry.entryType === 'largest-contentful-paint') {
             metrics.timing('webvitals.lcp', entry.startTime)
           } else if (entry.entryType === 'first-input' && 'processingStart' in entry) {
-            const fid = entry.processingStart - entry.startTime
+            const fid = (entry as any).processingStart - entry.startTime
             metrics.timing('webvitals.fid', fid)
           } else if (entry.entryType === 'layout-shift' && !(entry as any).hadRecentInput) {
             metrics.gauge('webvitals.cls', (entry as any).value)
