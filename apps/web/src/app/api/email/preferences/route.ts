@@ -257,6 +257,6 @@ async function logPreferenceChange(userId: string, changes: Partial<EmailPrefere
 }
 
 // Export helper function for other modules
-export async function getUserEmailPreferences(userId: string): Promise<EmailPreferences> {
+async function getUserEmailPreferences(userId: string): Promise<EmailPreferences> {
   return EmailService.getEmailPreferences(userId)
 }

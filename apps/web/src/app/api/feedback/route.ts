@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { FeedbackService, FeedbackSubmissionSchema } from '@/lib/feedback';
 import { z } from 'zod';
 import { headers } from 'next/headers';
-import { currentUser } from '@clerk/nextjs';
+import { currentUser } from '@clerk/nextjs/server';
 
 // GET /api/feedback - List feedback with filters
 export async function GET(req: NextRequest) {
