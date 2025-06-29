@@ -3,11 +3,20 @@ import { auth } from '@clerk/nextjs/server'
 import { getAIService } from '@/lib/ai/enhanced-ai-service'
 import { AdvancedPrivacyScorer } from '@/lib/privacy/advanced-scoring'
 import { kv } from '@vercel/kv'
+import { aiCache } from '@/lib/cache/ai-cache'
+import { caches } from '@/lib/cache/redis-cache'
+import { withErrorHandling, RateLimitError } from '@/lib/errors/api-errors'
+import { performanceMonitor } from '@/lib/monitoring/performance'
+import { circuitBreakers } from '@/lib/resilience/circuit-breaker'
+import { logger } from '@/lib/monitoring'
+import crypto from 'crypto'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60 // 60 seconds for complex analysis
 
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  const transactionId = performanceMonitor.startTransaction('api.privacy.analyze-advanced')
+  
   try {
     const { userId } = await auth()
     
@@ -32,21 +41,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Generate cache key
+    const cacheKey = crypto
+      .createHash('sha256')
+      .update(JSON.stringify({ policyText, company, industry, analysisType, perspectives }))
+      .digest('hex')
+
+    // Check cache first (not for streaming responses)
+    if (!streamResponse && !isDemo) {
+      const cached = await aiCache.getResponse('privacy-analysis', cacheKey)
+      if (cached) {
+        logger.info('Privacy analysis cache hit', { company })
+        performanceMonitor.endTransaction(transactionId)
+        return NextResponse.json(JSON.parse(cached))
+      }
+    }
+
     // Rate limiting for demo mode
     if (isDemo) {
       const demoKey = request.headers.get('x-forwarded-for') || 'demo'
       const demoCount = await kv.incr(`demo:analyze:${demoKey}:${new Date().toISOString().slice(0, 10)}`)
       
       if (demoCount > 5) {
-        return NextResponse.json(
-          { error: 'Demo limit reached. Please sign up for unlimited analysis.' },
-          { status: 429 }
-        )
+        throw new RateLimitError(86400) // 24 hours
       }
     }
 
-    // Get AI service
-    const aiService = getAIService()
+    // Get AI service with circuit breaker
+    const aiService = await circuitBreakers.openrouter.execute(
+      () => getAIService(),
+      async () => {
+        // Fallback: return cached response or error
+        logger.warn('AI service circuit breaker open, using fallback')
+        throw new Error('AI service temporarily unavailable. Please try again later.')
+      }
+    )
 
     // For streaming responses
     if (streamResponse) {
@@ -232,7 +261,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({
+    const response = {
       success: true,
       analysisId,
       analysis: result.analysis,
@@ -247,16 +276,26 @@ export async function POST(request: NextRequest) {
         remaining: 5 - ((await kv.get(`demo:analyze:${request.headers.get('x-forwarded-for') || 'demo'}:${new Date().toISOString().slice(0, 10)}`) as number) || 0),
         resetAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString()
       } : undefined
-    })
+    }
+
+    // Cache the response (not for demo users)
+    if (!isDemo) {
+      await aiCache.setResponse('privacy-analysis', cacheKey, JSON.stringify(response), {
+        model: result.metadata?.model || 'unknown',
+        company,
+        industry,
+        analysisType
+      })
+    }
+
+    performanceMonitor.endTransaction(transactionId)
+    return NextResponse.json(response)
 
   } catch (error) {
-    console.error('Advanced analysis error:', error)
-    return NextResponse.json(
-      { error: 'Failed to analyze privacy policy' },
-      { status: 500 }
-    )
+    performanceMonitor.endTransaction(transactionId)
+    throw error
   }
-}
+})
 
 // Helper function to generate score distribution
 function generateDistribution(scores: number[]): Record<string, number> {
@@ -280,7 +319,9 @@ function generateDistribution(scores: number[]): Record<string, number> {
 }
 
 // GET endpoint for retrieving analysis results
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const transactionId = performanceMonitor.startTransaction('api.privacy.get-analysis')
+  
   try {
     const { userId } = await auth()
     const { searchParams } = new URL(request.url)
@@ -291,6 +332,14 @@ export async function GET(request: NextRequest) {
         { error: 'Analysis ID is required' },
         { status: 400 }
       )
+    }
+
+    // Try cache first
+    const cacheKey = `analysis:${analysisId}`
+    const cached = await caches.data.get(cacheKey)
+    if (cached) {
+      performanceMonitor.endTransaction(transactionId)
+      return NextResponse.json(cached)
     }
 
     const analysis = await kv.get(analysisId)
@@ -311,13 +360,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Cache the result for future requests
+    await caches.data.set(cacheKey, analysisData, {
+      ttl: 3600, // 1 hour
+      tags: ['analysis', `user:${userId}`]
+    })
+
+    performanceMonitor.endTransaction(transactionId)
     return NextResponse.json(analysisData)
 
   } catch (error) {
-    console.error('Get analysis error:', error)
-    return NextResponse.json(
-      { error: 'Failed to retrieve analysis' },
-      { status: 500 }
-    )
+    performanceMonitor.endTransaction(transactionId)
+    throw error
   }
-}
+})
