@@ -1,6 +1,6 @@
 import { kv, isKVConfigured } from '@/app/api/lib/kv-wrapper'
-import { logger } from '@/lib/logger-stub'
-import * as Sentry from '@/lib/sentry-stub'
+import { logger } from '@/lib/logger'
+import * as Sentry from '@/lib/sentry'
 
 export interface CacheOptions {
   ttl?: number // Time to live in seconds

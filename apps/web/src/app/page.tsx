@@ -281,6 +281,9 @@ const response = await fetch('https://api.inplain.ai/v1/policies/google.com', {
   }
 });
 
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
+
 const data = await response.json();
 console.log(data.changes);`
     

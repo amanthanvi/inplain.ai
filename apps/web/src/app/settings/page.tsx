@@ -1,5 +1,8 @@
 'use client'
 
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import { useUser } from '@clerk/nextjs'
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

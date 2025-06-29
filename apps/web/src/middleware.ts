@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { rateLimiters, getRateLimitHeaders, createRateLimitResponse } from '@/lib/middleware/rate-limiter'
 import { securityMiddleware, checkIPAccess } from '@/lib/middleware/security'
-import * as Sentry from '@/lib/sentry-stub'
-import { logger } from '@/lib/logger-stub'
+import * as Sentry from '@/lib/sentry'
+import { logger } from '@/lib/logger'
 
 // Define protected routes that require authentication
 const isProtectedRoute = createRouteMatcher([

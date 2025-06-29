@@ -1,3 +1,6 @@
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PolicyVersionComparison } from '@/components/comparison/PolicyVersionComparison'

@@ -1,5 +1,5 @@
-import * as Sentry from '@/lib/sentry-stub'
-import { logger } from '@/lib/logger-stub'
+import * as Sentry from '@/lib/sentry'
+import { logger } from '@/lib/logger'
 
 interface PerformanceMetric {
   name: string

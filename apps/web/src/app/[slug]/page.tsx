@@ -1,3 +1,6 @@
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import Link from 'next/link'

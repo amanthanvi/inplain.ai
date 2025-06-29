@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable static optimization to avoid export errors
+  // Disable static optimization completely
   output: undefined,
   
   // Generate build ID
@@ -20,12 +20,13 @@ const nextConfig = {
   // Transpile packages that might cause issues
   transpilePackages: ['@clerk/nextjs'],
   
-  // Disable type checking during build (we'll run it separately)
+  // Enable type checking during build
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   
-  // Disable ESLint during build
+  // Temporarily disable ESLint during build
+  // TODO: Re-enable once all linting errors are fixed
   eslint: {
     ignoreDuringBuilds: true,
   },

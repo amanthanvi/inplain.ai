@@ -1,8 +1,11 @@
 'use client'
 
-import * as Sentry from '@sentry/nextjs'
+import * as Sentry from '@/lib/sentry'
 import NextError from 'next/error'
 import { useEffect } from 'react'
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 
 export default function GlobalError({
   error,

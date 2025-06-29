@@ -1,5 +1,5 @@
 import { caches } from './redis-cache'
-import { logger } from '@/lib/logger-stub'
+import { logger } from '@/lib/logger'
 // Use simple hash function for edge runtime compatibility
 function createSimpleHash(data: string): string {
   let hash = 0

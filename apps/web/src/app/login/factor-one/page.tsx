@@ -1,3 +1,6 @@
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import { SignIn } from '@clerk/nextjs'
 
 export default function FactorOnePage() {
