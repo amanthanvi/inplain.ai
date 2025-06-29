@@ -1,23 +1,30 @@
-import { auth } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Bell, Shield, AlertTriangle, TrendingUp, Mail, 
   Smartphone, Globe, Clock, Zap, Info, CheckCircle,
-  Gauge, Volume2, VolumeX, Settings, Star, Building2
+  Gauge, Volume2, VolumeX, Settings, Star, Building2,
+  Loader2, RefreshCw, Trash2, Check, X
 } from 'lucide-react'
 import { AnimatedContainer } from '@/components/ui/animations'
-import { WATCHED_COMPANIES } from '@inplain.ai/shared'
+import { useNotifications } from '@/hooks/useNotifications'
+import { NotificationCenter } from '@/components/notifications/NotificationCenter'
+import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
+import { cn } from '@/lib/utils'
+import type { NotificationPreferences } from '@/lib/notifications/notification-service'
 
-export const metadata = {
-  title: 'Notification Preferences - Inplain.AI',
-  description: 'Manage your privacy policy change notifications and alerts',
-}
+// Remove server-side metadata since this is now a client component
 
 interface NotificationSetting {
   id: string
@@ -146,21 +153,86 @@ const defaultSettings: NotificationSetting[] = [
   }
 ]
 
-export default async function NotificationsPage() {
-  const { userId } = await auth()
+export default function NotificationsPage() {
+  const { user, isLoaded } = useUser()
+  const router = useRouter()
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
   
-  if (!userId) {
-    redirect('/login')
+  // Use the notifications hook
+  const {
+    notifications,
+    unreadCount,
+    isConnected,
+    isLoading,
+    preferences,
+    markAsRead,
+    markAllAsRead,
+    dismiss,
+    dismissAll,
+    updatePreferences,
+    testNotification,
+    refresh
+  } = useNotifications()
+  
+  const [localPreferences, setLocalPreferences] = useState<NotificationPreferences | null>(null)
+  
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push('/login')
+    }
+  }, [isLoaded, user, router])
+  
+  useEffect(() => {
+    if (preferences) {
+      setLocalPreferences(preferences)
+    }
+  }, [preferences])
+  
+  if (!isLoaded || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+  
+  if (!user) {
+    return null
+  }
+  
+  const handlePreferenceChange = (key: keyof NotificationPreferences, value: any) => {
+    if (!localPreferences) return
+    
+    setLocalPreferences(prev => {
+      if (!prev) return prev
+      return { ...prev, [key]: value }
+    })
+    setHasChanges(true)
+  }
+  
+  const handleSavePreferences = async () => {
+    if (!localPreferences || !hasChanges) return
+    
+    setIsUpdating(true)
+    try {
+      await updatePreferences(localPreferences)
+      setHasChanges(false)
+    } catch (error) {
+      console.error('Failed to update preferences:', error)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+  
+  const handleResetPreferences = () => {
+    if (preferences) {
+      setLocalPreferences(preferences)
+      setHasChanges(false)
+    }
   }
 
-  // In production, these would be fetched from the database
-  const settings = defaultSettings
-  const watchedCompaniesCount = WATCHED_COMPANIES.filter(() => Math.random() > 0.3).length
-
-  const alertSettings = settings.filter(s => s.category === 'alerts')
-  const emailSettings = settings.filter(s => s.category === 'email')
-  const pushSettings = settings.filter(s => s.category === 'push')
-  const advancedSettings = settings.filter(s => s.category === 'advanced')
+  const watchedCompaniesCount = localPreferences?.subscriptions.length || 0
 
   return (
     <div className="min-h-screen">
@@ -196,197 +268,278 @@ export default async function NotificationsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3">
-                <Button variant="outline">
-                  <VolumeX className="mr-2 h-4 w-4" />
-                  Pause All Notifications
+                <Button 
+                  variant="outline"
+                  onClick={() => handlePreferenceChange('enableSound', !localPreferences?.enableSound)}
+                >
+                  {localPreferences?.enableSound ? (
+                    <><VolumeX className="mr-2 h-4 w-4" /> Mute Sounds</>
+                  ) : (
+                    <><Volume2 className="mr-2 h-4 w-4" /> Enable Sounds</>
+                  )}
                 </Button>
-                <Button variant="outline">
+                <Button 
+                  variant="outline"
+                  onClick={testNotification}
+                >
                   <Bell className="mr-2 h-4 w-4" />
-                  Enable Critical Only
+                  Test Notification
                 </Button>
-                <Button variant="outline">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Reset to Defaults
+                <Button 
+                  variant="outline"
+                  onClick={markAllAsRead}
+                  disabled={unreadCount === 0}
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Mark All Read ({unreadCount})
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={dismissAll}
+                  disabled={notifications.length === 0}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Clear All
                 </Button>
               </div>
             </CardContent>
           </Card>
         </AnimatedContainer>
 
-        {/* Alert Settings */}
+        {/* Notification Settings Tabs */}
         <AnimatedContainer animation="slideUp" delay={0.2}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Alert Types
-              </CardTitle>
-              <CardDescription>
-                Choose which types of privacy changes trigger notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {alertSettings.map((setting) => {
-                const Icon = setting.icon
-                return (
-                  <div key={setting.id} className="flex items-start justify-between gap-4">
+          <Tabs defaultValue="preferences" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="preferences">Preferences</TabsTrigger>
+              <TabsTrigger value="history">Notification History</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="preferences" className="space-y-6">
+              {/* Basic Preferences */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5" />
+                    Notification Preferences
+                  </CardTitle>
+                  <CardDescription>
+                    Control how you receive notifications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1">
-                      <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Volume2 className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="space-y-1">
-                        <Label htmlFor={setting.id} className="flex items-center gap-2">
-                          {setting.title}
-                          {setting.premium && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Star className="mr-1 h-3 w-3" />
-                              Premium
-                            </Badge>
-                          )}
-                        </Label>
+                        <Label htmlFor="sound">Sound Notifications</Label>
                         <p className="text-sm text-muted-foreground">
-                          {setting.description}
+                          Play a sound when new notifications arrive
                         </p>
                       </div>
                     </div>
                     <Switch
-                      id={setting.id}
-                      defaultChecked={setting.enabled}
-                      disabled={setting.premium}
+                      id="sound"
+                      checked={localPreferences?.enableSound ?? true}
+                      onCheckedChange={(checked) => handlePreferenceChange('enableSound', checked)}
                     />
                   </div>
-                )
-              })}
-            </CardContent>
-          </Card>
+                  
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Smartphone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="space-y-1">
+                        <Label htmlFor="desktop">Desktop Notifications</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Show system notifications for important updates
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="desktop"
+                      checked={localPreferences?.enableDesktop ?? true}
+                      onCheckedChange={(checked) => handlePreferenceChange('enableDesktop', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Bell className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="space-y-1">
+                        <Label htmlFor="toast">Toast Notifications</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Show in-app notification toasts
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="toast"
+                      checked={localPreferences?.enableToast ?? true}
+                      onCheckedChange={(checked) => handlePreferenceChange('enableToast', checked)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div className="space-y-1">
+                        <Label htmlFor="email">Email Notifications</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Receive email alerts for critical changes
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="email"
+                      checked={localPreferences?.enableEmail ?? false}
+                      onCheckedChange={(checked) => handlePreferenceChange('enableEmail', checked)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Quiet Hours */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Quiet Hours
+                  </CardTitle>
+                  <CardDescription>
+                    Pause non-critical notifications during specific hours
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="quiet-hours">Enable Quiet Hours</Label>
+                    <Switch
+                      id="quiet-hours"
+                      checked={localPreferences?.quietHours.enabled ?? false}
+                      onCheckedChange={(checked) => 
+                        handlePreferenceChange('quietHours', {
+                          ...localPreferences?.quietHours,
+                          enabled: checked
+                        })
+                      }
+                    />
+                  </div>
+                  
+                  {localPreferences?.quietHours.enabled && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="quiet-start">Start Time</Label>
+                        <input
+                          id="quiet-start"
+                          type="time"
+                          value={localPreferences?.quietHours.start || '22:00'}
+                          onChange={(e) => 
+                            handlePreferenceChange('quietHours', {
+                              ...localPreferences?.quietHours,
+                              start: e.target.value
+                            })
+                          }
+                          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="quiet-end">End Time</Label>
+                        <input
+                          id="quiet-end"
+                          type="time"
+                          value={localPreferences?.quietHours.end || '07:00'}
+                          onChange={(e) => 
+                            handlePreferenceChange('quietHours', {
+                              ...localPreferences?.quietHours,
+                              end: e.target.value
+                            })
+                          }
+                          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="history" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Recent Notifications</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={refresh}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </CardTitle>
+                  <CardDescription>
+                    View your notification history
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {notifications.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Bell className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-muted-foreground">No notifications yet</p>
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[400px]">
+                      <div className="space-y-4">
+                        {notifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={cn(
+                              "p-4 rounded-lg border",
+                              !notification.read && "bg-primary/5 border-primary/20"
+                            )}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium">{notification.title}</h4>
+                                  <Badge variant={notification.severity === 'critical' ? 'destructive' : 'secondary'}>
+                                    {notification.severity}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {notification.message}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  {formatDuration(getTimeDiff(notification.timestamp))} ago
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {!notification.read && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => markAsRead(notification.id)}
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => dismiss(notification.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </AnimatedContainer>
 
-        {/* Email Preferences */}
-        <AnimatedContainer animation="slideUp" delay={0.3}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Email Notifications
-              </CardTitle>
-              <CardDescription>
-                Configure email alerts and digests
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {emailSettings.map((setting) => {
-                const Icon = setting.icon
-                return (
-                  <div key={setting.id} className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />
-                      <div className="space-y-1">
-                        <Label htmlFor={setting.id} className="flex items-center gap-2">
-                          {setting.title}
-                          {setting.premium && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Star className="mr-1 h-3 w-3" />
-                              Premium
-                            </Badge>
-                          )}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {setting.description}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      id={setting.id}
-                      defaultChecked={setting.enabled}
-                      disabled={setting.premium}
-                    />
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-        </AnimatedContainer>
-
-        {/* Push Notifications */}
-        <AnimatedContainer animation="slideUp" delay={0.4}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
-                Push Notifications
-              </CardTitle>
-              <CardDescription>
-                Real-time alerts on your devices
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {pushSettings.map((setting) => {
-                const Icon = setting.icon
-                return (
-                  <div key={setting.id} className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />
-                      <div className="space-y-1">
-                        <Label htmlFor={setting.id}>{setting.title}</Label>
-                        <p className="text-sm text-muted-foreground">
-                          {setting.description}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      id={setting.id}
-                      defaultChecked={setting.enabled}
-                    />
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-        </AnimatedContainer>
-
-        {/* Advanced Settings */}
-        <AnimatedContainer animation="slideUp" delay={0.5}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Advanced Settings
-              </CardTitle>
-              <CardDescription>
-                Fine-tune your notification experience
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {advancedSettings.map((setting) => {
-                const Icon = setting.icon
-                return (
-                  <div key={setting.id} className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                      <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />
-                      <div className="space-y-1">
-                        <Label htmlFor={setting.id} className="flex items-center gap-2">
-                          {setting.title}
-                          {setting.premium && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Star className="mr-1 h-3 w-3" />
-                              Premium
-                            </Badge>
-                          )}
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          {setting.description}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      id={setting.id}
-                      defaultChecked={setting.enabled}
-                      disabled={setting.premium}
-                    />
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-        </AnimatedContainer>
 
         {/* Company-Specific Settings */}
         <AnimatedContainer animation="slideUp" delay={0.6}>
@@ -416,12 +569,29 @@ export default async function NotificationsPage() {
         </AnimatedContainer>
 
         {/* Save Button */}
-        <AnimatedContainer animation="fade" delay={0.7}>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline">Cancel</Button>
-            <Button>Save Preferences</Button>
-          </div>
-        </AnimatedContainer>
+        {hasChanges && (
+          <AnimatedContainer animation="fade">
+            <div className="flex justify-end gap-3 sticky bottom-4 bg-background/95 backdrop-blur p-4 rounded-lg border">
+              <Button 
+                variant="outline"
+                onClick={handleResetPreferences}
+                disabled={isUpdating}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSavePreferences}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
+                ) : (
+                  'Save Preferences'
+                )}
+              </Button>
+            </div>
+          </AnimatedContainer>
+        )}
 
         {/* Info Box */}
         <AnimatedContainer animation="slideUp" delay={0.8}>

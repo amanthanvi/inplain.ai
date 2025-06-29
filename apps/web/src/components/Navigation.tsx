@@ -11,7 +11,7 @@ import {
   Home, Info, FileText, Bell, Loader2,
   Building2, LayoutDashboard
 } from 'lucide-react'
-import { NotificationCenter, type Notification } from '@/components/realtime/NotificationCenter'
+import { NotificationCenter } from '@/components/notifications/NotificationCenter'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,8 +41,11 @@ export function Navigation() {
     unreadCount,
     isConnected,
     markAsRead,
+    markAllAsRead,
     dismiss,
-    testNotification
+    dismissAll,
+    preferences,
+    updatePreferences
   } = useNotifications({
     enableSound: true,
     enableDesktop: true,
@@ -112,6 +115,11 @@ export function Navigation() {
                     notifications={notifications}
                     onNotificationRead={markAsRead}
                     onNotificationDismiss={dismiss}
+                    onMarkAllRead={markAllAsRead}
+                    onClearAll={dismissAll}
+                    isConnected={isConnected}
+                    enableSound={preferences?.enableSound ?? true}
+                    onSoundToggle={(enabled) => updatePreferences({ enableSound: enabled })}
                   />
                   <UserButton 
                     appearance={{

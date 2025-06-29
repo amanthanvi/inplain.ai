@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { DiffViewer } from '@/components/DiffViewer'
 import { Timeline } from '@/components/Timeline'
 import { EnhancedCurrentPolicy } from '@/components/EnhancedCurrentPolicy'
@@ -101,9 +102,15 @@ export default async function CompanyPage({ params }: PageProps) {
               
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" asChild className="flex-1 md:flex-initial">
+                  <Link href={`/companies/${company.slug}/policies`}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Browse</span> Policies
+                  </Link>
+                </Button>
+                <Button size="sm" variant="outline" asChild className="flex-1 md:flex-initial">
                   <a href={company.url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">View</span> Policy
+                    <span className="hidden sm:inline">View</span> Original
                   </a>
                 </Button>
                 <Button size="sm" className="flex-1 md:flex-initial">
