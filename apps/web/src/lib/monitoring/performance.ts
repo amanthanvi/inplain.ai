@@ -1,5 +1,5 @@
-import * as Sentry from '@sentry/nextjs'
-import { logger } from './index'
+import * as Sentry from '@/lib/sentry-stub'
+import { logger } from '@/lib/logger-stub'
 
 interface PerformanceMetric {
   name: string

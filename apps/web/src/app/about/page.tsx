@@ -15,6 +15,8 @@ export const metadata = {
   description: 'Learn how Inplain.AI helps you understand privacy policy changes with AI-powered insights',
 }
 
+export const dynamic = 'force-dynamic'
+
 const features = [
   {
     icon: Eye,

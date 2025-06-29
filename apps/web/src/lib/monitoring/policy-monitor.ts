@@ -1,5 +1,5 @@
 import { kv } from '@vercel/kv'
-import { logger } from '@/lib/monitoring'
+import { logger } from '@/lib/logger-stub'
 import { notificationService } from '@/lib/notifications/notification-service'
 import { policyScraper } from '@/lib/scraper/policy-scraper'
 import { circuitBreakers } from '@/lib/resilience/circuit-breaker'

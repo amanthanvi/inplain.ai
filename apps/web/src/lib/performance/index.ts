@@ -2,8 +2,6 @@
  * Performance monitoring and optimization utilities
  */
 
-import { kv } from '@vercel/kv'
-
 interface PerformanceMetric {
   name: string
   value: number
@@ -213,15 +211,6 @@ export class PerformanceMonitor {
    */
   private async sendToAnalytics(metric: PerformanceMetric) {
     try {
-      // Store in KV for aggregation
-      const key = `perf:${metric.name}:${new Date().toISOString().split('T')[0]}`
-      const current = await kv.get<number[]>(key) || []
-      current.push(metric.value)
-      
-      await kv.set(key, current, {
-        ex: 86400 * 30 // 30 days
-      })
-      
       // Send to external analytics if configured
       if (typeof window !== 'undefined' && 'navigator' in window && 'sendBeacon' in navigator) {
         navigator.sendBeacon('/api/analytics/performance', JSON.stringify({

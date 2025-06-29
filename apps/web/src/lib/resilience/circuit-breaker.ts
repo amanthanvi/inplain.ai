@@ -1,5 +1,5 @@
-import { logger } from '@/lib/monitoring'
-import * as Sentry from '@sentry/nextjs'
+import { logger } from '@/lib/logger-stub'
+import * as Sentry from '@/lib/sentry-stub'
 
 export interface CircuitBreakerOptions {
   failureThreshold: number
