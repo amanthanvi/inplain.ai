@@ -1,12 +1,33 @@
 'use client'
 
-import { PerformanceMonitor } from '@/components/performance/PerformanceMonitor'
+import dynamicImport from 'next/dynamic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Activity } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 // Opt out of static generation for this page
 export const dynamic = 'force-dynamic'
+
+// Dynamically import PerformanceMonitor to avoid SSR issues
+const PerformanceMonitor = dynamicImport(
+  () => import('@/components/performance/PerformanceMonitor').then((mod) => mod.PerformanceMonitor),
+  { 
+    ssr: false,
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Performance Monitor
+          </CardTitle>
+          <CardDescription>
+            Loading performance metrics...
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
+)
 
 export default function PerformancePage() {
   const [mounted, setMounted] = useState(false)

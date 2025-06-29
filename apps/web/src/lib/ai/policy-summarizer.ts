@@ -1,5 +1,5 @@
 import { aiCache } from "@/lib/cache/ai-cache";
-import { logger } from "@/lib/monitoring";
+import { logger } from "@/lib/logger-stub";
 import { getAIService } from "./enhanced-ai-service";
 import { circuitBreakers } from "@/lib/resilience/circuit-breaker";
 

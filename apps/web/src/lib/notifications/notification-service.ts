@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events'
 import type { Notification } from '@/components/notifications/NotificationCenter'
-import { logger } from '@/lib/monitoring'
+import { logger } from '@/lib/logger-stub'
 
 export interface NotificationServiceConfig {
   userId: string

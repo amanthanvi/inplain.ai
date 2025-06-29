@@ -28,8 +28,10 @@ export function PerformanceMonitor() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   useEffect(() => {
-    // Analyze bundle on mount
-    analyzeBundleSize().then(setBundleAnalysis)
+    // Analyze bundle on mount (client-side only)
+    if (typeof window !== 'undefined') {
+      analyzeBundleSize().then(setBundleAnalysis)
+    }
   }, [])
 
   const analyzePerformance = async () => {
@@ -313,6 +315,7 @@ export function PerformanceMonitor() {
           Re-analyze
         </Button>
         <Button variant="outline" onClick={() => {
+          if (typeof window === 'undefined') return
           const data = JSON.stringify(report, null, 2)
           const blob = new Blob([data], { type: 'application/json' })
           const url = URL.createObjectURL(blob)

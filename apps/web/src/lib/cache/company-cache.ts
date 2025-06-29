@@ -1,5 +1,5 @@
 import { caches } from './redis-cache'
-import { logger } from '@/lib/monitoring'
+import { logger } from '@/lib/logger-stub'
 
 // Type definitions (should match your actual types)
 interface Company {
