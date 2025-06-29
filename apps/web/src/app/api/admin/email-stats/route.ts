@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { EmailService } from '@/lib/email'
-import { getUnsubscribeAnalytics } from '@/app/api/unsubscribe/route'
+import { getUnsubscribeAnalytics } from '@/lib/analytics/email-analytics'
 import { kv } from '@vercel/kv'
 
 export const runtime = 'edge'
