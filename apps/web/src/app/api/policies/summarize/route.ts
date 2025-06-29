@@ -38,10 +38,13 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const { policyText, companyName, industry, targetAudience, language } = validation.data
     
     // Rate limiting for non-authenticated users
+    let count = 0;
     if (!userId) {
       const ip = request.headers.get('x-forwarded-for') || 'anonymous'
       const rateLimitKey = `summarize:${ip}:${new Date().toDateString()}`
-      const count = await kv.incr(rateLimitKey)
+      const currentCount = await kv.get(rateLimitKey) as number || 0;
+      count = currentCount + 1;
+      await kv.set(rateLimitKey, count);
       
       if (count === 1) {
         await kv.expire(rateLimitKey, 86400) // 24 hours
@@ -77,7 +80,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       success: true,
       summary,
       usage: {
-        remaining: userId ? 'unlimited' : Math.max(0, 3 - (count || 0)),
+        remaining: userId ? 'unlimited' : Math.max(0, 3 - count),
         resetAt: userId ? null : new Date(new Date().setDate(new Date().getDate() + 1)).toISOString()
       }
     })

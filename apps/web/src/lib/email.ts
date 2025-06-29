@@ -12,6 +12,17 @@ export interface EmailTemplate {
   text: string;
 }
 
+export interface EmailPreferences {
+  policyChanges: boolean;
+  weeklyDigest: boolean;
+  urgentAlerts: boolean;
+  marketingEmails: boolean;
+  frequency: 'immediate' | 'daily' | 'weekly' | 'monthly';
+  timezone: string;
+  language: string;
+  categories: string[];
+}
+
 export class EmailService {
   static generateWatchlistAlertEmail(
     user: User,
@@ -568,6 +579,221 @@ The Inplain.AI Team
     });
 
     return !error;
+  }
+
+  // Missing methods to fix build errors
+
+  static async getEmailStats(): Promise<any> {
+    try {
+      const stats = await kv.get('email:stats') || {
+        totalSent: 0,
+        totalDelivered: 0,
+        totalBounced: 0,
+        totalComplaints: 0
+      };
+      return stats;
+    } catch (error) {
+      console.error('Failed to get email stats:', error);
+      return null;
+    }
+  }
+
+  static async getQueueStats(): Promise<any> {
+    try {
+      const queueLength = await kv.llen('email:queue') || 0;
+      const failedLength = await kv.llen('email:failed') || 0;
+      return {
+        pending: queueLength,
+        failed: failedLength,
+        processed: 0 // Could be tracked separately
+      };
+    } catch (error) {
+      console.error('Failed to get queue stats:', error);
+      return { pending: 0, failed: 0, processed: 0 };
+    }
+  }
+
+  static async sendWelcomeEmail(userId: string): Promise<boolean> {
+    try {
+      const user = await AuthService.getUserById(userId);
+      if (!user || !user.emailAddress) return false;
+
+      const template = this.generateWelcomeEmail(user);
+      return await this.sendEmail(user.emailAddress, template.subject, template.html, template.text);
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+      return false;
+    }
+  }
+
+  static async processNotificationQueue(): Promise<void> {
+    try {
+      // Process up to 10 items from the queue
+      for (let i = 0; i < 10; i++) {
+        const item = await kv.lpop('email:queue');
+        if (!item) break;
+
+        try {
+          const notification = JSON.parse(item as string);
+          await this.sendEmail(
+            notification.to,
+            notification.subject,
+            notification.html,
+            notification.text
+          );
+        } catch (error) {
+          console.error('Failed to process notification:', error);
+          // Move to failed queue
+          await kv.lpush('email:failed', item);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to process notification queue:', error);
+    }
+  }
+
+  static async getEmailPreferences(userId: string): Promise<EmailPreferences> {
+    try {
+      const prefs = await kv.get(`user:email:${userId}`) as EmailPreferences | null;
+      return prefs || {
+        policyChanges: true,
+        weeklyDigest: true,
+        urgentAlerts: true,
+        marketingEmails: false,
+        frequency: 'immediate',
+        timezone: 'UTC',
+        language: 'en',
+        categories: []
+      };
+    } catch (error) {
+      console.error('Failed to get email preferences:', error);
+      return {
+        policyChanges: true,
+        weeklyDigest: true,
+        urgentAlerts: true,
+        marketingEmails: false,
+        frequency: 'immediate',
+        timezone: 'UTC',
+        language: 'en',
+        categories: []
+      };
+    }
+  }
+
+  static async updateEmailPreferences(userId: string, preferences: Partial<EmailPreferences>): Promise<void> {
+    try {
+      const current = await this.getEmailPreferences(userId);
+      const updated = { ...current, ...preferences };
+      await kv.set(`user:email:${userId}`, updated);
+    } catch (error) {
+      console.error('Failed to update email preferences:', error);
+      throw error;
+    }
+  }
+
+  static async sendMonthlyDigest(userId: string): Promise<boolean> {
+    try {
+      const user = await AuthService.getUserById(userId);
+      if (!user || !user.emailAddress) return false;
+
+      // Get user's watchlist alerts for the month
+      const alerts = await WatchlistService.getAlertsForUser(userId, 30);
+      if (alerts.length === 0) return true; // No alerts, no email needed
+
+      const template = this.generateMonthlyDigestEmail(user, alerts);
+      return await this.sendEmail(user.emailAddress, template.subject, template.html, template.text);
+    } catch (error) {
+      console.error('Failed to send monthly digest:', error);
+      return false;
+    }
+  }
+
+  static async handleUnsubscribe(token: string, type?: string): Promise<boolean> {
+    try {
+      const data = await kv.get(`unsubscribe:${token}`);
+      if (!data) return false;
+
+      const { userId } = JSON.parse(data as string);
+      const preferences = await this.getEmailPreferences(userId);
+
+      if (type === 'all') {
+        // Unsubscribe from all emails
+        await this.updateEmailPreferences(userId, {
+          policyChanges: false,
+          weeklyDigest: false,
+          urgentAlerts: false,
+          marketingEmails: false
+        });
+      } else if (type) {
+        // Unsubscribe from specific type
+        await this.updateEmailPreferences(userId, {
+          [type]: false
+        });
+      }
+
+      // Clean up token
+      await kv.del(`unsubscribe:${token}`);
+      return true;
+    } catch (error) {
+      console.error('Failed to handle unsubscribe:', error);
+      return false;
+    }
+  }
+
+  static async validateUnsubscribeToken(token: string): Promise<boolean> {
+    try {
+      const data = await kv.get(`unsubscribe:${token}`);
+      return !!data;
+    } catch (error) {
+      console.error('Failed to validate unsubscribe token:', error);
+      return false;
+    }
+  }
+
+  private static generateWelcomeEmail(user: User): EmailTemplate {
+    const subject = 'Welcome to InPlain.AI!';
+    const html = `
+      <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+        <h1 style="color: #1f2937;">Welcome to InPlain.AI!</h1>
+        <p>Hi ${user.firstName || 'there'},</p>
+        <p>Welcome to InPlain.AI! We're excited to help you stay informed about privacy policy changes.</p>
+        <p>Get started by:</p>
+        <ul>
+          <li>Adding companies to your watchlist</li>
+          <li>Setting up notification preferences</li>
+          <li>Exploring our AI-powered analysis tools</li>
+        </ul>
+        <p>If you have any questions, feel free to reach out to our support team.</p>
+        <p>Best regards,<br>The InPlain.AI Team</p>
+      </div>
+    `;
+    const text = `Welcome to InPlain.AI! Hi ${user.firstName || 'there'}, Welcome to InPlain.AI! We're excited to help you stay informed about privacy policy changes.`;
+    
+    return { subject, html, text };
+  }
+
+  private static generateMonthlyDigestEmail(user: User, alerts: WatchlistAlert[]): EmailTemplate {
+    const subject = 'Your Monthly Privacy Policy Digest';
+    const html = `
+      <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+        <h1 style="color: #1f2937;">Monthly Privacy Policy Digest</h1>
+        <p>Hi ${user.firstName || 'there'},</p>
+        <p>Here's your monthly summary of privacy policy changes:</p>
+        <div>
+          ${alerts.map(alert => `
+            <div style="border: 1px solid #e5e7eb; padding: 16px; margin: 8px 0; border-radius: 8px;">
+              <h3>${alert.companyName}</h3>
+              <p>${alert.message}</p>
+              <small>Changed on ${new Date(alert.timestamp).toLocaleDateString()}</small>
+            </div>
+          `).join('')}
+        </div>
+        <p>View more details in your <a href="${process.env.NEXT_PUBLIC_BASE_URL}/dashboard">InPlain.AI dashboard</a>.</p>
+      </div>
+    `;
+    const text = `Monthly Privacy Policy Digest. Hi ${user.firstName || 'there'}, Here's your monthly summary of privacy policy changes...`;
+    
+    return { subject, html, text };
   }
 }
 
