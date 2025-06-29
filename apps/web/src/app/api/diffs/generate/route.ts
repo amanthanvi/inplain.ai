@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     const processedChanges: Change[] = []
     for (let i = 0; i < changes.length; i++) {
       const change = changes[i]
+      if (!change) continue
       
       if (change.added) {
         stats.additions += change.count || 1
