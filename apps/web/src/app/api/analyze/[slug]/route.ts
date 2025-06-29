@@ -1,36 +1,51 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import { StorageClient } from '../../lib/storage'
-import { PolicyAnalysisService } from '../../lib/ai-service'
-import { ContentExtractor } from '../../../../lib/content-extractor'
-import { ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, selectBestModel } from '../../../../lib/prompts'
-import { enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
-import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { StorageClient } from '@/lib/storage';
+import { ContentExtractor, ExtractedContent } from '@/lib/content-extractor';
+import { getUnifiedAIService, UnifiedAIRequest, AIError, AIResponseError, AIRateLimitError, AINotFoundError, AIAuthError } from '@/lib/ai/unified-ai-service';
+import { getPromptLibrary } from '@/lib/ai/prompts/prompt-library';
+import { ComprehensiveAnalysisContext } from '@/lib/ai/prompts/task-prompts';
+import { COMPREHENSIVE_POLICY_ANALYSIS_TOOL_NAME } from '@/lib/ai/tools/comprehensive-analysis-tools';
 
-const storage = new StorageClient()
+import { getClerkAuth } from '@/lib/auth-clerk';
+import { isDevAuthEnabled } from '@/lib/dev-auth';
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
-const DEFAULT_MODEL = process.env.DEFAULT_AI_MODEL || 'google/gemini-2.0-flash-exp:free'
+const storage = new StorageClient();
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+// Optional: Request body schema for future extensions (e.g., forcing re-analysis)
+const RequestBodySchema = z.object({
+  forceReanalyze: z.boolean().optional(),
+  // model: z.string().optional(), // Could allow user to specify model tier in future
+}).strict();
+
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } } // Slug is now directly available
 ) {
   try {
-    const { slug } = await params
-    
-    // Parse request body if provided
-    let requestBody: { model?: string; analysisType?: string; includeRiskScore?: boolean } = {}
+    const { slug } = params;
+    let parsedBody = {}; // Default empty body
+    // Try to parse body, but don't fail if it's not there or malformed for basic GET-like POST
     try {
-      requestBody = await request.json()
-    } catch {
-      // Body might be empty, which is fine
+        // Ensure request.json() is only called if there's a body
+        if (request.body && request.headers.get('content-length') !== '0') {
+            const body = await request.json();
+            parsedBody = RequestBodySchema.parse(body);
+        }
+    } catch (e) {
+        // Only error if there was a JSON body that was malformed
+        if (request.method === 'POST' && request.headers.get('content-type')?.includes('application/json') && request.body) {
+             return NextResponse.json({ error: 'Invalid request body', details: (e as Error).message }, { status: 400 });
+        }
     }
-    
-    // Check authentication in production (skip in dev with auth bypass)
+    const { forceReanalyze = false } = parsedBody as { forceReanalyze?: boolean };
+
+
+    // Authentication
     if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
+      const { userId } = getClerkAuth(request); // Pass request to getClerkAuth
       if (!userId) {
         return NextResponse.json(
           { error: 'Authentication required' },
@@ -39,7 +54,7 @@ export async function POST(
       }
     }
     
-    // Handle demo mode gracefully
+    // Demo mode
     if (!OPENROUTER_API_KEY) {
       // Return a mock analysis for demo mode
       const mockAnalysis = {
@@ -49,68 +64,36 @@ export async function POST(
         model: 'demo-model',
         structured_content: {
           executive_summary: "This is a demo analysis. To enable real AI analysis, please configure your OpenRouter API key.",
-          data_collection: ["Personal information", "Usage data", "Device information"],
-          data_usage: ["Service improvement", "Marketing", "Analytics"],
-          third_party_sharing: ["Service providers", "Business partners"],
-          user_rights: ["Access", "Deletion", "Correction", "Opt-out"],
-          data_retention: "Data retained as long as necessary for business purposes",
-          security_measures: "Industry-standard security measures in place",
-          cookies_tracking: {
-            uses_cookies: true,
-            tracking_technologies: ["Cookies", "Pixels", "Analytics"],
-            third_party_analytics: true
-          },
-          gdpr_compliant: true,
-          ccpa_compliant: true,
-          contact_info: "privacy@example.com",
-          overall_privacy_score: "good",
-          recommendations: ["Review privacy settings", "Enable two-factor authentication"]
+          // TODO: Add other fields from comprehensiveAnalysisParameters to make the mock more realistic
         },
         raw_content: "Demo analysis content",
-        metadata: {
-          wordCount: 1000,
-          sections: 10,
-          title: "Privacy Policy"
-        }
+        tokensUsed: { input:0, output:0, total:0 },
+        metadata: { wordCount: 0, sectionsCount: 0, title: "Demo Policy" }
+      };
+      return NextResponse.json({ analysis: mockAnalysis, cached: false, demo: true });
+    }
+
+    const snapshots = await storage.getLatestSnapshots(slug, 1);
+    if (snapshots.length === 0 || !snapshots[0]) {
+      return NextResponse.json({ error: 'No snapshots found for this policy' }, { status: 404 });
+    }
+    const snapshot = snapshots[0];
+
+    // Check for cached analysis first, unless forceReanalyze is true
+    const cacheKey = `analysis:unified:v2:${snapshot.id}`; // Incremented version for new structure
+    if (!forceReanalyze) {
+      const cachedAnalysis = await storage.getCachedAnalysis(cacheKey);
+      if (cachedAnalysis) {
+        return NextResponse.json({ analysis: cachedAnalysis, cached: true });
       }
-      
-      return NextResponse.json({
-        analysis: mockAnalysis,
-        cached: false,
-        demo: true
-      })
     }
-    
-    // Get the latest snapshot
-    const snapshots = await storage.getLatestSnapshots(slug, 1)
-    
-    if (snapshots.length === 0) {
-      return NextResponse.json(
-        { error: 'No snapshots found for this policy' },
-        { status: 404 }
-      )
+
+    const htmlContent = await storage.getSnapshotContent(snapshot.blobKey);
+    if (!htmlContent) {
+      return NextResponse.json({ error: 'Snapshot content not found' }, { status: 404 });
     }
-    
-    const snapshot = snapshots[0]
-    
-    if (!snapshot) {
-      return NextResponse.json(
-        { error: 'No snapshots found for this policy' },
-        { status: 404 }
-      )
-    }
-    
-    const content = await storage.getSnapshotContent(snapshot.blobKey)
-    
-    if (!content) {
-      return NextResponse.json(
-        { error: 'Snapshot content not found' },
-        { status: 404 }
-      )
-    }
-    
-    // Extract clean text from HTML
-    const extractedContent = ContentExtractor.extract(content)
+
+    const extractedContent: ExtractedContent = ContentExtractor.extract(htmlContent);
     
     if (!extractedContent.text || extractedContent.text.length < 100) {
       return NextResponse.json(
@@ -119,104 +102,77 @@ export async function POST(
       )
     }
     
-    // Verify this is actually a privacy policy
     if (!ContentExtractor.isPrivacyPolicy(extractedContent.text)) {
-      return NextResponse.json(
-        { error: 'Content does not appear to be a privacy policy' },
-        { status: 422 }
-      )
+      return NextResponse.json({ error: 'Content does not appear to be a privacy policy' }, { status: 422 });
+    }
+
+    // Prepare request for UnifiedAIService using PromptLibrary
+    const promptLibrary = getPromptLibrary();
+    const context: ComprehensiveAnalysisContext = {
+      policyHtmlContent: extractedContent.text, // Send extracted text
+      companyName: slug.charAt(0).toUpperCase() + slug.slice(1),
+      policyTitle: extractedContent.title,
+      policyLastUpdated: extractedContent.metadata.lastUpdated,
+      policyEffectiveDate: extractedContent.metadata.effectiveDate,
+      policyWordCount: extractedContent.metadata.wordCount,
+      policySections: extractedContent.sections.map(s => ({ title: s.title, characterCount: s.content.length })),
+    };
+
+    // Using 'COMPREHENSIVE_ANALYSIS_TASK' and 'PRIVACY_EXPERT_PERSONA' as defaults for this route
+    const preparedPrompt = promptLibrary.prepareAIRequest(
+      "comprehensive-policy-analysis-v1", // Task ID
+      "privacy-expert-v1", // Persona ID
+      context
+    );
+
+    if (!preparedPrompt) {
+      return NextResponse.json({ error: 'Failed to prepare AI prompt' }, { status: 500 });
     }
     
-    // Check if we already have a cached analysis
-    const cacheKey = `analysis:${snapshot.id}`
-    const cachedAnalysis = await storage.getCachedAnalysis(cacheKey)
-    
-    if (cachedAnalysis) {
-      return NextResponse.json({
-        analysis: cachedAnalysis,
-        cached: true
-      })
-    }
-    
-    // Generate new analysis with enhanced prompt
-    const modelToUse = requestBody.model || DEFAULT_MODEL
-    const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, modelToUse)
-    
-    // Create a structured prompt with metadata
-    const policyMetadata = [
-      `Company: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`,
-      extractedContent.title ? `Title: ${extractedContent.title}` : '',
-      extractedContent.metadata.lastUpdated ? `Last Updated: ${extractedContent.metadata.lastUpdated}` : '',
-      extractedContent.metadata.effectiveDate ? `Effective Date: ${extractedContent.metadata.effectiveDate}` : '',
-      `Word Count: ${extractedContent.metadata.wordCount}`,
-      `Sections: ${extractedContent.sections.length}`
-    ].filter(Boolean).join('\n')
-    
-    const sectionSummary = extractedContent.sections.slice(0, 10)
-      .map(s => `- ${s.title}`)
-      .join('\n')
-    
-    // Use optimized prompt from prompts library
-    const basePrompt = ANALYSIS_PROMPTS.comprehensive(
-      policyMetadata,
-      sectionSummary,
-      extractedContent.text.substring(0, 30000)
-    )
-    
-    // Enhance with world-class prompts based on user tier
-    // For now, default to premium tier for all users to showcase capabilities
-    const userTier = 'premium' // TODO: Get from user subscription
-    const enhanced = enhanceAnalysisWithWorldClassPrompts(
-      'comprehensive',
-      basePrompt,
-      userTier
-    )
-    
-    // Get available models and select the best one
-    const availableModels = aiService.getAvailableModels().map(m => m.id)
-    const selectedModel = selectBestModel('comprehensive', availableModels)
-    
-    // Define fallback models for reliability
-    const fallbackModels = PROMPT_OPTIMIZATION.modelRecommendations.comprehensive
-      .filter(m => m !== selectedModel && availableModels.includes(m))
-    
-    const response = await aiService.generateResponse(enhanced.prompt, {
-      model: selectedModel,
-      temperature: enhanced.temperature,
-      maxTokens: PROMPT_OPTIMIZATION.maxTokens.comprehensive,
-      systemPrompt: enhanced.systemPrompt || 'You are a privacy policy expert. Always respond with valid JSON only, no markdown or additional text.',
-      fallbackModels
-    })
-    
-    // Parse the JSON response
-    let parsedAnalysis
-    try {
-      // Clean the response in case it has markdown formatting
-      const cleanedContent = response.content
-        .replace(/^```json\n?/i, '')
-        .replace(/\n?```$/i, '')
-        .trim()
-      
-      parsedAnalysis = JSON.parse(cleanedContent)
-    } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError)
-      console.error('Raw response:', response.content)
-      
-      // Fallback to text analysis if JSON parsing fails
-      parsedAnalysis = {
-        executive_summary: response.content,
-        parse_error: true
+    const aiService = getUnifiedAIService();
+    const aiRequest: UnifiedAIRequest = {
+      prompt: preparedPrompt.userPrompt,
+      systemPrompt: preparedPrompt.systemPrompt,
+      tools: preparedPrompt.tool ? [preparedPrompt.tool] : undefined,
+      toolChoice: preparedPrompt.toolChoice,
+      modelConfig: preparedPrompt.modelConfig,
+      temperature: preparedPrompt.temperature,
+      maxTokens: preparedPrompt.maxTokens,
+    };
+
+    const aiResponse = await aiService.request(aiRequest);
+
+    let analysisResult;
+    if (aiResponse.toolCalls && aiResponse.toolCalls.length > 0 && aiResponse.toolCalls[0].function.name === COMPREHENSIVE_POLICY_ANALYSIS_TOOL_NAME) {
+      try {
+        analysisResult = JSON.parse(aiResponse.toolCalls[0].function.arguments || "{}");
+      } catch (e) {
+        console.error("Failed to parse tool call arguments as JSON:", e, "Raw:", aiResponse.toolCalls[0].function.arguments);
+        return NextResponse.json({ error: 'AI returned malformed analysis data via tool.' }, { status: 500 });
       }
+    } else if (aiResponse.content) {
+      // Fallback: Model didn't use the tool, try to parse content if it's JSON, or use as text
+      try {
+        analysisResult = JSON.parse(aiResponse.content);
+         console.warn("AI did not use the requested tool, but returned parsable JSON content.");
+      } catch (e) {
+        console.warn("AI did not use tool and content was not JSON. Storing raw content fragment.");
+        analysisResult = { executive_summary: aiResponse.content.substring(0, 5000), raw_content_fallback: true, full_content_truncated: aiResponse.content.length > 5000 };
+      }
+    } else {
+      console.error("AI Error from service:", aiResponse.error)
+      return NextResponse.json({ error: aiResponse.error || 'AI returned no usable content or tool calls.' }, { status: 500 });
     }
-    
-    const analysis = {
+
+    const finalAnalysis = {
       id: crypto.randomUUID(),
       snapshotId: snapshot.id,
       generatedAt: new Date().toISOString(),
-      model: modelToUse,
-      structured_content: parsedAnalysis,
-      raw_content: response.content,
-      tokensUsed: response.tokensUsed || 0,
+      model: aiResponse.modelUsed,
+      structured_content: analysisResult,
+      // raw_content might be redundant if structured_content is from tool.
+      // Consider storing tool_calls[0].function.arguments directly if debugging is needed.
+      tokensUsed: aiResponse.tokensUsed,
       metadata: {
         wordCount: extractedContent.metadata.wordCount,
         sections: extractedContent.sections.length,
