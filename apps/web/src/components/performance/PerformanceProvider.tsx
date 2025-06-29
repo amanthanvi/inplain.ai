@@ -57,10 +57,8 @@ export function PerformanceProvider({
     // Lazy load images
     PerformanceOptimizer.lazyLoadImages()
 
-    // Preload critical fonts
-    PerformanceOptimizer.preloadResources([
-      { href: '/fonts/inter-var.woff2', as: 'font', type: 'font/woff2' }
-    ])
+    // Skip font preloading as we're using Google Fonts
+    // which handles its own optimization
 
     // Monitor Core Web Vitals
     if ('web-vital' in window) {

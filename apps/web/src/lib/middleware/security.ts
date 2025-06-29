@@ -52,12 +52,12 @@ export class SecurityMiddleware {
     if (this.config.enableCSP) {
       const csp = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev https://clerk.inplain.ai https://challenges.cloudflare.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "font-src 'self' https://fonts.gstatic.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
         "img-src 'self' data: blob: https: http:",
-        "connect-src 'self' https://clerk.com https://*.clerk.accounts.dev https://api.openrouter.ai wss://*.clerk.accounts.dev",
-        "frame-src 'self' https://clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+        "connect-src 'self' https://clerk.com https://*.clerk.accounts.dev https://clerk.inplain.ai https://api.clerk.com https://api.openrouter.ai wss://*.clerk.accounts.dev",
+        "frame-src 'self' https://clerk.com https://*.clerk.accounts.dev https://clerk.inplain.ai https://challenges.cloudflare.com",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

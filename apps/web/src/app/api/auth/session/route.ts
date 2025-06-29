@@ -5,6 +5,15 @@ export const runtime = 'edge'
 
 export async function GET() {
 	try {
+		// Check if Clerk is properly configured
+		if (!process.env.CLERK_SECRET_KEY || !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+			console.error('Clerk environment variables not configured')
+			return NextResponse.json({ 
+				user: null, 
+				error: 'Authentication service not configured' 
+			}, { status: 503 })
+		}
+
 		const { userId } = await auth()
 		
 		if (!userId) {
