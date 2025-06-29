@@ -7,23 +7,24 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 interface ComparePageProps {
-  params: {
+  params: Promise<{
     slug: string
     policySlug: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     left?: string
     right?: string
-  }
+  }>
 }
 
 export async function generateMetadata({ params }: ComparePageProps): Promise<Metadata> {
-  const company = WATCHED_COMPANIES.find(c => c.slug === params.slug)
+  const { slug, policySlug } = await params
+  const company = WATCHED_COMPANIES.find(c => c.slug === slug)
   if (!company) return { title: 'Not Found' }
   
   return {
-    title: `Compare ${params.policySlug.replace('-', ' ')} Policy - ${company.name}`,
-    description: `Compare different versions of ${company.name}'s ${params.policySlug.replace('-', ' ')} policy over time`
+    title: `Compare ${policySlug.replace('-', ' ')} Policy - ${company.name}`,
+    description: `Compare different versions of ${company.name}'s ${policySlug.replace('-', ' ')} policy over time`
   }
 }
 
@@ -86,19 +87,22 @@ async function getSnapshots(companySlug: string, policySlug: string) {
 }
 
 export default async function ComparePage({ params, searchParams }: ComparePageProps) {
-  const company = WATCHED_COMPANIES.find(c => c.slug === params.slug)
+  const { slug, policySlug } = await params
+  const search = await searchParams
+  
+  const company = WATCHED_COMPANIES.find(c => c.slug === slug)
   if (!company) notFound()
 
-  const snapshots = await getSnapshots(params.slug, params.policySlug)
+  const snapshots = await getSnapshots(slug, policySlug)
   
   // Get initial snapshots based on query params
-  const leftSnapshot = searchParams.left ? snapshots.find(s => s.id === searchParams.left) : snapshots[0]
-  const rightSnapshot = searchParams.right ? snapshots.find(s => s.id === searchParams.right) : snapshots[snapshots.length - 1]
+  const leftSnapshot = search.left ? snapshots.find(s => s.id === search.left) : snapshots[0]
+  const rightSnapshot = search.right ? snapshots.find(s => s.id === search.right) : snapshots[snapshots.length - 1]
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-6">
-        <Link href={`/companies/${params.slug}/policies/${params.policySlug}`}>
+        <Link href={`/companies/${slug}/policies/${policySlug}`}>
           <Button variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Policy
@@ -106,7 +110,7 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
         </Link>
         
         <h1 className="text-3xl font-bold mb-2">
-          Compare {params.policySlug.charAt(0).toUpperCase() + params.policySlug.slice(1).replace('-', ' ')} Policy Versions
+          Compare {policySlug.charAt(0).toUpperCase() + policySlug.slice(1).replace('-', ' ')} Policy Versions
         </h1>
         <p className="text-muted-foreground">
           {company.name} • Track changes and understand how the policy has evolved over time
@@ -114,8 +118,8 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
       </div>
 
       <PolicyVersionComparison
-        companySlug={params.slug}
-        policySlug={params.policySlug}
+        companySlug={slug}
+        policySlug={policySlug}
         leftSnapshot={leftSnapshot}
         rightSnapshot={rightSnapshot}
         snapshots={snapshots}
