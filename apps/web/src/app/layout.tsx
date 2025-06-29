@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
@@ -44,7 +44,6 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/manifest.json',
-  themeColor: '#6366f1',
   openGraph: {
     title: 'InPlain.AI - Privacy Policies Made Simple | AI-Powered Monitoring',
     description: 'Stop missing critical privacy policy updates. Monitor 500+ companies with AI-powered analysis and instant alerts.',
@@ -70,6 +69,12 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#6366f1',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
