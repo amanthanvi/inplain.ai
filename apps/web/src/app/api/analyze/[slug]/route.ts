@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { StorageClient } from '../../lib/storage'
-import { PolicyAnalysisService } from '../../lib/ai-service'
+import { getUnifiedAIService, AnalysisTask } from '../../../../lib/ai/unified-ai-service'
+import { ModelSelector, UserTier } from '../../../../lib/ai/model-selector'
+import { getErrorRecovery } from '../../../../lib/ai/error-recovery'
 import { ContentExtractor } from '../../../../lib/content-extractor'
-import { ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, selectBestModel } from '../../../../lib/prompts'
-import { enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
 import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 const storage = new StorageClient()
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
-const DEFAULT_MODEL = process.env.DEFAULT_AI_MODEL || 'google/gemini-2.0-flash-exp:free'
 
 export async function POST(
   request: NextRequest,
@@ -138,91 +137,84 @@ export async function POST(
       })
     }
     
-    // Generate new analysis with enhanced prompt
-    const modelToUse = requestBody.model || DEFAULT_MODEL
-    const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, modelToUse)
+    // Get unified AI service and error recovery
+    const aiService = getUnifiedAIService()
+    const errorRecovery = getErrorRecovery()
     
-    // Create a structured prompt with metadata
-    const policyMetadata = [
-      `Company: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`,
-      extractedContent.title ? `Title: ${extractedContent.title}` : '',
-      extractedContent.metadata.lastUpdated ? `Last Updated: ${extractedContent.metadata.lastUpdated}` : '',
-      extractedContent.metadata.effectiveDate ? `Effective Date: ${extractedContent.metadata.effectiveDate}` : '',
-      `Word Count: ${extractedContent.metadata.wordCount}`,
-      `Sections: ${extractedContent.sections.length}`
-    ].filter(Boolean).join('\n')
+    // Determine user tier (TODO: Get from actual subscription)
+    const userTier: UserTier = 'free' // For now, default to free tier
     
-    const sectionSummary = extractedContent.sections.slice(0, 10)
-      .map(s => `- ${s.title}`)
-      .join('\n')
+    // Determine analysis task type
+    const analysisType = requestBody.analysisType as AnalysisTask || 'comprehensive'
     
-    // Use optimized prompt from prompts library
-    const basePrompt = ANALYSIS_PROMPTS.comprehensive(
-      policyMetadata,
-      sectionSummary,
-      extractedContent.text.substring(0, 30000)
-    )
-    
-    // Enhance with world-class prompts based on user tier
-    // For now, default to premium tier for all users to showcase capabilities
-    const userTier = 'premium' // TODO: Get from user subscription
-    const enhanced = enhanceAnalysisWithWorldClassPrompts(
-      'comprehensive',
-      basePrompt,
-      userTier
-    )
-    
-    // Get available models and select the best one
-    const availableModels = aiService.getAvailableModels().map(m => m.id)
-    const selectedModel = selectBestModel('comprehensive', availableModels)
-    
-    // Define fallback models for reliability
-    const fallbackModels = PROMPT_OPTIMIZATION.modelRecommendations.comprehensive
-      .filter(m => m !== selectedModel && availableModels.includes(m))
-    
-    const response = await aiService.generateResponse(enhanced.prompt, {
-      model: selectedModel,
-      temperature: enhanced.temperature,
-      maxTokens: PROMPT_OPTIMIZATION.maxTokens.comprehensive,
-      systemPrompt: enhanced.systemPrompt || 'You are a privacy policy expert. Always respond with valid JSON only, no markdown or additional text.',
-      fallbackModels
+    // Select optimal model based on task and user tier
+    const { primary: selectedModel, fallbacks, reasoning } = ModelSelector.selectModel({
+      task: analysisType,
+      contentLength: extractedContent.text.length,
+      userTier,
+      responseTime: 'balanced',
+      requiredFeatures: {
+        tools: true, // Enable structured data extraction
+        webSearch: false, // Can be enabled for premium users
+        streaming: false, // This endpoint doesn't stream
+        thinking: false,
+        vision: false
+      }
     })
     
-    // Parse the JSON response
-    let parsedAnalysis
-    try {
-      // Clean the response in case it has markdown formatting
-      const cleanedContent = response.content
-        .replace(/^```json\n?/i, '')
-        .replace(/\n?```$/i, '')
-        .trim()
-      
-      parsedAnalysis = JSON.parse(cleanedContent)
-    } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError)
-      console.error('Raw response:', response.content)
-      
-      // Fallback to text analysis if JSON parsing fails
-      parsedAnalysis = {
-        executive_summary: response.content,
-        parse_error: true
+    console.log('Model selection reasoning:', reasoning)
+    
+    // Execute analysis with full error recovery
+    const result = await errorRecovery.executeWithRecovery(
+      selectedModel.id,
+      async () => {
+        return await aiService.analyze(extractedContent.text, {
+          task: analysisType,
+          model: selectedModel.id,
+          temperature: 0.3,
+          maxTokens: 3000,
+          useTools: true,
+          useWebSearch: userTier !== 'free',
+          includeConfidence: true,
+          includeEvidence: true
+        })
+      },
+      {
+        fallbackModels: fallbacks.map(m => m.id),
+        priority: 1, // Higher priority for user-initiated requests
+        maxRetries: 3
       }
+    )
+    
+    // Extract structured content from result
+    const structuredContent = result.content
+    
+    // Add privacy-specific enhancements
+    if (typeof structuredContent === 'object' && !structuredContent.privacy_score) {
+      // Calculate privacy score based on analysis
+      const privacyScore = calculatePrivacyScore(structuredContent)
+      structuredContent.privacy_score = privacyScore
+      structuredContent.privacy_grade = getPrivacyGrade(privacyScore)
     }
     
     const analysis = {
       id: crypto.randomUUID(),
       snapshotId: snapshot.id,
       generatedAt: new Date().toISOString(),
-      model: modelToUse,
-      structured_content: parsedAnalysis,
-      raw_content: response.content,
-      tokensUsed: response.tokensUsed || 0,
+      model: result.model,
+      structured_content: structuredContent,
+      raw_content: JSON.stringify(result.content),
+      tokensUsed: result.tokensUsed.total,
+      confidence: result.confidence,
+      evidence: result.evidence,
       metadata: {
         wordCount: extractedContent.metadata.wordCount,
         sections: extractedContent.sections.length,
         title: extractedContent.title,
         lastUpdated: extractedContent.metadata.lastUpdated,
-        effectiveDate: extractedContent.metadata.effectiveDate
+        effectiveDate: extractedContent.metadata.effectiveDate,
+        analysisTask: analysisType,
+        processingTime: result.processingTime
       }
     }
     
@@ -241,4 +233,32 @@ export async function POST(
       { status: 500 }
     )
   }
+}
+
+// Helper function to calculate privacy score
+function calculatePrivacyScore(analysis: any): number {
+  let score = 100
+  
+  // Deduct points for concerning practices
+  if (analysis.data_sharing?.includes('third parties')) score -= 15
+  if (analysis.data_retention === 'indefinite') score -= 20
+  if (!analysis.gdpr_compliant) score -= 25
+  if (!analysis.user_rights?.includes('deletion')) score -= 15
+  if (analysis.cookies_tracking?.third_party_analytics) score -= 10
+  
+  // Add points for good practices
+  if (analysis.security_measures?.includes('encryption')) score += 5
+  if (analysis.user_rights?.includes('portability')) score += 5
+  if (analysis.transparency_score > 0.8) score += 10
+  
+  return Math.max(0, Math.min(100, score))
+}
+
+// Helper function to get privacy grade
+function getPrivacyGrade(score: number): string {
+  if (score >= 90) return 'A'
+  if (score >= 80) return 'B'
+  if (score >= 70) return 'C'
+  if (score >= 60) return 'D'
+  return 'F'
 }

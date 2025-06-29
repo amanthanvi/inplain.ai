@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StorageClient } from '../../lib/storage'
 import { ContentExtractor } from '../../../../lib/content-extractor'
-import { ANALYSIS_PROMPTS, PROMPT_OPTIMIZATION, SYSTEM_PROMPTS, selectBestModel } from '../../../../lib/prompts'
-import { enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
+import { getUnifiedAIService, AnalysisTask } from '../../../../lib/ai/unified-ai-service'
+import { ModelSelector, UserTier } from '../../../../lib/ai/model-selector'
 import { MockAIService } from '../../../../lib/mock-ai-service'
 import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDevAuthEnabled } from '@/lib/dev-auth'
@@ -10,7 +10,6 @@ import { isDevAuthEnabled } from '@/lib/dev-auth'
 const storage = new StorageClient()
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
-const DEFAULT_MODEL = process.env.DEFAULT_AI_MODEL || 'google/gemini-2.0-flash-exp:free'
 
 export async function POST(
   request: NextRequest,
@@ -18,6 +17,14 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
+    
+    // Parse request body
+    let requestBody: { analysisType?: string; model?: string; userTier?: string } = {}
+    try {
+      requestBody = await request.json()
+    } catch {
+      // Body might be empty
+    }
     
     // Check authentication in production (skip in dev with auth bypass)
     if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
@@ -67,7 +74,7 @@ export async function POST(
     }
     
     // Check if we already have a cached analysis
-    const cacheKey = `analysis:${snapshot.id}`
+    const cacheKey = `analysis:${snapshot.id}:${requestBody.analysisType || 'comprehensive'}`
     const cachedAnalysis = await storage.getCachedAnalysis(cacheKey)
     
     if (cachedAnalysis) {
@@ -107,34 +114,30 @@ export async function POST(
       )
     }
     
-    // Create structured prompt
-    const policyMetadata = [
-      `Company: ${slug.charAt(0).toUpperCase() + slug.slice(1)}`,
-      extractedContent.title ? `Title: ${extractedContent.title}` : '',
-      extractedContent.metadata.lastUpdated ? `Last Updated: ${extractedContent.metadata.lastUpdated}` : '',
-      extractedContent.metadata.effectiveDate ? `Effective Date: ${extractedContent.metadata.effectiveDate}` : '',
-      `Word Count: ${extractedContent.metadata.wordCount}`,
-      `Sections: ${extractedContent.sections.length}`
-    ].filter(Boolean).join('\n')
+    // Get unified AI service
+    const aiService = getUnifiedAIService()
     
-    const sectionSummary = extractedContent.sections.slice(0, 10)
-      .map(s => `- ${s.title}`)
-      .join('\n')
+    // Determine user tier and analysis type
+    const userTier = (requestBody.userTier as UserTier) || 'free'
+    const analysisType = (requestBody.analysisType as AnalysisTask) || 'comprehensive'
     
-    // Use optimized prompt from prompts library
-    const prompt = ANALYSIS_PROMPTS.comprehensive(
-      policyMetadata,
-      sectionSummary,
-      extractedContent.text.substring(0, 30000)
-    )
+    // Select optimal streaming model
+    const { primary: selectedModel, fallbacks } = ModelSelector.selectModel({
+      task: analysisType,
+      contentLength: extractedContent.text.length,
+      userTier,
+      responseTime: 'balanced',
+      requiredFeatures: {
+        streaming: true, // Must support streaming
+        tools: true,
+        webSearch: userTier !== 'free',
+        thinking: false,
+        vision: false
+      }
+    })
     
-    // Select best streaming model
-    const streamingModels = PROMPT_OPTIMIZATION.modelRecommendations.streaming
-    const selectedModel = streamingModels.includes(DEFAULT_MODEL) ? DEFAULT_MODEL : streamingModels[0]
-
     // Set up streaming response
     const encoder = new TextEncoder()
-    const decoder = new TextDecoder()
     
     const stream = new ReadableStream({
       async start(controller) {
@@ -142,153 +145,148 @@ export async function POST(
           // Send initial metadata
           controller.enqueue(encoder.encode('data: ' + JSON.stringify({
             type: 'metadata',
-            model: DEFAULT_MODEL,
+            model: selectedModel.id,
             snapshotId: snapshot.id,
-            wordCount: extractedContent.metadata.wordCount
+            wordCount: extractedContent.metadata.wordCount,
+            analysisType,
+            confidence: 'calculating...'
           }) + '\n\n'))
           
-          // Make streaming request to OpenRouter
-          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://inplain.ai',
-              'X-Title': 'Inplain.AI'
-            },
-            body: JSON.stringify({
-              model: selectedModel,
-              messages: [
-                { 
-                  role: 'system', 
-                  content: SYSTEM_PROMPTS.privacyAnalyst + '\n\nIMPORTANT: Always respond with valid JSON only, no markdown or additional text.' 
-                },
-                { role: 'user', content: prompt }
-              ],
-              max_tokens: PROMPT_OPTIMIZATION.maxTokens.streaming,
-              temperature: PROMPT_OPTIMIZATION.temperatures.structured,
-              stream: true
-            })
+          // Create async generator for streaming
+          const analysisStream = aiService.streamAnalysis(extractedContent.text, {
+            task: analysisType,
+            model: requestBody.model || selectedModel.id,
+            temperature: 0.3,
+            maxTokens: 3000,
+            useTools: true,
+            useWebSearch: userTier !== 'free',
+            includeConfidence: true,
+            includeEvidence: true
           })
           
-          if (!response.ok) {
-            let errorMessage = `AI API error (${response.status})`
-            try {
-              const errorText = await response.text()
-              const errorJson = JSON.parse(errorText)
-              errorMessage = errorJson.error?.message || errorJson.message || errorText
-            } catch {
-              errorMessage = `AI API error: ${response.status} ${response.statusText}`
-            }
-            
-            console.error('OpenRouter API error:', {
-              status: response.status,
-              message: errorMessage,
-              model: selectedModel
-            })
-            
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-              type: 'error',
-              error: errorMessage
-            })}\n\n`))
-            controller.close()
-            return
-          }
+          let fullAnalysis: any = null
           
-          if (!response.body) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-              type: 'error',
-              error: 'No response body from AI service'
-            })}\n\n`))
-            controller.close()
-            return
-          }
-          
-          const reader = response.body.getReader()
-          let fullContent = ''
-          
-          try {
-            while (true) {
-              const { done, value } = await reader.read()
-              
-              if (done) break
-              
-              const chunk = decoder.decode(value)
-              const lines = chunk.split('\n')
-              
-              for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  const data = line.slice(6)
-                  
-                  if (data === '[DONE]') {
-                    // Parse and validate the full response
-                    try {
-                      const cleanedContent = fullContent
-                        .replace(/^```json\n?/i, '')
-                        .replace(/\n?```$/i, '')
-                        .trim()
-                      
-                      const parsedAnalysis = JSON.parse(cleanedContent)
-                      
-                      // Save to cache
-                      const analysis = {
-                        id: crypto.randomUUID(),
-                        snapshotId: snapshot.id,
-                        generatedAt: new Date().toISOString(),
-                        model: selectedModel,
-                        structured_content: parsedAnalysis,
-                        raw_content: fullContent,
-                        metadata: {
-                          wordCount: extractedContent.metadata.wordCount,
-                          sections: extractedContent.sections.length,
-                          title: extractedContent.title,
-                          lastUpdated: extractedContent.metadata.lastUpdated,
-                          effectiveDate: extractedContent.metadata.effectiveDate
-                        }
-                      }
-                      
-                      await storage.setCachedAnalysis(cacheKey, analysis, 86400)
-                      
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                        type: 'complete',
-                        analysis
-                      })}\n\n`))
-                    } catch (parseError) {
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                        type: 'error',
-                        error: 'Failed to parse AI response as JSON'
-                      })}\n\n`))
-                    }
-                    
-                    controller.close()
-                    return
-                  }
-                  
-                  try {
-                    const parsed = JSON.parse(data)
-                    if (parsed.choices?.[0]?.delta?.content) {
-                      const content = parsed.choices[0].delta.content
-                      fullContent += content
-                      
-                      // Send progress update
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                        type: 'content',
-                        content: content
-                      })}\n\n`))
-                    }
-                  } catch (e) {
-                    // Ignore parse errors for individual chunks
+          // Process the stream
+          for await (const update of analysisStream) {
+            switch (update.type) {
+              case 'progress':
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                  type: 'progress',
+                  status: update.data.status,
+                  progress: update.data.progress
+                })}\n\n`))
+                break
+                
+              case 'content':
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                  type: 'content',
+                  content: update.data.partial || update.data,
+                  progress: update.data.progress
+                })}\n\n`))
+                break
+                
+              case 'complete':
+                fullAnalysis = update.data
+                
+                // Save to cache
+                const analysis = {
+                  id: crypto.randomUUID(),
+                  snapshotId: snapshot.id,
+                  generatedAt: new Date().toISOString(),
+                  model: fullAnalysis.model,
+                  structured_content: fullAnalysis.content,
+                  raw_content: JSON.stringify(fullAnalysis.content),
+                  confidence: fullAnalysis.confidence,
+                  evidence: fullAnalysis.evidence,
+                  metadata: {
+                    wordCount: extractedContent.metadata.wordCount,
+                    sections: extractedContent.sections.length,
+                    title: extractedContent.title,
+                    lastUpdated: extractedContent.metadata.lastUpdated,
+                    effectiveDate: extractedContent.metadata.effectiveDate,
+                    analysisTask: analysisType,
+                    processingTime: fullAnalysis.processingTime
                   }
                 }
-              }
+                
+                await storage.setCachedAnalysis(cacheKey, analysis, 86400)
+                
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                  type: 'complete',
+                  analysis
+                })}\n\n`))
+                break
             }
-          } finally {
-            reader.releaseLock()
           }
+          
+          // Close the stream
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+          
         } catch (error) {
+          console.error('Streaming error:', error)
+          
+          // Try fallback models if available
+          let fallbackError = error
+          for (const fallbackModel of fallbacks) {
+            try {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                type: 'fallback',
+                message: `Trying fallback model: ${fallbackModel.name}`,
+                model: fallbackModel.id
+              })}\n\n`))
+              
+              // Attempt with fallback (simplified for now)
+              const result = await aiService.analyze(extractedContent.text, {
+                task: analysisType,
+                model: fallbackModel.id,
+                temperature: 0.3,
+                maxTokens: 3000,
+                useTools: true,
+                stream: false // Fallback to non-streaming
+              })
+              
+              const analysis = {
+                id: crypto.randomUUID(),
+                snapshotId: snapshot.id,
+                generatedAt: new Date().toISOString(),
+                model: result.model,
+                structured_content: result.content,
+                raw_content: JSON.stringify(result.content),
+                confidence: result.confidence,
+                evidence: result.evidence,
+                metadata: {
+                  wordCount: extractedContent.metadata.wordCount,
+                  sections: extractedContent.sections.length,
+                  title: extractedContent.title,
+                  analysisTask: analysisType,
+                  processingTime: result.processingTime,
+                  fallback: true
+                }
+              }
+              
+              await storage.setCachedAnalysis(cacheKey, analysis, 86400)
+              
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+                type: 'complete',
+                analysis,
+                fallback: true
+              })}\n\n`))
+              
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+              controller.close()
+              return
+              
+            } catch (fbError) {
+              fallbackError = fbError
+              console.error(`Fallback model ${fallbackModel.id} failed:`, fbError)
+            }
+          }
+          
+          // All models failed
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({
             type: 'error',
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: fallbackError instanceof Error ? fallbackError.message : 'Analysis failed'
           })}\n\n`))
           controller.close()
         }
@@ -299,7 +297,8 @@ export async function POST(
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no' // Disable nginx buffering
       }
     })
   } catch (error) {
