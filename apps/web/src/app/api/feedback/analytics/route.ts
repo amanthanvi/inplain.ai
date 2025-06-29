@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FeedbackService } from '@/lib/feedback';
-import { currentUser } from '@clerk/nextjs';
+import { currentUser } from '@clerk/nextjs/server';
 
 // GET /api/feedback/analytics - Get feedback analytics (admin only)
 export async function GET(req: NextRequest) {

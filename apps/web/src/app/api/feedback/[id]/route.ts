@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FeedbackService, FeedbackStatusSchema } from '@/lib/feedback';
-import { currentUser } from '@clerk/nextjs';
+import { currentUser } from '@clerk/nextjs/server';
 import { z } from 'zod';
 
 // GET /api/feedback/[id] - Get specific feedback
