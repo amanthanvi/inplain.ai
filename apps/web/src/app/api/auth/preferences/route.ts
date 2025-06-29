@@ -12,7 +12,7 @@ export async function PATCH(request: NextRequest) {
 		}
 
 		const body = await request.json()
-		const { watchlist, notifications, theme } = body
+		const { watchlist, notifications, theme, onboarding } = body
 
 		// Update user metadata in Clerk
 		const updateData: Record<string, any> = {}
@@ -31,10 +31,20 @@ export async function PATCH(request: NextRequest) {
 			if (notifications.weeklyDigest !== undefined) {
 				updateData.weeklyDigest = notifications.weeklyDigest
 			}
+			if (notifications.riskAlerts !== undefined) {
+				updateData.riskAlerts = notifications.riskAlerts
+			}
+			if (notifications.competitorUpdates !== undefined) {
+				updateData.competitorUpdates = notifications.competitorUpdates
+			}
 		}
 
 		if (theme !== undefined) {
 			updateData.theme = theme
+		}
+
+		if (onboarding !== undefined) {
+			updateData.onboarding = onboarding
 		}
 
 		// Update the user's public metadata
@@ -61,9 +71,12 @@ export async function PATCH(request: NextRequest) {
 					email: (updatedUser.publicMetadata?.emailNotifications as boolean) ?? true,
 					majorChanges: (updatedUser.publicMetadata?.majorChangesOnly as boolean) ?? true,
 					weeklyDigest: (updatedUser.publicMetadata?.weeklyDigest as boolean) ?? false,
+					riskAlerts: (updatedUser.publicMetadata?.riskAlerts as boolean) ?? true,
+					competitorUpdates: (updatedUser.publicMetadata?.competitorUpdates as boolean) ?? false,
 				},
 				theme: (updatedUser.publicMetadata?.theme as 'light' | 'dark' | 'system') || 'system'
 			},
+			onboarding: updatedUser.publicMetadata?.onboarding || null,
 			createdAt: new Date(updatedUser.createdAt)
 		}
 

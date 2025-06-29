@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { 
   User, LogOut, Settings, ChevronDown, 
   Home, Info, FileText, Bell, Loader2,
-  Building2, LayoutDashboard
+  Building2, LayoutDashboard, MessageSquare, Sparkles
 } from 'lucide-react'
 import { NotificationCenter } from '@/components/notifications/NotificationCenter'
 import {
@@ -54,16 +54,20 @@ export function Navigation() {
   })
 
   // Dynamic navigation items based on auth state
+  const isAdmin = user?.publicMetadata?.role === 'admin';
+  
   const navItems = user ? [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/companies', label: 'Companies', icon: Building2 },
     { href: '/watchlist', label: 'Watchlist', icon: Bell },
-    { href: '/notifications', label: 'Notifications', icon: Bell },
+    { href: '/roadmap', label: 'Roadmap', icon: Sparkles },
+    ...(isAdmin ? [{ href: '/feedback', label: 'Feedback', icon: MessageSquare }] : []),
     { href: '/settings', label: 'Settings', icon: Settings },
     { href: '/about', label: 'About', icon: Info },
   ] : [
     { href: '/', label: 'Home', icon: Home },
     { href: '/companies', label: 'Companies', icon: Building2 },
+    { href: '/roadmap', label: 'Roadmap', icon: Sparkles },
     { href: '/about', label: 'About', icon: Info },
   ]
 

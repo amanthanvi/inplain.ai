@@ -845,6 +845,27 @@ ${config.comparisons ? '- Compare against industry best practices' : ''}`
     yield { chunk: '', progress: 1 }
   }
 
+  // Simple completion method for compatibility
+  async complete(options: {
+    messages: Array<{ role: string; content: string }>
+    model?: string
+    temperature?: number
+    max_tokens?: number
+    response_format?: { type: string }
+  }): Promise<{ content: string }> {
+    const response = await this.openai.chat.completions.create({
+      model: options.model || AI_MODELS.balanced.primary,
+      messages: options.messages as any,
+      temperature: options.temperature || 0.5,
+      max_tokens: options.max_tokens || 2000,
+      ...(options.response_format && { response_format: options.response_format as any })
+    })
+
+    return {
+      content: response.choices[0]?.message?.content || ''
+    }
+  }
+
   // Get model recommendations based on usage patterns
   getModelRecommendations(): {
     costOptimization: Record<string, number>

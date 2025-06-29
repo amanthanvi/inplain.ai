@@ -1,7 +1,8 @@
 import { Resend } from 'resend';
 import { kv } from '@vercel/kv';
-import { AuthService, User } from './auth';
+import { User } from './types/auth';
 import { WatchlistService, WatchlistAlert } from './watchlist';
+import { Feedback } from './feedback';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -393,4 +394,196 @@ ${alerts.slice(0, 10).map(alert =>
 
 View all updates: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard`;
   }
+
+  static async sendFeedbackNotification(feedback: Feedback): Promise<boolean> {
+    if (!resend) {
+      console.warn('Resend not configured - skipping email');
+      return false;
+    }
+
+    const feedbackTypeLabels = {
+      bug: 'Bug Report',
+      feature: 'Feature Request',
+      general: 'General Feedback',
+      rating: 'Rating'
+    };
+
+    const priorityColors = {
+      low: '#6b7280',
+      medium: '#3b82f6',
+      high: '#f59e0b',
+      urgent: '#ef4444'
+    };
+
+    const { data, error } = await resend.emails.send({
+      from: 'Inplain.AI Feedback <feedback@inplain.ai>',
+      to: process.env.ADMIN_EMAIL || 'admin@inplain.ai',
+      subject: `[${feedback.priority?.toUpperCase() || 'NEW'}] ${feedbackTypeLabels[feedback.type]}: ${feedback.title}`,
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; background: white; }
+    .header { background: #1a1a1a; color: white; padding: 20px; }
+    .content { padding: 30px; }
+    .priority-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: white; background: ${priorityColors[feedback.priority || 'medium']}; }
+    .metadata { background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0; }
+    .metadata p { margin: 5px 0; font-size: 14px; }
+    .description { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>New Feedback Received</h2>
+    </div>
+    <div class="content">
+      <h3>${feedback.title}</h3>
+      <p>
+        <span class="priority-badge">${feedback.priority || 'medium'}</span>
+        <strong>Type:</strong> ${feedbackTypeLabels[feedback.type]}
+        ${feedback.sentiment ? `<strong>Sentiment:</strong> ${feedback.sentiment}` : ''}
+      </p>
+      
+      <div class="metadata">
+        <p><strong>From:</strong> ${feedback.context.email || 'Anonymous'}</p>
+        <p><strong>User ID:</strong> ${feedback.context.userId || 'Not logged in'}</p>
+        <p><strong>Page:</strong> ${feedback.context.url}</p>
+        <p><strong>Time:</strong> ${new Date(feedback.createdAt).toLocaleString()}</p>
+        ${feedback.rating ? `<p><strong>Rating:</strong> ${feedback.rating}/5</p>` : ''}
+      </div>
+      
+      <div class="description">
+        <h4>Description</h4>
+        <p>${feedback.description}</p>
+      </div>
+      
+      ${feedback.tags && feedback.tags.length > 0 ? `
+      <p><strong>Tags:</strong> ${feedback.tags.join(', ')}</p>
+      ` : ''}
+      
+      <p style="margin-top: 30px;">
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/feedback" style="display: inline-block; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">View in Dashboard</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`,
+      text: `
+New Feedback Received
+
+Type: ${feedbackTypeLabels[feedback.type]}
+Priority: ${feedback.priority || 'medium'}
+Title: ${feedback.title}
+
+From: ${feedback.context.email || 'Anonymous'}
+User ID: ${feedback.context.userId || 'Not logged in'}
+Page: ${feedback.context.url}
+Time: ${new Date(feedback.createdAt).toLocaleString()}
+${feedback.rating ? `Rating: ${feedback.rating}/5` : ''}
+
+Description:
+${feedback.description}
+
+${feedback.tags && feedback.tags.length > 0 ? `Tags: ${feedback.tags.join(', ')}` : ''}
+
+View in Dashboard: ${process.env.NEXT_PUBLIC_APP_URL}/feedback
+      `,
+      tags: [
+        { name: 'feedback_type', value: feedback.type },
+        { name: 'priority', value: feedback.priority || 'medium' }
+      ]
+    });
+
+    return !error;
+  }
+
+  static async sendFeedbackFollowUp(feedback: Feedback): Promise<boolean> {
+    if (!resend || !feedback.followUpEmail) {
+      console.warn('Cannot send follow-up: no email configured');
+      return false;
+    }
+
+    const { data, error } = await resend.emails.send({
+      from: 'Inplain.AI <noreply@inplain.ai>',
+      to: feedback.followUpEmail,
+      subject: `Re: Your feedback - ${feedback.title}`,
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; background: white; }
+    .header { background: #1a1a1a; color: white; padding: 20px; text-align: center; }
+    .content { padding: 30px; }
+    .status-badge { display: inline-block; padding: 6px 16px; border-radius: 16px; font-size: 14px; font-weight: 600; background: #10b981; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Thank you for your feedback!</h2>
+    </div>
+    <div class="content">
+      <p>Hi there,</p>
+      <p>We wanted to let you know that we've reviewed your feedback and taken action.</p>
+      
+      <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="margin-top: 0;">${feedback.title}</h3>
+        <p><span class="status-badge">Resolved</span></p>
+        <p style="font-style: italic; color: #666;">"${feedback.description}"</p>
+      </div>
+      
+      <p>Your feedback helps us improve Inplain.AI for everyone. We truly appreciate you taking the time to share your thoughts with us.</p>
+      
+      <p>If you have any other suggestions or concerns, please don't hesitate to reach out again.</p>
+      
+      <p>Best regards,<br>The Inplain.AI Team</p>
+    </div>
+  </div>
+</body>
+</html>`,
+      text: `
+Thank you for your feedback!
+
+Hi there,
+
+We wanted to let you know that we've reviewed your feedback and taken action.
+
+Your feedback: "${feedback.title}"
+Status: Resolved
+
+"${feedback.description}"
+
+Your feedback helps us improve Inplain.AI for everyone. We truly appreciate you taking the time to share your thoughts with us.
+
+If you have any other suggestions or concerns, please don't hesitate to reach out again.
+
+Best regards,
+The Inplain.AI Team
+      `
+    });
+
+    return !error;
+  }
 }
+
+// AuthService interface to fix missing import
+interface AuthServiceInterface {
+  getUserById(userId: string): Promise<User | null>;
+}
+
+// Mock AuthService for now - should be replaced with actual implementation
+const AuthService: AuthServiceInterface = {
+  async getUserById(userId: string): Promise<User | null> {
+    // This should be replaced with actual user lookup logic
+    const user = await kv.get(`user:${userId}`) as User | null;
+    return user;
+  }
+};
+
+// Export the AuthService mock for other files to use
+export { AuthService };

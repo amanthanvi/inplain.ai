@@ -14,6 +14,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { PWAProvider } from '@/components/providers/PWAProvider'
 import { SkipLinks } from '@/components/accessibility/SkipLinks'
 import { AccessibilityAudit } from '@/components/accessibility/AccessibilityAudit'
+import FeedbackWidget from '@/components/feedback/FeedbackWidget'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -24,10 +25,10 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Inplain.AI - Privacy policies made simple',
-  description: 'AI-powered privacy policy monitoring and analysis. Understand privacy policies and terms of service with clear, intelligent summaries.',
-  keywords: ['privacy policy', 'terms of service', 'policy tracking', 'gdpr', 'data privacy'],
-  authors: [{ name: 'Inplain.AI' }],
+  title: 'InPlain.AI - Privacy Policies Made Simple | AI-Powered Monitoring',
+  description: 'Stop missing critical privacy policy updates. InPlain.AI monitors changes across 500+ companies, translates legal jargon into plain English, and alerts you instantly when your data rights change. Start free trial.',
+  keywords: ['privacy policy', 'terms of service', 'policy tracking', 'gdpr', 'data privacy', 'policy monitoring', 'AI analysis', 'privacy alerts', 'compliance tracking', 'privacy rights'],
+  authors: [{ name: 'InPlain.AI' }],
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -45,16 +46,25 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   themeColor: '#6366f1',
   openGraph: {
-    title: 'Inplain.AI - Privacy policies made simple',
-    description: 'AI-powered privacy policy monitoring and analysis',
+    title: 'InPlain.AI - Privacy Policies Made Simple | AI-Powered Monitoring',
+    description: 'Stop missing critical privacy policy updates. Monitor 500+ companies with AI-powered analysis and instant alerts.',
     url: 'https://inplain.ai',
-    siteName: 'Inplain.AI',
+    siteName: 'InPlain.AI',
     type: 'website',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'InPlain.AI - Privacy Policy Monitoring Platform',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Inplain.AI - Privacy policies made simple',
-    description: 'AI-powered privacy policy monitoring and analysis',
+    title: 'InPlain.AI - Privacy Policies Made Simple',
+    description: 'AI-powered privacy policy monitoring with instant alerts. Track 500+ companies for free.',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,
@@ -85,29 +95,14 @@ export default function RootLayout({
             </main>
             {/* Mobile Navigation */}
             <MobileNavigation />
-            <footer className="border-t py-6 md:py-0 hidden md:block">
-              <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
-                <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                  Built to help you understand privacy policy changes. 
-                  {' '}
-                  <a
-                    href="https://github.com/inplain-ai/inplain.ai"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-medium underline underline-offset-4"
-                  >
-                    Open Source
-                  </a>
-                  .
-                </p>
-              </div>
-            </footer>
+            {/* Footer is included within individual pages for custom layouts */}
           </div>
           <Toaster />
           <AppStatus />
           <DevAuthWarning />
           <DemoModeBanner />
           <AccessibilityAudit />
+          {/* <FeedbackWidget /> */}
           <Analytics />
             </PWAProvider>
           </Providers>

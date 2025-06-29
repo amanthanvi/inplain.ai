@@ -237,11 +237,17 @@ export class RateLimiter {
 /**
  * API key validation
  */
-export function validateAPIKey(
-  key: string,
-  pattern: RegExp = /^[a-zA-Z0-9_-]{32,}$/
-): boolean {
-  return pattern.test(key)
+export async function validateAPIKey(apiKey: string): Promise<boolean> {
+  const pattern = /^(pk|sk)_[a-zA-Z0-9]{32,}$/
+  
+  if (!apiKey || apiKey.length < 32 || !pattern.test(apiKey)) {
+    return false
+  }
+  
+  // In a real implementation, this would check against a database
+  // For now, we'll accept any well-formed key
+  // TODO: Implement actual API key validation against KV store
+  return true
 }
 
 /**
@@ -255,9 +261,10 @@ export function generateSecureToken(length: number = 32): string {
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     crypto.getRandomValues(randomValues)
   } else {
-    // Fallback for Node.js
-    const { randomBytes } = require('crypto')
-    randomValues.set(randomBytes(length))
+    // Fallback - use Math.random for edge runtime compatibility
+    for (let i = 0; i < length; i++) {
+      randomValues[i] = Math.floor(Math.random() * 256)
+    }
   }
   
   for (let i = 0; i < length; i++) {

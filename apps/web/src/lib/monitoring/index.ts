@@ -2,7 +2,8 @@
  * Monitoring and observability utilities
  */
 
-import { headers } from 'next/headers'
+// Remove server-only import for client compatibility
+// import { headers } from 'next/headers'
 
 // Types
 export interface MetricData {
