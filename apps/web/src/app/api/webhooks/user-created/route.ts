@@ -258,7 +258,7 @@ async function cleanupUserData(userId: string): Promise<void> {
 }
 
 // Helper function to manually trigger welcome email (for testing)
-export async function triggerWelcomeEmail(userId: string): Promise<boolean> {
+async function triggerWelcomeEmail(userId: string): Promise<boolean> {
   try {
     const user = await kv.get(`user:${userId}`) as any
     if (!user) {
