@@ -248,11 +248,13 @@ export function trackWebVitals() {
     const entries = list.getEntries()
     const lastEntry = entries[entries.length - 1]
     
-    performanceMonitor.recordMetric({
-      name: 'web_vitals.lcp',
-      value: lastEntry.startTime,
-      unit: 'ms',
-    })
+    if (lastEntry) {
+      performanceMonitor.recordMetric({
+        name: 'web_vitals.lcp',
+        value: lastEntry.startTime,
+        unit: 'ms',
+      })
+    }
   })
 
   lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
