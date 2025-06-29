@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const user = await currentUser();
     
     // Get context information
-    const headersList = headers();
+    const headersList = await headers();
     const userAgent = headersList.get('user-agent') || 'Unknown';
     const referer = headersList.get('referer') || req.nextUrl.origin;
     

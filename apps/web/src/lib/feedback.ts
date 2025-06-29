@@ -135,7 +135,9 @@ export class FeedbackService {
   static async submitFeedback(submission: FeedbackSubmission, userId?: string): Promise<Feedback> {
     // Rate limiting check
     const rateLimitKey = `${this.RATE_LIMIT_KEY_PREFIX}${submission.context.url}:${userId || 'anonymous'}`;
-    const submissions = await kv.incr(rateLimitKey);
+    const currentCount = await kv.get(rateLimitKey) as number || 0;
+    const submissions = currentCount + 1;
+    await kv.set(rateLimitKey, submissions);
     
     if (submissions === 1) {
       await kv.expire(rateLimitKey, 3600); // 1 hour

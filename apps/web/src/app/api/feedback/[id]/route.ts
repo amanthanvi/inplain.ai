@@ -6,13 +6,14 @@ import { z } from 'zod';
 // GET /api/feedback/[id] - Get specific feedback
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
     const isAdmin = user?.publicMetadata?.role === 'admin';
+    const { id } = await params;
     
-    const feedback = await FeedbackService.getFeedback(params.id);
+    const feedback = await FeedbackService.getFeedback(id);
     
     if (!feedback) {
       return NextResponse.json({ error: 'Feedback not found' }, { status: 404 });
@@ -36,7 +37,7 @@ export async function GET(
 // PATCH /api/feedback/[id] - Update feedback (admin only)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await currentUser();
@@ -47,6 +48,7 @@ export async function PATCH(
     }
     
     const body = await req.json();
+    const { id } = await params;
     
     // Validate status if provided
     if (body.status) {
@@ -54,7 +56,7 @@ export async function PATCH(
     }
     
     const feedback = await FeedbackService.updateFeedbackStatus(
-      params.id,
+      id,
       body.status,
       body.notes,
       body.assignedTo || user.id
