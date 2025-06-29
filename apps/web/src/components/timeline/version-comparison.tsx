@@ -79,8 +79,8 @@ export function VersionComparison({
       
       // Select latest two versions by default
       if (data.length >= 2 && !fromVersion && !toVersion) {
-        setSelectedFrom(data[1])
-        setSelectedTo(data[0])
+        setSelectedFrom(data[1] || null)
+        setSelectedTo(data[0] || null)
       }
     } catch (err) {
       console.error('Error loading snapshots:', err)
@@ -151,7 +151,7 @@ export function VersionComparison({
       if (selectedTo && selectedTo.version <= snapshot.version) {
         const newerVersions = snapshots.filter(s => s.version > snapshot.version)
         if (newerVersions.length > 0) {
-          setSelectedTo(newerVersions[newerVersions.length - 1])
+          setSelectedTo(newerVersions[newerVersions.length - 1] || null)
         } else {
           setSelectedTo(null)
         }
@@ -162,7 +162,7 @@ export function VersionComparison({
       if (selectedFrom && selectedFrom.version >= snapshot.version) {
         const olderVersions = snapshots.filter(s => s.version < snapshot.version)
         if (olderVersions.length > 0) {
-          setSelectedFrom(olderVersions[0])
+          setSelectedFrom(olderVersions[0] || null)
         } else {
           setSelectedFrom(null)
         }

@@ -3,7 +3,7 @@
  */
 
 import { promisify } from 'util'
-import { gzip, gunzip } from 'zlib'
+import { gzip, gunzip, gzipSync } from 'zlib'
 
 const gzipAsync = promisify(gzip)
 const gunzipAsync = promisify(gunzip)
@@ -18,7 +18,7 @@ export async function compress(data: string): Promise<string> {
     return compressed.toString('base64')
   } catch (error) {
     console.error('Compression error:', error)
-    throw new Error(`Failed to compress data: ${error.message}`)
+    throw new Error(`Failed to compress data: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -32,7 +32,7 @@ export async function decompress(data: string): Promise<string> {
     return decompressed.toString('utf-8')
   } catch (error) {
     console.error('Decompression error:', error)
-    throw new Error(`Failed to decompress data: ${error.message}`)
+    throw new Error(`Failed to decompress data: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
@@ -49,10 +49,15 @@ export function getCompressionRatio(original: string, compressed: string): numbe
  * Check if compression is worthwhile
  */
 export function shouldCompress(data: string, threshold: number = 0.1): boolean {
-  // Quick test with small sample
-  const sample = data.slice(0, 1024)
-  const testCompressed = gzip(Buffer.from(sample, 'utf-8')).toString('base64')
-  const ratio = getCompressionRatio(sample, testCompressed)
-  
-  return ratio > threshold
+  try {
+    // Quick test with small sample
+    const sample = data.slice(0, 1024)
+    const testCompressed = gzipSync(Buffer.from(sample, 'utf-8')).toString('base64')
+    const ratio = getCompressionRatio(sample, testCompressed)
+    
+    return ratio > threshold
+  } catch {
+    // If compression test fails, don't compress
+    return false
+  }
 }
