@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
 import type { Notification } from '@/components/notifications/NotificationCenter'
+import { logger } from '@/lib/monitoring'
 
 export interface NotificationServiceConfig {
   userId: string
@@ -497,6 +498,23 @@ class NotificationService extends EventEmitter {
     this.removeAllListeners()
     this.subscriptions.clear()
     this.notificationQueue = []
+  }
+
+  // Add method for policy change notifications (used by policy monitor)
+  async notifyPolicyChange(change: {
+    companySlug: string
+    changeType: string
+    timestamp: string
+    severity: string
+  }): Promise<void> {
+    // This would be implemented to send notifications through appropriate channels
+    // For now, just log the change
+    logger.info('Policy change notification', change)
+    
+    // TODO: Implement actual notification logic
+    // - Check user subscriptions
+    // - Send notifications through enabled channels
+    // - Update notification history
   }
 }
 

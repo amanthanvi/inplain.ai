@@ -3,7 +3,16 @@ import { logger } from '@/lib/monitoring'
 import { notificationService } from '@/lib/notifications/notification-service'
 import { policyScraper } from '@/lib/scraper/policy-scraper'
 import { circuitBreakers } from '@/lib/resilience/circuit-breaker'
-import crypto from 'crypto'
+// Use simple hash function for edge runtime compatibility
+function createSimpleHash(data: string): string {
+  let hash = 0
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(16)
+}
 
 export interface PolicySnapshot {
   url: string
@@ -234,10 +243,7 @@ export class PolicyMonitor {
       .trim()
       .toLowerCase()
     
-    return crypto
-      .createHash(this.checksumAlgorithm)
-      .update(normalized)
-      .digest('hex')
+    return createSimpleHash(normalized)
   }
 
   /**

@@ -1,23 +1,36 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@clerk/nextjs'
+import { useAuth, useUser } from '@clerk/nextjs'
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { userId, isLoaded } = useAuth()
+  const { userId, isLoaded: authLoaded } = useAuth()
+  const { user, isLoaded: userLoaded } = useUser()
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true)
 
   useEffect(() => {
     // Redirect if user is not authenticated
-    if (isLoaded && !userId) {
+    if (authLoaded && !userId) {
       router.push('/login?redirect=/onboarding')
+      return
     }
-  }, [userId, isLoaded, router])
 
-  if (!isLoaded) {
+    // Check if user has already completed onboarding
+    if (userLoaded && user) {
+      const onboardingCompleted = user.publicMetadata?.onboarding?.completed
+      if (onboardingCompleted) {
+        router.push('/dashboard')
+      } else {
+        setCheckingOnboarding(false)
+      }
+    }
+  }, [userId, authLoaded, user, userLoaded, router])
+
+  if (!authLoaded || !userLoaded || checkingOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />

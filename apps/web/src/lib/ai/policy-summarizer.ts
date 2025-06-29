@@ -100,7 +100,7 @@ export class PolicySummarizer {
 
   private buildSummaryPrompt(policyText: string, options: any): string {
     const audience = options.targetAudience || 'general'
-    const audienceInstructions = {
+    const audienceInstructions: Record<string, string> = {
       general: 'Use simple, everyday language that anyone can understand.',
       technical: 'Include technical details about data handling and security measures.',
       legal: 'Maintain legal precision while highlighting compliance aspects.'
@@ -131,7 +131,7 @@ Create a JSON response with this structure:
 }
 
 Target Audience: ${audience}
-Instructions: ${audienceInstructions[audience]}
+Instructions: ${audienceInstructions[audience] || audienceInstructions.general}
 ${options.companyName ? `Company: ${options.companyName}` : ''}
 ${options.industry ? `Industry: ${options.industry}` : ''}`
   }
@@ -282,9 +282,15 @@ ${options.industry ? `Industry: ${options.industry}` : ''}`
   }
 
   private generateCacheKey(text: string, options: any): string {
-    const crypto = require('crypto')
     const data = text + JSON.stringify(options)
-    return crypto.createHash('sha256').update(data).digest('hex')
+    // Use simple hash for edge runtime compatibility
+    let hash = 0
+    for (let i = 0; i < data.length; i++) {
+      const char = data.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(16)
   }
 
   private estimateReadingTime(text: string): number {

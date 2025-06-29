@@ -1,0 +1,46 @@
+/* Content script styles - minimal to avoid conflicts with host pages */
+
+.inplain-privacy-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  background: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inplain-privacy-indicator:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.inplain-privacy-score {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.inplain-privacy-score.high {
+  color: #22c55e;
+}
+
+.inplain-privacy-score.medium {
+  color: #f97316;
+}
+
+.inplain-privacy-score.low {
+  color: #ef4444;
+}
+
+.inplain-privacy-label {
+  color: #6b7280;
+  font-size: 12px;
+}

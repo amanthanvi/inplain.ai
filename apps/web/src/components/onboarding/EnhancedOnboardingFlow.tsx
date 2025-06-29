@@ -16,7 +16,8 @@ import {
   BarChart3, Search, Users, Zap, Star, ChevronRight,
   Building, Eye, Brain, Target, Rocket, Globe, Lock,
   TrendingUp, AlertTriangle, Clock, Lightbulb, Gift,
-  CreditCard, Crown, Gem, Heart, PlayCircle
+  CreditCard, Crown, Gem, Heart, PlayCircle, Key,
+  Download, Code, Copy, CheckCircle2, ExternalLink
 } from 'lucide-react'
 import { 
   FadeIn, SlideIn, ScaleIn, HoverScale, 
@@ -148,6 +149,10 @@ export function EnhancedOnboardingFlow() {
   const { success: showSuccessToast, error: showErrorToast } = useToastContext()
   const [currentStep, setCurrentStep] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [generatedApiKey, setGeneratedApiKey] = useState<string>('')
+  const [apiKeyCopied, setApiKeyCopied] = useState(false)
+  const [skipApiKey, setSkipApiKey] = useState(true)
+  const [skipExtension, setSkipExtension] = useState(false)
   
   // User selections
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
@@ -638,6 +643,265 @@ export function EnhancedOnboardingFlow() {
       validation: () => true
     },
     {
+      id: 'api-key',
+      title: 'Developer API Access',
+      subtitle: 'Build with InPlain.AI',
+      description: 'Generate an API key to integrate privacy monitoring into your applications',
+      icon: Key,
+      color: 'from-indigo-500 to-purple-500',
+      content: (
+        <div className="space-y-6">
+          <div className="text-center space-y-4">
+            <div className="mx-auto h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 p-1">
+              <div className="h-full w-full rounded-xl bg-background flex items-center justify-center">
+                <Code className="h-10 w-10 text-indigo-600" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="text-xl font-semibold">Are you a developer?</h4>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Get programmatic access to privacy data, changes, and AI analysis through our REST API.
+              </p>
+            </div>
+          </div>
+          
+          {!skipApiKey ? (
+            <div className="space-y-4">
+              {generatedApiKey ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-4"
+                >
+                  <div className="glass-card p-6 space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-green-600">
+                      <CheckCircle2 className="h-4 w-4" />
+                      API Key Generated Successfully
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Your API Key</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          readOnly
+                          value={generatedApiKey}
+                          className="font-mono text-sm"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            navigator.clipboard.writeText(generatedApiKey)
+                            setApiKeyCopied(true)
+                            setTimeout(() => setApiKeyCopied(false), 2000)
+                          }}
+                        >
+                          {apiKeyCopied ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Save this key securely. You won't be able to see it again.
+                      </p>
+                    </div>
+                    
+                    <div className="pt-2 space-y-2">
+                      <p className="text-sm font-medium">Quick Start:</p>
+                      <pre className="text-xs bg-muted p-3 rounded-lg overflow-x-auto">
+{`curl -H "Authorization: Bearer ${generatedApiKey.slice(0, 16)}..." \
+  https://api.inplain.ai/v1/companies/google`}</pre>
+                    </div>
+                  </div>
+                  
+                  <Button variant="outline" className="w-full" asChild>
+                    <a href="/docs/api" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View API Documentation
+                    </a>
+                  </Button>
+                </motion.div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid gap-3">
+                    {[
+                      { icon: Globe, text: 'Access privacy data for 500+ companies' },
+                      { icon: Bell, text: 'Set up webhooks for real-time updates' },
+                      { icon: Brain, text: 'Leverage AI analysis in your apps' },
+                      { icon: BarChart3, text: 'Build privacy dashboards & tools' }
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3 text-sm">
+                        <feature.icon className="h-4 w-4 text-primary" />
+                        <span>{feature.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/user/api-key', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name: 'Onboarding Key' })
+                          })
+                          const data = await response.json()
+                          if (data.key) {
+                            setGeneratedApiKey(data.key)
+                            setSkipApiKey(false)
+                          }
+                        } catch (error) {
+                          showErrorToast('Failed to generate API key', 'Please try again later')
+                        }
+                      }}
+                      className="flex-1"
+                    >
+                      <Key className="h-4 w-4 mr-2" />
+                      Generate API Key
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSkipApiKey(true)}
+                      className="flex-1"
+                    >
+                      I'm not a developer
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center space-y-4">
+              <p className="text-muted-foreground">
+                No problem! You can always generate an API key later from your account settings.
+              </p>
+              <Button variant="link" onClick={() => setSkipApiKey(false)}>
+                Actually, I want an API key
+              </Button>
+            </div>
+          )}
+        </div>
+      ),
+      validation: () => true
+    },
+    {
+      id: 'extension',
+      title: 'Enhance Your Browsing',
+      subtitle: 'Real-time privacy insights',
+      description: 'See privacy scores and get alerts while you browse',
+      icon: Download,
+      color: 'from-emerald-500 to-teal-500',
+      content: (
+        <div className="space-y-6">
+          <div className="text-center space-y-4">
+            <motion.div
+              animate={{ 
+                y: [0, -10, 0],
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+              className="mx-auto h-24 w-24 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 p-1"
+            >
+              <div className="h-full w-full rounded-xl bg-background flex items-center justify-center">
+                <Download className="h-12 w-12 text-emerald-600" />
+              </div>
+            </motion.div>
+            
+            <div className="space-y-2">
+              <h4 className="text-xl font-semibold">InPlain.AI Browser Extension</h4>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Get instant privacy insights on any website you visit
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid gap-4 max-w-lg mx-auto">
+            {[
+              {
+                icon: Shield,
+                title: 'Privacy Score Badge',
+                description: 'See privacy ratings instantly on supported sites'
+              },
+              {
+                icon: Bell,
+                title: 'Real-time Alerts',
+                description: 'Get notified of policy changes as you browse'
+              },
+              {
+                icon: Brain,
+                title: 'One-click Analysis',
+                description: 'Analyze any privacy policy with AI in seconds'
+              },
+              {
+                icon: Eye,
+                title: 'Privacy Highlights',
+                description: 'Key concerns highlighted automatically'
+              }
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="flex gap-3"
+              >
+                <div className="h-10 w-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0">
+                  <feature.icon className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <div className="font-medium text-sm">{feature.title}</div>
+                  <div className="text-xs text-muted-foreground">{feature.description}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <Button asChild className="flex-1">
+                <a 
+                  href="https://chrome.google.com/webstore/detail/inplainai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={() => setSkipExtension(false)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Install for Chrome
+                </a>
+              </Button>
+              <Button variant="outline" asChild className="flex-1">
+                <a 
+                  href="https://addons.mozilla.org/firefox/addon/inplainai" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={() => setSkipExtension(false)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Install for Firefox
+                </a>
+              </Button>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              className="w-full text-muted-foreground"
+              onClick={() => setSkipExtension(true)}
+            >
+              Maybe later
+            </Button>
+          </div>
+        </div>
+      ),
+      validation: () => true
+    },
+    {
       id: 'complete',
       title: 'Welcome to Inplain.AI Pro!',
       subtitle: 'Your privacy command center is ready',
@@ -735,7 +999,7 @@ export function EnhancedOnboardingFlow() {
       // Save preferences and redirect
       try {
         if (user) {
-          // Update user preferences via API
+          // Update user preferences and onboarding status via API
           await fetch('/api/auth/preferences', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -744,7 +1008,17 @@ export function EnhancedOnboardingFlow() {
               notifications: {
                 email: preferences.emailAlerts,
                 majorChanges: preferences.majorChangesOnly,
-                weeklyDigest: preferences.weeklyDigest
+                weeklyDigest: preferences.weeklyDigest,
+                riskAlerts: preferences.riskAlerts,
+                competitorUpdates: preferences.competitorUpdates
+              },
+              onboarding: {
+                completed: true,
+                completedAt: new Date().toISOString(),
+                useCase: selectedUseCase,
+                plan: selectedPlan,
+                hasApiKey: !!generatedApiKey,
+                extensionPrompted: true
               }
             })
           })

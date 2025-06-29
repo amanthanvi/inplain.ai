@@ -3,30 +3,7 @@ import { cookies } from 'next/headers';
 import { kv } from '@vercel/kv';
 import { isDevAuthEnabled, DEV_USER, DEV_SESSION_TOKEN, logDevAuthStatus } from './dev-auth';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  tier: 'free' | 'premium' | 'enterprise';
-  createdAt: Date;
-  updatedAt: Date;
-  emailVerified: boolean;
-  apiKey?: string;
-  webhookUrl?: string;
-  emailAlerts: boolean;
-  alertFrequency: 'instant' | 'daily' | 'weekly';
-  customWatchlists: string[];
-  usage: {
-    apiCalls: number;
-    analysisCount: number;
-    lastReset: Date;
-  };
-}
-
-export interface Session {
-  userId: string;
-  expiresAt: Date;
-}
+export type { User, Session, AuthTokens } from './types/auth';
 
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
