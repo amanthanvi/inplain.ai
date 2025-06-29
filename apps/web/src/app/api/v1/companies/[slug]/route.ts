@@ -77,7 +77,7 @@ export const GET = withErrorHandling(async (
 })
 
 // GET /api/v1/companies/:slug/policies
-export const getPolicies = withErrorHandling(async (
+const getPolicies = withErrorHandling(async (
   request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) => {
@@ -127,7 +127,7 @@ export const getPolicies = withErrorHandling(async (
 })
 
 // GET /api/v1/companies/:slug/score
-export const getScore = withErrorHandling(async (
+const getScore = withErrorHandling(async (
   request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) => {
@@ -158,7 +158,7 @@ export const getScore = withErrorHandling(async (
 })
 
 // GET /api/v1/companies/:slug/changes
-export const getChanges = withErrorHandling(async (
+const getChanges = withErrorHandling(async (
   request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) => {

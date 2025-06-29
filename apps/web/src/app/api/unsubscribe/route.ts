@@ -233,7 +233,7 @@ async function logUnsubscribeReason(
 /**
  * Get unsubscribe analytics (admin only)
  */
-export async function getUnsubscribeAnalytics(days: number = 30): Promise<{
+async function getUnsubscribeAnalytics(days: number = 30): Promise<{
   totalUnsubscribes: number
   reasonBreakdown: Record<string, number>
   dailyStats: Array<{ date: string; count: number }>
