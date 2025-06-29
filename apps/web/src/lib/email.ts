@@ -15,8 +15,10 @@ export interface EmailTemplate {
 export interface EmailPreferences {
   policyChanges: boolean;
   weeklyDigest: boolean;
+  monthlyDigest: boolean;
   urgentAlerts: boolean;
   marketingEmails: boolean;
+  unsubscribed: boolean;
   frequency: 'immediate' | 'daily' | 'weekly' | 'monthly';
   timezone: string;
   language: string;
@@ -583,7 +585,7 @@ The Inplain.AI Team
 
   // Missing methods to fix build errors
 
-  static async getEmailStats(): Promise<any> {
+  static async getEmailStats(days: number = 30): Promise<any> {
     try {
       const stats = await kv.get('email:stats') || {
         totalSent: 0,
@@ -626,10 +628,11 @@ The Inplain.AI Team
     }
   }
 
-  static async processNotificationQueue(): Promise<void> {
+  static async processNotificationQueue(limit: number = 10): Promise<number> {
     try {
-      // Process up to 10 items from the queue
-      for (let i = 0; i < 10; i++) {
+      let processed = 0;
+      // Process up to specified limit from the queue
+      for (let i = 0; i < limit; i++) {
         const item = await kv.lpop('email:queue');
         if (!item) break;
 
@@ -641,14 +644,17 @@ The Inplain.AI Team
             notification.html,
             notification.text
           );
+          processed++;
         } catch (error) {
           console.error('Failed to process notification:', error);
           // Move to failed queue
           await kv.lpush('email:failed', item);
         }
       }
+      return processed;
     } catch (error) {
       console.error('Failed to process notification queue:', error);
+      return 0;
     }
   }
 
@@ -658,8 +664,10 @@ The Inplain.AI Team
       return prefs || {
         policyChanges: true,
         weeklyDigest: true,
+        monthlyDigest: true,
         urgentAlerts: true,
         marketingEmails: false,
+        unsubscribed: false,
         frequency: 'immediate',
         timezone: 'UTC',
         language: 'en',
@@ -670,8 +678,10 @@ The Inplain.AI Team
       return {
         policyChanges: true,
         weeklyDigest: true,
+        monthlyDigest: true,
         urgentAlerts: true,
         marketingEmails: false,
+        unsubscribed: false,
         frequency: 'immediate',
         timezone: 'UTC',
         language: 'en',
