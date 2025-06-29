@@ -1,5 +1,8 @@
 'use client'
 
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import { useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'

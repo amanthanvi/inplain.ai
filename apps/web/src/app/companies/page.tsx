@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
 
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
+
 export default function CompaniesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')

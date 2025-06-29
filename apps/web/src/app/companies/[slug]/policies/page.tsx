@@ -1,3 +1,6 @@
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation'
 import { PolicyNavigation } from '@/components/policies/PolicyNavigation'
 import { GlobalSearch } from '@/components/search/GlobalSearch'

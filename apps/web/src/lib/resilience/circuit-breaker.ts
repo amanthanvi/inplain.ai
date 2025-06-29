@@ -1,5 +1,5 @@
-import { logger } from '@/lib/logger-stub'
-import * as Sentry from '@/lib/sentry-stub'
+import { logger } from '@/lib/logger'
+import * as Sentry from '@/lib/sentry'
 
 export interface CircuitBreakerOptions {
   failureThreshold: number

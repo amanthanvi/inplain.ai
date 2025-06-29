@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger-stub'
+import { logger } from '@/lib/logger'
 
 export interface ScrapedContent {
   text: string

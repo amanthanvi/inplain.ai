@@ -1,5 +1,8 @@
 'use client'
 
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { AnalyticsDashboard } from '@/components/analytics-dashboard'

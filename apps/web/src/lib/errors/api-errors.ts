@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import * as Sentry from '@/lib/sentry-stub'
+import * as Sentry from '@/lib/sentry'
 import { z } from 'zod'
-import { logger } from '@/lib/logger-stub'
+import { logger } from '@/lib/logger'
 
 // Error types
 export class APIError extends Error {

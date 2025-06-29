@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link'
 import { AnimatedContainer } from '@/components/ui/animations'
 
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
+
 export default function Error({
   error,
   reset,

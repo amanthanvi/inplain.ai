@@ -1,3 +1,6 @@
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import { Suspense } from 'react'
 import { AdvancedSearch } from '@/components/search/AdvancedSearch'
 import { SearchResults } from '@/components/search/SearchResults'

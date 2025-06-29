@@ -6,6 +6,9 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
+
 export default function OnboardingPage() {
 	const router = useRouter();
 	const { userId, isLoaded: authLoaded } = useAuth();

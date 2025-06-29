@@ -1,3 +1,6 @@
+
+// Force dynamic rendering to prevent static export
+export const dynamic = 'force-dynamic'
 import FeedbackDashboard from '@/components/feedback/FeedbackDashboard';
 
 export const metadata = {
