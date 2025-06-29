@@ -9,7 +9,7 @@ export function getLuminance(rgb: { r: number; g: number; b: number }): number {
     c = c / 255
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
   })
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+  return 0.2126 * rs! + 0.7152 * gs! + 0.0722 * bs!
 }
 
 export function getContrastRatio(
@@ -28,25 +28,34 @@ export function parseColor(color: string): { r: number; g: number; b: number } |
   const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
   if (rgbMatch) {
     return {
-      r: parseInt(rgbMatch[1]),
-      g: parseInt(rgbMatch[2]),
-      b: parseInt(rgbMatch[3])
+      r: parseInt(rgbMatch[1]!),
+      g: parseInt(rgbMatch[2]!),
+      b: parseInt(rgbMatch[3]!)
     }
   }
 
   // Handle hex
   const hexMatch = color.match(/^#([0-9a-f]{6})$/i)
   if (hexMatch) {
-    const hex = hexMatch[1]
+    const hex = hexMatch[1]!
     return {
-      r: parseInt(hex.substr(0, 2), 16),
-      g: parseInt(hex.substr(2, 2), 16),
-      b: parseInt(hex.substr(4, 2), 16)
+      r: parseInt(hex.substring(0, 2), 16),
+      g: parseInt(hex.substring(2, 4), 16),
+      b: parseInt(hex.substring(4, 6), 16)
     }
   }
 
   return null
 }
+
+// Re-export from accessibility index for backward compatibility
+export { 
+  FocusManager, 
+  ScreenReaderAnnouncer, 
+  AriaHelpers, 
+  focusRingStyles,
+  useKeyboardNavigation 
+} from './accessibility/index'
 
 export function checkColorContrast(
   foreground: string,

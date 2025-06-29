@@ -82,7 +82,7 @@ const PATH_TRAVERSAL_PATTERNS = [
 /**
  * Sanitize HTML content
  */
-export function sanitizeHTML(html: string, options?: DOMPurify.Config): string {
+export function sanitizeHTML(html: string, options?: any): string {
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre'],
     ALLOWED_ATTR: ['href', 'target', 'rel'],
@@ -181,13 +181,16 @@ export class RateLimiter {
   private requests: Map<string, number[]> = new Map()
   private readonly windowMs: number
   private readonly maxRequests: number
+  private cleanupInterval?: NodeJS.Timeout
 
   constructor(windowMs: number = 60000, maxRequests: number = 60) {
     this.windowMs = windowMs
     this.maxRequests = maxRequests
     
     // Clean up old entries periodically
-    setInterval(() => this.cleanup(), windowMs)
+    if (typeof setInterval !== 'undefined') {
+      this.cleanupInterval = setInterval(() => this.cleanup(), windowMs)
+    }
   }
 
   isAllowed(identifier: string): boolean {
@@ -221,6 +224,12 @@ export class RateLimiter {
       }
     }
   }
+
+  destroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval)
+    }
+  }
 }
 
 /**
@@ -241,10 +250,16 @@ export function generateSecureToken(length: number = 32): string {
   let token = ''
   
   const randomValues = new Uint8Array(length)
-  crypto.getRandomValues(randomValues)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(randomValues)
+  } else {
+    // Fallback for Node.js
+    const { randomBytes } = require('crypto')
+    randomValues.set(randomBytes(length))
+  }
   
   for (let i = 0; i < length; i++) {
-    token += chars[randomValues[i] % chars.length]
+    token += chars[randomValues[i]! % chars.length]
   }
   
   return token

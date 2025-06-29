@@ -134,7 +134,7 @@ export function NotificationCenter({
       else if (date === yesterday) groupKey = 'Yesterday'
 
       if (!groups[groupKey]) groups[groupKey] = []
-      groups[groupKey].push(notification)
+      groups[groupKey]!.push(notification)
     })
 
     return groups

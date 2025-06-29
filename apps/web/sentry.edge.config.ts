@@ -14,10 +14,7 @@ if (SENTRY_DSN) {
     release: process.env.VERCEL_GIT_COMMIT_SHA,
     
     // Edge-specific configuration
-    transportOptions: {
-      // Reduce request size for edge runtime
-      maxValueLength: 250,
-    },
+    // transportOptions is not available in edge runtime
     
     beforeSend(event, hint) {
       // Add Edge runtime context

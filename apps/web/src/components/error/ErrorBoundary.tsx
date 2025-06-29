@@ -124,8 +124,8 @@ function DefaultErrorFallback({
 
   React.useEffect(() => {
     // Show Sentry user feedback dialog if available
-    if (showDialog && eventId && window.Sentry) {
-      window.Sentry.showReportDialog({ eventId })
+    if (showDialog && eventId && typeof window !== 'undefined' && (window as any).Sentry) {
+      (window as any).Sentry.showReportDialog({ eventId })
     }
   }, [eventId, showDialog])
 

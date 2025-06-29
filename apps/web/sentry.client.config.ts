@@ -65,7 +65,8 @@ if (SENTRY_DSN) {
 }
 
 // Helper to get user context (implement based on your auth)
-function getUserContext() {
+function getUserContext(): { id: string; email?: string; username?: string } | null {
   // This would integrate with Clerk
+  // For now, return null until Clerk integration is added
   return null
 }

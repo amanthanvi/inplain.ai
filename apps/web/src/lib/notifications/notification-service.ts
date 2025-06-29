@@ -171,11 +171,11 @@ class NotificationService extends EventEmitter {
     const now = new Date()
     const currentTime = now.getHours() * 60 + now.getMinutes()
     
-    const [startHour, startMin] = this.preferences.quietHours.start.split(':').map(Number)
-    const [endHour, endMin] = this.preferences.quietHours.end.split(':').map(Number)
+    const startParts = this.preferences.quietHours.start.split(':').map(Number)
+    const endParts = this.preferences.quietHours.end.split(':').map(Number)
     
-    const startTime = startHour * 60 + startMin
-    const endTime = endHour * 60 + endMin
+    const startTime = (startParts[0] || 0) * 60 + (startParts[1] || 0)
+    const endTime = (endParts[0] || 0) * 60 + (endParts[1] || 0)
     
     if (startTime <= endTime) {
       return currentTime >= startTime && currentTime <= endTime

@@ -13,17 +13,12 @@ if (SENTRY_DSN) {
     // Release tracking
     release: process.env.VERCEL_GIT_COMMIT_SHA,
     
-    // Server-specific options
-    autoSessionTracking: true,
-    
     // Integrations
     integrations: [
       // Database query tracking
       Sentry.prismaIntegration(),
       // HTTP request tracking
-      Sentry.httpIntegration({
-        tracing: true,
-      }),
+      Sentry.httpIntegration(),
     ],
     
     // Filtering

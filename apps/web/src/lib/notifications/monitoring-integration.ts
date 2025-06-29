@@ -105,8 +105,8 @@ export async function notifyRiskAlert(event: RiskAlertEvent): Promise<void> {
     // Filter users who have risk alerts enabled
     const usersToNotify: string[] = []
     for (const userId of watchingUsers) {
-      const subscription = await kv.get(`notifications:subscription:${userId}:${event.companySlug}`)
-      if (subscription && subscription['types']?.includes('risk-alert')) {
+      const subscription = await kv.get<{ types?: string[] }>(`notifications:subscription:${userId}:${event.companySlug}`)
+      if (subscription && subscription.types?.includes('risk-alert')) {
         usersToNotify.push(userId)
       }
     }
