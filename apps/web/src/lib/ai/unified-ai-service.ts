@@ -388,6 +388,7 @@ const searchContextTool = {
 // ============= Main Service Class =============
 
 export class UnifiedAIService {
+  private static instance: UnifiedAIService
   private openai: OpenAI
   private cache = new Map<string, AnalysisResult>()
   private requestQueue = new Map<string, Promise<any>>()
@@ -402,6 +403,16 @@ export class UnifiedAIService {
         'X-Title': 'Inplain.AI - Privacy Policy Analysis'
       }
     })
+  }
+  
+  static getInstance(apiKey?: string): UnifiedAIService {
+    if (!this.instance) {
+      if (!apiKey) {
+        throw new AIConfigurationError('API key required for first initialization')
+      }
+      this.instance = new UnifiedAIService(apiKey)
+    }
+    return this.instance
   }
 
   /**

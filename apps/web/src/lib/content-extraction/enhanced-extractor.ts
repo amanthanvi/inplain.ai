@@ -256,7 +256,7 @@ export class EnhancedContentExtractor {
       return this.createEmptyContent('No content found')
     }
     
-    const html = bestElement.html() || ''
+    const html = (bestElement as any).html ? (bestElement as any).html() : ''
     const text = this.cleanText(bestContent)
     const markdown = this.turndown.turndown(html)
     
@@ -345,8 +345,9 @@ export class EnhancedContentExtractor {
     ]
     
     for (const source of sources) {
-      if (source && source.trim()) {
-        return source.trim()
+      const sourceText = source?.toString()
+      if (sourceText && sourceText.trim()) {
+        return sourceText.trim()
       }
     }
     
@@ -367,7 +368,7 @@ export class EnhancedContentExtractor {
       
       if (tagName.startsWith('h')) {
         // New section
-        const level = parseInt(tagName[1])
+        const level = parseInt(tagName[1] || '1')
         const title = $elem.text().trim()
         
         if (title) {
@@ -405,7 +406,7 @@ export class EnhancedContentExtractor {
       const tagName = elem.tagName.toLowerCase()
       
       if (tagName.startsWith('h')) {
-        const level = parseInt(tagName[1])
+        const level = parseInt(tagName[1] || '1')
         const title = $elem.text().trim()
         
         if (title) {
@@ -562,12 +563,12 @@ export class EnhancedContentExtractor {
     })
     
     // Update metadata from meta tags
-    if (metaTags['description']) {
+    if (metaTags['author']) {
       content.metadata.author = metaTags['author']
     }
     
     if (metaTags['language'] || metaTags['lang']) {
-      content.metadata.language = metaTags['language'] || metaTags['lang']
+      content.metadata.language = metaTags['language'] || metaTags['lang'] || 'en'
     }
     
     // Validate content is actually a privacy policy

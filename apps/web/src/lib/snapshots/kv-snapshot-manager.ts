@@ -11,10 +11,13 @@ import type { ExtractedContent } from '@/lib/content-extraction/enhanced-extract
 import type { SnapshotMeta, DiffMeta } from '@inplain.ai/shared'
 import { v4 as uuidv4 } from 'uuid'
 
-export interface EnhancedSnapshotMeta extends SnapshotMeta {
+export interface EnhancedSnapshotMeta extends Omit<SnapshotMeta, 'contentHash' | 'contentLength'> {
   version: number
   hash: string
   compressed: boolean
+  content: string
+  contentHash: string
+  contentLength: number
   metadata: {
     extractionMethod: string
     quality: number
@@ -116,12 +119,16 @@ export class KVSnapshotManager {
         slug,
         url,
         content: finalContent,
-        contentType: 'text',
+        contentType: 'text' as const,
         capturedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
         version: newVersion,
         hash: contentHash,
         compressed,
+        contentHash: contentHash,
+        contentLength: finalContent.length,
+        blobKey: `${slug}/${uuidv4()}`,
+        headers: {},
+        status: 'processed' as const,
         metadata: {
           extractionMethod: extracted.quality.confidence,
           quality: extracted.quality.score,
@@ -176,7 +183,7 @@ export class KVSnapshotManager {
       
     } catch (error) {
       console.error('Error creating snapshot:', error)
-      throw new Error(`Failed to create snapshot: ${error.message}`)
+      throw new Error(`Failed to create snapshot: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -231,7 +238,7 @@ export class KVSnapshotManager {
       if (!latestId) {
         // Fallback to getting from sorted set
         const snapshotIds = await kv.zrange<string>(`snapshots:${slug}`, -1, -1)
-        if (!snapshotIds?.length) return null
+        if (!snapshotIds?.length || !snapshotIds[0]) return null
         return this.getSnapshot(slug, snapshotIds[0])
       }
       
@@ -312,7 +319,12 @@ export class KVSnapshotManager {
         toVersion: toSnapshot.version,
         changes,
         summary,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        changeCount: changes.length,
+        changeType: summary.totalChanges > 10 ? 'major' : summary.totalChanges > 5 ? 'moderate' : 'minor',
+        additions: summary.addedSections,
+        deletions: summary.removedSections,
+        diffBlobKey: `${slug}/diffs/${uuidv4()}`
       }
       
       // Store diff
@@ -337,7 +349,7 @@ export class KVSnapshotManager {
       return diff
     } catch (error) {
       console.error('Error creating diff:', error)
-      throw new Error(`Failed to create diff: ${error.message}`)
+      throw new Error(`Failed to create diff: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -415,14 +427,18 @@ export class KVSnapshotManager {
       // Delete old snapshots
       for (const snapshotId of snapshotsToDelete) {
         await kv.del(`snapshot:${slug}:${snapshotId}`)
-        await kv.zrem(`snapshots:${slug}`, snapshotId)
+        // Note: We can't remove from sorted set with current KV client
+        // The sorted set will grow but old IDs will point to deleted snapshots
       }
       
       // Clean up version mappings
-      const snapshot = await this.getSnapshot(slug, snapshotsToDelete[0])
-      if (snapshot) {
-        for (let v = 1; v < snapshot.version; v++) {
-          await kv.del(`snapshot:${slug}:version:${v}`)
+      const firstSnapshotId = snapshotsToDelete[0]
+      if (firstSnapshotId) {
+        const snapshot = await this.getSnapshot(slug, firstSnapshotId)
+        if (snapshot) {
+          for (let v = 1; v < snapshot.version; v++) {
+            await kv.del(`snapshot:${slug}:version:${v}`)
+          }
         }
       }
       
@@ -445,11 +461,14 @@ export class KVSnapshotManager {
     languages: Record<string, number>
   }> {
     try {
-      const [snapshotCount, diffCount, snapshots] = await Promise.all([
-        kv.zcard(`snapshots:${slug}`),
-        kv.zcard(`diffs:${slug}`),
+      const [snapshotIds, diffIds, snapshots] = await Promise.all([
+        kv.zrange<string>(`snapshots:${slug}`, 0, -1),
+        kv.zrange<string>(`diffs:${slug}`, 0, -1),
         this.getSnapshots(slug, 100) // Get up to 100 for stats
       ])
+      
+      const snapshotCount = snapshotIds?.length || 0
+      const diffCount = diffIds?.length || 0
       
       if (!snapshots.length) {
         return {
@@ -471,11 +490,14 @@ export class KVSnapshotManager {
         languages[lang] = (languages[lang] || 0) + 1
       }
       
+      const oldestSnapshot = snapshots[snapshots.length - 1]
+      const newestSnapshot = snapshots[0]
+      
       return {
         totalSnapshots: snapshotCount || 0,
         totalDiffs: diffCount || 0,
-        oldestSnapshot: new Date(snapshots[snapshots.length - 1].capturedAt),
-        newestSnapshot: new Date(snapshots[0].capturedAt),
+        oldestSnapshot: oldestSnapshot ? new Date(oldestSnapshot.capturedAt) : null,
+        newestSnapshot: newestSnapshot ? new Date(newestSnapshot.capturedAt) : null,
         averageQuality: totalQuality / snapshots.length,
         languages
       }

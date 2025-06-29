@@ -145,37 +145,43 @@ export function PolicyTimeline({
     const clustered: TimelineEvent[] = []
     const clusterThreshold = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
     
-    let currentCluster: TimelineEvent[] = [events[0]]
+    let currentCluster: TimelineEvent[] = [events[0]!]
     
     for (let i = 1; i < events.length; i++) {
-      const timeDiff = currentCluster[0].date.getTime() - events[i].date.getTime()
+      const event = events[i]
+      if (!event || currentCluster.length === 0) continue
+      
+      const firstEvent = currentCluster[0]
+      if (!firstEvent) continue
+      
+      const timeDiff = firstEvent.date.getTime() - event.date.getTime()
       
       if (timeDiff <= clusterThreshold) {
-        currentCluster.push(events[i])
+        currentCluster.push(event)
       } else {
         // Process current cluster
-        if (currentCluster.length > 1) {
+        if (currentCluster.length > 1 && currentCluster[0]) {
           clustered.push({
             ...currentCluster[0],
             clustered: true,
             clusterSize: currentCluster.length
           })
-        } else {
+        } else if (currentCluster[0]) {
           clustered.push(currentCluster[0])
         }
         
-        currentCluster = [events[i]]
+        currentCluster = [event]
       }
     }
     
     // Process last cluster
-    if (currentCluster.length > 1) {
+    if (currentCluster.length > 1 && currentCluster[0]) {
       clustered.push({
         ...currentCluster[0],
         clustered: true,
         clusterSize: currentCluster.length
       })
-    } else {
+    } else if (currentCluster[0]) {
       clustered.push(currentCluster[0])
     }
     
@@ -185,8 +191,13 @@ export function PolicyTimeline({
   const positionEvents = (events: TimelineEvent[]) => {
     if (events.length === 0) return
     
-    const firstDate = events[events.length - 1].date.getTime()
-    const lastDate = events[0].date.getTime()
+    const lastEvent = events[events.length - 1]
+    const firstEvent = events[0]
+    
+    if (!lastEvent || !firstEvent) return
+    
+    const firstDate = lastEvent.date.getTime()
+    const lastDate = firstEvent.date.getTime()
     const range = lastDate - firstDate
     
     events.forEach(event => {
@@ -365,8 +376,8 @@ export function PolicyTimeline({
         
         {/* Date labels */}
         <div className="absolute top-full mt-4 left-0 right-0 flex justify-between text-xs text-gray-600">
-          <span>{events.length > 0 && format(events[events.length - 1].date, 'MMM yyyy')}</span>
-          <span>{events.length > 0 && format(events[0].date, 'MMM yyyy')}</span>
+          <span>{events.length > 0 && events[events.length - 1] && format(events[events.length - 1]!.date, 'MMM yyyy')}</span>
+          <span>{events.length > 0 && events[0] && format(events[0]!.date, 'MMM yyyy')}</span>
         </div>
       </div>
 
