@@ -122,8 +122,9 @@ let configError: string | null = null
 export function getKV(): KVClient {
   if (kvInstance) return kvInstance as KVClient
   
-  const kvUrl = getEnvVar('KV_REST_API_URL')
-  const kvToken = getEnvVar('KV_REST_API_TOKEN')
+  // Access environment variables directly for better compatibility
+  const kvUrl = process.env.KV_REST_API_URL
+  const kvToken = process.env.KV_REST_API_TOKEN
   
   if (!kvUrl || !kvToken) {
     console.warn('KV not configured - using in-memory mock (data will not persist)')
