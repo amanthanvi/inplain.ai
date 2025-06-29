@@ -7,7 +7,8 @@ import { Providers } from './providers'
 import { DevAuthWarning } from '@/components/dev-auth-warning'
 import { DemoModeBanner } from '@/components/demo-mode-banner'
 import { Navigation } from '@/components/Navigation'
-import { MobileNavigation, MobileBottomNav } from '@/components/MobileNavigation'
+import { MobileNavigation } from '@/components/mobile/MobileNavigation'
+import { MobileOptimizations } from '@/components/mobile/MobileOptimizations'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import { PWAProvider } from '@/components/providers/PWAProvider'
@@ -73,20 +74,17 @@ export default function RootLayout({
           <Providers>
             <PWAProvider>
               <SkipLinks />
+              <MobileOptimizations />
               <div className="relative min-h-screen bg-background">
             {/* Desktop Navigation */}
             <div className="hidden md:block">
               <Navigation />
             </div>
-            {/* Mobile Navigation */}
-            <div className="md:hidden">
-              <MobileNavigation />
-            </div>
-            <main id="main-content" className="flex-1 pb-16 md:pb-0" tabIndex={-1}>
+            <main id="main-content" className="flex-1" tabIndex={-1}>
               {children}
             </main>
-            {/* Mobile Bottom Navigation */}
-            <MobileBottomNav />
+            {/* Mobile Navigation */}
+            <MobileNavigation />
             <footer className="border-t py-6 md:py-0 hidden md:block">
               <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
                 <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">

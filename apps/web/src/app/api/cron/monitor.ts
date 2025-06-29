@@ -4,6 +4,7 @@ import { SnapshotMetaSchema, CrawlJobSchema } from '@inplain.ai/shared'
 import { formatTimestamp, hashContent } from '@inplain.ai/shared'
 import { WatchlistService } from '@/lib/watchlist'
 import { AIService } from '../lib/ai-service'
+import { notifyPolicyChange, notifyRiskAlert } from '@/lib/notifications/monitoring-integration'
 
 const storage = new StorageClient()
 
@@ -193,6 +194,31 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
           )
           
           console.log(`[Monitor] Watchlist alerts processed for ${company.slug}`)
+          
+          // Send notifications for policy changes
+          await notifyPolicyChange({
+            companySlug: company.slug,
+            companyName: company.name,
+            policyType: 'privacy',
+            changeType: changeType === 'critical' ? 'major' : changeType === 'significant' ? 'moderate' : 'minor',
+            summary,
+            riskLevel: changeType === 'critical' ? 'high' : changeType === 'significant' ? 'medium' : 'low',
+            detectedAt: formatTimestamp(),
+            diffUrl: `/${company.slug}`
+          })
+          
+          // Send risk alert for critical changes
+          if (changeType === 'critical') {
+            await notifyRiskAlert({
+              companySlug: company.slug,
+              companyName: company.name,
+              alertType: 'data-collection',
+              severity: 'critical',
+              description: `Critical privacy policy changes detected that may impact your data privacy`,
+              affectedSections: [],
+              detectedAt: formatTimestamp()
+            })
+          }
         }
       } catch (error) {
         console.error(`[Monitor] Error processing watchlist alerts:`, error)
