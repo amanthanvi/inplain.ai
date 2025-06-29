@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Use default output for Vercel
@@ -133,4 +135,35 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry configuration options
+const sentryWebpackPluginOptions = {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  silent: true, // Suppresses all logs
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  
+  // Only upload source maps in production
+  dryRun: process.env.NODE_ENV !== 'production',
+  
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+  
+  // Transpiles SDK to be compatible with IE11 (increases bundle size)
+  transpileClientSDK: true,
+  
+  // Routes browser requests to Sentry through a Next.js rewrite to prevent ad-blockers blocking requests
+  tunnelRoute: "/monitoring",
+  
+  // Hides source maps from generated client bundles
+  hideSourceMaps: true,
+  
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+}
+
+// Make sure adding Sentry options is the last code to run before exporting
+export default process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;
