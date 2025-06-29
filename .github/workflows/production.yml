@@ -1,0 +1,210 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests (emergency deployment only)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  test-and-validate:
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_tests }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      
+      - name: Install dependencies
+        run: |
+          cd apps/web
+          npm ci
+      
+      - name: Run full test suite
+        run: |
+          cd apps/web
+          npm run lint
+          npm run typecheck
+          npm run test:unit
+          npm run test:integration
+        env:
+          CI: true
+      
+      - name: Build production bundle
+        run: |
+          cd apps/web
+          npm run build
+      
+      - name: Check bundle size
+        uses: preactjs/compressed-size-action@v2
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          pattern: "apps/web/.next/**/*.{js,css,html}"
+          exclude: "apps/web/.next/cache/**"
+
+  security-and-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run security audit
+        run: |
+          cd apps/web
+          npm audit --production
+      
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      
+      - name: Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+
+  deploy-production:
+    needs: [test-and-validate, security-and-quality]
+    runs-on: ubuntu-latest
+    if: ${{ always() && (needs.test-and-validate.result == 'success' || inputs.skip_tests) }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create deployment
+        uses: chrnorm/deployment-action@v2
+        id: deployment
+        with:
+          token: "${{ github.token }}"
+          environment: production
+          environment-url: https://inplain.ai
+      
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      
+      - name: Deploy to Production
+        run: |
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "DEPLOYMENT_URL=$DEPLOYMENT_URL" >> $GITHUB_ENV
+      
+      - name: Update deployment status
+        uses: chrnorm/deployment-status@v2
+        if: always()
+        with:
+          token: "${{ github.token }}"
+          environment-url: ${{ env.DEPLOYMENT_URL }}
+          state: ${{ job.status }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+
+  post-deployment:
+    needs: [deploy-production]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Purge CDN cache
+        run: |
+          # Add CDN purge commands here
+          echo "Purging CDN cache..."
+      
+      - name: Warm up critical paths
+        run: |
+          curl -s https://inplain.ai > /dev/null
+          curl -s https://inplain.ai/companies > /dev/null
+          curl -s https://inplain.ai/api/health > /dev/null
+      
+      - name: Run smoke tests
+        run: |
+          cd apps/web
+          npm ci
+          PLAYWRIGHT_BASE_URL=https://inplain.ai npm run test:smoke
+      
+      - name: Monitor deployment
+        run: |
+          # Check health endpoint
+          for i in {1..5}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://inplain.ai/api/health)
+            if [ $STATUS -eq 200 ]; then
+              echo "Health check passed"
+              break
+            fi
+            echo "Health check attempt $i failed with status $STATUS"
+            sleep 10
+          done
+
+  notify:
+    needs: [deploy-production, post-deployment]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Send deployment notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ needs.deploy-production.result }}
+          text: |
+            Production Deployment ${{ needs.deploy-production.result }}
+            Version: ${{ github.sha }}
+            Actor: ${{ github.actor }}
+            URL: https://inplain.ai
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      
+      - name: Create Sentry release
+        uses: getsentry/action-release@v1
+        if: needs.deploy-production.result == 'success'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          version: ${{ github.sha }}
+
+  rollback:
+    needs: [post-deployment]
+    runs-on: ubuntu-latest
+    if: failure()
+    
+    steps:
+      - name: Rollback deployment
+        run: |
+          echo "Rolling back to previous deployment..."
+          vercel rollback --token=${{ secrets.VERCEL_TOKEN }}
+      
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "⚠️ Production deployment failed and was rolled back",
+              color: "danger"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
