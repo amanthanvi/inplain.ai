@@ -201,10 +201,12 @@ async function getPreferenceAnalytics(days: number): Promise<{
       const userPrefs = await kv.get(key) as any
       if (userPrefs) {
         for (const pref of preferences) {
-          if (userPrefs[pref]) {
-            preferenceCounts[pref].enabled++
-          } else {
-            preferenceCounts[pref].disabled++
+          if (preferenceCounts[pref]) {
+            if (userPrefs[pref]) {
+              preferenceCounts[pref].enabled++
+            } else {
+              preferenceCounts[pref].disabled++
+            }
           }
         }
       }
