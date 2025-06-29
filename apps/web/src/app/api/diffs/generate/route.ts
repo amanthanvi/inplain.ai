@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { diffLines, Change } from 'diff'
 
 export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
 interface DiffRequest {
   oldContent: string
