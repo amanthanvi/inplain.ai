@@ -26,33 +26,20 @@ import { AnimatedContainer } from '@/components/ui/animations'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 import { formatDistanceToNow } from 'date-fns'
+import { PrivacyMetricsService } from '@/lib/analytics/privacy-metrics'
+import type { PrivacyMetrics } from '@/lib/analytics/privacy-metrics'
+import { getLatestDiffs } from '@/lib/api'
 
 interface CompanyPageProps {
   slug: string
 }
 
-interface CompanyStats {
+interface CompanyStats extends PrivacyMetrics {
   checkInterval: number
-  totalChanges: number
-  privacyScore: number
-  scoreBreakdown: {
-    dataCollection: number
-    thirdPartySharing: number
-    userRights: number
-    retention: number
-    security: number
-  }
-  riskLevel: 'Low' | 'Medium' | 'High'
   lastChecked: Date
   nextCheck: Date
-  changeFrequency: 'Rarely' | 'Occasionally' | 'Frequently'
-  complianceStatus: {
-    gdpr: boolean
-    ccpa: boolean
-    coppa: boolean
-  }
-  userCount?: number
-  analysisCount?: number
+  userCount: number
+  analysisCount: number
 }
 
 export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
@@ -69,33 +56,48 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
   }
 
   useEffect(() => {
-    // Simulate loading real stats
-    setTimeout(() => {
-      setStats({
-        checkInterval: company.checkInterval / 3600,
-        totalChanges: Math.floor(Math.random() * 30) + 5,
-        privacyScore: Math.floor(Math.random() * 30) + 70,
-        scoreBreakdown: {
-          dataCollection: Math.floor(Math.random() * 30) + 70,
-          thirdPartySharing: Math.floor(Math.random() * 30) + 60,
-          userRights: Math.floor(Math.random() * 30) + 80,
-          retention: Math.floor(Math.random() * 30) + 65,
-          security: Math.floor(Math.random() * 30) + 75
-        },
-        riskLevel: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)] as 'Low' | 'Medium' | 'High',
-        lastChecked: new Date(Date.now() - Math.random() * 86400000),
-        nextCheck: new Date(Date.now() + Math.random() * 86400000),
-        changeFrequency: ['Rarely', 'Occasionally', 'Frequently'][Math.floor(Math.random() * 3)] as 'Rarely' | 'Occasionally' | 'Frequently',
-        complianceStatus: {
-          gdpr: Math.random() > 0.3,
-          ccpa: Math.random() > 0.4,
-          coppa: Math.random() > 0.7
-        },
-        userCount: Math.floor(Math.random() * 500) + 100,
-        analysisCount: Math.floor(Math.random() * 1000) + 200
-      })
-      setLoading(false)
-    }, 1000)
+    // Load real stats
+    const loadStats = async () => {
+      try {
+        const metricsService = PrivacyMetricsService.getInstance()
+        
+        // Get recent diffs for analysis
+        const recentDiffs = await getLatestDiffs(company.slug, 20)
+        
+        // Calculate real privacy metrics
+        const metrics = await metricsService.calculateMetrics(company, undefined, recentDiffs)
+        
+        // Get watcher count
+        const watcherCount = await metricsService.getWatcherCount(company.slug)
+        
+        setStats({
+          ...metrics,
+          checkInterval: company.checkInterval / 3600,
+          lastChecked: new Date(), // Would come from actual monitoring data
+          nextCheck: new Date(Date.now() + company.checkInterval * 1000),
+          userCount: watcherCount,
+          analysisCount: recentDiffs.length * 3 // Estimate based on diffs
+        })
+      } catch (error) {
+        console.error('Failed to load company stats:', error)
+        // Use default metrics as fallback
+        const metricsService = PrivacyMetricsService.getInstance()
+        const defaultMetrics = await metricsService.calculateMetrics(company)
+        
+        setStats({
+          ...defaultMetrics,
+          checkInterval: company.checkInterval / 3600,
+          lastChecked: new Date(),
+          nextCheck: new Date(Date.now() + company.checkInterval * 1000),
+          userCount: 0,
+          analysisCount: 0
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadStats()
   }, [company])
 
   const getRiskColor = (level: string) => {
@@ -355,7 +357,19 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
                     </div>
                   </div>
                   
-                  <Button size="sm" variant="secondary" className="w-full">
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="w-full"
+                    onClick={() => {
+                      setActiveTab('changes')
+                      // Scroll to tabs
+                      const tabsElement = document.querySelector('[role="tablist"]')
+                      if (tabsElement) {
+                        tabsElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }}
+                  >
                     <Gauge className="h-4 w-4 mr-2" />
                     View Analysis
                   </Button>

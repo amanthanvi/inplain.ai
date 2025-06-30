@@ -1,35 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { StorageClient } from '../../lib/storage'
+import { getStorage } from '../../lib/storage-utils'
 import { DiffEngine } from '../../lib/diff-engine'
+import { SmartDiffEngine } from '@/lib/change-detection/smart-diff'
 import { DiffMetaSchema } from '@inplain.ai/shared'
 import { formatTimestamp } from '@inplain.ai/shared'
-import { getEnvVar } from '@/lib/env'
 
-// Initialize storage with error handling
-let storage: StorageClient | null = null
+// Initialize diff engine
 let diffEngine: DiffEngine | null = null
-
-function getStorage(): StorageClient | null {
-  if (storage) return storage
-  
-  // Check if KV is configured
-  const kvUrl = getEnvVar('KV_REST_API_URL')
-  const kvToken = getEnvVar('KV_REST_API_TOKEN')
-  
-  if (!kvUrl || !kvToken) {
-    console.warn('KV storage not configured - diff API will return mock data')
-    return null
-  }
-  
-  try {
-    storage = new StorageClient()
-    return storage
-  } catch (error) {
-    console.error('Failed to initialize storage client:', error)
-    return null
-  }
-}
 
 function getDiffEngine(): DiffEngine {
   if (!diffEngine) {
@@ -125,7 +103,48 @@ export async function GET(
       )
     }
 
-    const diffResult = getDiffEngine().computeDiff(oldContent, newContent)
+    // Use smart diff engine for better change detection
+    const smartDiff = new SmartDiffEngine()
+    const smartDiffResult = smartDiff.detectChanges(oldContent, newContent)
+    
+    // If no significant changes, don't create a diff
+    if (!smartDiffResult.hasSignificantChanges) {
+      console.log(`No significant changes detected for ${slug}`, {
+        ignoredChanges: smartDiffResult.ignoredChanges
+      })
+      
+      // Return the last meaningful diff if available
+      const existingDiffs = await storageClient.getLatestDiffs(slug, 1)
+      if (existingDiffs.length > 0) {
+        const lastDiff = existingDiffs[0]
+        if (lastDiff) {
+          const diffContent = await storageClient.getDiffContent(lastDiff.diffBlobKey)
+          
+          return NextResponse.json({
+            diff: lastDiff,
+            htmlDiff: diffContent?.htmlDiff || '',
+            fromSnapshot: {
+              id: lastDiff.fromSnapshotId,
+              capturedAt: fromSnapshot.capturedAt
+            },
+            toSnapshot: {
+              id: lastDiff.toSnapshotId,
+              capturedAt: toSnapshot.capturedAt
+            },
+            noChanges: true,
+            ignoredChanges: smartDiffResult.ignoredChanges
+          }, {
+            headers: {
+              'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+              'Content-Type': 'application/json'
+            }
+          })
+        }
+      }
+    }
+    
+    // Use traditional diff for display but smart diff results for metadata
+    const displayDiffResult = getDiffEngine().computeDiff(oldContent, newContent)
     
     const diff = DiffMetaSchema.parse({
       id: crypto.randomUUID(),
@@ -133,26 +152,29 @@ export async function GET(
       fromSnapshotId: fromSnapshot.id,
       toSnapshotId: toSnapshot.id,
       createdAt: formatTimestamp(),
-      changeCount: diffResult.changeCount,
-      changeType: diffResult.changeType,
-      additions: diffResult.additions,
-      deletions: diffResult.deletions,
+      changeCount: smartDiffResult.changeCount,
+      changeType: smartDiffResult.changeType as any,
+      additions: smartDiffResult.additions,
+      deletions: smartDiffResult.deletions,
       diffBlobKey: `diffs/${slug}/${formatTimestamp()}.json`
     })
 
     await Promise.all([
       storageClient.saveDiff(diff),
       storageClient.saveDiffContent(diff.diffBlobKey, {
-        ...diffResult,
+        ...displayDiffResult,
+        htmlDiff: smartDiffResult.filteredDiff || displayDiffResult.htmlDiff,
         fromSnapshot: fromSnapshot.id,
         toSnapshot: toSnapshot.id,
-        generatedAt: formatTimestamp()
+        generatedAt: formatTimestamp(),
+        ignoredChanges: smartDiffResult.ignoredChanges,
+        hasSignificantChanges: smartDiffResult.hasSignificantChanges
       })
     ])
 
     return NextResponse.json({
       diff,
-      htmlDiff: diffResult.htmlDiff,
+      htmlDiff: smartDiffResult.filteredDiff || displayDiffResult.htmlDiff,
       fromSnapshot: {
         id: fromSnapshot.id,
         capturedAt: fromSnapshot.capturedAt

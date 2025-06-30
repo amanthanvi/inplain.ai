@@ -48,17 +48,67 @@ export async function POST(
 ) {
   try {
     const { slug } = await params
-    const body = await request.json()
-    const { diffId, force, model } = bodySchema.parse(body)
     
-    // Check authentication in production (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
-      if (!userId) {
+    // Parse request body with better error handling
+    let body
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError)
+      return NextResponse.json(
+        { error: 'Invalid request data', message: 'Request body must be valid JSON' },
+        { status: 400 }
+      )
+    }
+    
+    // Validate request data
+    let diffId, force, model
+    try {
+      const validated = bodySchema.parse(body)
+      diffId = validated.diffId
+      force = validated.force
+      model = validated.model
+    } catch (validationError) {
+      console.error('Request validation failed:', validationError)
+      if (validationError instanceof z.ZodError) {
+        const errors = validationError.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
         return NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
+          { 
+            error: 'Invalid request data', 
+            message: 'Request validation failed',
+            details: errors,
+            received: body
+          },
+          { status: 400 }
         )
+      }
+      throw validationError
+    }
+    
+    // Check authentication (skip if dev auth is enabled)
+    if (!isDevAuthEnabled()) {
+      try {
+        const { userId } = await getClerkAuth()
+        if (!userId) {
+          return NextResponse.json(
+            { error: 'Authentication required', message: 'Please sign in to generate AI summaries' },
+            { status: 401 }
+          )
+        }
+      } catch (authError) {
+        console.error('Auth check failed:', authError)
+        // In development, continue without auth if Clerk is not configured
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Auth check failed in development, continuing without auth')
+        } else {
+          return NextResponse.json(
+            { error: 'Authentication failed', message: 'Unable to verify authentication' },
+            { status: 401 }
+          )
+        }
       }
     }
 

@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { extractDomain } from '@inplain.ai/shared/utils'
-import { getCompanies } from '@/lib/api'
+import { getCompanies, getLatestDiffs } from '@/lib/api'
 import type { Company } from '@inplain.ai/shared'
 import { cn } from '@/lib/utils'
 import { AnimatedContainer } from '@/components/ui/animations'
+import { PrivacyMetricsService } from '@/lib/analytics/privacy-metrics'
+import type { PrivacyMetrics } from '@/lib/analytics/privacy-metrics'
 import { 
   Building2, Clock, Shield, TrendingUp, AlertCircle, 
   CheckCircle, Eye, Users, Activity, ChevronRight,
@@ -25,17 +27,9 @@ interface CompanyGridProps {
   viewMode?: 'grid' | 'list'
 }
 
-interface CompanyStats {
-  privacyScore: number
-  riskLevel: 'Low' | 'Medium' | 'High'
+interface CompanyStats extends Omit<PrivacyMetrics, 'lastAnalyzed'> {
   lastChecked: Date
-  changeFrequency: 'Rarely' | 'Occasionally' | 'Frequently'
-  totalChanges: number
   watchers: number
-  compliance: {
-    gdpr: boolean
-    ccpa: boolean
-  }
 }
 
 export function EnhancedCompanyGrid({ 
@@ -54,25 +48,41 @@ export function EnhancedCompanyGrid({
       category: category || undefined,
       limit: limit || undefined,
       active: true
-    }).then(data => {
+    }).then(async data => {
       setCompanies(data)
       
-      // Simulate loading stats for each company
+      // Load real metrics for each company
+      const metricsService = PrivacyMetricsService.getInstance()
       const stats: Record<string, CompanyStats> = {}
-      data.forEach(company => {
-        stats[company.slug] = {
-          privacyScore: Math.floor(Math.random() * 30) + 70,
-          riskLevel: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)] as 'Low' | 'Medium' | 'High',
-          lastChecked: new Date(Date.now() - Math.random() * 86400000),
-          changeFrequency: ['Rarely', 'Occasionally', 'Frequently'][Math.floor(Math.random() * 3)] as 'Rarely' | 'Occasionally' | 'Frequently',
-          totalChanges: Math.floor(Math.random() * 30) + 5,
-          watchers: Math.floor(Math.random() * 500) + 50,
-          compliance: {
-            gdpr: Math.random() > 0.3,
-            ccpa: Math.random() > 0.4
+      
+      await Promise.all(data.map(async (company) => {
+        try {
+          // Get recent diffs for change analysis
+          const recentDiffs = await getLatestDiffs(company.slug, 10)
+          
+          // Calculate real privacy metrics
+          const metrics = await metricsService.calculateMetrics(company, undefined, recentDiffs)
+          
+          // Get watcher count
+          const watchers = await metricsService.getWatcherCount(company.slug)
+          
+          stats[company.slug] = {
+            ...metrics,
+            lastChecked: new Date(), // Would come from actual monitoring data
+            watchers
+          }
+        } catch (error) {
+          console.error(`Failed to load metrics for ${company.name}:`, error)
+          // Fallback to calculated defaults
+          const defaultMetrics = await metricsService.calculateMetrics(company)
+          stats[company.slug] = {
+            ...defaultMetrics,
+            lastChecked: new Date(),
+            watchers: 0
           }
         }
-      })
+      }))
+      
       setCompanyStats(stats)
       setLoading(false)
     }).catch(error => {
@@ -211,10 +221,10 @@ export function EnhancedCompanyGrid({
                           <div className="flex items-center gap-2">
                             <Shield className="h-4 w-4 text-muted-foreground" />
                             <div className="flex gap-1">
-                              {stats?.compliance?.gdpr && (
+                              {stats?.complianceStatus?.gdpr && (
                                 <Badge variant="outline" className="text-xs px-1">GDPR</Badge>
                               )}
-                              {stats?.compliance?.ccpa && (
+                              {stats?.complianceStatus?.ccpa && (
                                 <Badge variant="outline" className="text-xs px-1">CCPA</Badge>
                               )}
                             </div>
@@ -303,7 +313,7 @@ export function EnhancedCompanyGrid({
                     <div className="flex items-center gap-1.5">
                       <Shield className="h-3 w-3 text-muted-foreground" />
                       <span className="text-muted-foreground">
-                        {[stats?.compliance?.gdpr && 'GDPR', stats?.compliance?.ccpa && 'CCPA']
+                        {[stats?.complianceStatus?.gdpr && 'GDPR', stats?.complianceStatus?.ccpa && 'CCPA']
                           .filter(Boolean)
                           .join(', ') || 'Limited'}
                       </span>

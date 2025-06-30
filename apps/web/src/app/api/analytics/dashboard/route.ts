@@ -27,25 +27,51 @@ export async function GET(request: Request) {
       }
     }
 
-    // Generate analytics data
+    // Generate analytics data from real metrics
     const totalCompanies = WATCHED_COMPANIES.length
     const now = new Date()
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-    // Simulate analytics based on realistic patterns
+    // Import metrics service
+    const { PrivacyMetricsService } = await import('@/lib/analytics/privacy-metrics')
+    const metricsService = PrivacyMetricsService.getInstance()
+
+    // Calculate real analytics for all companies
+    let totalScore = 0
+    let highRiskCount = 0
+    let recentChangesCount = 0
+    const companiesWithMetrics = []
+
+    for (const company of WATCHED_COMPANIES) {
+      try {
+        const metrics = await metricsService.calculateMetrics(company)
+        companiesWithMetrics.push({ company, metrics })
+        
+        totalScore += metrics.privacyScore
+        if (metrics.riskLevel === 'High') highRiskCount++
+        if (metrics.totalChanges > 0) recentChangesCount++
+      } catch (error) {
+        console.warn(`Failed to calculate metrics for ${company.name}:`, error)
+      }
+    }
+
+    const averageScore = companiesWithMetrics.length > 0 
+      ? Math.round(totalScore / companiesWithMetrics.length)
+      : 75
+
     const stats = {
       // Active monitoring (all companies are actively monitored)
       activeMonitoring: totalCompanies,
       
-      // Recent changes (simulate ~20% of companies had changes in last 30 days)
-      recentChanges: Math.floor(totalCompanies * 0.2),
+      // Recent changes based on actual data
+      recentChanges: recentChangesCount,
       
-      // High risk (simulate ~10% are high risk)
-      highRisk: Math.floor(totalCompanies * 0.1),
+      // High risk based on actual metrics
+      highRisk: highRiskCount,
       
-      // Average privacy score (realistic range 70-90)
-      averageScore: 82,
+      // Average privacy score from real calculations
+      averageScore,
       
       // Additional detailed stats
       details: {

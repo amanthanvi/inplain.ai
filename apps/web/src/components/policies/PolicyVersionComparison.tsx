@@ -43,6 +43,9 @@ interface PolicyVersion {
     keyChanges: string[]
     recommendations: string[]
   }
+  _diffMeta?: any
+  fromSnapshotId?: string
+  toSnapshotId?: string
 }
 
 interface PolicyVersionComparisonProps {
@@ -62,44 +65,63 @@ export function PolicyVersionComparison({
   const [showOnlyChanges, setShowOnlyChanges] = useState(true)
   const [loading, setLoading] = useState(!propVersions)
   const [diffResults, setDiffResults] = useState<any[]>([])
+  const [diffHtml, setDiffHtml] = useState<string>('')
 
   useEffect(() => {
     if (!propVersions) {
-      // Fetch versions from API
-      fetch(`/api/companies/${companySlug}/versions`)
-        .then(res => res.json())
-        .then(data => {
-          // Generate mock data for now
-          const mockVersions: PolicyVersion[] = Array.from({ length: 10 }, (_, i) => ({
-            id: `v${i + 1}`,
-            date: new Date(Date.now() - i * 30 * 24 * 60 * 60 * 1000), // 30 days apart
-            version: `${2024 - Math.floor(i / 4)}.${12 - (i % 12)}.${28 - i}`,
-            changeCount: Math.floor(Math.random() * 20) + 5,
-            changeType: ['minor', 'moderate', 'major'][Math.floor(Math.random() * 3)] as any,
-            summary: `Updated ${['data collection', 'third-party sharing', 'user rights', 'cookie policy'][i % 4]} section`,
-            content: generateMockPolicyContent(i),
+      // Fetch real diff history and convert to versions
+      Promise.all([
+        fetch(`/api/diff/${companySlug}/history?limit=20`).then(res => res.json()),
+        fetch(`/api/companies/${companySlug}`).then(res => res.json())
+      ])
+        .then(async ([diffHistory, companyData]) => {
+          const diffs = diffHistory.diffs || []
+          
+          if (diffs.length === 0) {
+            setVersions([])
+            setLoading(false)
+            return
+          }
+          
+          // Helper function to format version number
+          const formatVersion = (date: Date, index: number) => {
+            const year = date.getFullYear()
+            const month = date.getMonth() + 1
+            const day = date.getDate()
+            return `${year}.${month}.${day}-${index + 1}`
+          }
+          
+          // Helper function to generate summary from diff
+          const generateSummary = (diff: any) => {
+            if (diff.changeCount === 0) return 'No changes detected'
+            const changeType = diff.changeType || 'minor'
+            const changeWord = changeType === 'major' ? 'Significant' : changeType === 'moderate' ? 'Moderate' : 'Minor'
+            return `${changeWord} policy updates with ${diff.additions} additions and ${diff.deletions} deletions`
+          }
+          
+          // Convert diffs to version format
+          const realVersions: PolicyVersion[] = diffs.map((diff: any, index: number) => ({
+            id: diff.id,
+            date: new Date(diff.createdAt),
+            version: formatVersion(new Date(diff.createdAt), index),
+            changeCount: diff.changeCount || 0,
+            changeType: diff.changeType || 'minor',
+            summary: generateSummary(diff),
+            content: '', // Will be loaded when needed
             stats: {
-              additions: Math.floor(Math.random() * 50) + 10,
-              deletions: Math.floor(Math.random() * 30) + 5,
-              modifications: Math.floor(Math.random() * 20) + 5
+              additions: diff.additions || 0,
+              deletions: diff.deletions || 0,
+              modifications: Math.round((diff.additions + diff.deletions) / 2)
             },
-            aiAnalysis: {
-              impactScore: Math.floor(Math.random() * 30) + 70,
-              keyChanges: [
-                'Enhanced data retention policies',
-                'Updated third-party partner list',
-                'Clarified user opt-out procedures'
-              ].slice(0, Math.floor(Math.random() * 3) + 1),
-              recommendations: [
-                'Review new data sharing agreements',
-                'Update consent forms if applicable'
-              ]
-            }
+            aiAnalysis: null, // Will be loaded if summary available
+            _diffMeta: diff, // Store original diff data
+            fromSnapshotId: diff.fromSnapshotId,
+            toSnapshotId: diff.toSnapshotId
           }))
           
-          setVersions(mockVersions)
-          if (mockVersions.length >= 2) {
-            setSelectedVersions([mockVersions[1]?.id || '', mockVersions[0]?.id || ''])
+          setVersions(realVersions)
+          if (realVersions.length >= 2) {
+            setSelectedVersions([realVersions[1]?.id || '', realVersions[0]?.id || ''])
           }
           setLoading(false)
         })
@@ -116,85 +138,56 @@ export function PolicyVersionComparison({
       const v2 = versions.find(v => v.id === selectedVersions[1])
       
       if (v1 && v2) {
-        const dmp = new (DiffMatchPatch as any)()
-        const diffs = dmp.diff_main(v1.content, v2.content)
-        dmp.diff_cleanupSemantic(diffs)
-        setDiffResults(diffs)
+        // Reset previous results
+        setDiffHtml('')
+        setDiffResults([])
+        
+        // For comparing two versions, we need to find the diff that represents the change from v1 to v2
+        // Since v2 is the newer version, its diff should contain the changes from v1
+        const targetDiff = v2._diffMeta
+        
+        if (targetDiff && targetDiff.diffBlobKey) {
+          // Fetch the actual diff content
+          fetch('/api/storage/diff-content', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ blobKey: targetDiff.diffBlobKey })
+          })
+            .then(res => res.json())
+            .then(diffContent => {
+              if (diffContent && diffContent.htmlDiff) {
+                // Use the HTML diff directly
+                setDiffHtml(diffContent.htmlDiff)
+              } else {
+                setDiffHtml('<p class="text-muted-foreground">No diff content available</p>')
+              }
+            })
+            .catch(err => {
+              console.error('Failed to fetch diff content:', err)
+              setDiffHtml('<p class="text-red-600">Unable to load comparison data. Please try again.</p>')
+            })
+        } else {
+          // If we don't have diff metadata, show a message
+          setDiffHtml('<p class="text-muted-foreground">No comparison data available for these versions</p>')
+        }
       }
     }
-  }, [selectedVersions, versions])
+  }, [selectedVersions, versions, companySlug])
 
   const renderDiffView = () => {
-    if (!diffResults.length) return null
+    if (!diffHtml) return null
 
-    switch (viewMode) {
-      case 'unified':
-        return (
-          <div className="prose prose-sm max-w-none">
-            {diffResults.map((diff, index) => {
-              const [op, text] = diff
-              if (op === 0) {
-                return showOnlyChanges ? null : (
-                  <span key={index} className="text-muted-foreground">{text}</span>
-                )
-              } else if (op === -1) {
-                return (
-                  <span key={index} className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 line-through">
-                    {text}
-                  </span>
-                )
-              } else {
-                return (
-                  <span key={index} className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                    {text}
-                  </span>
-                )
-              }
-            })}
-          </div>
-        )
-      
-      case 'split':
-        const leftContent: JSX.Element[] = []
-        const rightContent: JSX.Element[] = []
-        
-        diffResults.forEach((diff, index) => {
-          const [op, text] = diff
-          if (op === 0) {
-            const elem = <span key={index} className="text-muted-foreground">{text}</span>
-            leftContent.push(elem)
-            rightContent.push(elem)
-          } else if (op === -1) {
-            leftContent.push(
-              <span key={index} className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300">
-                {text}
-              </span>
-            )
-          } else {
-            rightContent.push(
-              <span key={index} className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                {text}
-              </span>
-            )
-          }
-        })
-        
-        return (
-          <div className="grid grid-cols-2 gap-4">
-            <div className="prose prose-sm max-w-none">
-              <h4 className="text-sm font-medium mb-2">Previous Version</h4>
-              {leftContent}
-            </div>
-            <div className="prose prose-sm max-w-none">
-              <h4 className="text-sm font-medium mb-2">Current Version</h4>
-              {rightContent}
-            </div>
-          </div>
-        )
-      
-      default:
-        return null
-    }
+    // Apply custom styles to the diff HTML
+    const styledDiff = diffHtml
+      .replace(/<del/g, '<del style="background-color: rgb(254 202 202); text-decoration: line-through; color: rgb(185 28 28);"')
+      .replace(/<ins/g, '<ins style="background-color: rgb(187 247 208); text-decoration: none; color: rgb(21 128 61);"')
+
+    return (
+      <div 
+        className="prose prose-sm max-w-none dark:prose-invert"
+        dangerouslySetInnerHTML={{ __html: styledDiff }}
+      />
+    )
   }
 
   const getChangeIcon = (type: string) => {
@@ -414,32 +407,22 @@ export function PolicyVersionComparison({
           )}
 
           {/* View Options */}
-          <div className="flex items-center justify-between">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
-              <TabsList>
-                <TabsTrigger value="unified">Unified</TabsTrigger>
-                <TabsTrigger value="split">Split View</TabsTrigger>
-                <TabsTrigger value="inline">Inline</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showOnlyChanges}
-                  onChange={(e) => setShowOnlyChanges(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                Show only changes
-              </label>
-              
-              <Button size="sm" variant="outline">
-                <Eye className="h-4 w-4 mr-2" />
-                View Full
-              </Button>
+          {diffHtml && (
+            <div className="flex items-center justify-end">
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">
+                  <del className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1">Removed</del>
+                  {' '}
+                  <ins className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-1">Added</ins>
+                </span>
+                
+                <Button size="sm" variant="outline">
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Full
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Diff View */}
           <ScrollArea className="h-[600px] border rounded-lg p-4">
