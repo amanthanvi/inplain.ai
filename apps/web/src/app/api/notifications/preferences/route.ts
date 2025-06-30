@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { kv } from '@vercel/kv'
+import { kv } from '@/app/api/lib/kv-wrapper'
 import type { NotificationPreferences } from '@/lib/notifications/notification-service'
 
 export const runtime = 'edge'

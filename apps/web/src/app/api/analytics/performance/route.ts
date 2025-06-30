@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { kv } from '@vercel/kv'
+import { kv } from '@/app/api/lib/kv-wrapper'
 import { z } from 'zod'
 
 const performanceMetricSchema = z.object({

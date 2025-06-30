@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { kv } from '@vercel/kv'
+import { kv } from '@/app/api/lib/kv-wrapper'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
