@@ -157,7 +157,7 @@ export async function POST(
         tools: true, // Enable structured data extraction
         webSearch: false, // Can be enabled for premium users
         streaming: false, // This endpoint doesn't stream
-        thinking: false,
+        thinking: true, // Enable free thinking model for deeper analysis
         vision: false
       }
     })
@@ -174,6 +174,7 @@ export async function POST(
           temperature: 0.3,
           maxTokens: 3000,
           useTools: true,
+          useThinking: true, // Enable thinking for all users with free model
           useWebSearch: userTier !== 'free',
           includeConfidence: true,
           includeEvidence: true

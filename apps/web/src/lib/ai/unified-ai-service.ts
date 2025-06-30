@@ -261,7 +261,10 @@ export const AnalysisOptions = z.object({
   stream: z.boolean().default(false),
   includeConfidence: z.boolean().default(true),
   includeEvidence: z.boolean().default(true),
-  language: z.string().default('en')
+  language: z.string().default('en'),
+  systemPrompt: z.string().optional(),
+  userPrompt: z.string().optional(),
+  metadata: z.any().optional()
 })
 
 export type AnalysisOptions = z.infer<typeof AnalysisOptions>
@@ -633,11 +636,11 @@ export class UnifiedAIService {
     const messages: any[] = [
       {
         role: 'system',
-        content: this.getSystemPrompt(options.task)
+        content: options.systemPrompt || this.getSystemPrompt(options.task)
       },
       {
         role: 'user',
-        content: this.getUserPrompt(content, options.task)
+        content: options.userPrompt || this.getUserPrompt(content, options.task)
       }
     ]
 
