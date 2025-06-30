@@ -1,6 +1,4 @@
 
-'use client'
-
 import { notFound } from 'next/navigation'
 import EnhancedCompanyPage from './page-enhanced'
 import { WATCHED_COMPANIES } from '@inplain.ai/shared'
