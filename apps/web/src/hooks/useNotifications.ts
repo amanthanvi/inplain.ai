@@ -28,6 +28,7 @@ interface UseNotificationsReturn {
   updatePreferences: (preferences: Partial<NotificationPreferences>) => Promise<void>
   testNotification: () => void
   refresh: () => Promise<void>
+  requestDesktopPermission: () => Promise<boolean>
 }
 
 export function useNotifications(options: UseNotificationsOptions = {}): UseNotificationsReturn {
@@ -250,6 +251,11 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     await loadNotifications()
   }, [])
 
+  // Request desktop notification permission
+  const requestDesktopPermission = useCallback(async () => {
+    return await notificationService.requestDesktopPermission()
+  }, [])
+
   return {
     notifications,
     unreadCount,
@@ -266,6 +272,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
     getSubscription,
     updatePreferences,
     testNotification,
-    refresh
+    refresh,
+    requestDesktopPermission
   }
 }

@@ -5,6 +5,7 @@ import { rateLimiters, getRateLimitHeaders, createRateLimitResponse } from '@/li
 import { securityMiddleware, checkIPAccess } from '@/lib/middleware/security'
 import * as Sentry from '@/lib/sentry'
 import { logger } from '@/lib/logger'
+import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 // Define protected routes that require authentication
 const isProtectedRoute = createRouteMatcher([
@@ -128,15 +129,20 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Protect specific routes with Clerk authentication
   if (isProtectedRoute(req)) {
-    try {
-      await auth.protect()
-    } catch (error) {
-      logger.error('Authentication error', { error, requestId, path: req.url })
-      Sentry.captureException(error, {
-        tags: { type: 'middleware_auth' },
-        extra: { url: req.url }
-      })
-      throw error
+    // Skip authentication in development with auth bypass
+    if (isDevAuthEnabled()) {
+      logger.info('Dev auth bypass active - skipping authentication', { requestId, path: req.url })
+    } else {
+      try {
+        await auth.protect()
+      } catch (error) {
+        logger.error('Authentication error', { error, requestId, path: req.url })
+        Sentry.captureException(error, {
+          tags: { type: 'middleware_auth' },
+          extra: { url: req.url }
+        })
+        throw error
+      }
     }
   }
 

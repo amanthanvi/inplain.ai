@@ -65,11 +65,16 @@ class NotificationService extends EventEmitter {
     // Load user preferences
     await this.loadPreferences()
     
-    // Request notification permission if needed
+    // Do NOT automatically request notification permission - this should only happen on user interaction
+    // Check current permission status without requesting
     if (this.preferences?.enableDesktop && typeof window !== 'undefined' && 'Notification' in window) {
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') {
-        console.warn('Desktop notifications permission denied')
+      const currentPermission = Notification.permission
+      if (currentPermission === 'denied') {
+        console.warn('Desktop notifications permission was previously denied')
+        // Optionally disable desktop notifications in preferences
+        if (this.preferences) {
+          this.preferences.enableDesktop = false
+        }
       }
     }
     
@@ -345,6 +350,31 @@ class NotificationService extends EventEmitter {
         window.location.href = notification.action.href
       }
       desktopNotif.close()
+    }
+  }
+
+  // Request desktop notification permission - should only be called on user interaction
+  async requestDesktopPermission(): Promise<boolean> {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      console.warn('Desktop notifications not supported')
+      return false
+    }
+
+    if (Notification.permission === 'granted') {
+      return true
+    }
+
+    if (Notification.permission === 'denied') {
+      console.warn('Desktop notifications were previously denied')
+      return false
+    }
+
+    try {
+      const permission = await Notification.requestPermission()
+      return permission === 'granted'
+    } catch (error) {
+      console.error('Error requesting notification permission:', error)
+      return false
     }
   }
 
