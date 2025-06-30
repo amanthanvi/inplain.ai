@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { kv } from "@vercel/kv";
+import { kv } from "@/app/api/lib/kv-wrapper";
 import {
 	isDevAuthEnabled,
 	DEV_USER,
