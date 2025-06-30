@@ -76,12 +76,20 @@ export function EnhancedCompanyGrid({
             // Use fallback values
             stats[slug] = {
               privacyScore: 75,
-              riskLevel: 'Medium',
-              dataCategories: [],
-              lastAnalysisDate: new Date().toISOString(),
-              complianceScore: 70,
-              transparencyScore: 80,
-              userControlScore: 65,
+              scoreBreakdown: {
+                dataCollection: 70,
+                thirdPartySharing: 75,
+                userRights: 80,
+                retention: 70,
+                security: 75
+              },
+              riskLevel: 'Medium' as const,
+              complianceStatus: {
+                gdpr: false,
+                ccpa: false,
+                coppa: false
+              },
+              changeFrequency: 'Occasionally' as const,
               totalChanges: 0,
               lastChecked: new Date(),
               watchers: 0
@@ -99,12 +107,20 @@ export function EnhancedCompanyGrid({
         data.forEach(company => {
           stats[company.slug] = {
             privacyScore: 75,
-            riskLevel: 'Medium',
-            dataCategories: [],
-            lastAnalysisDate: new Date().toISOString(),
-            complianceScore: 70,
-            transparencyScore: 80,
-            userControlScore: 65,
+            scoreBreakdown: {
+              dataCollection: 70,
+              thirdPartySharing: 75,
+              userRights: 80,
+              retention: 70,
+              security: 75
+            },
+            riskLevel: 'Medium' as const,
+            complianceStatus: {
+              gdpr: false,
+              ccpa: false,
+              coppa: false
+            },
+            changeFrequency: 'Occasionally' as const,
             totalChanges: 0,
             lastChecked: new Date(),
             watchers: 0

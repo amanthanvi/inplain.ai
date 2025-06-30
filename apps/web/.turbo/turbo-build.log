@@ -6,133 +6,130 @@
   - Environments: .env.local
 
    Creating an optimized production build ...
-(node:3033017) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (149kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
-(node:3033392) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
  ✓ Compiled successfully
    Skipping linting
    Checking validity of types ...
    Collecting page data ...
  ⚠ Using edge runtime on a page currently disables static generation for that page
-(node:3033784) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:3584883) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-   Generating static pages (0/135) ...
+   Generating static pages (0/136) ...
  ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
  ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+   Generating static pages (34/136) 
  ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
  ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
-   Generating static pages (33/135) 
-(node:3034024) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:3585130) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
  ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
-   Generating static pages (67/135) 
-   Generating static pages (101/135) 
- ✓ Generating static pages (135/135)
+   Generating static pages (68/136) 
+   Generating static pages (102/136) 
+ ✓ Generating static pages (136/136)
    Finalizing page optimization ...
    Collecting build traces ...
 
 Route (app)                                          Size     First Load JS
 ┌ ○ /                                                14.6 kB         196 kB
-├ ƒ /_not-found                                      357 B           100 kB
-├ ● /[slug]                                          27.3 kB         270 kB
+├ ƒ /_not-found                                      361 B           100 kB
+├ ● /[slug]                                          45.3 kB         288 kB
 ├   ├ /google
 ├   ├ /microsoft
 ├   ├ /apple
 ├   └ [+82 more paths]
 ├ ƒ /[slug]/analytics                                21.9 kB         303 kB
 ├ ƒ /about                                           177 B           109 kB
-├ ƒ /api/activity                                    357 B           100 kB
-├ ƒ /api/admin/email-stats                           358 B           100 kB
-├ ƒ /api/ai-health                                   357 B           100 kB
-├ ƒ /api/alerts                                      357 B           100 kB
-├ ƒ /api/alerts/[id]                                 357 B           100 kB
-├ ƒ /api/analytics/[slug]                            358 B           100 kB
-├ ƒ /api/analytics/benchmark                         358 B           100 kB
-├ ƒ /api/analytics/compliance                        358 B           100 kB
-├ ƒ /api/analytics/dashboard                         358 B           100 kB
-├ ƒ /api/analytics/performance                       357 B           100 kB
-├ ƒ /api/analytics/risk-score                        357 B           100 kB
-├ ƒ /api/analytics/trends                            357 B           100 kB
-├ ƒ /api/analyze-advanced-stream/[slug]              358 B           100 kB
-├ ƒ /api/analyze-advanced/[slug]                     358 B           100 kB
-├ ƒ /api/analyze-premium/[slug]                      358 B           100 kB
-├ ƒ /api/analyze-stream/[slug]                       357 B           100 kB
-├ ƒ /api/analyze/[slug]                              357 B           100 kB
-├ ƒ /api/auth/preferences                            358 B           100 kB
-├ ƒ /api/auth/session                                358 B           100 kB
-├ ƒ /api/cache                                       357 B           100 kB
-├ ƒ /api/companies                                   357 B           100 kB
-├ ƒ /api/companies/[slug]                            358 B           100 kB
-├ ƒ /api/cron/monitor                                358 B           100 kB
-├ ƒ /api/cron/monitor-policies                       357 B           100 kB
-├ ƒ /api/cron/notifications                          358 B           100 kB
-├ ƒ /api/cron/process-alerts                         359 B           100 kB
-├ ƒ /api/debug                                       357 B           100 kB
-├ ƒ /api/debug-monitor                               358 B           100 kB
-├ ƒ /api/debug/ai-test                               357 B           100 kB
-├ ƒ /api/debug/auth                                  357 B           100 kB
-├ ƒ /api/debug/deployment                            357 B           100 kB
-├ ƒ /api/debug/dev-auth                              357 B           100 kB
-├ ƒ /api/debug/env-status                            358 B           100 kB
-├ ƒ /api/diff/[slug]                                 357 B           100 kB
-├ ƒ /api/diff/[slug]/history                         357 B           100 kB
-├ ƒ /api/diffs                                       357 B           100 kB
-├ ƒ /api/diffs/generate                              358 B           100 kB
-├ ƒ /api/email/preferences                           358 B           100 kB
-├ ƒ /api/env-test                                    357 B           100 kB
-├ ƒ /api/example/protected                           358 B           100 kB
-├ ƒ /api/export                                      357 B           100 kB
-├ ƒ /api/feed                                        357 B           100 kB
-├ ƒ /api/feed-optimized                              357 B           100 kB
-├ ƒ /api/feedback                                    357 B           100 kB
-├ ƒ /api/feedback/[id]                               357 B           100 kB
-├ ƒ /api/feedback/analytics                          357 B           100 kB
-├ ƒ /api/feedback/upload                             357 B           100 kB
-├ ƒ /api/health                                      357 B           100 kB
-├ ƒ /api/health/detailed                             357 B           100 kB
-├ ƒ /api/metrics                                     357 B           100 kB
-├ ƒ /api/metrics/[slug]                              357 B           100 kB
-├ ƒ /api/models                                      357 B           100 kB
-├ ƒ /api/notifications                               358 B           100 kB
-├ ƒ /api/notifications/preferences                   357 B           100 kB
-├ ƒ /api/notifications/stream                        357 B           100 kB
-├ ƒ /api/notifications/subscriptions                 357 B           100 kB
-├ ƒ /api/notifications/test                          357 B           100 kB
-├ ƒ /api/policies/summarize                          357 B           100 kB
-├ ƒ /api/privacy/analysis-cache                      357 B           100 kB
-├ ƒ /api/privacy/analyze-advanced                    358 B           100 kB
-├ ƒ /api/search                                      358 B           100 kB
-├ ƒ /api/search/policies                             357 B           100 kB
-├ ƒ /api/snapshot/[slug]                             357 B           100 kB
-├ ƒ /api/snapshot/google                             357 B           100 kB
-├ ƒ /api/status                                      358 B           100 kB
-├ ƒ /api/summary/[slug]                              357 B           100 kB
-├ ƒ /api/summary/google                              358 B           100 kB
-├ ƒ /api/test                                        358 B           100 kB
-├ ƒ /api/test-fetch                                  358 B           100 kB
-├ ƒ /api/unsubscribe                                 357 B           100 kB
-├ ƒ /api/user/activity                               358 B           100 kB
-├ ƒ /api/user/api-key                                358 B           100 kB
-├ ƒ /api/user/api-keys                               358 B           100 kB
-├ ƒ /api/user/settings                               358 B           100 kB
-├ ƒ /api/user/watchlist                              358 B           100 kB
-├ ƒ /api/v1/changes/recent                           358 B           100 kB
-├ ƒ /api/v1/companies/[slug]                         358 B           100 kB
-├ ƒ /api/v1/docs                                     357 B           100 kB
-├ ƒ /api/v1/notifications/settings                   357 B           100 kB
-├ ƒ /api/v1/policies/summarize                       357 B           100 kB
-├ ƒ /api/v1/watchlist                                357 B           100 kB
-├ ƒ /api/watchlists                                  357 B           100 kB
-├ ƒ /api/watchlists/[id]                             358 B           100 kB
-├ ƒ /api/watchlists/[id]/sites                       358 B           100 kB
-├ ƒ /api/webhooks                                    357 B           100 kB
-├ ƒ /api/webhooks/user-created                       358 B           100 kB
-├ ○ /companies                                       5.81 kB         229 kB
+├ ƒ /api/activity                                    361 B           100 kB
+├ ƒ /api/admin/email-stats                           361 B           100 kB
+├ ƒ /api/ai-health                                   361 B           100 kB
+├ ƒ /api/alerts                                      361 B           100 kB
+├ ƒ /api/alerts/[id]                                 361 B           100 kB
+├ ƒ /api/analytics/[slug]                            361 B           100 kB
+├ ƒ /api/analytics/benchmark                         361 B           100 kB
+├ ƒ /api/analytics/compliance                        361 B           100 kB
+├ ƒ /api/analytics/dashboard                         361 B           100 kB
+├ ƒ /api/analytics/performance                       361 B           100 kB
+├ ƒ /api/analytics/risk-score                        361 B           100 kB
+├ ƒ /api/analytics/trends                            362 B           100 kB
+├ ƒ /api/analyze-advanced-stream/[slug]              361 B           100 kB
+├ ƒ /api/analyze-advanced/[slug]                     361 B           100 kB
+├ ƒ /api/analyze-premium/[slug]                      361 B           100 kB
+├ ƒ /api/analyze-stream/[slug]                       361 B           100 kB
+├ ƒ /api/analyze/[slug]                              361 B           100 kB
+├ ƒ /api/auth/preferences                            360 B           100 kB
+├ ƒ /api/auth/session                                361 B           100 kB
+├ ƒ /api/cache                                       361 B           100 kB
+├ ƒ /api/companies                                   361 B           100 kB
+├ ƒ /api/companies/[slug]                            362 B           100 kB
+├ ƒ /api/companies/metrics                           361 B           100 kB
+├ ƒ /api/cron/monitor                                361 B           100 kB
+├ ƒ /api/cron/monitor-policies                       362 B           100 kB
+├ ƒ /api/cron/notifications                          361 B           100 kB
+├ ƒ /api/cron/process-alerts                         361 B           100 kB
+├ ƒ /api/debug                                       361 B           100 kB
+├ ƒ /api/debug-monitor                               362 B           100 kB
+├ ƒ /api/debug/ai-test                               362 B           100 kB
+├ ƒ /api/debug/auth                                  363 B           100 kB
+├ ƒ /api/debug/deployment                            363 B           100 kB
+├ ƒ /api/debug/dev-auth                              361 B           100 kB
+├ ƒ /api/debug/env-status                            361 B           100 kB
+├ ƒ /api/diff/[slug]                                 362 B           100 kB
+├ ƒ /api/diff/[slug]/history                         361 B           100 kB
+├ ƒ /api/diffs                                       361 B           100 kB
+├ ƒ /api/diffs/generate                              361 B           100 kB
+├ ƒ /api/email/preferences                           361 B           100 kB
+├ ƒ /api/env-test                                    361 B           100 kB
+├ ƒ /api/example/protected                           361 B           100 kB
+├ ƒ /api/export                                      361 B           100 kB
+├ ƒ /api/feed                                        361 B           100 kB
+├ ƒ /api/feed-optimized                              361 B           100 kB
+├ ƒ /api/feedback                                    361 B           100 kB
+├ ƒ /api/feedback/[id]                               361 B           100 kB
+├ ƒ /api/feedback/analytics                          361 B           100 kB
+├ ƒ /api/feedback/upload                             360 B           100 kB
+├ ƒ /api/health                                      362 B           100 kB
+├ ƒ /api/health/detailed                             361 B           100 kB
+├ ƒ /api/metrics                                     362 B           100 kB
+├ ƒ /api/metrics/[slug]                              361 B           100 kB
+├ ƒ /api/models                                      361 B           100 kB
+├ ƒ /api/notifications                               361 B           100 kB
+├ ƒ /api/notifications/preferences                   362 B           100 kB
+├ ƒ /api/notifications/stream                        362 B           100 kB
+├ ƒ /api/notifications/subscriptions                 362 B           100 kB
+├ ƒ /api/notifications/test                          361 B           100 kB
+├ ƒ /api/policies/summarize                          362 B           100 kB
+├ ƒ /api/privacy/analysis-cache                      361 B           100 kB
+├ ƒ /api/privacy/analyze-advanced                    361 B           100 kB
+├ ƒ /api/search                                      361 B           100 kB
+├ ƒ /api/search/policies                             361 B           100 kB
+├ ƒ /api/snapshot/[slug]                             362 B           100 kB
+├ ƒ /api/snapshot/google                             361 B           100 kB
+├ ƒ /api/status                                      362 B           100 kB
+├ ƒ /api/storage/diff-content                        362 B           100 kB
+├ ƒ /api/summary/[slug]                              361 B           100 kB
+├ ƒ /api/summary/google                              361 B           100 kB
+├ ƒ /api/test                                        361 B           100 kB
+├ ƒ /api/test-fetch                                  361 B           100 kB
+├ ƒ /api/unsubscribe                                 360 B           100 kB
+├ ƒ /api/user/activity                               361 B           100 kB
+├ ƒ /api/user/api-key                                361 B           100 kB
+├ ƒ /api/user/api-keys                               360 B           100 kB
+├ ƒ /api/user/settings                               361 B           100 kB
+├ ƒ /api/user/watchlist                              363 B           100 kB
+├ ƒ /api/v1/changes/recent                           362 B           100 kB
+├ ƒ /api/v1/companies/[slug]                         362 B           100 kB
+├ ƒ /api/v1/docs                                     362 B           100 kB
+├ ƒ /api/v1/notifications/settings                   360 B           100 kB
+├ ƒ /api/v1/policies/summarize                       361 B           100 kB
+├ ƒ /api/v1/watchlist                                361 B           100 kB
+├ ƒ /api/watchlists                                  361 B           100 kB
+├ ƒ /api/watchlists/[id]                             361 B           100 kB
+├ ƒ /api/watchlists/[id]/sites                       361 B           100 kB
+├ ƒ /api/webhooks                                    362 B           100 kB
+├ ƒ /api/webhooks/user-created                       362 B           100 kB
+├ ○ /companies                                       6.04 kB         229 kB
 ├ ƒ /companies/[slug]/policies                       235 B           180 kB
 ├ ƒ /companies/[slug]/policies/[policySlug]          5.21 kB         185 kB
-├ ƒ /companies/[slug]/policies/[policySlug]/compare  5.28 kB         163 kB
+├ ƒ /companies/[slug]/policies/[policySlug]/compare  5.12 kB         163 kB
 ├ ○ /dashboard                                       15.9 kB         203 kB
 ├ ƒ /feedback                                        13.6 kB         281 kB
 ├ ƒ /login                                           2.4 kB          132 kB

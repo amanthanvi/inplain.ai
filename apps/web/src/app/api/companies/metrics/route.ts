@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Get recent diffs
-          let recentDiffs = []
+          let recentDiffs: any[] = []
           try {
             recentDiffs = await getLatestDiffs(slug, 10)
           } catch (error) {

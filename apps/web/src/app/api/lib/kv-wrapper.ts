@@ -10,7 +10,7 @@ type KVClient = {
   get: <T = string>(key: string) => Promise<T | null>
   set: (key: string, value: any, options?: { ex?: number; nx?: boolean }) => Promise<string>
   zadd: (key: string, ...members: Array<{ score: number; member: string }>) => Promise<number>
-  zrange: <T = string>(key: string, start: number, stop: number, options?: { withScores?: boolean }) => Promise<T[] | Array<[T, number]>>
+  zrange: (key: string, start: number, stop: number, options?: { withScores?: boolean }) => Promise<Array<[string, number]> | string[]>
   del: (...keys: string[]) => Promise<number>
   exists: (...keys: string[]) => Promise<number>
   expire: (key: string, seconds: number) => Promise<number>
@@ -24,12 +24,22 @@ type KVClient = {
   pipeline: () => KVPipeline
   lrange: (key: string, start: number, stop: number) => Promise<string[]>
   ltrim: (key: string, start: number, stop: number) => Promise<string>
+  lpush: (key: string, ...elements: string[]) => Promise<number>
+  incr: (key: string) => Promise<number>
+  decr: (key: string) => Promise<number>
+  lrem: (key: string, count: number, element: string) => Promise<number>
+  zcard: (key: string) => Promise<number>
+  keys: (pattern: string) => Promise<string[]>
 }
 
 type KVPipeline = {
+  get<T = any>(key: string): KVPipeline
+  set<T = any>(key: string, value: T, options?: { ex?: number }): KVPipeline
   zadd: (key: string, ...members: Array<{ score: number; member: string }>) => KVPipeline
   hset: (key: string, values: Record<string, unknown>) => KVPipeline
   expire: (key: string, seconds: number) => KVPipeline
+  del: (key: string) => KVPipeline
+  sadd: (key: string, member: string) => KVPipeline
   exec: () => Promise<Array<any>>
 }
 
@@ -39,6 +49,16 @@ class MockKVPipeline implements KVPipeline {
 
   constructor(client: MockKVClient) {
     this.client = client
+  }
+
+  get<T = any>(key: string): KVPipeline {
+    this.commands.push(() => this.client.get<T>(key))
+    return this
+  }
+
+  set<T = any>(key: string, value: T, options?: { ex?: number }): KVPipeline {
+    this.commands.push(() => this.client.set(key, value, options))
+    return this
   }
 
   zadd(key: string, ...members: Array<{ score: number; member: string }>): KVPipeline {
@@ -53,6 +73,16 @@ class MockKVPipeline implements KVPipeline {
 
   expire(key: string, seconds: number): KVPipeline {
     this.commands.push(() => this.client.expire(key, seconds))
+    return this
+  }
+
+  del(key: string): KVPipeline {
+    this.commands.push(() => this.client.del(key))
+    return this
+  }
+
+  sadd(key: string, member: string): KVPipeline {
+    this.commands.push(() => this.client.sadd(key, member))
     return this
   }
 
@@ -116,7 +146,7 @@ class MockKVClient implements KVClient {
     return members.length
   }
 
-  async zrange<T = string>(key: string, start: number, stop: number, options?: { withScores?: boolean }): Promise<T[] | Array<[T, number]>> {
+  async zrange(key: string, start: number, stop: number, options?: { withScores?: boolean }): Promise<Array<[string, number]> | string[]> {
     const set = this.sortedSets.get(key) || []
     
     // Handle negative indices
@@ -126,10 +156,10 @@ class MockKVClient implements KVClient {
     const slice = set.slice(actualStart, actualStop + 1)
     
     if (options?.withScores) {
-      return slice.map(item => [item.member as T, item.score])
+      return slice.map(item => [item.member, item.score] as [string, number])
     }
     
-    return slice.map(item => item.member) as T[]
+    return slice.map(item => item.member)
   }
 
   async del(...keys: string[]): Promise<number> {
@@ -253,6 +283,107 @@ class MockKVClient implements KVClient {
     }
     
     return 'OK'
+  }
+
+  async lpush(key: string, ...elements: string[]): Promise<number> {
+    let list = this.store.get(key)
+    if (!Array.isArray(list)) {
+      list = []
+    }
+    
+    // Push elements to the front of the list
+    list.unshift(...elements.reverse())
+    this.store.set(key, list)
+    
+    return list.length
+  }
+
+  async incr(key: string): Promise<number> {
+    const value = this.store.get(key)
+    const num = typeof value === 'number' ? value : parseInt(value) || 0
+    const newValue = num + 1
+    this.store.set(key, newValue)
+    return newValue
+  }
+
+  async decr(key: string): Promise<number> {
+    const value = this.store.get(key)
+    const num = typeof value === 'number' ? value : parseInt(value) || 0
+    const newValue = Math.max(0, num - 1)
+    this.store.set(key, newValue)
+    return newValue
+  }
+
+  async lrem(key: string, count: number, element: string): Promise<number> {
+    const list = this.store.get(key)
+    if (!Array.isArray(list)) return 0
+    
+    let removed = 0
+    const newList = []
+    
+    if (count === 0) {
+      // Remove all occurrences
+      for (const item of list) {
+        if (item === element) {
+          removed++
+        } else {
+          newList.push(item)
+        }
+      }
+    } else if (count > 0) {
+      // Remove first count occurrences
+      for (const item of list) {
+        if (item === element && removed < count) {
+          removed++
+        } else {
+          newList.push(item)
+        }
+      }
+    } else {
+      // Remove last count occurrences
+      const absCount = Math.abs(count)
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i] === element && removed < absCount) {
+          removed++
+        } else {
+          newList.unshift(list[i])
+        }
+      }
+    }
+    
+    if (newList.length === 0) {
+      this.store.delete(key)
+    } else {
+      this.store.set(key, newList)
+    }
+    
+    return removed
+  }
+
+  async zcard(key: string): Promise<number> {
+    const set = this.sortedSets.get(key)
+    return set?.length || 0
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    const results: string[] = []
+    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$')
+    
+    // Check all keys in the store
+    for (const key of this.store.keys()) {
+      if (regex.test(key)) {
+        results.push(key)
+      }
+    }
+    
+    // Check all keys in sorted sets
+    for (const key of this.sortedSets.keys()) {
+      if (regex.test(key) && !results.includes(key)) {
+        results.push(key)
+      }
+    }
+    
+    return results
   }
 }
 

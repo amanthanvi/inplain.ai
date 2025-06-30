@@ -237,7 +237,7 @@ export class KVSnapshotManager {
       
       if (!latestId) {
         // Fallback to getting from sorted set
-        const snapshotIds = await kv.zrange<string>(`snapshots:${slug}`, -1, -1)
+        const snapshotIds = await kv.zrange(`snapshots:${slug}`, -1, -1) as string[]
         if (!snapshotIds?.length || !snapshotIds[0]) return null
         return this.getSnapshot(slug, snapshotIds[0])
       }
@@ -254,7 +254,7 @@ export class KVSnapshotManager {
    */
   async getSnapshots(slug: string, limit: number = 10): Promise<EnhancedSnapshotMeta[]> {
     try {
-      const snapshotIds = await kv.zrange<string>(`snapshots:${slug}`, -limit, -1)
+      const snapshotIds = await kv.zrange(`snapshots:${slug}`, -limit, -1) as string[]
       
       if (!snapshotIds?.length) return []
       
@@ -392,7 +392,7 @@ export class KVSnapshotManager {
    */
   async getDiffs(slug: string, limit: number = 10): Promise<EnhancedDiffMeta[]> {
     try {
-      const diffIds = await kv.zrange<string>(`diffs:${slug}`, -limit, -1)
+      const diffIds = await kv.zrange(`diffs:${slug}`, -limit, -1) as string[]
       
       if (!diffIds?.length) return []
       
@@ -414,7 +414,7 @@ export class KVSnapshotManager {
   async cleanupOldSnapshots(slug: string): Promise<number> {
     try {
       // Get all snapshot IDs
-      const allSnapshotIds = await kv.zrange<string>(`snapshots:${slug}`, 0, -1)
+      const allSnapshotIds = await kv.zrange(`snapshots:${slug}`, 0, -1) as string[]
       
       if (!allSnapshotIds || allSnapshotIds.length <= this.maxVersions) {
         return 0
@@ -462,8 +462,8 @@ export class KVSnapshotManager {
   }> {
     try {
       const [snapshotIds, diffIds, snapshots] = await Promise.all([
-        kv.zrange<string>(`snapshots:${slug}`, 0, -1),
-        kv.zrange<string>(`diffs:${slug}`, 0, -1),
+        kv.zrange(`snapshots:${slug}`, 0, -1) as Promise<string[]>,
+        kv.zrange(`diffs:${slug}`, 0, -1) as Promise<string[]>,
         this.getSnapshots(slug, 100) // Get up to 100 for stats
       ])
       

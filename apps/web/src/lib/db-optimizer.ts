@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { kv } from '@/app/api/lib/kv-wrapper';
 import { CacheService, CacheKeys, CacheTags } from './cache';
 
 export interface QueryOptions {
@@ -102,11 +102,11 @@ export class DatabaseOptimizer {
   }> {
     try {
       // For sorted sets
-      const items = await kv.zrange<T[]>(key, cursor, cursor + limit - 1);
+      const items = await kv.zrange(key, cursor, cursor + limit - 1) as string[];
       const total = await kv.zcard(key);
       
       return {
-        items: items || [],
+        items: (items || []) as T[],
         nextCursor: cursor + limit < total ? cursor + limit : null,
         hasMore: cursor + limit < total
       };

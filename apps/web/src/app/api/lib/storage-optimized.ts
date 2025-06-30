@@ -18,7 +18,7 @@ export class OptimizedStorageClient {
     return CacheService.wrap(
       CacheKeys.latestSnapshots(slug),
       async () => {
-        const snapshotIds = await kv.zrange<string>(`snapshots:${slug}`, -limit, -1)
+        const snapshotIds = await kv.zrange(`snapshots:${slug}`, -limit, -1)
         
         if (!snapshotIds?.length) return []
         
@@ -100,10 +100,10 @@ export class OptimizedStorageClient {
     return CacheService.wrap(
       `diffs:latest:${slug}:${limit}`,
       async () => {
-        const keys = await kv.zrange<string>(`diffs:${slug}`, -limit, -1)
+        const keys = await kv.zrange(`diffs:${slug}`, -limit, -1)
         if (!keys?.length) return []
         
-        const diffs = await DatabaseOptimizer.batchGet<DiffMeta>(keys)
+        const diffs = await DatabaseOptimizer.batchGet<DiffMeta>(keys as string[])
         return diffs.filter(Boolean).reverse() as DiffMeta[]
       },
       { ttl: 600, tags: [CacheTags.company(slug), CacheTags.diffs] }
