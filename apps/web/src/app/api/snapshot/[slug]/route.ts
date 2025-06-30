@@ -52,13 +52,31 @@ export async function GET(
       const latestSnapshot = snapshots[0]
       
       if (!latestSnapshot) {
-        // Return a meaningful response even if no snapshot exists yet
+        // Return mock data if no snapshot exists yet in development
+        if (process.env.NODE_ENV === 'development' || isDemoMode()) {
+          const mockText = `This is mock privacy policy content for ${company.name}. In production, this would contain the actual privacy policy text scraped from ${company.url}.`
+          return NextResponse.json({
+            id: `mock-${slug}-${Date.now()}`,
+            companyId: slug,
+            content: mockText,
+            text: mockText,
+            url: company.url,
+            hash: 'mock-hash-' + slug,
+            scrapedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+          }, {
+            headers: {
+              'Cache-Control': 'no-store'
+            }
+          })
+        }
+        
+        // In production, return 404 if no snapshot
         return NextResponse.json({
-          snapshot: null,
-          content: null,
+          error: 'No policy snapshots available yet',
           message: 'No policy snapshots available yet. Check back later.'
         }, {
-          status: 200,
+          status: 404,
           headers: {
             'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
           }
@@ -81,22 +99,22 @@ export async function GET(
         }
       }
       
-      // Return snapshot data with content in the expected format
+      // Return snapshot data in the format expected by analytics API
       return NextResponse.json({
+        id: latestSnapshot.id,
+        companyId: slug, // Use slug as companyId for compatibility
+        content: content || 'Policy content is being processed. Please check back in a few moments.',
+        text: content || 'Policy content is being processed. Please check back in a few moments.', // For backward compatibility
+        url: latestSnapshot.url,
+        hash: latestSnapshot.contentHash,
+        scrapedAt: latestSnapshot.capturedAt,
+        createdAt: latestSnapshot.capturedAt,
+        // Include the full snapshot object for other consumers
         snapshot: {
           id: latestSnapshot.id,
           capturedAt: latestSnapshot.capturedAt,
           url: latestSnapshot.url,
           contentHash: latestSnapshot.contentHash
-        },
-        content: content ? {
-          text: content,
-          wordCount: content.split(/\s+/).length,
-          characterCount: content.length
-        } : {
-          text: 'Policy content is being processed. Please check back in a few moments.',
-          wordCount: 0,
-          characterCount: 0
         }
       }, {
         headers: {
@@ -113,16 +131,19 @@ export async function GET(
         
         const mockText = `This is mock privacy policy content for ${company.name}. In production, this would contain the actual privacy policy text scraped from ${company.url}.`
         return NextResponse.json({
+          id: `mock-${slug}-${Date.now()}`,
+          companyId: slug,
+          content: mockText,
+          text: mockText,
+          url: company.url,
+          hash: 'mock-hash-' + slug,
+          scrapedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           snapshot: {
             id: `mock-${slug}-${Date.now()}`,
             capturedAt: new Date().toISOString(),
             url: company.url,
             contentHash: 'mock-hash-' + slug
-          },
-          content: {
-            text: mockText,
-            wordCount: mockText.split(/\s+/).length,
-            characterCount: mockText.length
           }
         }, {
           headers: {

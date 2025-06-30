@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { kv } from '@vercel/kv'
+import { kv } from '@/app/api/lib/kv-wrapper'
 import { AIAnalyticsService } from '@/lib/ai-analytics'
 import type { DiffMeta, Summary } from '@inplain.ai/shared'
 

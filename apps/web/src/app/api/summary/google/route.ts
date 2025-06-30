@@ -44,8 +44,47 @@ const DEFAULT_MODEL = getEnvVar('DEFAULT_AI_MODEL', 'google/gemini-2.5-flash-pre
 export async function POST(request: NextRequest) {
   try {
     const slug = 'google' // Hardcoded for this specific route
-    const body = await request.json()
-    const { diffId, force, model } = bodySchema.parse(body)
+    
+    // Parse request body with better error handling
+    let body
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError)
+      return NextResponse.json(
+        { error: 'Invalid request data', message: 'Request body must be valid JSON' },
+        { status: 400 }
+      )
+    }
+    
+    console.log('Google summary API request:', body)
+    
+    let diffId, force, model
+    try {
+      const validated = bodySchema.parse(body)
+      diffId = validated.diffId
+      force = validated.force
+      model = validated.model
+    } catch (validationError) {
+      console.error('Request validation failed:', validationError)
+      console.error('Received body:', body)
+      if (validationError instanceof z.ZodError) {
+        const errors = validationError.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
+        return NextResponse.json(
+          { 
+            error: 'Invalid request data', 
+            message: 'Request validation failed',
+            details: errors,
+            received: body
+          },
+          { status: 400 }
+        )
+      }
+      throw validationError
+    }
     
     // Check authentication in production (skip in dev with auth bypass)
     if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
@@ -97,25 +136,49 @@ export async function POST(request: NextRequest) {
     const storageClient = getStorage()
     
     if (!storageClient) {
-      // Even without storage, we can return a mock summary
-      const mockSummary = {
-        id: crypto.randomUUID(),
-        diffId,
-        createdAt: formatTimestamp(),
-        model: model || DEFAULT_MODEL,
-        prompt: 'Analysis without storage access',
-        summary: 'Storage is not configured. Please configure Vercel KV storage for full functionality.',
-        highlights: ['Storage configuration required'],
-        riskLevel: 'unknown' as const,
-        categories: [],
-        tokensUsed: 0
+      console.warn('Storage not configured for Google summary API')
+      
+      // Check if this is the mock diff ID
+      if (diffId === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') {
+        const mockSummary = {
+          id: crypto.randomUUID(),
+          diffId,
+          createdAt: formatTimestamp(),
+          model: model || DEFAULT_MODEL,
+          prompt: 'Mock AI analysis for Google demonstration',
+          summary: 'Google has updated its privacy policy with several important changes. The company has enhanced user data control options through a new privacy dashboard, giving users more granular control over their personal information. Third-party data sharing policies have been updated to be more transparent, with clearer explanations of which partners have access to user data. New data retention guidelines limit how long personal information is stored, and improved security measures including encryption at rest have been implemented.',
+          highlights: [
+            'New privacy dashboard for enhanced user control',
+            'Transparent third-party data sharing disclosures',
+            '90-day data retention limit for non-essential data',
+            'End-to-end encryption for sensitive user data',
+            'Simplified one-click opt-out for all marketing'
+          ],
+          riskLevel: 'low' as const,
+          categories: ['data_collection', 'user_rights', 'security', 'third_party_sharing'],
+          tokensUsed: 0
+        }
+        
+        return NextResponse.json({
+          summary: mockSummary,
+          cached: false,
+          mockMode: true,
+          warning: 'Demo mode: Using mock data. Configure storage for real analysis.'
+        }, {
+          headers: {
+            'Cache-Control': 'private, s-maxage=60',
+            'Content-Type': 'application/json',
+            'X-Mock-Mode': 'true'
+          }
+        })
       }
       
+      // If not the mock diff ID, return error
       return NextResponse.json({
-        summary: mockSummary,
-        cached: false,
-        storageError: true
-      })
+        error: 'Storage not configured',
+        message: 'Cannot generate summaries without storage. Please configure Vercel KV.',
+        code: 'STORAGE_NOT_CONFIGURED'
+      }, { status: 503 })
     }
     
     // Check if we already have a summary for this diff
