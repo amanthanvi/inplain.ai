@@ -15,6 +15,10 @@ type KVClient = {
   exists: (...keys: string[]) => Promise<number>
   expire: (key: string, seconds: number) => Promise<number>
   ttl: (key: string) => Promise<number>
+  sadd: (key: string, ...members: string[]) => Promise<number>
+  srem: (key: string, ...members: string[]) => Promise<number>
+  scard: (key: string) => Promise<number>
+  smembers: (key: string) => Promise<string[]>
 }
 
 class MockKVClient implements KVClient {
@@ -108,6 +112,51 @@ class MockKVClient implements KVClient {
     
     const ttl = Math.floor((expiryTime - Date.now()) / 1000)
     return ttl > 0 ? ttl : -2
+  }
+
+  async sadd(key: string, ...members: string[]): Promise<number> {
+    const set = this.store.get(key) || new Set<string>()
+    let added = 0
+    
+    for (const member of members) {
+      if (!set.has(member)) {
+        set.add(member)
+        added++
+      }
+    }
+    
+    this.store.set(key, set)
+    return added
+  }
+
+  async srem(key: string, ...members: string[]): Promise<number> {
+    const set = this.store.get(key)
+    if (!set || !(set instanceof Set)) return 0
+    
+    let removed = 0
+    for (const member of members) {
+      if (set.delete(member)) {
+        removed++
+      }
+    }
+    
+    if (set.size === 0) {
+      this.store.delete(key)
+    }
+    
+    return removed
+  }
+
+  async scard(key: string): Promise<number> {
+    const set = this.store.get(key)
+    if (!set || !(set instanceof Set)) return 0
+    return set.size
+  }
+
+  async smembers(key: string): Promise<string[]> {
+    const set = this.store.get(key)
+    if (!set || !(set instanceof Set)) return []
+    return Array.from(set)
   }
 }
 

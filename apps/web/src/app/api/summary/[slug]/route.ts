@@ -64,12 +64,15 @@ export async function POST(
     // Validate request data
     let diffId, force, model
     try {
+      console.log('Summary API request:', { slug, body })
       const validated = bodySchema.parse(body)
       diffId = validated.diffId
       force = validated.force
       model = validated.model
+      console.log('Validated request:', { diffId, force, model })
     } catch (validationError) {
       console.error('Request validation failed:', validationError)
+      console.error('Received body:', body)
       if (validationError instanceof z.ZodError) {
         const errors = validationError.errors.map(e => ({
           field: e.path.join('.'),
@@ -151,8 +154,46 @@ export async function POST(
     // Get storage client
     const storageClient = getStorage()
     
-    // If storage is not configured, we can't fetch diffs
+    // If storage is not configured, return enhanced mock summary
     if (!storageClient) {
+      console.warn('Storage not configured, returning mock summary')
+      
+      // Check if this is the mock diff ID
+      if (diffId === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') {
+        const mockSummary = {
+          id: crypto.randomUUID(),
+          diffId,
+          createdAt: formatTimestamp(),
+          model: model || DEFAULT_MODEL,
+          prompt: 'Mock AI analysis for demonstration',
+          summary: 'This privacy policy update includes several important changes. The company has enhanced user data control options, giving users more granular control over their personal information. Third-party data sharing policies have been updated to be more transparent, with clearer explanations of which partners have access to user data. New data retention guidelines limit how long personal information is stored, and improved security measures including encryption at rest have been implemented.',
+          highlights: [
+            'Enhanced user data control options with new privacy dashboard',
+            'Updated third-party sharing policies with partner transparency',
+            'New 90-day data retention limit for non-essential data',
+            'Improved security with end-to-end encryption',
+            'Simplified opt-out process for marketing communications'
+          ],
+          riskLevel: 'low' as const,
+          categories: ['data_collection', 'user_rights', 'security', 'third_party_sharing'],
+          tokensUsed: 0
+        }
+        
+        return NextResponse.json({
+          summary: mockSummary,
+          cached: false,
+          mockMode: true,
+          warning: 'Demo mode: Using mock data. Configure storage (KV_REST_API_URL and KV_REST_API_TOKEN) for real analysis.'
+        }, {
+          headers: {
+            'Cache-Control': 'private, s-maxage=60',
+            'Content-Type': 'application/json',
+            'X-Mock-Mode': 'true'
+          }
+        })
+      }
+      
+      // If not the mock diff ID, we can't proceed without storage
       return NextResponse.json(
         { 
           error: 'Storage service not configured',

@@ -41,10 +41,34 @@ export function DiffViewer({ slug }: DiffViewerProps) {
   }, [slug])
 
   async function generateSummary() {
-    if (!diffData) return
+    if (!diffData) {
+      console.error('No diff data available')
+      toast({
+        title: "Error",
+        description: "No diff data available to generate summary",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    if (!diffData.diff?.id) {
+      console.error('Diff data missing ID:', diffData)
+      toast({
+        title: "Error",
+        description: "Invalid diff data structure",
+        variant: "destructive",
+      })
+      return
+    }
     
     setLoadingSummary(true)
     try {
+      console.log('Generating summary for diff:', {
+        diffId: diffData.diff.id,
+        slug,
+        model: selectedModel
+      })
+      
       const response = await fetch(`/api/summary/${slug}`, {
         method: 'POST',
         headers: {
@@ -61,9 +85,24 @@ export function DiffViewer({ slug }: DiffViewerProps) {
         const errorData = await response.json().catch(() => ({}))
         const errorMessage = errorData.error || `Summary generation failed (${response.status})`
         
+        console.error('Summary API error:', {
+          status: response.status,
+          errorData,
+          requestBody: {
+            diffId: diffData.diff.id,
+            model: selectedModel,
+            force: true
+          }
+        })
+        
         // Add specific error handling for common issues
-        if (response.status === 500) {
+        if (response.status === 400) {
+          const details = errorData.details ? errorData.details.map((d: any) => `${d.field}: ${d.message}`).join(', ') : ''
+          throw new Error(`Invalid request: ${errorMessage}${details ? ` (${details})` : ''}. ${errorData.received ? `Received: ${JSON.stringify(errorData.received)}` : ''}`)
+        } else if (response.status === 500) {
           throw new Error(`${errorMessage}. Please try again or select a different model.`)
+        } else if (response.status === 503) {
+          throw new Error('Storage service not configured. Please check server configuration.')
         } else if (response.status === 404) {
           throw new Error('Diff not found. Please refresh the page and try again.')
         } else if (response.status === 429) {
