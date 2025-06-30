@@ -160,8 +160,13 @@ export function DiffViewer({ slug }: DiffViewerProps) {
           <Card>
             <CardContent className="p-4">
               <div 
-                className="prose prose-sm max-w-none overflow-x-auto"
-                dangerouslySetInnerHTML={{ __html: diffData.htmlDiff }}
+                className="font-mono text-sm leading-relaxed whitespace-pre-wrap break-words overflow-x-auto max-h-96 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900 rounded"
+                dangerouslySetInnerHTML={{ 
+                  __html: diffData.htmlDiff
+                    // Add inline styles to the diff elements
+                    .replace(/<ins class="diff-addition">/g, '<ins style="background-color: #d4f4dd; color: #22863a; text-decoration: none; padding: 2px 4px; border-radius: 3px;">')
+                    .replace(/<del class="diff-deletion">/g, '<del style="background-color: #ffeef0; color: #cb2431; text-decoration: line-through; padding: 2px 4px; border-radius: 3px;">')
+                }}
               />
             </CardContent>
           </Card>

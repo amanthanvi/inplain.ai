@@ -58,6 +58,7 @@ export class SecurityMiddleware {
         "img-src 'self' data: blob: https: http:",
         "connect-src 'self' https://clerk.com https://*.clerk.accounts.dev https://clerk.inplain.ai https://api.clerk.com https://api.openrouter.ai wss://*.clerk.accounts.dev",
         "frame-src 'self' https://clerk.com https://*.clerk.accounts.dev https://clerk.inplain.ai https://challenges.cloudflare.com",
+        "worker-src 'self' blob:",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

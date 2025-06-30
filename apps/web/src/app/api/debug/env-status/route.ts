@@ -17,8 +17,8 @@ export async function GET() {
       secretKey: !!process.env.CLERK_SECRET_KEY,
       signInUrl: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || 'not set',
       signUpUrl: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL || 'not set',
-      afterSignInUrl: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL || 'not set',
-      afterSignUpUrl: process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL || 'not set',
+      fallbackRedirectUrl: process.env.NEXT_PUBLIC_CLERK_FALLBACK_REDIRECT_URL || 'not set',
+      forceRedirectUrl: process.env.NEXT_PUBLIC_CLERK_FORCE_REDIRECT_URL || 'not set',
     },
     kv: {
       restApiUrl: !!process.env.KV_REST_API_URL,

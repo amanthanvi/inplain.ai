@@ -25,6 +25,7 @@ import { useNotifications } from '@/hooks/useNotifications'
 import { NotificationCenter } from '@/components/notifications/NotificationCenter'
 import { formatDuration, getTimeDiff } from '@inplain.ai/shared/utils'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui/use-toast'
 import type { NotificationPreferences } from '@/lib/notifications/notification-service'
 
 // Remove server-side metadata since this is now a client component
@@ -159,6 +160,7 @@ const defaultSettings: NotificationSetting[] = [
 export default function NotificationsPage() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
+  const { toast } = useToast()
   const [isUpdating, setIsUpdating] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   
@@ -175,7 +177,8 @@ export default function NotificationsPage() {
     dismissAll,
     updatePreferences,
     testNotification,
-    refresh
+    refresh,
+    requestDesktopPermission
   } = useNotifications()
   
   const [localPreferences, setLocalPreferences] = useState<NotificationPreferences | null>(null)
@@ -204,8 +207,21 @@ export default function NotificationsPage() {
     return null
   }
   
-  const handlePreferenceChange = (key: keyof NotificationPreferences, value: any) => {
+  const handlePreferenceChange = async (key: keyof NotificationPreferences, value: any) => {
     if (!localPreferences) return
+    
+    // If enabling desktop notifications, request permission first
+    if (key === 'enableDesktop' && value === true) {
+      const granted = await requestDesktopPermission()
+      if (!granted) {
+        toast({
+          title: "Permission Denied",
+          description: "Desktop notifications require browser permission. Please check your browser settings.",
+          variant: "destructive",
+        })
+        return // Don't update the preference if permission was denied
+      }
+    }
     
     setLocalPreferences(prev => {
       if (!prev) return prev

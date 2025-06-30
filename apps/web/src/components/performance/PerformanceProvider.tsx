@@ -98,7 +98,7 @@ export function PerformanceProvider({
     })
 
     // Prefetch commonly accessed routes
-    const commonRoutes = ['/dashboard', '/settings', '/analytics']
+    const commonRoutes = ['/dashboard', '/settings', '/watchlist']
     commonRoutes.forEach(route => {
       if (route !== pathname) {
         PerformanceOptimizer.prefetchRoute(route)
