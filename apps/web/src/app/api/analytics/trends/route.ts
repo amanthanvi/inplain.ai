@@ -4,7 +4,7 @@ import { OptimizedStorageClient } from '@/app/api/lib/storage-optimized';
 
 const storageClient = new OptimizedStorageClient();
 import { validateAnalyticsAccess } from '../auth-helper';
-import { kv } from '@vercel/kv';
+import { kv } from '@/app/api/lib/kv-wrapper';
 
 export const runtime = 'edge';
 
@@ -32,13 +32,13 @@ export async function GET(request: NextRequest) {
     switch (type) {
       case 'risk':
         // Get historical diffs
-        const diffKeys = await kv.zrange<string[]>(`diffs:${slug}`, 0, -1);
+        const diffKeys = await kv.zrange(`diffs:${slug}`, 0, -1) as string[];
         if (!diffKeys || diffKeys.length === 0) {
           return NextResponse.json({ error: 'No historical data' }, { status: 404 });
         }
 
         const diffs = await Promise.all(
-          diffKeys.map(key => storageClient.getDiff(key))
+          diffKeys.map((diffId: string) => storageClient.getDiff(diffId))
         );
         
         trendData = await TrendAnalyzer.analyzeRiskTrends(
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
       case 'frequency':
         // Get historical snapshots
-        const snapshotIds = await kv.zrange<string[]>(`snapshots:${slug}`, 0, -1);
+        const snapshotIds = await kv.zrange(`snapshots:${slug}`, 0, -1) as string[];
         if (!snapshotIds || snapshotIds.length === 0) {
           return NextResponse.json({ error: 'No snapshot history' }, { status: 404 });
         }
@@ -66,13 +66,13 @@ export async function GET(request: NextRequest) {
 
       case 'compliance':
         // Get compliance trends for multiple regulations
-        const complianceDiffKeys = await kv.zrange<string[]>(`diffs:${slug}`, 0, -1);
+        const complianceDiffKeys = await kv.zrange(`diffs:${slug}`, 0, -1) as string[];
         if (!complianceDiffKeys || complianceDiffKeys.length === 0) {
           return NextResponse.json({ error: 'No historical data' }, { status: 404 });
         }
 
         const complianceDiffs = await Promise.all(
-          complianceDiffKeys.map(key => storageClient.getDiff(key))
+          complianceDiffKeys.map((diffId: string) => storageClient.getDiff(diffId))
         );
         
         const complianceTrends = await TrendAnalyzer.analyzeComplianceTrends(

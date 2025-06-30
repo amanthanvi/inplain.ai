@@ -122,15 +122,20 @@ export async function GET(request: NextRequest) {
     
     // Return specific metric data
     const key = `perf:${metric}:${date}`
-    const values = await kv.zrange(key, -limit, -1, { withScores: true }) as Array<[string, number]>
+    const values = await kv.zrange(key, -limit, -1, { withScores: true })
     
-    const data = values.map(([member, score]) => {
-      const parsed = JSON.parse(member)
-      return {
-        ...parsed,
-        timestamp: score
+    const data = values.map((item) => {
+      if (Array.isArray(item)) {
+        const [member, score] = item
+        const parsed = JSON.parse(member)
+        return {
+          ...parsed,
+          timestamp: score
+        }
       }
-    })
+      // Should not reach here with withScores: true
+      return null
+    }).filter(Boolean)
     
     return NextResponse.json({
       metric,
