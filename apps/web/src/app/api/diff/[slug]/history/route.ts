@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { StorageClient } from '../../../lib/storage'
-
-const storage = new StorageClient()
+import { getStorage } from '../../../lib/storage-utils'
 
 export async function GET(
   request: NextRequest,
@@ -11,6 +9,22 @@ export async function GET(
     const { slug } = await params
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '10')
+    
+    const storage = getStorage()
+    if (!storage) {
+      // Return mock data if storage is not configured
+      return NextResponse.json({
+        diffs: [],
+        count: 0,
+        _mock: true
+      }, {
+        headers: {
+          'Cache-Control': 'no-store',
+          'Content-Type': 'application/json',
+          'X-Mock-Data': 'true'
+        }
+      })
+    }
     
     // Get the latest diffs for this company
     const diffs = await storage.getLatestDiffs(slug, limit)
