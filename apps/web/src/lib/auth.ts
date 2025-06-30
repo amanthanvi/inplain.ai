@@ -19,6 +19,61 @@ const getJwtSecret = () => {
 
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+export async function checkAuth(request: Request): Promise<{ authenticated: boolean; user?: User }> {
+	// Check if dev auth is enabled
+	if (isDevAuthEnabled()) {
+		logDevAuthStatus();
+		return { authenticated: true, user: DEV_USER };
+	}
+
+	try {
+		const cookieStore = await cookies();
+		const sessionToken = cookieStore.get('session')?.value;
+		
+		if (!sessionToken) {
+			return { authenticated: false };
+		}
+
+		const { payload } = await jwtVerify(sessionToken, getJwtSecret());
+		const userId = payload.userId as string;
+		
+		if (!userId) {
+			return { authenticated: false };
+		}
+
+		// Try to get user from cache
+		const cachedUser = await kv.get<User>(`user:${userId}`);
+		if (cachedUser) {
+			return { authenticated: true, user: cachedUser };
+		}
+
+		// For now, return a basic user object
+		return {
+			authenticated: true,
+			user: {
+				id: userId,
+				email: payload.email as string || 'user@example.com',
+				name: payload.name as string || 'User',
+				tier: 'free',
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				emailVerified: false,
+				emailAlerts: false,
+				alertFrequency: 'daily',
+				customWatchlists: [],
+				usage: {
+					apiCalls: 0,
+					analysisCount: 0,
+					lastReset: new Date()
+				}
+			} as User
+		};
+	} catch (error) {
+		console.error('Auth check failed:', error);
+		return { authenticated: false };
+	}
+}
+
 export class AuthService {
 	static async hashPassword(password: string): Promise<string> {
 		const encoder = new TextEncoder();
