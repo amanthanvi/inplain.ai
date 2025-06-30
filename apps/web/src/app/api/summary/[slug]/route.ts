@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { StorageClient } from '../../lib/storage'
-import { PolicyAnalysisService } from '../../lib/ai-service'
+import { getUnifiedAIService } from '@/lib/ai/unified-ai-service'
+import type { AnalysisTask } from '@/lib/ai/unified-ai-service'
 import { SummarySchema } from '@inplain.ai/shared'
 import { formatTimestamp } from '@inplain.ai/shared'
 import { getEnvVar } from '@/lib/env'
@@ -36,11 +37,12 @@ function getStorage(): StorageClient | null {
 const bodySchema = z.object({
   diffId: z.string().uuid(),
   force: z.boolean().optional(),
-  model: z.string().optional()
+  model: z.string().optional(),
+  analysisType: z.enum(['summary', 'comprehensive', 'differential']).optional().default('differential'),
+  useThinking: z.boolean().optional().default(false)
 })
 
 const OPENROUTER_API_KEY = getEnvVar('OPENROUTER_API_KEY')
-const DEFAULT_MODEL = getEnvVar('DEFAULT_AI_MODEL', 'google/gemini-2.5-flash-preview-05-20')
 
 export async function POST(
   request: NextRequest,
@@ -62,14 +64,16 @@ export async function POST(
     }
     
     // Validate request data
-    let diffId, force, model
+    let diffId, force, model, analysisType, useThinking
     try {
       console.log('Summary API request:', { slug, body })
       const validated = bodySchema.parse(body)
       diffId = validated.diffId
       force = validated.force
       model = validated.model
-      console.log('Validated request:', { diffId, force, model })
+      analysisType = validated.analysisType
+      useThinking = validated.useThinking
+      console.log('Validated request:', { diffId, force, model, analysisType, useThinking })
     } catch (validationError) {
       console.error('Request validation failed:', validationError)
       console.error('Received body:', body)
@@ -92,20 +96,27 @@ export async function POST(
     }
     
     // Check authentication (skip if dev auth is enabled)
+    let userId: string | null = null
+    let userTier: 'free' | 'premium' | 'enterprise' = 'free'
+    
     if (!isDevAuthEnabled()) {
       try {
-        const { userId } = await getClerkAuth()
+        const auth = await getClerkAuth()
+        userId = auth.userId
         if (!userId) {
           return NextResponse.json(
             { error: 'Authentication required', message: 'Please sign in to generate AI summaries' },
             { status: 401 }
           )
         }
+        // TODO: Get actual user tier from database
+        userTier = 'free'
       } catch (authError) {
         console.error('Auth check failed:', authError)
         // In development, continue without auth if Clerk is not configured
         if (process.env.NODE_ENV !== 'production') {
           console.warn('Auth check failed in development, continuing without auth')
+          userId = 'dev-user'
         } else {
           return NextResponse.json(
             { error: 'Authentication failed', message: 'Unable to verify authentication' },
@@ -113,6 +124,8 @@ export async function POST(
           )
         }
       }
+    } else {
+      userId = 'dev-user'
     }
 
     if (!OPENROUTER_API_KEY) {
@@ -164,7 +177,7 @@ export async function POST(
           id: crypto.randomUUID(),
           diffId,
           createdAt: formatTimestamp(),
-          model: model || DEFAULT_MODEL,
+          model: model || 'google/gemini-2.0-flash-thinking-exp-1219:free',
           prompt: 'Mock AI analysis for demonstration',
           summary: 'This privacy policy update includes several important changes. The company has enhanced user data control options, giving users more granular control over their personal information. Third-party data sharing policies have been updated to be more transparent, with clearer explanations of which partners have access to user data. New data retention guidelines limit how long personal information is stored, and improved security measures including encryption at rest have been implemented.',
           highlights: [
@@ -254,13 +267,29 @@ export async function POST(
       // Continue with diff-only analysis
     }
 
-    // Initialize AI service
-    const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, model || DEFAULT_MODEL)
+    // Initialize unified AI service
+    const aiService = getUnifiedAIService()
     
-    // Generate analysis with original content when available
+    // Prepare content for analysis
+    const analysisContent = newContent || `
+## Policy Change Summary
+
+**Change Type**: ${diff.changeType}
+**Total Changes**: ${diff.changeCount}
+**Additions**: ${diff.additions}
+**Deletions**: ${diff.deletions}
+
+### Changes:
+${diffContent.htmlDiff || 'No diff content available'}
+
+${oldContent ? `\n### Previous Version:\n${oldContent.substring(0, 5000)}...` : ''}
+${newContent ? `\n### Current Version:\n${newContent.substring(0, 5000)}...` : ''}
+    `.trim()
+    
+    // Generate analysis using enhanced AI service
     let analysis
     try {
-      console.log('Generating analysis for diff:', {
+      console.log('Generating enhanced analysis for diff:', {
         diffId,
         slug,
         additions: diff.additions,
@@ -269,25 +298,44 @@ export async function POST(
         changeType: diff.changeType,
         hasOldContent: !!oldContent,
         hasNewContent: !!newContent,
-        htmlDiffLength: diffContent.htmlDiff?.length || 0
+        htmlDiffLength: diffContent.htmlDiff?.length || 0,
+        analysisType,
+        useThinking
       })
       
-      analysis = await aiService.analyzePolicyChanges({
-        additions: diff.additions,
-        deletions: diff.deletions,
-        changeCount: diff.changeCount,
-        changeType: diff.changeType,
-        htmlDiff: diffContent.htmlDiff,
-        oldContent,
-        newContent
-      }, { model: model || DEFAULT_MODEL })
-      
-      console.log('Analysis generated successfully:', {
-        model: analysis.model,
-        tokensUsed: analysis.tokensUsed,
-        summaryLength: analysis.summary?.length || 0,
-        highlightsCount: analysis.highlights?.length || 0
+      // Use the enhanced AI service with advanced features
+      const result = await aiService.analyze(analysisContent, {
+        task: analysisType as AnalysisTask,
+        model: model,
+        useTools: true, // Enable structured extraction
+        useThinking: useThinking || (userTier !== 'free'), // Enable thinking for premium users
+        useWebSearch: false, // Don't use web search for summaries
+        metadata: {
+          slug,
+          diffId,
+          changeType: diff.changeType,
+          changeCount: diff.changeCount
+        }
       })
+      
+      console.log('Enhanced analysis generated successfully:', {
+        model: result.model,
+        tokensUsed: result.tokensUsed.total,
+        contentLength: JSON.stringify(result.content || {}).length,
+        evidenceCount: result.evidence?.length || 0,
+        confidence: result.confidence
+      })
+      
+      // Extract analysis results from unified AI service response
+      const content = result.content || {}
+      analysis = {
+        model: result.model,
+        summary: typeof content === 'object' && content.summary || 'Unable to generate summary',
+        highlights: result.evidence || [],
+        riskLevel: typeof content === 'object' && content.riskAssessment?.overallRisk || 'unknown',
+        categories: typeof content === 'object' && content.dataCollected || [],
+        tokensUsed: result.tokensUsed.total
+      }
     } catch (analysisError) {
       console.error('AI analysis failed:', analysisError)
       throw new Error(`AI analysis failed: ${analysisError instanceof Error ? analysisError.message : 'Unknown error'}`)
@@ -298,7 +346,7 @@ export async function POST(
       diffId,
       createdAt: formatTimestamp(),
       model: analysis.model,
-      prompt: 'AI-generated policy analysis',
+      prompt: 'AI-generated policy analysis using enhanced service',
       summary: analysis.summary,
       highlights: analysis.highlights,
       riskLevel: analysis.riskLevel,
@@ -317,7 +365,8 @@ export async function POST(
 
     return NextResponse.json({
       summary: validatedSummary,
-      cached: false
+      cached: false,
+      enhancedAnalysis: true
     }, {
       headers: {
         'Cache-Control': 'private, s-maxage=3600',

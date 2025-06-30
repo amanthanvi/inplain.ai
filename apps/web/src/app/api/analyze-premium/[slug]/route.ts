@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StorageClient } from '../../lib/storage'
-import { PolicyAnalysisService } from '../../lib/ai-service'
+import { getUnifiedAIService } from '@/lib/ai/unified-ai-service'
+import type { AnalysisTask } from '@/lib/ai/unified-ai-service'
 import { ContentExtractor } from '../../../../lib/content-extractor'
-import { PROMPT_OPTIMIZATION } from '../../../../lib/prompts'
 import { WorldClassPromptsLibrary, enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
 import { ExpertPromptsLibrary } from '../../../../lib/expert-prompts'
 import { getClerkAuth } from '@/lib/auth-clerk'
@@ -19,6 +19,8 @@ interface PremiumAnalysisRequest {
   userTier?: 'free' | 'premium' | 'enterprise'
   includeExpertPrompts?: boolean
   outputFormat?: 'structured' | 'narrative' | 'both'
+  useThinking?: boolean
+  useWebSearch?: boolean
 }
 
 export async function POST(
@@ -30,20 +32,28 @@ export async function POST(
     const body: PremiumAnalysisRequest = await request.json().catch(() => ({}))
     
     // Check authentication in production (skip in dev with auth bypass)
+    let userId: string | null = null
+    let actualUserTier: 'free' | 'premium' | 'enterprise' = 'premium'
+    
     if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
+      const auth = await getClerkAuth()
+      userId = auth.userId
       if (!userId) {
         return NextResponse.json(
           { error: 'Authentication required' },
           { status: 401 }
         )
       }
+      // TODO: Get actual user tier from database
+      actualUserTier = 'premium'
     }
     
     const analysisType = body.analysisType || 'comprehensive'
-    const userTier = body.userTier || 'premium'
+    const userTier = body.userTier || actualUserTier
     const includeExpertPrompts = body.includeExpertPrompts !== false
     const outputFormat = body.outputFormat || 'structured'
+    const useThinking = body.useThinking ?? true // Default to true for premium
+    const useWebSearch = body.useWebSearch ?? (userTier !== 'free') // Web search for premium/enterprise
     
     if (!OPENROUTER_API_KEY) {
       return NextResponse.json(
@@ -70,14 +80,15 @@ export async function POST(
     }
     
     // Check premium cache
-    const cacheKey = `premium-analysis:${snapshot.id}:${analysisType}:${userTier}`
+    const cacheKey = `premium-analysis:${snapshot.id}:${analysisType}:${userTier}:enhanced`
     const cachedAnalysis = await storage.getCachedAnalysis(cacheKey)
     
     if (cachedAnalysis) {
       return NextResponse.json({
         analysis: cachedAnalysis,
         cached: true,
-        premium: true
+        premium: true,
+        enhanced: true
       })
     }
     
@@ -98,143 +109,100 @@ export async function POST(
       )
     }
     
-    // Initialize AI service
-    const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY)
+    // Initialize unified AI service
+    const aiService = getUnifiedAIService()
     
-    // Prepare analysis based on type
-    let worldClassPrompt, expertPrompt, combinedSystemPrompt, analysisPrompt
-    
-    switch (analysisType) {
-      case 'executive':
-        worldClassPrompt = WorldClassPromptsLibrary.getPrompt('executive-summary-genius')
-        expertPrompt = includeExpertPrompts ? ExpertPromptsLibrary.getPrompt('competitive-benchmark') : null
-        break
-        
-      case 'privacy-champion':
-        worldClassPrompt = WorldClassPromptsLibrary.getPrompt('privacy-champion')
-        expertPrompt = includeExpertPrompts ? ExpertPromptsLibrary.getPrompt('consumer-friendly-analysis') : null
-        break
-        
-      case 'risk-assessment':
-        worldClassPrompt = WorldClassPromptsLibrary.getPrompt('risk-oracle')
-        expertPrompt = includeExpertPrompts ? ExpertPromptsLibrary.getPrompt('security-architecture-review') : null
-        break
-        
-      case 'change-analysis':
-        worldClassPrompt = WorldClassPromptsLibrary.getPrompt('change-detective')
-        // For change analysis, we'd need previous version - for now, analyze current
-        break
-        
-      case 'comprehensive':
-      default:
-        // Combine multiple perspectives for comprehensive analysis
-        const executiveSummary = WorldClassPromptsLibrary.getPrompt('executive-summary-genius')
-        const privacyChampion = WorldClassPromptsLibrary.getPrompt('privacy-champion')
-        const riskOracle = WorldClassPromptsLibrary.getPrompt('risk-oracle')
-        
-        combinedSystemPrompt = [
-          executiveSummary?.systemPrompt,
-          privacyChampion?.systemPrompt,
-          riskOracle?.systemPrompt
-        ].filter(Boolean).join('\n\n---\n\n')
-        
-        analysisPrompt = `Provide a comprehensive premium analysis combining multiple expert perspectives:
-
-## Executive Summary
-${executiveSummary?.analysisPrompt}
-
-## Privacy Champion Analysis
-${privacyChampion?.analysisPrompt}
-
-## Risk Assessment
-${riskOracle?.analysisPrompt}
-
-Analyze the following privacy policy:
-${extractedContent.text.substring(0, 50000)}`
-        break
+    // Map analysis types to tasks
+    const taskMapping: Record<string, AnalysisTask> = {
+      'executive': 'comprehensive',
+      'privacy-champion': 'user_impact',
+      'risk-assessment': 'risk_assessment',
+      'change-analysis': 'differential',
+      'comprehensive': 'comprehensive'
     }
     
-    // Build the final prompt
-    if (!combinedSystemPrompt && worldClassPrompt) {
-      combinedSystemPrompt = worldClassPrompt.systemPrompt
-      if (expertPrompt) {
-        combinedSystemPrompt += `\n\n---\n\n${expertPrompt.systemPrompt || ''}`
+    const task = taskMapping[analysisType] || 'comprehensive'
+    
+    // Generate the enhanced analysis
+    const response = await aiService.analyze(extractedContent.text, {
+      task,
+      useTools: true, // Always use tools for premium analysis
+      useThinking, // Enable thinking for deeper insights
+      useWebSearch, // Enable web search for real-time context
+      stream: false, // No streaming for this endpoint
+      metadata: {
+        company: slug,
+        snapshotId: snapshot.id,
+        analysisType,
+        userTier,
+        includeExpertPrompts
       }
-    }
-    
-    if (!analysisPrompt && worldClassPrompt) {
-      analysisPrompt = worldClassPrompt.analysisPrompt
-      if (expertPrompt) {
-        analysisPrompt += `\n\n---\n\nAdditional Expert Analysis:\n${expertPrompt.prompt}`
-      }
-      analysisPrompt += `\n\nPrivacy Policy Content:\n${extractedContent.text.substring(0, 50000)}`
-    }
-    
-    // Select optimal model based on analysis type and length
-    const modelPreferences = worldClassPrompt?.modelPreferences || [
-      'anthropic/claude-3.5-sonnet',
-      'openai/gpt-4-turbo',
-      'google/gemini-2.0-flash'
-    ]
-    
-    const availableModels = aiService.getAvailableModels().map(m => m.id)
-    const selectedModel = modelPreferences.find(m => availableModels.includes(m)) || availableModels[0]
-    
-    // Generate the analysis
-    const response = await aiService.generateResponse(analysisPrompt || '', {
-      model: selectedModel,
-      temperature: worldClassPrompt?.temperature || 0.3,
-      maxTokens: worldClassPrompt?.maxTokens || 4000,
-      systemPrompt: combinedSystemPrompt,
-      response_format: outputFormat === 'structured' ? { type: 'json_object' } : undefined
     })
     
-    // Parse response based on format
-    let structuredContent, narrativeContent
-    
-    if (outputFormat === 'structured' || outputFormat === 'both') {
-      try {
-        const cleanedContent = response.content
-          .replace(/^```json\n?/i, '')
-          .replace(/\n?```$/i, '')
-          .trim()
-        structuredContent = JSON.parse(cleanedContent)
-      } catch (e) {
-        console.error('Failed to parse structured response:', e)
-        structuredContent = { error: 'Failed to parse structured response', raw: response.content }
+    // Extract world-class insights if requested
+    let worldClassInsights = null
+    if (includeExpertPrompts) {
+      const worldClassPrompt = WorldClassPromptsLibrary.getPrompt(
+        analysisType === 'executive' ? 'executive-summary-genius' :
+        analysisType === 'privacy-champion' ? 'privacy-champion' :
+        analysisType === 'risk-assessment' ? 'risk-oracle' :
+        analysisType === 'change-analysis' ? 'change-detective' :
+        'executive-summary-genius'
+      )
+      
+      if (worldClassPrompt && response.content) {
+        // Use the AI to extract world-class insights from the analysis
+        const insightsResponse = await aiService.analyze(JSON.stringify(response.content), {
+          task: 'summary',
+          model: 'openai/gpt-4o-mini', // Use fast model for extraction
+          useTools: false,
+          useThinking: false,
+          useWebSearch: false,
+          systemPrompt: worldClassPrompt.systemPrompt,
+          userPrompt: worldClassPrompt.analysisPrompt
+        })
+        
+        worldClassInsights = {
+          promptId: worldClassPrompt.id,
+          insights: insightsResponse.content,
+          highlights: response.evidence || []
+        }
       }
     }
     
-    if (outputFormat === 'narrative' || outputFormat === 'both') {
-      narrativeContent = response.content
-    }
-    
-    // Create the premium analysis object
+    // Create the premium analysis object with enhanced features
     const premiumAnalysis = {
       id: crypto.randomUUID(),
       snapshotId: snapshot.id,
       generatedAt: new Date().toISOString(),
       analysisType,
       userTier,
-      model: selectedModel,
+      model: response.model,
       premium: true,
-      structured_content: structuredContent,
-      narrative_content: narrativeContent,
+      enhanced: true,
+      structured_content: response.content || {},
+      narrative_content: outputFormat === 'narrative' || outputFormat === 'both' ? JSON.stringify(response.content, null, 2) : undefined,
       metadata: {
-        worldClassPrompt: worldClassPrompt?.id,
-        expertPrompt: expertPrompt?.id,
-        tokensUsed: response.tokensUsed,
+        tokensUsed: response.tokensUsed.total,
         wordCount: extractedContent.metadata.wordCount,
         sections: extractedContent.sections.length,
-        company: slug
+        company: slug,
+        toolsUsed: response.evidence?.filter(e => e.includes('Tool:')) || [],
+        thinkingEnabled: useThinking,
+        webSearchEnabled: useWebSearch,
+        processingTime: response.processingTime,
+        confidence: response.confidence
       },
       insights: {
-        executiveSummary: structuredContent?.executiveSummary || structuredContent?.investigation?.headline,
-        topRisks: structuredContent?.regulatoryRisk || structuredContent?.alerts?.critical,
-        userActions: structuredContent?.actionPlan || structuredContent?.defense?.minimum,
-        competitivePosition: structuredContent?.metricsSnapshot?.competitivePosition,
-        overallGrade: structuredContent?.reportCard?.overallGrade || structuredContent?.metricsSnapshot?.overallGrade
-      }
+        executiveSummary: typeof response.content === 'object' && response.content.summary || 'Premium analysis completed',
+        topRisks: typeof response.content === 'object' && response.content.risks || [],
+        userActions: typeof response.content === 'object' && response.content.recommendations || [],
+        competitivePosition: typeof response.content === 'object' && response.content.competitiveAnalysis,
+        overallGrade: typeof response.content === 'object' && response.content.riskLevel || 'moderate',
+        worldClassInsights
+      },
+      visualizations: null,
+      sources: response.evidence || []
     }
     
     // Cache the premium analysis for 48 hours
@@ -243,7 +211,14 @@ ${extractedContent.text.substring(0, 50000)}`
     return NextResponse.json({
       analysis: premiumAnalysis,
       cached: false,
-      premium: true
+      premium: true,
+      enhanced: true,
+      features: {
+        toolsUsed: (response.evidence?.filter(e => e.includes('Tool:')) || []).length > 0,
+        thinkingUsed: useThinking,
+        webSearchUsed: useWebSearch && (response.evidence?.length || 0) > 0,
+        modelUsed: response.model
+      }
     })
   } catch (error) {
     console.error('Premium analysis error:', error)
@@ -252,7 +227,8 @@ ${extractedContent.text.substring(0, 50000)}`
       { 
         error: 'Premium analysis failed', 
         message: error instanceof Error ? error.message : 'Unknown error',
-        premium: true 
+        premium: true,
+        enhanced: true
       },
       { status: 500 }
     )
