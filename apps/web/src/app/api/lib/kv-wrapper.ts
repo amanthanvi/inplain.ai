@@ -19,6 +19,8 @@ type KVClient = {
   srem: (key: string, ...members: string[]) => Promise<number>
   scard: (key: string) => Promise<number>
   smembers: (key: string) => Promise<string[]>
+  hset: (key: string, values: Record<string, unknown>) => Promise<number>
+  hgetall: <T = Record<string, unknown>>(key: string) => Promise<T | null>
 }
 
 class MockKVClient implements KVClient {
@@ -158,6 +160,19 @@ class MockKVClient implements KVClient {
     if (!set || !(set instanceof Set)) return []
     return Array.from(set)
   }
+
+  async hset(key: string, values: Record<string, unknown>): Promise<number> {
+    const existing = this.store.get(key) || {}
+    const updated = { ...existing, ...values }
+    this.store.set(key, updated)
+    return Object.keys(values).length
+  }
+
+  async hgetall<T = Record<string, unknown>>(key: string): Promise<T | null> {
+    const data = this.store.get(key)
+    if (!data || typeof data !== 'object') return null
+    return data as T
+  }
 }
 
 // Singleton instance
@@ -176,7 +191,12 @@ export function getKV(): KVClient {
   const kvToken = process.env.KV_REST_API_TOKEN
   
   if (!kvUrl || !kvToken) {
-    console.warn('KV not configured - using in-memory mock (data will not persist)')
+    console.warn('KV not configured - using in-memory mock (data will not persist)', {
+      hasUrl: !!kvUrl,
+      hasToken: !!kvToken,
+      urlLength: kvUrl?.length || 0,
+      tokenLength: kvToken?.length || 0
+    })
     configError = 'KV_REST_API_URL and KV_REST_API_TOKEN not configured'
     kvInstance = new MockKVClient()
     return kvInstance
@@ -187,6 +207,7 @@ export function getKV(): KVClient {
     const { kv } = require('@vercel/kv')
     kvInstance = kv
     isConfigured = true
+    console.log('KV client successfully initialized with Vercel KV')
     return kvInstance as KVClient
   } catch (error) {
     console.error('Failed to initialize KV client:', error)

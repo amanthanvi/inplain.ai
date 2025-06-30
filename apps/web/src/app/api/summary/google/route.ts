@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
           'Improved security measures'
         ],
         riskLevel: 'low' as const,
-        categories: ['data_collection', 'user_rights', 'security'],
+        categories: ['data_collection', 'user_rights', 'security'] as const,
         tokensUsed: 0
       }
       
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
             'Simplified one-click opt-out for all marketing'
           ],
           riskLevel: 'low' as const,
-          categories: ['data_collection', 'user_rights', 'security', 'third_party_sharing'],
+          categories: ['data_collection', 'user_rights', 'security', 'data_sharing'] as const,
           tokensUsed: 0
         }
         
@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
     - summary: A clear explanation of what changed
     - highlights: Array of key changes (max 5)
     - riskLevel: "low", "medium", or "high"
-    - categories: Array of categories affected
+    - categories: Array of categories affected. Use ONLY these exact values: data_collection, data_sharing, data_retention, user_rights, security, cookies, third_parties, children, other
     `
     
     const response = await aiService.generateResponse(summaryPrompt, {
@@ -232,6 +232,31 @@ export async function POST(request: NextRequest) {
     
     // Parse and validate the response
     const parsedResponse = JSON.parse(response.content)
+    
+    // Normalize categories to match enum values
+    const normalizeCategory = (category: string): string => {
+      // Convert to lowercase and replace spaces with underscores
+      const normalized = category.toLowerCase().replace(/\s+/g, '_')
+      
+      // Map common variations to correct enum values
+      const categoryMap: Record<string, string> = {
+        'data_collection': 'data_collection',
+        'data_sharing': 'data_sharing',
+        'data_retention': 'data_retention',
+        'user_rights': 'user_rights',
+        'security': 'security',
+        'cookies': 'cookies',
+        'third_parties': 'third_parties',
+        'third_party': 'third_parties',
+        'third_party_sharing': 'data_sharing',
+        'children': 'children',
+        'childrens_privacy': 'children',
+        'other': 'other'
+      }
+      
+      return categoryMap[normalized] || 'other'
+    }
+    
     const summary = {
       id: crypto.randomUUID(),
       diffId,
@@ -241,7 +266,7 @@ export async function POST(request: NextRequest) {
       summary: parsedResponse.summary || 'No summary generated',
       highlights: parsedResponse.highlights || [],
       riskLevel: parsedResponse.riskLevel || 'medium',
-      categories: parsedResponse.categories || [],
+      categories: (parsedResponse.categories || []).map(normalizeCategory),
       tokensUsed: response.tokensUsed.total
     }
     

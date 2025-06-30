@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 import { 
@@ -24,6 +23,7 @@ import { cn } from '@/lib/utils'
 import DiffMatchPatch from 'diff-match-patch'
 import { AnimatedContainer } from '@/components/ui/animations'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { EnhancedDiffViewer } from './EnhancedDiffViewer'
 
 interface PolicyVersion {
   id: string
@@ -174,21 +174,6 @@ export function PolicyVersionComparison({
     }
   }, [selectedVersions, versions, companySlug])
 
-  const renderDiffView = () => {
-    if (!diffHtml) return null
-
-    // Apply custom styles to the diff HTML
-    const styledDiff = diffHtml
-      .replace(/<del/g, '<del style="background-color: rgb(254 202 202); text-decoration: line-through; color: rgb(185 28 28);"')
-      .replace(/<ins/g, '<ins style="background-color: rgb(187 247 208); text-decoration: none; color: rgb(21 128 61);"')
-
-    return (
-      <div 
-        className="prose prose-sm max-w-none dark:prose-invert"
-        dangerouslySetInnerHTML={{ __html: styledDiff }}
-      />
-    )
-  }
 
   const getChangeIcon = (type: string) => {
     switch (type) {
@@ -425,15 +410,22 @@ export function PolicyVersionComparison({
           )}
 
           {/* Diff View */}
-          <ScrollArea className="h-[600px] border rounded-lg p-4">
-            {v1 && v2 ? (
-              renderDiffView()
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Select two versions to compare
-              </div>
-            )}
-          </ScrollArea>
+          {v1 && v2 ? (
+            <EnhancedDiffViewer 
+              diffHtml={diffHtml}
+              fromDate={v1.date.toISOString()}
+              toDate={v2.date.toISOString()}
+              changeStats={v2.stats}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-8">
+                <div className="text-center text-muted-foreground">
+                  Select two versions to compare
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Statistics */}
           {v2?.stats && (
