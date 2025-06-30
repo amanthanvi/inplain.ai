@@ -48,6 +48,9 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
   const [stats, setStats] = useState<CompanyStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [showShareMenu, setShowShareMenu] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
 
   const company = WATCHED_COMPANIES.find(c => c.slug === slug)
   
@@ -56,6 +59,7 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
   }
 
   useEffect(() => {
+    setMounted(true)
     // Load real stats
     const loadStats = async () => {
       try {
@@ -78,18 +82,18 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
           return count + 1
         }, 0)
         
-        // Simulate last checked based on most recent diff
+        // Use stable values for initial render
         const lastChecked = recentDiffs.length > 0 && recentDiffs[0]?.createdAt
           ? new Date(recentDiffs[0].createdAt)
-          : new Date(Date.now() - (Math.random() * 24 * 60 * 60 * 1000)) // Random time in last 24h
+          : new Date(Date.now() - (12 * 60 * 60 * 1000)) // Stable 12 hours ago
         
         setStats({
           ...metrics,
           checkInterval: company.checkInterval / 3600,
           lastChecked,
           nextCheck: new Date(lastChecked.getTime() + company.checkInterval * 1000),
-          userCount: watcherCount || Math.floor(Math.random() * 50) + 10, // Fallback to 10-60 users
-          analysisCount: analysisCount || Math.floor(Math.random() * 10) + 5 // Fallback to 5-15 analyses
+          userCount: watcherCount || 25, // Stable default
+          analysisCount: analysisCount || 8 // Stable default
         })
       } catch (error) {
         console.error('Failed to load company stats:', error)
@@ -97,13 +101,14 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
         const metricsService = PrivacyMetricsService.getInstance()
         const defaultMetrics = await metricsService.calculateMetrics(company)
         
+        const stableLastChecked = new Date(Date.now() - (12 * 60 * 60 * 1000)) // Stable 12 hours ago
         setStats({
           ...defaultMetrics,
           checkInterval: company.checkInterval / 3600,
-          lastChecked: new Date(Date.now() - (Math.random() * 24 * 60 * 60 * 1000)),
-          nextCheck: new Date(Date.now() + company.checkInterval * 1000),
-          userCount: Math.floor(Math.random() * 50) + 10, // 10-60 users
-          analysisCount: Math.floor(Math.random() * 10) + 5 // 5-15 analyses
+          lastChecked: stableLastChecked,
+          nextCheck: new Date(stableLastChecked.getTime() + company.checkInterval * 1000),
+          userCount: 25, // Stable default
+          analysisCount: 8 // Stable default
         })
       } finally {
         setLoading(false)
@@ -150,14 +155,17 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
 
   const loadAnalysis = async () => {
     // Load AI analysis data
+    setAnalyticsLoading(true)
     try {
       const response = await fetch(`/api/analytics/${slug}`)
       if (response.ok) {
         const data = await response.json()
-        // Update stats with real data
+        setAnalyticsData(data)
       }
     } catch (error) {
       console.error('Failed to load analysis:', error)
+    } finally {
+      setAnalyticsLoading(false)
     }
   }
 
@@ -207,7 +215,7 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
                       <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          <span>Checked {formatDistanceToNow(stats.lastChecked, { addSuffix: true })}</span>
+                          <span>Checked {mounted ? formatDistanceToNow(stats.lastChecked, { addSuffix: true }) : '12 hours ago'}</span>
                         </div>
                         <Separator orientation="vertical" className="h-4" />
                         <div className="flex items-center gap-1">
@@ -375,7 +383,7 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
                     variant="secondary" 
                     className="w-full"
                     onClick={() => {
-                      setActiveTab('changes')
+                      setActiveTab('analysis')
                       // Scroll to tabs
                       const tabsElement = document.querySelector('[role="tablist"]')
                       if (tabsElement) {
@@ -395,7 +403,7 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
         {/* Enhanced Tabs Section */}
         <div className="container pb-12">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:w-auto lg:inline-grid h-auto p-1">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid h-auto p-1">
               <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Overview
@@ -415,6 +423,10 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
               <TabsTrigger value="timeline">
                 <Clock className="h-4 w-4 mr-2" />
                 Timeline
+              </TabsTrigger>
+              <TabsTrigger value="analysis">
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Analysis
               </TabsTrigger>
             </TabsList>
             
@@ -513,7 +525,7 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Next Check</span>
                         <span className="text-sm font-medium">
-                          {formatDistanceToNow(stats.nextCheck, { addSuffix: true })}
+                          {mounted ? formatDistanceToNow(stats.nextCheck, { addSuffix: true }) : 'in 12 hours'}
                         </span>
                       </div>
                     </CardContent>
@@ -607,6 +619,163 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
                     <Timeline slug={slug} />
                   </CardContent>
                 </Card>
+              </AnimatedContainer>
+            </TabsContent>
+            
+            <TabsContent value="analysis" className="space-y-6">
+              <AnimatedContainer animation="fade">
+                {analyticsLoading ? (
+                  <Card>
+                    <CardContent className="p-12">
+                      <div className="flex flex-col items-center justify-center space-y-4">
+                        <LoadingSpinner />
+                        <p className="text-muted-foreground">Loading AI analysis...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : analyticsData ? (
+                  <div className="space-y-6">
+                    {/* Risk Score Overview */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>AI Risk Analysis</CardTitle>
+                        <CardDescription>
+                          Comprehensive analysis of privacy practices and potential risks
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {analyticsData.riskScore && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-lg font-semibold">Overall Risk Score</h3>
+                              <Badge className={cn(
+                                "text-lg px-4 py-1",
+                                analyticsData.riskScore.overall >= 70 ? "bg-red-100 text-red-700" :
+                                analyticsData.riskScore.overall >= 40 ? "bg-yellow-100 text-yellow-700" :
+                                "bg-green-100 text-green-700"
+                              )}>
+                                {analyticsData.riskScore.overall}/100
+                              </Badge>
+                            </div>
+                            
+                            {analyticsData.riskScore.breakdown && (
+                              <div className="space-y-3">
+                                {Object.entries(analyticsData.riskScore.breakdown).map(([category, score]) => (
+                                  <div key={category} className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-sm font-medium capitalize">
+                                        {category.replace(/([A-Z])/g, ' $1').trim()}
+                                      </span>
+                                      <span className={cn(
+                                        "text-sm font-bold",
+                                        getScoreColor(100 - (score as number))
+                                      )}>
+                                        {score as number}/100
+                                      </span>
+                                    </div>
+                                    <Progress value={score as number} className="h-2" />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Trend Analysis */}
+                    {analyticsData.trendAnalysis && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Privacy Trend Analysis</CardTitle>
+                          <CardDescription>
+                            {analyticsData.trendAnalysis.summary}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={analyticsData.trendAnalysis.riskTrajectory === 'increasing' ? 'destructive' : 'success'}>
+                              {analyticsData.trendAnalysis.riskTrajectory === 'increasing' ? (
+                                <TrendingUp className="h-3 w-3 mr-1" />
+                              ) : (
+                                <TrendingUp className="h-3 w-3 mr-1 rotate-180" />
+                              )}
+                              Risk {analyticsData.trendAnalysis.riskTrajectory}
+                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              {analyticsData.trendAnalysis.trends?.change}% change over {analyticsData.trendAnalysis.trends?.period}
+                            </span>
+                          </div>
+                          
+                          {analyticsData.trendAnalysis.keyChanges && (
+                            <div>
+                              <h4 className="text-sm font-medium mb-2">Key Changes</h4>
+                              <ul className="space-y-1">
+                                {analyticsData.trendAnalysis.keyChanges.map((change: string, idx: number) => (
+                                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                    <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
+                                    {change}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+                    
+                    {/* AI Insights */}
+                    {analyticsData.insights && analyticsData.insights.length > 0 && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>AI-Generated Insights</CardTitle>
+                          <CardDescription>
+                            Key findings and recommendations from our AI analysis
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {analyticsData.insights.map((insight: any, idx: number) => (
+                              <div key={idx} className={cn(
+                                "p-4 rounded-lg border",
+                                insight.type === 'positive' ? "bg-green-50 border-green-200 dark:bg-green-900/20" :
+                                insight.type === 'concern' ? "bg-red-50 border-red-200 dark:bg-red-900/20" :
+                                "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20"
+                              )}>
+                                <div className="flex items-start gap-3">
+                                  {insight.type === 'positive' ? (
+                                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                                  ) : (
+                                    <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                                  )}
+                                  <div className="flex-1">
+                                    <h4 className="font-medium mb-1">{insight.title}</h4>
+                                    <p className="text-sm text-muted-foreground">{insight.description}</p>
+                                    {insight.recommendation && (
+                                      <p className="text-sm font-medium mt-2">Recommendation: {insight.recommendation}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="p-12">
+                      <div className="flex flex-col items-center justify-center space-y-4">
+                        <AlertCircle className="h-12 w-12 text-muted-foreground" />
+                        <p className="text-muted-foreground">Failed to load analytics data</p>
+                        <Button onClick={loadAnalysis} variant="outline">
+                          Try Again
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </AnimatedContainer>
             </TabsContent>
           </Tabs>

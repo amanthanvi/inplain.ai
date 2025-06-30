@@ -10,7 +10,7 @@ type KVClient = {
   get: <T = string>(key: string) => Promise<T | null>
   set: (key: string, value: any, options?: { ex?: number; nx?: boolean }) => Promise<string>
   zadd: (key: string, ...members: Array<{ score: number; member: string }>) => Promise<number>
-  zrange: <T = string>(key: string, start: number, stop: number) => Promise<T[]>
+  zrange: <T = string>(key: string, start: number, stop: number, options?: { withScores?: boolean }) => Promise<T[] | Array<[T, number]>>
   del: (...keys: string[]) => Promise<number>
   exists: (...keys: string[]) => Promise<number>
   expire: (key: string, seconds: number) => Promise<number>
@@ -21,6 +21,48 @@ type KVClient = {
   smembers: (key: string) => Promise<string[]>
   hset: (key: string, values: Record<string, unknown>) => Promise<number>
   hgetall: <T = Record<string, unknown>>(key: string) => Promise<T | null>
+  pipeline: () => KVPipeline
+  lrange: (key: string, start: number, stop: number) => Promise<string[]>
+  ltrim: (key: string, start: number, stop: number) => Promise<string>
+}
+
+type KVPipeline = {
+  zadd: (key: string, ...members: Array<{ score: number; member: string }>) => KVPipeline
+  hset: (key: string, values: Record<string, unknown>) => KVPipeline
+  expire: (key: string, seconds: number) => KVPipeline
+  exec: () => Promise<Array<any>>
+}
+
+class MockKVPipeline implements KVPipeline {
+  private commands: Array<() => Promise<any>> = []
+  private client: MockKVClient
+
+  constructor(client: MockKVClient) {
+    this.client = client
+  }
+
+  zadd(key: string, ...members: Array<{ score: number; member: string }>): KVPipeline {
+    this.commands.push(() => this.client.zadd(key, ...members))
+    return this
+  }
+
+  hset(key: string, values: Record<string, unknown>): KVPipeline {
+    this.commands.push(() => this.client.hset(key, values))
+    return this
+  }
+
+  expire(key: string, seconds: number): KVPipeline {
+    this.commands.push(() => this.client.expire(key, seconds))
+    return this
+  }
+
+  async exec(): Promise<Array<any>> {
+    const results = []
+    for (const command of this.commands) {
+      results.push(await command())
+    }
+    return results
+  }
 }
 
 class MockKVClient implements KVClient {
@@ -74,16 +116,20 @@ class MockKVClient implements KVClient {
     return members.length
   }
 
-  async zrange<T = string>(key: string, start: number, stop: number): Promise<T[]> {
+  async zrange<T = string>(key: string, start: number, stop: number, options?: { withScores?: boolean }): Promise<T[] | Array<[T, number]>> {
     const set = this.sortedSets.get(key) || []
     
     // Handle negative indices
     const actualStart = start < 0 ? Math.max(0, set.length + start) : start
     const actualStop = stop < 0 ? set.length + stop : stop
     
-    return set
-      .slice(actualStart, actualStop + 1)
-      .map(item => item.member) as T[]
+    const slice = set.slice(actualStart, actualStop + 1)
+    
+    if (options?.withScores) {
+      return slice.map(item => [item.member as T, item.score])
+    }
+    
+    return slice.map(item => item.member) as T[]
   }
 
   async del(...keys: string[]): Promise<number> {
@@ -172,6 +218,41 @@ class MockKVClient implements KVClient {
     const data = this.store.get(key)
     if (!data || typeof data !== 'object') return null
     return data as T
+  }
+
+  pipeline(): KVPipeline {
+    return new MockKVPipeline(this)
+  }
+
+  async lrange(key: string, start: number, stop: number): Promise<string[]> {
+    const list = this.store.get(key)
+    if (!Array.isArray(list)) return []
+    
+    // Handle negative indices
+    const actualStart = start < 0 ? Math.max(0, list.length + start) : start
+    const actualStop = stop < 0 ? list.length + stop : stop
+    
+    return list.slice(actualStart, actualStop + 1)
+  }
+
+  async ltrim(key: string, start: number, stop: number): Promise<string> {
+    const list = this.store.get(key)
+    if (!Array.isArray(list)) return 'OK'
+    
+    // Handle negative indices
+    const actualStart = start < 0 ? Math.max(0, list.length + start) : start
+    const actualStop = stop < 0 ? list.length + stop : stop
+    
+    // Keep only elements in the specified range
+    const trimmed = list.slice(actualStart, actualStop + 1)
+    
+    if (trimmed.length === 0) {
+      this.store.delete(key)
+    } else {
+      this.store.set(key, trimmed)
+    }
+    
+    return 'OK'
   }
 }
 

@@ -8,11 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { extractDomain } from '@inplain.ai/shared/utils'
-import { getCompanies, getLatestDiffs } from '@/lib/api'
+import { getCompanies } from '@/lib/api'
 import type { Company } from '@inplain.ai/shared'
 import { cn } from '@/lib/utils'
 import { AnimatedContainer } from '@/components/ui/animations'
-import { PrivacyMetricsService } from '@/lib/analytics/privacy-metrics'
 import type { PrivacyMetrics } from '@/lib/analytics/privacy-metrics'
 import { 
   Building2, Clock, Shield, TrendingUp, AlertCircle, 
@@ -51,39 +50,68 @@ export function EnhancedCompanyGrid({
     }).then(async data => {
       setCompanies(data)
       
-      // Load real metrics for each company
-      const metricsService = PrivacyMetricsService.getInstance()
-      const stats: Record<string, CompanyStats> = {}
-      
-      await Promise.all(data.map(async (company) => {
-        try {
-          // Get recent diffs for change analysis
-          const recentDiffs = await getLatestDiffs(company.slug, 10)
-          
-          // Calculate real privacy metrics
-          const metrics = await metricsService.calculateMetrics(company, undefined, recentDiffs)
-          
-          // Get watcher count
-          const watchers = await metricsService.getWatcherCount(company.slug)
-          
-          stats[company.slug] = {
-            ...metrics,
-            lastChecked: new Date(), // Would come from actual monitoring data
-            watchers
+      // Load real metrics for each company via API
+      try {
+        const response = await fetch('/api/companies/metrics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            companySlugs: data.map(c => c.slug)
+          })
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch metrics: ${response.statusText}`)
+        }
+        
+        const { metrics } = await response.json()
+        
+        // Convert to CompanyStats format
+        const stats: Record<string, CompanyStats> = {}
+        for (const [slug, metric] of Object.entries(metrics)) {
+          if ((metric as any).error) {
+            console.error(`Failed to load metrics for ${slug}:`, (metric as any).error)
+            // Use fallback values
+            stats[slug] = {
+              privacyScore: 75,
+              riskLevel: 'Medium',
+              dataCategories: [],
+              lastAnalysisDate: new Date().toISOString(),
+              complianceScore: 70,
+              transparencyScore: 80,
+              userControlScore: 65,
+              totalChanges: 0,
+              lastChecked: new Date(),
+              watchers: 0
+            }
+          } else {
+            stats[slug] = metric as CompanyStats
           }
-        } catch (error) {
-          console.error(`Failed to load metrics for ${company.name}:`, error)
-          // Fallback to calculated defaults
-          const defaultMetrics = await metricsService.calculateMetrics(company)
+        }
+        
+        setCompanyStats(stats)
+      } catch (error) {
+        console.error('Failed to load company metrics:', error)
+        // Use fallback values for all companies
+        const stats: Record<string, CompanyStats> = {}
+        data.forEach(company => {
           stats[company.slug] = {
-            ...defaultMetrics,
+            privacyScore: 75,
+            riskLevel: 'Medium',
+            dataCategories: [],
+            lastAnalysisDate: new Date().toISOString(),
+            complianceScore: 70,
+            transparencyScore: 80,
+            userControlScore: 65,
+            totalChanges: 0,
             lastChecked: new Date(),
             watchers: 0
           }
-        }
-      }))
-      
-      setCompanyStats(stats)
+        })
+        setCompanyStats(stats)
+      }
       setLoading(false)
     }).catch(error => {
       console.error('Failed to load companies:', error)
