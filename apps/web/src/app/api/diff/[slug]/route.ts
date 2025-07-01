@@ -143,8 +143,8 @@ export async function GET(
       }
     }
     
-    // Use traditional diff for display but smart diff results for metadata
-    const displayDiffResult = getDiffEngine().computeDiff(oldContent, newContent)
+    // Use optimized diff for display but smart diff results for metadata
+    const displayDiffResult = await getDiffEngine().computeDiff(oldContent, newContent)
     
     const diff = DiffMetaSchema.parse({
       id: crypto.randomUUID(),

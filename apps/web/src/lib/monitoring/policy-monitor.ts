@@ -3,16 +3,7 @@ import { logger } from '@/lib/logger'
 import { notificationService } from '@/lib/notifications/notification-service'
 import { policyScraper } from '@/lib/scraper/policy-scraper'
 import { circuitBreakers } from '@/lib/resilience/circuit-breaker'
-// Use simple hash function for edge runtime compatibility
-function createSimpleHash(data: string): string {
-  let hash = 0
-  for (let i = 0; i < data.length; i++) {
-    const char = data.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32-bit integer
-  }
-  return Math.abs(hash).toString(16)
-}
+import { HashUtils } from '@/lib/utils/hash'
 
 export interface PolicySnapshot {
   url: string
@@ -64,7 +55,7 @@ export class PolicyMonitor {
       }
 
       // Calculate hash of current content
-      const currentHash = this.calculateHash(currentContent.text)
+      const currentHash = await this.calculateHash(currentContent.text)
 
       // Get previous snapshot
       const previousSnapshot = await this.getLatestSnapshot(companySlug)
@@ -236,14 +227,15 @@ export class PolicyMonitor {
   /**
    * Calculate hash of content
    */
-  private calculateHash(content: string): string {
+  private async calculateHash(content: string): Promise<string> {
     // Normalize content before hashing (remove extra whitespace, etc.)
     const normalized = content
       .replace(/\s+/g, ' ')
       .trim()
       .toLowerCase()
     
-    return createSimpleHash(normalized)
+    // Use secure hash to prevent collision attacks on content deduplication
+    return await HashUtils.hashContent(normalized)
   }
 
   /**
