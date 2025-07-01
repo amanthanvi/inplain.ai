@@ -21,6 +21,7 @@ interface StatusCheck {
 export function AppStatus() {
   const [isVisible, setIsVisible] = useState(true)
   const [isChecking, setIsChecking] = useState(true)
+  const [autoHideTimer, setAutoHideTimer] = useState<NodeJS.Timeout | null>(null)
   const [checks, setChecks] = useState<StatusCheck[]>([
     { name: 'Environment', status: 'checking', message: 'Checking configuration...' },
     { name: 'AI Service', status: 'checking', message: 'Verifying AI service...' },
@@ -31,6 +32,13 @@ export function AppStatus() {
   
   useEffect(() => {
     checkAppStatus()
+    
+    // Cleanup timer on unmount
+    return () => {
+      if (autoHideTimer) {
+        clearTimeout(autoHideTimer)
+      }
+    }
   }, [])
   
   async function checkAppStatus() {
@@ -177,7 +185,13 @@ export function AppStatus() {
     // Auto-hide if everything is successful
     const allSuccess = newChecks.every(check => check.status === 'success')
     if (allSuccess) {
-      setTimeout(() => setIsVisible(false), 5000)
+      // Clear any existing timer
+      if (autoHideTimer) {
+        clearTimeout(autoHideTimer)
+      }
+      // Set longer timer (10 seconds) to give users time to read
+      const timer = setTimeout(() => setIsVisible(false), 10000)
+      setAutoHideTimer(timer)
     }
   }
   
@@ -198,11 +212,11 @@ export function AppStatus() {
   const hasIssues = checks.some(check => check.status === 'warning' || check.status === 'error')
   
   return (
-    <Card className="fixed bottom-4 right-4 z-50 w-96 shadow-lg">
+    <Card className="fixed bottom-4 right-4 z-50 w-full max-w-[24rem] shadow-lg mx-4 sm:mx-0">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">App Status</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             <Button
               variant="ghost"
               size="icon"
@@ -214,7 +228,15 @@ export function AppStatus() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsVisible(false)}
+              onClick={() => {
+                // Clear timer when manually closing
+                if (autoHideTimer) {
+                  clearTimeout(autoHideTimer)
+                  setAutoHideTimer(null)
+                }
+                setIsVisible(false)
+              }}
+              className="text-xl leading-none"
             >
               ×
             </Button>

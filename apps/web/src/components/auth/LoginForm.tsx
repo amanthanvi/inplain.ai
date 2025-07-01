@@ -24,10 +24,16 @@ export function LoginForm({ onSuccess, onSignupClick }: LoginFormProps) {
 		setError('')
 		setIsLoading(true)
 
-		// Since Clerk handles login through its own components,
-		// redirect to the Clerk login page
-		setIsLoading(false)
-		router.push('/login')
+		// Validate inputs before redirecting
+		if (!email || !password) {
+			setError('Please fill in all fields')
+			setIsLoading(false)
+			return
+		}
+
+		// Redirect to Clerk login page with email pre-filled
+		const params = new URLSearchParams({ email_address: email })
+		router.push(`/login?${params.toString()}`)
 	}
 
 	return (
@@ -81,17 +87,8 @@ export function LoginForm({ onSuccess, onSignupClick }: LoginFormProps) {
 						</div>
 					</div>
 
-					<div className="flex items-center justify-between">
-						<label className="flex items-center gap-2">
-							<input type="checkbox" className="rounded border-input" />
-							<span className="text-sm">Remember me</span>
-						</label>
-						<button
-							type="button"
-							className="text-sm text-primary hover:underline"
-						>
-							Forgot password?
-						</button>
+					<div className="text-xs text-muted-foreground text-center">
+						You will be redirected to our secure login page
 					</div>
 
 					<Button
@@ -103,7 +100,7 @@ export function LoginForm({ onSuccess, onSignupClick }: LoginFormProps) {
 						{isLoading ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Signing in...
+								Redirecting to login...
 							</>
 						) : (
 							'Sign In'

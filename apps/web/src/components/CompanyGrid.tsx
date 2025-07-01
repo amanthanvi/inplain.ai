@@ -7,6 +7,7 @@ import { extractDomain } from '@inplain.ai/shared/utils'
 import { useEffect, useState } from 'react'
 import { getCompanies } from '@/lib/api'
 import type { Company } from '@inplain.ai/shared'
+import { useDebounce } from '@/hooks/useDebounce'
 
 interface CompanyGridProps {
   limit?: number
@@ -17,21 +18,33 @@ interface CompanyGridProps {
 export function CompanyGrid({ limit, searchQuery = '', category }: CompanyGridProps = {}) {
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Debounce search query to reduce API calls
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
 
   useEffect(() => {
+    // Show loading immediately on search change, but wait for debounced value
+    if (searchQuery !== debouncedSearchQuery) {
+      setLoading(true)
+      return
+    }
+    
     getCompanies({
-      search: searchQuery || undefined,
+      search: debouncedSearchQuery || undefined,
       category: category || undefined,
       limit: limit || undefined,
       active: true
     }).then(data => {
       setCompanies(data)
+      setError(null)
       setLoading(false)
     }).catch(error => {
       console.error('Failed to load companies:', error)
+      setError('Unable to load companies. Please try again later.')
       setLoading(false)
     })
-  }, [limit, searchQuery, category])
+  }, [limit, debouncedSearchQuery, category])
 
   if (loading) {
     return (
@@ -48,12 +61,45 @@ export function CompanyGrid({ limit, searchQuery = '', category }: CompanyGridPr
     )
   }
 
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="inline-flex flex-col items-center space-y-4">
+          <svg className="w-16 h-16 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="space-y-2">
+            <p className="text-lg font-medium text-destructive">{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="text-sm text-primary hover:underline"
+            >
+              Try refreshing the page
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (companies.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">
-          {searchQuery ? 'No companies found matching your search.' : 'No companies available.'}
-        </p>
+        <div className="inline-flex flex-col items-center space-y-4">
+          <svg className="w-16 h-16 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <div className="space-y-2">
+            <p className="text-muted-foreground">
+              {searchQuery ? 'No companies found matching your search.' : 'No companies available yet.'}
+            </p>
+            {searchQuery && (
+              <p className="text-sm text-muted-foreground">
+                Try adjusting your search terms or clearing the filters.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     )
   }
