@@ -117,6 +117,14 @@ export default function FeedbackForm({ onSuccess, initialType }: FeedbackFormPro
   };
 
   const handleScreenshotCapture = (screenshot: any) => {
+    if (screenshots.length >= 5) {
+      toast({
+        title: 'Screenshot limit reached',
+        description: 'You can add up to 5 screenshots per feedback submission.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setScreenshots([...screenshots, screenshot]);
     setShowScreenshotCapture(false);
   };
@@ -154,7 +162,7 @@ export default function FeedbackForm({ onSuccess, initialType }: FeedbackFormPro
                 />
                 <Label
                   htmlFor={type.value}
-                  className="flex items-center gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                  className="flex items-center gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
                 >
                   <Icon className={`h-5 w-5 ${type.color}`} />
                   <span className="font-medium">{type.label}</span>
@@ -167,12 +175,19 @@ export default function FeedbackForm({ onSuccess, initialType }: FeedbackFormPro
 
       {/* Title */}
       <div>
-        <Label htmlFor="title">Title</Label>
+        <div className="flex justify-between items-baseline">
+          <Label htmlFor="title">Title</Label>
+          <span className="text-xs text-muted-foreground">
+            {form.watch('title')?.length || 0}/200
+          </span>
+        </div>
         <Input
           id="title"
           placeholder="Brief summary of your feedback"
+          maxLength={200}
           {...form.register('title')}
           className="mt-1"
+          aria-invalid={!!form.formState.errors.title}
         />
         {form.formState.errors.title && (
           <p className="text-sm text-red-500 mt-1">
@@ -183,17 +198,29 @@ export default function FeedbackForm({ onSuccess, initialType }: FeedbackFormPro
 
       {/* Description */}
       <div>
-        <Label htmlFor="description">Description</Label>
+        <div className="flex justify-between items-baseline">
+          <Label htmlFor="description">Description</Label>
+          <span className="text-xs text-muted-foreground">
+            {form.watch('description')?.length || 0}/5000
+          </span>
+        </div>
         <Textarea
           id="description"
           placeholder="Please provide details..."
           rows={5}
+          maxLength={5000}
           {...form.register('description')}
           className="mt-1"
+          aria-invalid={!!form.formState.errors.description}
         />
         {form.formState.errors.description && (
           <p className="text-sm text-red-500 mt-1">
             {form.formState.errors.description.message}
+          </p>
+        )}
+        {!form.formState.errors.description && form.watch('description')?.length > 0 && form.watch('description')?.length < 10 && (
+          <p className="text-sm text-yellow-600 mt-1">
+            Please add more details (minimum 10 characters)
           </p>
         )}
       </div>
@@ -240,7 +267,12 @@ export default function FeedbackForm({ onSuccess, initialType }: FeedbackFormPro
 
       {/* Screenshots */}
       <div>
-        <Label>Screenshots (optional)</Label>
+        <div className="flex justify-between items-baseline">
+          <Label>Screenshots (optional)</Label>
+          <span className="text-xs text-muted-foreground">
+            {screenshots.length}/5 added
+          </span>
+        </div>
         <div className="mt-2 space-y-2">
           {screenshots.map((screenshot, index) => (
             <div

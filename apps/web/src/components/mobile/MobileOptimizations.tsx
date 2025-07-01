@@ -9,11 +9,12 @@ export function MobileOptimizations() {
   useEffect(() => {
     if (!isMobile) return
 
-    // Disable pinch zoom on mobile
+    // Ensure proper viewport settings for mobile
+    // IMPORTANT: Allow zooming for accessibility (WCAG compliance)
     const metaViewport = document.querySelector('meta[name="viewport"]')
     if (metaViewport) {
       metaViewport.setAttribute('content', 
-        'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
+        'width=device-width, initial-scale=1, minimum-scale=1'
       )
     }
 
@@ -64,9 +65,15 @@ export function MobileOptimizations() {
         min-width: 44px;
       }
 
-      /* Disable hover effects on touch */
+      /* Reduce hover effects on touch but maintain visual feedback */
       .touch-device *:hover {
-        transition: none !important;
+        transition-duration: 0ms;
+      }
+      
+      /* Ensure focus states are visible for keyboard navigation */
+      .touch-device *:focus-visible {
+        outline: 2px solid var(--primary, #3B82F6);
+        outline-offset: 2px;
       }
 
       /* Optimize scrolling */

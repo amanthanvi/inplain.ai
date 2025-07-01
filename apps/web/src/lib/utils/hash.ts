@@ -8,21 +8,19 @@
 export class HashUtils {
   /**
    * Secure SHA-256 hash for cryptographic purposes
-   * Works in both Edge runtime and Node.js environments
+   * Uses Web Crypto API (Edge runtime compatible)
    */
   static async secureSHA256(data: string): Promise<string> {
+    // Web Crypto API (Edge runtime compatible)
+    if (typeof crypto === 'undefined' || !crypto.subtle) {
+      throw new Error('Web Crypto API not available')
+    }
+    
     try {
-      if (typeof crypto !== 'undefined' && crypto.subtle) {
-        // Web Crypto API (Edge runtime compatible)
-        const encoder = new TextEncoder()
-        const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data))
-        const hashArray = new Uint8Array(hashBuffer)
-        return Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('')
-      } else {
-        // Node.js crypto fallback
-        const { createHash } = await import('crypto')
-        return createHash('sha256').update(data, 'utf8').digest('hex')
-      }
+      const encoder = new TextEncoder()
+      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data))
+      const hashArray = new Uint8Array(hashBuffer)
+      return Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('')
     } catch (error) {
       console.error('HashUtils.secureSHA256 failed:', error)
       throw new Error('Failed to generate secure hash')
@@ -83,15 +81,16 @@ export class HashUtils {
    * Generate secure random string for tokens
    */
   static async generateSecureToken(length: number = 32): Promise<string> {
+    // Use Web Crypto API which is available in both browser and Edge runtime
     if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
       const array = new Uint8Array(length)
       crypto.getRandomValues(array)
       return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
-    } else {
-      // Node.js fallback
-      const { randomBytes } = await import('crypto')
-      return randomBytes(length).toString('hex')
     }
+    
+    // Fallback for environments without crypto
+    // This should rarely happen in modern environments
+    throw new Error('Crypto API not available. Cannot generate secure token.')
   }
 
   /**
