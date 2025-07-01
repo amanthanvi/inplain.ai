@@ -1,5 +1,5 @@
 /**
- * Feedback system for InPlain.AI
+ * Feedback system for Inplain.ai
  * Handles user feedback, bug reports, feature requests, and ratings
  */
 
@@ -302,7 +302,10 @@ export class FeedbackService {
 				if (options.status && feedback.status !== options.status) {
 					continue;
 				}
-				if (options.priority && feedback.priority !== options.priority) {
+				if (
+					options.priority &&
+					feedback.priority !== options.priority
+				) {
 					continue;
 				}
 				if (

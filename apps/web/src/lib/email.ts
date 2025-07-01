@@ -850,12 +850,12 @@ The Inplain.AI Team
 	}
 
 	private static generateWelcomeEmail(user: User): EmailTemplate {
-		const subject = "Welcome to InPlain.AI!";
+		const subject = "Welcome to Inplain.ai!";
 		const html = `
       <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-        <h1 style="color: #1f2937;">Welcome to InPlain.AI!</h1>
+        <h1 style="color: #1f2937;">Welcome to Inplain.ai!</h1>
         <p>Hi ${user.name || "there"},</p>
-        <p>Welcome to InPlain.AI! We're excited to help you stay informed about privacy policy changes.</p>
+        <p>Welcome to Inplain.ai! We're excited to help you stay informed about privacy policy changes.</p>
         <p>Get started by:</p>
         <ul>
           <li>Adding companies to your watchlist</li>
@@ -863,10 +863,10 @@ The Inplain.AI Team
           <li>Exploring our AI-powered analysis tools</li>
         </ul>
         <p>If you have any questions, feel free to reach out to our support team.</p>
-        <p>Best regards,<br>The InPlain.AI Team</p>
+        <p>Best regards,<br>The Inplain.ai Team</p>
       </div>
     `;
-		const text = `Welcome to InPlain.AI! Hi ${user.name || "there"}, Welcome to InPlain.AI! We're excited to help you stay informed about privacy policy changes.`;
+		const text = `Welcome to Inplain.ai! Hi ${user.name || "there"}, Welcome to Inplain.ai! We're excited to help you stay informed about privacy policy changes.`;
 
 		return { subject, html, text };
 	}
@@ -894,7 +894,7 @@ The Inplain.AI Team
 				)
 				.join("")}
         </div>
-        <p>View more details in your <a href="${process.env.NEXT_PUBLIC_BASE_URL}/dashboard">InPlain.AI dashboard</a>.</p>
+        <p>View more details in your <a href="${process.env.NEXT_PUBLIC_BASE_URL}/dashboard">Inplain.ai dashboard</a>.</p>
       </div>
     `;
 		const text = `Monthly Privacy Policy Digest. Hi ${user.name || "there"}, Here's your monthly summary of privacy policy changes...`;
