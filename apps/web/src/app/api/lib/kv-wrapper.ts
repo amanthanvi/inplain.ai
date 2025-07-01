@@ -40,6 +40,7 @@ type KVPipeline = {
   expire: (key: string, seconds: number) => KVPipeline
   del: (key: string) => KVPipeline
   sadd: (key: string, member: string) => KVPipeline
+  srem: (key: string, member: string) => KVPipeline
   exec: () => Promise<Array<any>>
 }
 
@@ -83,6 +84,11 @@ class MockKVPipeline implements KVPipeline {
 
   sadd(key: string, member: string): KVPipeline {
     this.commands.push(() => this.client.sadd(key, member))
+    return this
+  }
+
+  srem(key: string, member: string): KVPipeline {
+    this.commands.push(() => this.client.srem(key, member))
     return this
   }
 

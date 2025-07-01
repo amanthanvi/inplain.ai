@@ -43,7 +43,7 @@ export function MobileOptimizations() {
     // Prefetch critical resources for mobile
     const links = [
       { rel: 'prefetch', href: '/api/companies' },
-      { rel: 'prefetch', href: '/api/notifications/count' },
+      { rel: 'prefetch', href: '/api/health' }, // Use health endpoint instead of non-existent notifications/count
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
     ]
 
