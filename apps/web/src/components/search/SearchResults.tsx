@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback, memo } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useDebounce } from '@/hooks/useDebounce'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -31,6 +32,94 @@ interface SearchResult {
   }
 }
 
+// Memoized search result item component
+const SearchResultItem = memo(({ 
+  result, 
+  index, 
+  getIcon, 
+  getRiskBadgeVariant 
+}: {
+  result: SearchResult
+  index: number
+  getIcon: (type: string) => any
+  getRiskBadgeVariant: (risk?: string) => any
+}) => {
+  const Icon = getIcon(result.type)
+  
+  return (
+    <AnimatedContainer
+      animation="slideUp"
+      delay={Math.min(index * 0.05, 0.5)} // Cap animation delay
+    >
+      <Link href={result.url}>
+        <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  result.type === 'insight' ? 'bg-primary/10' : 'bg-muted'
+                }`}>
+                  <Icon className={`h-5 w-5 ${
+                    result.type === 'insight' ? 'text-primary' : 'text-muted-foreground'
+                  }`} />
+                </div>
+                
+                <div className="flex-1">
+                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                    {result.title}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {result.description}
+                  </CardDescription>
+                  
+                  {/* Metadata */}
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                    {result.metadata.company && (
+                      <Badge variant="outline">
+                        <Building2 className="h-3 w-3 mr-1" />
+                        {result.metadata.company}
+                      </Badge>
+                    )}
+                    
+                    {result.metadata.category && (
+                      <Badge variant="secondary">
+                        {result.metadata.category.replace('-', ' ')}
+                      </Badge>
+                    )}
+                    
+                    {result.metadata.changeType && (
+                      <Badge variant={getRiskBadgeVariant(result.metadata.riskLevel)}>
+                        {result.metadata.changeType} change
+                      </Badge>
+                    )}
+                    
+                    {result.metadata.riskLevel && (
+                      <Badge variant={getRiskBadgeVariant(result.metadata.riskLevel)}>
+                        {result.metadata.riskLevel} risk
+                      </Badge>
+                    )}
+                    
+                    {result.metadata.date && (
+                      <span className="text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3 inline mr-1" />
+                        {formatDuration(getTimeDiff(result.metadata.date))} ago
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+          </CardHeader>
+        </Card>
+      </Link>
+    </AnimatedContainer>
+  )
+})
+
+SearchResultItem.displayName = 'SearchResultItem'
+
 export function SearchResults() {
   const searchParams = useSearchParams()
   const [results, setResults] = useState<SearchResult[]>([])
@@ -43,10 +132,13 @@ export function SearchResults() {
   const timeRange = searchParams.get('time') || 'all'
   const changeTypes = searchParams.get('changes')?.split(',') || []
   const sortBy = searchParams.get('sort') || 'relevance'
+  
+  // Debounce search query to reduce API calls
+  const debouncedQuery = useDebounce(query, 300)
 
   useEffect(() => {
     performSearch()
-  }, [query, categories, riskLevels, timeRange, changeTypes, sortBy])
+  }, [debouncedQuery, categories, riskLevels, timeRange, changeTypes, sortBy])
 
   const performSearch = async () => {
     setLoading(true)
@@ -179,7 +271,7 @@ export function SearchResults() {
     }
   }
 
-  const getIcon = (type: string) => {
+  const getIcon = useCallback((type: string) => {
     switch (type) {
       case 'company': return Building2
       case 'policy': return FileText
@@ -187,9 +279,9 @@ export function SearchResults() {
       case 'insight': return Sparkles
       default: return FileText
     }
-  }
+  }, [])
 
-  const getRiskBadgeVariant = (risk?: string) => {
+  const getRiskBadgeVariant = useCallback((risk?: string) => {
     switch (risk) {
       case 'critical': return 'destructive'
       case 'high': return 'destructive'
@@ -197,11 +289,13 @@ export function SearchResults() {
       case 'low': return 'secondary'
       default: return 'secondary'
     }
-  }
+  }, [])
 
-  const filteredResults = activeTab === 'all' 
-    ? results 
-    : results.filter(r => r.type === activeTab)
+  const filteredResults = useMemo(() => {
+    return activeTab === 'all' 
+      ? results 
+      : results.filter(r => r.type === activeTab)
+  }, [activeTab, results])
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -236,13 +330,13 @@ export function SearchResults() {
                 All ({results.length})
               </TabsTrigger>
               <TabsTrigger value="company">
-                Companies ({results.filter(r => r.type === 'company').length})
+                Companies ({useMemo(() => results.filter(r => r.type === 'company').length, [results])})
               </TabsTrigger>
               <TabsTrigger value="change">
-                Changes ({results.filter(r => r.type === 'change').length})
+                Changes ({useMemo(() => results.filter(r => r.type === 'change').length, [results])})
               </TabsTrigger>
               <TabsTrigger value="insight">
-                Insights ({results.filter(r => r.type === 'insight').length})
+                Insights ({useMemo(() => results.filter(r => r.type === 'insight').length, [results])})
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -273,81 +367,15 @@ export function SearchResults() {
         </Card>
       ) : (
         <AnimatedContainer animation="fade" className="space-y-4">
-          {filteredResults.map((result, index) => {
-            const Icon = getIcon(result.type)
-            
-            return (
-              <AnimatedContainer
-                key={result.id}
-                animation="slideUp"
-                delay={index * 0.05}
-              >
-                <Link href={result.url}>
-                  <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3">
-                          <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            result.type === 'insight' ? 'bg-primary/10' : 'bg-muted'
-                          }`}>
-                            <Icon className={`h-5 w-5 ${
-                              result.type === 'insight' ? 'text-primary' : 'text-muted-foreground'
-                            }`} />
-                          </div>
-                          
-                          <div className="flex-1">
-                            <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                              {result.title}
-                            </CardTitle>
-                            <CardDescription className="mt-1">
-                              {result.description}
-                            </CardDescription>
-                            
-                            {/* Metadata */}
-                            <div className="flex flex-wrap items-center gap-2 mt-3">
-                              {result.metadata.company && (
-                                <Badge variant="outline">
-                                  <Building2 className="h-3 w-3 mr-1" />
-                                  {result.metadata.company}
-                                </Badge>
-                              )}
-                              
-                              {result.metadata.category && (
-                                <Badge variant="secondary">
-                                  {result.metadata.category.replace('-', ' ')}
-                                </Badge>
-                              )}
-                              
-                              {result.metadata.changeType && (
-                                <Badge variant={getRiskBadgeVariant(result.metadata.riskLevel)}>
-                                  {result.metadata.changeType} change
-                                </Badge>
-                              )}
-                              
-                              {result.metadata.riskLevel && (
-                                <Badge variant={getRiskBadgeVariant(result.metadata.riskLevel)}>
-                                  {result.metadata.riskLevel} risk
-                                </Badge>
-                              )}
-                              
-                              {result.metadata.date && (
-                                <span className="text-xs text-muted-foreground">
-                                  <Clock className="h-3 w-3 inline mr-1" />
-                                  {formatDuration(getTimeDiff(result.metadata.date))} ago
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
-                    </CardHeader>
-                  </Card>
-                </Link>
-              </AnimatedContainer>
-            )
-          })}
+          {filteredResults.map((result, index) => (
+            <SearchResultItem
+              key={result.id}
+              result={result}
+              index={index}
+              getIcon={getIcon}
+              getRiskBadgeVariant={getRiskBadgeVariant}
+            />
+          ))}
         </AnimatedContainer>
       )}
 

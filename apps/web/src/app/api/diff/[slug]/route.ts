@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getStorage } from '../../lib/storage-utils'
+import { getStorage, getUnifiedStorage } from '../../lib/storage-utils'
 import { DiffEngine } from '../../lib/diff-engine'
 import { SmartDiffEngine } from '@/lib/change-detection/smart-diff'
 import { DiffMetaSchema } from '@inplain.ai/shared'
@@ -34,8 +34,9 @@ export async function GET(
       to: searchParams.get('to') || undefined
     })
 
-    // Get storage client
-    const storageClient = getStorage()
+    // Get storage client - try unified first, fall back to legacy
+    const unifiedStorage = getUnifiedStorage()
+    const storageClient = unifiedStorage || getStorage()
     
     // If storage is not configured, return mock data
     if (!storageClient) {
