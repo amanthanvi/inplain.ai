@@ -16,6 +16,7 @@ import { z } from 'zod'
 import { OpenAI } from 'openai'
 import { formatTimestamp } from '@inplain.ai/shared'
 import { getPersonaForTask, getPromptTemplate, buildPrompt } from './prompts/prompt-library'
+import { retryAI } from '@/lib/utils/retry'
 
 // ============= Error Class Hierarchy =============
 
@@ -572,7 +573,7 @@ export class UnifiedAIService {
   }
 
   /**
-   * Perform the actual analysis with retry logic
+   * Perform the actual analysis with robust retry logic
    */
   private async performAnalysis(
     content: string,
@@ -583,46 +584,34 @@ export class UnifiedAIService {
     
     // Check rate limit
     if (this.checkRateLimit(model.id)) {
-      throw new Error(`Rate limited for model ${model.name}. Please try again in a minute.`)
+      throw new AIRateLimitError(`Rate limited for model ${model.name}. Please try again in a minute.`)
     }
 
-    let lastError: Error | null = null
-    const maxRetries = 3
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
+    const { result } = await retryAI(
+      async () => {
         this.updateRateLimit(model.id)
-        
-        const result = await this.callModel(content, model, options)
-        
-        return {
-          task: options.task,
-          content: result.content,
-          confidence: result.confidence || this.calculateConfidence(result),
-          evidence: result.evidence,
-          model: model.id,
-          tokensUsed: result.tokensUsed,
-          processingTime: Date.now() - startTime,
-          timestamp: formatTimestamp()
-        }
-      } catch (error) {
-        lastError = error as Error
-        console.error(`Attempt ${attempt} failed for ${model.id}:`, error)
-        
-        // Don't retry on certain errors
-        if (this.isNonRetryableError(error as Error)) {
-          throw error
-        }
-        
-        // Exponential backoff
-        if (attempt < maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000)
-          await new Promise(resolve => setTimeout(resolve, delay))
+        return await this.callModel(content, model, options)
+      },
+      {
+        maxAttempts: 3,
+        initialDelay: 1000,
+        maxDelay: 10000,
+        onRetry: (attempt, error, delay) => {
+          console.warn(`AI analysis attempt ${attempt} failed for ${model.id}, retrying in ${delay}ms:`, error.message)
         }
       }
-    }
+    )
 
-    throw lastError || new Error('Analysis failed after all retries')
+    return {
+      task: options.task,
+      content: result.content,
+      confidence: result.confidence || this.calculateConfidence(result),
+      evidence: result.evidence,
+      model: model.id,
+      tokensUsed: result.tokensUsed,
+      processingTime: Date.now() - startTime,
+      timestamp: formatTimestamp()
+    }
   }
 
   /**

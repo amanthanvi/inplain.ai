@@ -137,15 +137,45 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
     const timestamp = formatTimestamp()
     const contentKey = `content:${company.slug}:${snapshotId}`
     
-    // Store content in KV instead of blob for now
-    // KV has a 512KB limit per value, so we'll store large content in chunks if needed
-    let contentToStore = fetchedContent
-    if (contentToStore.length > 400000) {
-      console.warn(`[Monitor] Content too large for single KV entry (${contentToStore.length} bytes), truncating...`)
-      contentToStore = contentToStore.substring(0, 400000)
-    }
+    // Store content in KV with proper chunking for large content
+    // KV has a 512KB limit per value, so we'll store large content in chunks
+    const maxChunkSize = 400000 // Leave some buffer for metadata
     
-    await kv.set(contentKey, contentToStore, { ex: 30 * 24 * 60 * 60 }) // 30 days TTL
+    if (fetchedContent.length > maxChunkSize) {
+      console.log(`[Monitor] Content size ${fetchedContent.length} bytes requires chunking`)
+      
+      // Split content into chunks
+      const chunks: string[] = []
+      let offset = 0
+      let chunkIndex = 0
+      
+      while (offset < fetchedContent.length) {
+        const chunkEnd = Math.min(offset + maxChunkSize, fetchedContent.length)
+        const chunk = fetchedContent.substring(offset, chunkEnd)
+        chunks.push(chunk)
+        
+        // Store each chunk with numbered key
+        const chunkKey = `${contentKey}:chunk:${chunkIndex}`
+        await kv.set(chunkKey, chunk, { ex: 30 * 24 * 60 * 60 }) // 30 days TTL
+        
+        offset = chunkEnd
+        chunkIndex++
+      }
+      
+      // Store metadata about chunks
+      const chunkMetadata = {
+        totalChunks: chunks.length,
+        totalSize: fetchedContent.length,
+        chunkSize: maxChunkSize,
+        chunkedAt: timestamp
+      }
+      await kv.set(`${contentKey}:meta`, JSON.stringify(chunkMetadata), { ex: 30 * 24 * 60 * 60 })
+      
+      console.log(`[Monitor] Stored content in ${chunks.length} chunks for ${company.name}`)
+    } else {
+      // Store content normally for smaller content
+      await kv.set(contentKey, fetchedContent, { ex: 30 * 24 * 60 * 60 }) // 30 days TTL
+    }
     
     const snapshot = SnapshotMetaSchema.parse({
       id: snapshotId,
@@ -154,7 +184,7 @@ async function checkCompany(company: CompanyRecord): Promise<void> {
       capturedAt: timestamp,
       blobKey: contentKey, // Using KV key instead of blob key
       contentHash,
-      contentLength: fetchedContent.length,
+      contentLength: fetchedContent.length, // Always store the actual content length
       contentType: 'html',
       headers: {},
       status: 'processed'
@@ -328,9 +358,8 @@ Summary:`;
 
 async function fetchPolicyContent(url: string): Promise<string | null> {
   try {
-    console.log(`[Monitor] Starting fetch for ${url}`)
+    console.log(`[Monitor] Starting fetch with retry for ${url}`)
     
-    // Log the fetch attempt details
     const fetchOptions = {
       method: 'GET',
       headers: {
@@ -340,30 +369,32 @@ async function fetchPolicyContent(url: string): Promise<string | null> {
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
       },
-      redirect: 'follow' as RequestRedirect,
-      // Remove compression to avoid potential Edge Runtime issues
-      // 'Accept-Encoding': 'gzip, deflate, br' removed
+      redirect: 'follow' as RequestRedirect
     }
     
-    console.log(`[Monitor] Fetch options:`, JSON.stringify(fetchOptions, null, 2))
+    // Import retry utility dynamically to handle Edge runtime
+    const { retryFetch } = await import('@/lib/utils/retry')
     
-    const response = await fetch(url, fetchOptions)
-    
-    console.log(`[Monitor] Response received:`, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
-      url: response.url,
-      redirected: response.redirected
+    const { result: response, attempts, totalTime } = await retryFetch(url, fetchOptions, {
+      maxAttempts: 3,
+      initialDelay: 2000,
+      maxDelay: 15000,
+      onRetry: (attempt, error, delay) => {
+        console.warn(`[Monitor] Fetch retry attempt ${attempt} for ${url}`, {
+          error: error.message,
+          delay,
+          url
+        })
+      }
     })
     
-    if (!response.ok) {
-      console.error(`[Monitor] HTTP error for ${url}: ${response.status} ${response.statusText}`)
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-    
-    const contentType = response.headers.get('content-type') || ''
-    console.log(`[Monitor] Content-Type: ${contentType}`)
+    console.log(`[Monitor] Fetch successful after ${attempts} attempts in ${totalTime}ms:`, {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url,
+      redirected: response.redirected,
+      contentType: response.headers.get('content-type')
+    })
     
     const text = await response.text()
     console.log(`[Monitor] Text received: ${text.length} characters`)
@@ -372,17 +403,23 @@ async function fetchPolicyContent(url: string): Promise<string | null> {
       throw new Error('Received empty response body')
     }
     
-    // Log first 500 chars for debugging
-    console.log(`[Monitor] Content preview: ${text.substring(0, 500)}...`)
+    // Validate content appears to be HTML/text
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('text/html') && !contentType.includes('text/plain') && !contentType.includes('application/xhtml')) {
+      console.warn(`[Monitor] Unexpected content type for ${url}: ${contentType}`)
+    }
+    
+    // Log first 200 chars for debugging (reduced to avoid log spam)
+    console.log(`[Monitor] Content preview: ${text.substring(0, 200)}...`)
     
     return text
   } catch (error) {
-    // More detailed error logging
-    console.error(`[Monitor] Detailed fetch error for ${url}:`, {
+    // Enhanced error logging with retry context
+    console.error(`[Monitor] Policy fetch failed after retries for ${url}:`, {
       name: error instanceof Error ? error.name : 'Unknown',
       message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      error: error
+      url,
+      timestamp: new Date().toISOString()
     })
     return null
   }

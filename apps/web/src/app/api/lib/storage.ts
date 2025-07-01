@@ -30,15 +30,47 @@ export class StorageClient {
     try {
       // If it's a KV key (starts with 'content:'), fetch from KV
       if (blobKey.startsWith('content:')) {
-        const content = await kv.get<string>(blobKey)
-        return content
+        // First check if content is chunked
+        const chunkMetadata = await kv.get<string>(`${blobKey}:meta`)
+        
+        if (chunkMetadata) {
+          // Content is chunked, reassemble it
+          const metadata = JSON.parse(chunkMetadata)
+          console.log(`[Storage] Reassembling chunked content: ${metadata.totalChunks} chunks, ${metadata.totalSize} bytes`)
+          
+          const chunks: string[] = []
+          for (let i = 0; i < metadata.totalChunks; i++) {
+            const chunkKey = `${blobKey}:chunk:${i}`
+            const chunk = await kv.get<string>(chunkKey)
+            if (chunk === null) {
+              console.error(`[Storage] Missing chunk ${i} for key ${blobKey}`)
+              return null
+            }
+            chunks.push(chunk)
+          }
+          
+          const reassembledContent = chunks.join('')
+          
+          // Verify reassembled content length matches expected
+          if (reassembledContent.length !== metadata.totalSize) {
+            console.error(`[Storage] Content length mismatch: expected ${metadata.totalSize}, got ${reassembledContent.length}`)
+            return null
+          }
+          
+          return reassembledContent
+        } else {
+          // Content is not chunked, fetch normally
+          const content = await kv.get<string>(blobKey)
+          return content
+        }
       }
       
       // Otherwise try to fetch from blob URL (legacy)
       const response = await fetch(blobKey)
       if (!response.ok) return null
       return response.text()
-    } catch {
+    } catch (error) {
+      console.error(`[Storage] Error retrieving content for key ${blobKey}:`, error)
       return null
     }
   }

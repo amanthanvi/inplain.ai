@@ -1,15 +1,6 @@
 import { caches } from './redis-cache'
 import { logger } from '@/lib/logger'
-// Use simple hash function for edge runtime compatibility
-function createSimpleHash(data: string): string {
-  let hash = 0
-  for (let i = 0; i < data.length; i++) {
-    const char = data.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32-bit integer
-  }
-  return Math.abs(hash).toString(16)
-}
+import { HashUtils } from '@/lib/utils/hash'
 
 const AI_RESPONSE_TTL = 86400 // 24 hours
 const EMBEDDING_TTL = 604800 // 7 days
@@ -38,16 +29,14 @@ export class AICache {
     prompt: string,
     params?: Record<string, any>
   ): string {
-    const hash = createSimpleHash(`${model}:${prompt}:${JSON.stringify(params || {})}`)
-    return `ai:response:${hash}`
+    return HashUtils.generateCacheKey(`${model}:${prompt}:${JSON.stringify(params || {})}`, 'ai:response')
   }
 
   /**
    * Generate cache key for embeddings
    */
   private static getEmbeddingKey(text: string, model: string): string {
-    const hash = createSimpleHash(`${model}:${text}`)
-    return `ai:embedding:${hash}`
+    return HashUtils.generateCacheKey(`${model}:${text}`, 'ai:embedding')
   }
 
   /**
