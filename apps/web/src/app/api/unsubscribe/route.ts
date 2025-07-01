@@ -180,7 +180,9 @@ async function unsubscribeByEmail(email: string): Promise<boolean> {
 			const user = (await kv.get(key)) as any;
 			if (user && user.email === email) {
 				const userId = key.split(":")[1];
-				if (!userId) continue;
+				if (!userId) {
+					continue;
+				}
 
 				// Update preferences
 				const preferences =

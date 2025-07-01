@@ -139,7 +139,9 @@ Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/setting
 	}
 
 	static formatAlertDetails(details: any): string {
-		if (!details) return "<p>No additional details available.</p>";
+		if (!details) {
+			return "<p>No additional details available.</p>";
+		}
 
 		let html = "<ul>";
 
@@ -168,7 +170,9 @@ Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/setting
 	}
 
 	static formatAlertDetailsText(details: any): string {
-		if (!details) return "No additional details available.";
+		if (!details) {
+			return "No additional details available.";
+		}
 
 		let text = "";
 
@@ -200,15 +204,21 @@ Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/setting
 			const alert = (await kv.hgetall(
 				`alert:${alertId}`
 			)) as WatchlistAlert | null;
-			if (!alert || alert.emailSent) return false;
+			if (!alert || alert.emailSent) {
+				return false;
+			}
 
 			const user = await AuthService.getUserById(alert.userId);
-			if (!user || !user.emailAlerts) return false;
+			if (!user || !user.emailAlerts) {
+				return false;
+			}
 
 			const watchlist = await WatchlistService.getWatchlist(
 				alert.watchlistId
 			);
-			if (!watchlist) return false;
+			if (!watchlist) {
+				return false;
+			}
 
 			const email = this.generateWatchlistAlertEmail(
 				user,
@@ -344,13 +354,16 @@ The Inplain.AI Team
 		}
 
 		const user = await AuthService.getUserById(userId);
-		if (!user || !user.emailAlerts || user.alertFrequency !== "weekly")
+		if (!user || !user.emailAlerts || user.alertFrequency !== "weekly") {
 			return false;
+		}
 
 		const alerts = await WatchlistService.getUserAlerts(userId, 50);
 		const unreadAlerts = alerts.filter((a) => !a.read);
 
-		if (unreadAlerts.length === 0) return true; // No alerts to send
+		if (unreadAlerts.length === 0) {
+			return true; // No alerts to send
+		}
 
 		const { data, error } = await resend.emails.send({
 			from: "Inplain.AI <digest@inplain.ai>",
@@ -662,7 +675,9 @@ The Inplain.AI Team
 	static async sendWelcomeEmail(userId: string): Promise<boolean> {
 		try {
 			const user = await AuthService.getUserById(userId);
-			if (!user || !user.email) return false;
+			if (!user || !user.email) {
+				return false;
+			}
 
 			const template = this.generateWelcomeEmail(user);
 			return await this.sendEmail(
@@ -683,7 +698,9 @@ The Inplain.AI Team
 			// Process up to specified limit from the queue
 			for (let i = 0; i < limit; i++) {
 				const item = await kv.lpop("email:queue");
-				if (!item) break;
+				if (!item) {
+					break;
+				}
 
 				try {
 					const notification = JSON.parse(item as string);
@@ -762,11 +779,15 @@ The Inplain.AI Team
 	static async sendMonthlyDigest(userId: string): Promise<boolean> {
 		try {
 			const user = await AuthService.getUserById(userId);
-			if (!user || !user.email) return false;
+			if (!user || !user.email) {
+				return false;
+			}
 
 			// Get user's watchlist alerts for the month
 			const alerts = await WatchlistService.getUserAlerts(userId, 30);
-			if (alerts.length === 0) return true; // No alerts, no email needed
+			if (alerts.length === 0) {
+				return true; // No alerts, no email needed
+			}
 
 			const template = this.generateMonthlyDigestEmail(user, alerts);
 			return await this.sendEmail(
@@ -787,7 +808,9 @@ The Inplain.AI Team
 	): Promise<boolean> {
 		try {
 			const data = await kv.get(`unsubscribe:${token}`);
-			if (!data) return false;
+			if (!data) {
+				return false;
+			}
 
 			const { userId } = JSON.parse(data as string);
 			const preferences = await this.getEmailPreferences(userId);

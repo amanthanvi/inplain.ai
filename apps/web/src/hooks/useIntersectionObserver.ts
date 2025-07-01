@@ -18,12 +18,16 @@ export function useIntersectionObserver({
 
 	useEffect(() => {
 		const element = ref.current;
-		if (!element) return;
+		if (!element) {
+			return;
+		}
 
 		const observer = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0];
-				if (!entry) return;
+				if (!entry) {
+					return;
+				}
 
 				setIsIntersecting(entry.isIntersecting);
 

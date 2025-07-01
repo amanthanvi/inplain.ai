@@ -296,21 +296,27 @@ export class FeedbackService {
 			const feedback = await this.getFeedback(id as string);
 			if (feedback) {
 				// Apply filters
-				if (options.type && feedback.type !== options.type) continue;
-				if (options.status && feedback.status !== options.status)
+				if (options.type && feedback.type !== options.type) {
 					continue;
-				if (options.priority && feedback.priority !== options.priority)
+				}
+				if (options.status && feedback.status !== options.status) {
 					continue;
+				}
+				if (options.priority && feedback.priority !== options.priority) {
+					continue;
+				}
 				if (
 					options.sentiment &&
 					feedback.sentiment !== options.sentiment
-				)
+				) {
 					continue;
+				}
 				if (
 					options.userId &&
 					feedback.context.userId !== options.userId
-				)
+				) {
 					continue;
+				}
 
 				allFeedback.push(feedback);
 			}
@@ -335,7 +341,9 @@ export class FeedbackService {
 		assignedTo?: string
 	): Promise<Feedback | null> {
 		const feedback = await this.getFeedback(id);
-		if (!feedback) return null;
+		if (!feedback) {
+			return null;
+		}
 
 		feedback.status = status;
 		feedback.updatedAt = new Date().toISOString();
@@ -519,8 +527,12 @@ export class FeedbackService {
 			lowerText.includes(word)
 		).length;
 
-		if (positiveScore > negativeScore) return "positive";
-		if (negativeScore > positiveScore) return "negative";
+		if (positiveScore > negativeScore) {
+			return "positive";
+		}
+		if (negativeScore > positiveScore) {
+			return "negative";
+		}
 		return "neutral";
 	}
 
@@ -532,11 +544,21 @@ export class FeedbackService {
 		sentiment: FeedbackSentiment,
 		rating?: number
 	): FeedbackPriority {
-		if (type === "bug" && sentiment === "negative") return "urgent";
-		if (type === "bug") return "high";
-		if (rating && rating <= 2) return "high";
-		if (type === "feature" && sentiment === "positive") return "medium";
-		if (sentiment === "negative") return "medium";
+		if (type === "bug" && sentiment === "negative") {
+			return "urgent";
+		}
+		if (type === "bug") {
+			return "high";
+		}
+		if (rating && rating <= 2) {
+			return "high";
+		}
+		if (type === "feature" && sentiment === "positive") {
+			return "medium";
+		}
+		if (sentiment === "negative") {
+			return "medium";
+		}
 		return "low";
 	}
 

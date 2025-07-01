@@ -286,7 +286,9 @@ export function validateContentType(
 	allowedTypes: string[]
 ): boolean {
 	const contentType = request.headers.get("content-type");
-	if (!contentType) return false;
+	if (!contentType) {
+		return false;
+	}
 
 	return allowedTypes.some((type) =>
 		contentType.toLowerCase().includes(type.toLowerCase())
