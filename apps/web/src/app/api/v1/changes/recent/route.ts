@@ -90,8 +90,12 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
 		if (startDate || endDate) {
 			changes = changes.filter((change) => {
 				const changeDate = new Date(change.timestamp);
-				if (startDate && changeDate < new Date(startDate)) return false;
-				if (endDate && changeDate > new Date(endDate)) return false;
+				if (startDate && changeDate < new Date(startDate)) {
+					return false;
+				}
+				if (endDate && changeDate > new Date(endDate)) {
+					return false;
+				}
 				return true;
 			});
 		}

@@ -158,7 +158,9 @@ async function sendWeeklyDigests(): Promise<number> {
 
 		for (const key of userPrefKeys) {
 			const userId = key.split(":")[2];
-			if (!userId) continue;
+			if (!userId) {
+				continue;
+			}
 
 			try {
 				const preferences =
@@ -213,7 +215,9 @@ async function sendMonthlyDigests(): Promise<number> {
 
 		for (const key of userPrefKeys) {
 			const userId = key.split(":")[2];
-			if (!userId) continue;
+			if (!userId) {
+				continue;
+			}
 
 			try {
 				const preferences =

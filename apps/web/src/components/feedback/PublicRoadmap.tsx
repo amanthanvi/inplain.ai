@@ -48,7 +48,9 @@ export default function PublicRoadmap() {
 			const response = await fetch(
 				"/api/feedback?type=feature&limit=100"
 			);
-			if (!response.ok) throw new Error("Failed to fetch roadmap items");
+			if (!response.ok) {
+				throw new Error("Failed to fetch roadmap items");
+			}
 
 			const data = await response.json();
 			const features: RoadmapItem[] = data.items;

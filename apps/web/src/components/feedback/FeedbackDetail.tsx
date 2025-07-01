@@ -43,7 +43,9 @@ export default function FeedbackDetail({
 	const { toast } = useToast();
 
 	const handleStatusUpdate = async () => {
-		if (!isAdmin) return;
+		if (!isAdmin) {
+			return;
+		}
 
 		setIsUpdating(true);
 		try {
@@ -53,7 +55,9 @@ export default function FeedbackDetail({
 				body: JSON.stringify({ status, notes }),
 			});
 
-			if (!response.ok) throw new Error("Failed to update feedback");
+			if (!response.ok) {
+				throw new Error("Failed to update feedback");
+			}
 
 			toast({
 				title: "Feedback updated",

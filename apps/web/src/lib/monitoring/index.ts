@@ -165,7 +165,9 @@ class MetricsCollector {
 	}
 
 	async flush() {
-		if (this.metrics.length === 0) return;
+		if (this.metrics.length === 0) {
+			return;
+		}
 
 		const metricsToFlush = [...this.metrics];
 		this.metrics = [];

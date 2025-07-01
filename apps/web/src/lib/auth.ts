@@ -113,12 +113,16 @@ export class AuthService {
 		hashedPassword: string
 	): Promise<boolean> {
 		const [saltHex, storedHashHex] = hashedPassword.split(":");
-		if (!saltHex || !storedHashHex) return false;
+		if (!saltHex || !storedHashHex) {
+			return false;
+		}
 
 		const encoder = new TextEncoder();
 
 		const saltMatches = saltHex.match(/.{2}/g);
-		if (!saltMatches) return false;
+		if (!saltMatches) {
+			return false;
+		}
 
 		const salt = new Uint8Array(
 			saltMatches.map((byte) => parseInt(byte, 16))
@@ -201,7 +205,9 @@ export class AuthService {
 		const userId = await kv.get<string>(
 			`user:email:${email.toLowerCase()}`
 		);
-		if (!userId) return null;
+		if (!userId) {
+			return null;
+		}
 
 		const user = (await kv.hgetall(`user:${userId}`)) as User | null;
 		return user;
@@ -222,7 +228,9 @@ export class AuthService {
 		updates: Partial<User>
 	): Promise<User | null> {
 		const user = await this.getUserById(userId);
-		if (!user) return null;
+		if (!user) {
+			return null;
+		}
 
 		const updatedUser = {
 			...user,
@@ -318,10 +326,14 @@ export class AuthService {
 		const cookieStore = await cookies();
 		const sessionCookie = cookieStore.get("session");
 
-		if (!sessionCookie?.value) return null;
+		if (!sessionCookie?.value) {
+			return null;
+		}
 
 		const session = await this.verifySession(sessionCookie.value);
-		if (!session) return null;
+		if (!session) {
+			return null;
+		}
 
 		return this.getUserById(session.userId);
 	}
@@ -370,7 +382,9 @@ export class AuthService {
 			.join("");
 		const userId = await kv.get<string>(`apikey:${hashedKey}`);
 
-		if (!userId) return null;
+		if (!userId) {
+			return null;
+		}
 
 		return this.getUserById(userId);
 	}
@@ -380,7 +394,9 @@ export class AuthService {
 		type: "api" | "analysis"
 	): Promise<void> {
 		const user = await this.getUserById(userId);
-		if (!user) return;
+		if (!user) {
+			return;
+		}
 
 		const now = new Date();
 		const resetDate = new Date(user.usage.lastReset);
@@ -413,7 +429,9 @@ export class AuthService {
 		userId: string
 	): Promise<{ allowed: boolean; limit: number; used: number }> {
 		const user = await this.getUserById(userId);
-		if (!user) return { allowed: false, limit: 0, used: 0 };
+		if (!user) {
+			return { allowed: false, limit: 0, used: 0 };
+		}
 
 		const limits = {
 			free: { api: 100, analysis: 20 },
@@ -438,7 +456,9 @@ export class AuthService {
 
 	static async verifyEmail(token: string): Promise<boolean> {
 		const userId = await kv.get<string>(`verify:${token}`);
-		if (!userId) return false;
+		if (!userId) {
+			return false;
+		}
 
 		await this.updateUser(userId, { emailVerified: true });
 		await kv.del(`verify:${token}`);
@@ -448,7 +468,9 @@ export class AuthService {
 
 	static async requestPasswordReset(email: string): Promise<string | null> {
 		const user = await this.getUserByEmail(email);
-		if (!user) return null;
+		if (!user) {
+			return null;
+		}
 
 		const tokenArray = crypto.getRandomValues(new Uint8Array(32));
 		const resetToken = Array.from(tokenArray)
@@ -464,7 +486,9 @@ export class AuthService {
 		newPassword: string
 	): Promise<boolean> {
 		const userId = await kv.get<string>(`reset:${token}`);
-		if (!userId) return false;
+		if (!userId) {
+			return false;
+		}
 
 		const hashedPassword = await this.hashPassword(newPassword);
 		await kv.set(`user:password:${userId}`, hashedPassword);
