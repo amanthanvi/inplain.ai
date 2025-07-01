@@ -1,8 +1,8 @@
-# InPlain.AI API v1
+# Inplain.ai API v1
 
 ## Overview
 
-The InPlain.AI API provides programmatic access to privacy policy analysis, monitoring, and management features. This RESTful API enables developers to integrate privacy intelligence into their applications.
+The Inplain.ai API provides programmatic access to privacy policy analysis, monitoring, and management features. This RESTful API enables developers to integrate privacy intelligence into their applications.
 
 ## Authentication
 
@@ -23,7 +23,7 @@ https://inplain.ai/api/v1
 ### Companies
 
 - `GET /companies/{slug}` - Get company information
-- `GET /companies/{slug}/policies` - Get company privacy policies  
+- `GET /companies/{slug}/policies` - Get company privacy policies
 - `GET /companies/{slug}/score` - Get privacy score
 - `GET /companies/{slug}/changes` - Get policy change history
 
@@ -51,12 +51,14 @@ All responses follow a consistent format:
 
 ```json
 {
-  "success": true,
-  "data": { /* endpoint-specific data */ },
-  "metadata": {
-    "timestamp": "2024-01-20T12:00:00Z",
-    "version": "1.0"
-  }
+	"success": true,
+	"data": {
+		/* endpoint-specific data */
+	},
+	"metadata": {
+		"timestamp": "2024-01-20T12:00:00Z",
+		"version": "1.0"
+	}
 }
 ```
 
@@ -64,19 +66,22 @@ Error responses:
 
 ```json
 {
-  "error": "Error message",
-  "code": "ERROR_CODE",
-  "details": { /* additional error details */ }
+	"error": "Error message",
+	"code": "ERROR_CODE",
+	"details": {
+		/* additional error details */
+	}
 }
 ```
 
 ## Rate Limiting
 
 - Standard: 1,000 requests/day
-- Pro: 10,000 requests/day  
+- Pro: 10,000 requests/day
 - Enterprise: Custom limits
 
 Rate limit headers are included in responses:
+
 - `X-RateLimit-Limit`
 - `X-RateLimit-Remaining`
 - `X-RateLimit-Reset`
@@ -129,6 +134,7 @@ curl -X POST \
 ## SDKs
 
 Official SDKs are available for:
+
 - JavaScript/TypeScript
 - Python
 - Ruby
@@ -143,6 +149,7 @@ Official SDKs are available for:
 ## Changelog
 
 ### v1.0.0 (2024-01-20)
+
 - Initial API release
 - Company information endpoints
 - Policy summarization

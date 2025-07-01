@@ -1,4 +1,4 @@
-# InPlain.AI Browser Extension
+# Inplain.ai Browser Extension
 
 A browser extension that allows users to quickly check privacy policies and monitor privacy changes across the web.
 
@@ -17,34 +17,37 @@ A browser extension that allows users to quickly check privacy policies and moni
 ### Development
 
 1. Install dependencies:
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 2. Build the extension:
-   ```bash
-   npm run build
-   ```
+
+    ```bash
+    npm run build
+    ```
 
 3. Load in Chrome/Edge:
-   - Open `chrome://extensions/` or `edge://extensions/`
-   - Enable "Developer mode"
-   - Click "Load unpacked"
-   - Select the `dist` folder
+    - Open `chrome://extensions/` or `edge://extensions/`
+    - Enable "Developer mode"
+    - Click "Load unpacked"
+    - Select the `dist` folder
 
 ### Production
 
 1. Build and package:
-   ```bash
-   npm run package
-   ```
+
+    ```bash
+    npm run package
+    ```
 
 2. The packaged extension will be available as `inplain-extension.zip`
 
 ## Configuration
 
 1. Click the extension icon and follow the setup instructions
-2. Get your API key from [InPlain.AI Settings](https://inplain.ai/settings)
+2. Get your API key from [Inplain.ai Settings](https://inplain.ai/settings)
 3. Enter your API key in the extension settings
 
 ## Development
@@ -72,7 +75,7 @@ src/
 
 ### API Integration
 
-The extension uses the InPlain.AI API v1 endpoints:
+The extension uses the Inplain.ai API v1 endpoints:
 
 - `GET /api/v1/companies/{slug}` - Get company information
 - `GET /api/v1/companies/{slug}/score` - Get privacy score
