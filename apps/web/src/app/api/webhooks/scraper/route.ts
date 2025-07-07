@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { kv } from '@/app/api/lib/kv-wrapper'
 import { logger } from '@/lib/logger'
-import { unifiedStorage } from '@/lib/storage/unified-storage'
+import { storage as unifiedStorage } from '@/lib/storage/unified-storage'
 import { HashUtils } from '@/lib/utils/hash'
 
 export const runtime = 'edge'
@@ -160,15 +160,15 @@ async function handleFailedScrape(jobId: string, data: any) {
     await kv.incr(`scraper:failures:${company_slug}`)
     
     // Store failure details
-    await kv.setex(
+    await kv.set(
       `scraper:failure:${jobId}`,
-      7 * 24 * 60 * 60, // 7 days
       JSON.stringify({
         job_id: jobId,
         company_slug,
         error,
         failed_at: new Date().toISOString(),
-      })
+      }),
+      { ex: 7 * 24 * 60 * 60 } // 7 days TTL
     )
     
     // Check if we should alert about repeated failures
