@@ -16,8 +16,7 @@ from flask_cors import CORS
 import redis
 from dotenv import load_dotenv
 
-from crawl import run_scraper
-from spiders.privacy_spider import PrivacySpider
+from spiders.policy_spider import PolicySpider
 
 # Load environment variables
 load_dotenv()
@@ -261,7 +260,7 @@ def run_scrape_job(job_id: str, company_slug: str, url: str):
         
         # Run spider
         deferred = runner.crawl(
-            PrivacySpider,
+            PolicySpider,
             company_slug=company_slug,
             start_urls=[url]
         )
