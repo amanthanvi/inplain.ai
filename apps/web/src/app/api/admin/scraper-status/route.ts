@@ -45,7 +45,9 @@ export async function GET(request: NextRequest) {
       const recentWebhooks = webhooks?.map(w => JSON.parse(w as string)) || []
       
       // Get processing queue length
-      const queueLength = await kv.llen('scraper:process_queue')
+      // Note: Vercel KV doesn't have llen, so we'll use lrange to get count
+      const queueItems = await kv.lrange('scraper:process_queue', 0, -1)
+      const queueLength = queueItems?.length || 0
       
       // Get recent job stats
       const stats = await getScraperStats()
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
         url: process.env.NEXT_PUBLIC_SCRAPER_API_URL,
         stats,
         queue: {
-          length: queueLength || 0,
+          length: queueLength,
         },
         recent_webhooks: recentWebhooks,
       })
