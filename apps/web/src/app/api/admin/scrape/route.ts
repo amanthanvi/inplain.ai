@@ -138,16 +138,16 @@ export async function POST(request: NextRequest) {
     })
     
     // Store job metadata
-    await kv.setex(
+    await kv.set(
       `scrape:job:${job.job_id}`,
-      3600, // 1 hour
       JSON.stringify({
         ...job,
         triggered_by: userId,
         triggered_at: new Date().toISOString(),
         company_slug: data.slug,
         url: data.url,
-      })
+      }),
+      { ex: 3600 } // 1 hour TTL
     )
     
     return NextResponse.json({
