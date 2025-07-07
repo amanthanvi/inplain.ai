@@ -40,12 +40,18 @@ ALLOWED_ORIGINS = [
 CORS(app, origins=ALLOWED_ORIGINS)
 
 # Initialize Redis client for job queue
-redis_client = redis.Redis(
-    host=os.getenv('REDIS_HOST', 'localhost'),
-    port=int(os.getenv('REDIS_PORT', 6379)),
-    password=os.getenv('REDIS_PASSWORD'),
-    decode_responses=True
-)
+redis_url = os.getenv('REDIS_URL')
+if redis_url:
+    # Use Redis URL (for Render/Upstash)
+    redis_client = redis.from_url(redis_url, decode_responses=True)
+else:
+    # Use individual settings (for Railway)
+    redis_client = redis.Redis(
+        host=os.getenv('REDIS_HOST', 'localhost'),
+        port=int(os.getenv('REDIS_PORT', 6379)),
+        password=os.getenv('REDIS_PASSWORD'),
+        decode_responses=True
+    )
 
 # Thread pool for running scrapers
 executor = ThreadPoolExecutor(max_workers=5)

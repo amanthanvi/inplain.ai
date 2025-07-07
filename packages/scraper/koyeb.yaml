@@ -1,0 +1,36 @@
+# Koyeb deployment configuration
+app:
+  name: inplain-scraper
+
+services:
+  - name: scraper-api
+    type: web
+    git:
+      repository: github.com/yourusername/inplain.ai
+      branch: main
+      workdir: /packages/scraper
+    builder:
+      dockerfile: Dockerfile
+    env:
+      - name: PYTHONUNBUFFERED
+        value: "1"
+      - name: SCRAPY_SETTINGS_MODULE
+        value: scrapy_settings
+      - name: SCRAPER_API_KEY
+        secret: true
+    ports:
+      - port: 8080
+        protocol: http
+    routes:
+      - path: /
+        port: 8080
+    scaling:
+      min: 0
+      max: 1
+    instance_types:
+      - nano # Free tier
+    health_checks:
+      - path: /health
+        port: 8080
+        interval: 30
+        timeout: 5
