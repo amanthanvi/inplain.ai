@@ -36,4 +36,5 @@ COPY . .
 ENV PYTHONUNBUFFERED=1
 ENV SCRAPY_SETTINGS_MODULE=scrapy_settings
 
-CMD ["python", "crawl.py"]
+# Use gunicorn for production
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--threads", "4", "--timeout", "120", "api_server:app"]
