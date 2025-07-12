@@ -100,15 +100,25 @@ The scraper can store data in three ways:
 1. Connect GitHub repository
 2. Set root directory to `packages/scraper`
 3. Use Docker deployment with provided Dockerfile
-4. Configure environment variables
+4. Configure environment variables (see Environment Variables section)
 5. Deploy
 
 ### 2. Deploy Web App to Vercel
 
 1. Connect GitHub repository
 2. Set root directory to `apps/web`
-3. Configure environment variables
+3. Configure environment variables (see Environment Variables section)
 4. Deploy
+
+### 3. Configure Webhook Integration
+
+Run the webhook setup script for automated configuration:
+
+```bash
+./scripts/setup-webhook.sh
+```
+
+Or manually configure following the [Webhook Setup Guide](./WEBHOOK_SETUP.md)
 
 ### 3. Configure Cron Jobs in Vercel
 
