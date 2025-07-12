@@ -26,7 +26,7 @@ const SnapshotCreateSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
     // Verify API key
@@ -37,7 +37,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { slug } = params
+    const { slug } = await context.params
     const body = await request.json()
     
     // Validate input

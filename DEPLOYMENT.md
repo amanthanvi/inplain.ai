@@ -1,180 +1,192 @@
-# Deployment Guide for Inplain.ai
+# Inplain.AI Deployment Guide
 
-## Environments
+## Overview
 
-- **Production**: https://inplain.ai
-- **Staging**: https://staging.inplain.ai
-- **Preview**: Automatically created for PRs
+Inplain.AI consists of two main components:
+1. **Web Application** - Next.js app deployed on Vercel
+2. **Scraper Service** - Python Scrapy app deployed on Render
 
-## Pre-Deployment Checklist
+## Environment Variables Configuration
 
-### Code Quality
-- [ ] All tests passing (`npm run test:all`)
-- [ ] No TypeScript errors (`npm run typecheck`)
-- [ ] No linting errors (`npm run lint`)
-- [ ] Bundle size within limits
-- [ ] No console.logs in production code
+### Vercel (Web Application)
 
-### Security
-- [ ] No secrets in code
-- [ ] Environment variables documented
-- [ ] Security headers configured
-- [ ] CORS properly configured
-- [ ] Rate limiting enabled
+The following environment variables need to be set in Vercel:
 
-### Database
-- [ ] Migrations tested on staging
-- [ ] Backup created before deployment
-- [ ] Redis cache will be cleared if needed
-- [ ] KV data structure changes documented
+```env
+# Authentication
+CLERK_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+NEXT_PUBLIC_CLERK_DOMAIN=clerk.inplain.ai
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/login
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/onboarding
+NEXT_PUBLIC_CLERK_SIGN_OUT_REDIRECT_URL=/
 
-### Features
-- [ ] Feature flags set correctly
-- [ ] A/B tests configured
-- [ ] New features documented
-- [ ] Breaking changes communicated
+# Database
+KV_REST_API_URL=https://...upstash.io
+KV_REST_API_TOKEN=...
+KV_REST_API_READ_ONLY_TOKEN=...
+REDIS_URL=rediss://...
+KV_URL=rediss://...
 
-## Deployment Process
+# AI Service
+OPENROUTER_API_KEY=sk-or-v1-...
+DEFAULT_AI_MODEL=google/gemini-2.5-flash-preview-05-20
 
-### Staging Deployment
+# Security
+CRON_SECRET=... (generate with: openssl rand -hex 32)
+JWT_SECRET=... (generate with: openssl rand -base64 32)
+SCRAPER_API_KEY=... (shared with scraper service)
+VERCEL_API_KEY=... (generate for internal API access)
 
-1. **Automatic Deployment**
-   - Push to `staging` or `develop` branch
-   - GitHub Actions runs tests
-   - Deploys to staging environment
+# URLs
+NEXT_PUBLIC_APP_URL=https://inplain.ai
+NEXT_PUBLIC_SCRAPER_API_URL=https://inplain-scraper.onrender.com
 
-2. **Manual Deployment**
+# Feature Flags
+NEXT_PUBLIC_DEMO_MODE=false
+```
+
+### Render (Scraper Service)
+
+The following environment variables need to be set in Render:
+
+```env
+# Core Configuration
+PYTHONUNBUFFERED=1
+SCRAPY_SETTINGS_MODULE=scrapy_settings
+
+# Frontend Integration
+FRONTEND_URL=https://inplain.ai
+WEBHOOK_URL=https://inplain.ai/api/webhooks/scraper
+VERCEL_API_URL=https://inplain.ai
+VERCEL_API_KEY=... (same as VERCEL_API_KEY in Vercel)
+
+# Database
+REDIS_URL=rediss://... (same as in Vercel)
+
+# Security
+SCRAPER_API_KEY=... (same as in Vercel)
+```
+
+## Data Flow Architecture
+
+### 1. Scraping Trigger
+- Vercel cron job (`/api/cron/trigger-scraping`) runs daily
+- Checks which companies need scraping based on `checkInterval`
+- Updates Redis with companies to scrape
+- Optionally triggers Render scraper via webhook
+
+### 2. Scraping Process
+The scraper can store data in three ways:
+- **Redis Storage** (legacy) - Stores directly in Redis queues
+- **Webhook Notification** - Sends to `/api/webhooks/scraper`
+- **Direct API Storage** - Uses `/api/snapshots/[slug]` endpoint
+
+### 3. Data Processing
+- Vercel cron job (`/api/cron/process-scrapes`) processes scraped data
+- Converts raw scrapes into snapshots
+- Calculates diffs between consecutive snapshots
+- Generates AI summaries for changes
+
+### 4. Frontend Access
+- All data accessed through unified storage adapter
+- Real-time metrics calculated from actual data
+- No mock data in production
+
+## Deployment Steps
+
+### 1. Deploy Scraper to Render
+
+1. Connect GitHub repository
+2. Set root directory to `packages/scraper`
+3. Use Docker deployment with provided Dockerfile
+4. Configure environment variables
+5. Deploy
+
+### 2. Deploy Web App to Vercel
+
+1. Connect GitHub repository
+2. Set root directory to `apps/web`
+3. Configure environment variables
+4. Deploy
+
+### 3. Configure Cron Jobs in Vercel
+
+Add the following cron jobs in Vercel project settings:
+
+```
+# Daily scraping trigger (9 AM UTC)
+/api/cron/trigger-scraping - 0 9 * * *
+
+# Process scraped data (every 30 minutes)
+/api/cron/process-scrapes - */30 * * * *
+
+# Monitor for changes (already configured)
+/api/cron/monitor - 0 9 * * *
+```
+
+### 4. Test Integration
+
+1. Manually trigger scraping:
    ```bash
-   vercel --prod --env-file=.env.staging
+   curl -X GET https://inplain.ai/api/cron/trigger-scraping \
+     -H "Authorization: Bearer $CRON_SECRET"
    ```
 
-### Production Deployment
+2. Check scraper logs in Render dashboard
 
-1. **Standard Flow**
-   - Merge PR to `main` branch
-   - GitHub Actions runs full test suite
-   - Automatic deployment to production
-   - Post-deployment checks run
-
-2. **Emergency Deployment**
-   - Use workflow dispatch with `skip_tests: true`
-   - Only for critical fixes
-   - Must be followed by proper testing
-
-### Rollback Process
-
-1. **Automatic Rollback**
-   - Triggered if post-deployment checks fail
-   - Reverts to previous deployment
-
-2. **Manual Rollback**
+3. Verify snapshots are created:
    ```bash
-   vercel rollback --token=$VERCEL_TOKEN
+   curl https://inplain.ai/api/snapshot/google
    ```
 
-## Environment Variables
+## Security Considerations
 
-### Required for All Environments
-- `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- `CLERK_SECRET_KEY`
-- `KV_REST_API_URL`
-- `KV_REST_API_TOKEN`
-- `OPENROUTER_API_KEY`
+1. **API Keys**: 
+   - Generate strong, unique keys for `SCRAPER_API_KEY` and `VERCEL_API_KEY`
+   - Rotate keys periodically
 
-### Production Only
-- `SENTRY_DSN`
-- `SENTRY_AUTH_TOKEN`
-- `HEALTH_CHECK_TOKEN`
-- `CRON_SECRET`
+2. **CORS**: 
+   - Scraper endpoints validate API keys
+   - Webhook endpoints are protected
 
-### Staging Only
-- `DEBUG_MODE=true`
-- `LOG_LEVEL=debug`
+3. **Rate Limiting**: 
+   - Built-in rate limiting on all API endpoints
+   - Scraper respects robots.txt and implements delays
 
 ## Monitoring
 
-### Health Checks
-- Basic: `/api/health`
-- Detailed: `/api/health/detailed` (requires auth token)
-- Run locally: `npm run health:check`
+1. **Vercel Dashboard**: 
+   - Monitor function execution
+   - Check error logs
+   - Track API usage
 
-### Alerts
-- Sentry for errors
-- Vercel Analytics for performance
-- Custom alerts for:
-  - API errors > 5% in 5 minutes
-  - Response time > 3s
-  - Cache hit rate < 50%
+2. **Render Dashboard**:
+   - Monitor scraper health
+   - Check deployment status
+   - View logs
 
-### Dashboards
-- Vercel Dashboard: Performance metrics
-- Sentry Dashboard: Error tracking
-- Custom Dashboard: Business metrics
-
-## Post-Deployment
-
-### Verification Steps
-1. Check health endpoints
-2. Test critical user flows
-3. Verify feature flags
-4. Check error rates in Sentry
-5. Monitor performance metrics
-
-### Communication
-1. Update #deployments Slack channel
-2. Note any configuration changes
-3. Document any issues encountered
+3. **Upstash Console**:
+   - Monitor Redis usage
+   - Check data persistence
+   - Track KV operations
 
 ## Troubleshooting
 
-### Common Issues
+### Scraper Not Running
+1. Check Render deployment status
+2. Verify environment variables
+3. Check Redis connectivity
+4. Review scraper logs
 
-1. **Build Failures**
-   - Check Node version (requires 20.x)
-   - Clear cache: `vercel --force`
-   - Check environment variables
+### Data Not Appearing
+1. Check cron job execution in Vercel
+2. Verify webhook is receiving data
+3. Check storage adapter operations
+4. Review processing logs
 
-2. **Runtime Errors**
-   - Check Sentry for detailed errors
-   - Review Vercel Function logs
-   - Verify environment variables
-
-3. **Performance Issues**
-   - Check Redis connection
-   - Review API response times
-   - Check for N+1 queries
-
-### Debug Commands
-
-```bash
-# Check deployment status
-vercel ls
-
-# View logs
-vercel logs
-
-# Check environment
-vercel env ls
-
-# Run health check
-npm run health:check production
-```
-
-## Deployment Schedule
-
-- **Production**: Tuesday and Thursday mornings
-- **Staging**: Continuous deployment
-- **Hotfixes**: As needed with approval
-
-## Contacts
-
-- **DevOps Lead**: [Email]
-- **On-Call Engineer**: Check PagerDuty
-- **Escalation**: Engineering Manager
-
-## Related Documentation
-
-- [Architecture Overview](./ARCHITECTURE.md)
-- [API Documentation](./API.md)
-- [Security Guidelines](./SECURITY.md)
+### AI Summaries Failing
+1. Verify OpenRouter API key
+2. Check AI service integration
+3. Review error logs
+4. Monitor token usage

@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { kv } from '@/app/api/lib/kv-wrapper'
 import { logger } from '@/lib/logger'
-import { storage as unifiedStorage } from '@/lib/storage/unified-storage'
+import { storage } from '@/lib/storage/adapter'
 import { HashUtils } from '@/lib/utils/hash'
 
 export const runtime = 'edge'
@@ -93,24 +93,29 @@ async function handleCompletedScrape(data: any) {
       typeof content === 'string' ? content : JSON.stringify(content)
     )
     
-    // Store the scraped content
-    const storageKey = `scrape:${company_slug}:${contentHash}`
-    await unifiedStorage.set(storageKey, {
-      company_slug,
+    // Store the scraped content as a snapshot
+    const snapshotId = crypto.randomUUID()
+    const snapshot = {
+      id: snapshotId,
+      slug: company_slug,
       url,
-      content,
-      scraped_at,
-      content_hash: contentHash,
-      processed: false,
-    }, {
-      ttl: 7 * 24 * 60 * 60, // 7 days
-    })
+      capturedAt: scraped_at,
+      blobKey: `snapshots/${company_slug}/${snapshotId}.html`,
+      contentHash,
+      contentLength: content.length,
+      contentType: 'html' as const,
+      headers: {},
+      status: 'processed' as const
+    }
+    
+    await storage.snapshot.set(company_slug, snapshot)
+    await storage.setSnapshotContent(company_slug, snapshotId, content)
     
     // Mark for processing
     await kv.lpush('scraper:process_queue', JSON.stringify({
       company_slug,
       content_hash: contentHash,
-      storage_key: storageKey,
+      snapshot_id: snapshotId,
       scraped_at,
     }))
     
