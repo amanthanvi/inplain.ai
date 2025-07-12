@@ -38,46 +38,16 @@ export async function POST(
       }
     }
     
-    // Handle demo mode gracefully
+    // Check AI configuration
     if (!OPENROUTER_API_KEY) {
-      // Return a mock analysis for demo mode
-      const mockAnalysis = {
-        id: crypto.randomUUID(),
-        snapshotId: 'demo-snapshot',
-        generatedAt: new Date().toISOString(),
-        model: 'demo-model',
-        structured_content: {
-          executive_summary: "This is a demo analysis. To enable real AI analysis, please configure your OpenRouter API key.",
-          data_collection: ["Personal information", "Usage data", "Device information"],
-          data_usage: ["Service improvement", "Marketing", "Analytics"],
-          third_party_sharing: ["Service providers", "Business partners"],
-          user_rights: ["Access", "Deletion", "Correction", "Opt-out"],
-          data_retention: "Data retained as long as necessary for business purposes",
-          security_measures: "Industry-standard security measures in place",
-          cookies_tracking: {
-            uses_cookies: true,
-            tracking_technologies: ["Cookies", "Pixels", "Analytics"],
-            third_party_analytics: true
-          },
-          gdpr_compliant: true,
-          ccpa_compliant: true,
-          contact_info: "privacy@example.com",
-          overall_privacy_score: "good",
-          recommendations: ["Review privacy settings", "Enable two-factor authentication"]
+      return NextResponse.json(
+        {
+          error: 'AI service not configured',
+          message: 'Please configure OPENROUTER_API_KEY in your environment variables',
+          documentation: 'https://docs.inplain.ai/configuration'
         },
-        raw_content: "Demo analysis content",
-        metadata: {
-          wordCount: 1000,
-          sections: 10,
-          title: "Privacy Policy"
-        }
-      }
-      
-      return NextResponse.json({
-        analysis: mockAnalysis,
-        cached: false,
-        demo: true
-      })
+        { status: 503 }
+      )
     }
     
     // Get the latest snapshot

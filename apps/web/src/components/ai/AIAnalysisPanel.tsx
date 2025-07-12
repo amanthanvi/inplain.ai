@@ -15,7 +15,8 @@ import { HoverScale, FadeIn, SlideIn } from '@/components/ui/framer-animations'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
-import { ModelSelector, AI_MODELS } from '@/components/ai/ModelSelector'
+import { ModelSelector } from '@/components/ai/ModelSelector'
+import { ModelCatalog } from '@/lib/ai/model-catalog'
 import { useEffect, useState as useStateHook } from 'react'
 
 interface AIAnalysisPanelProps {
@@ -295,7 +296,10 @@ export function AIAnalysisPanel({
 }: AIAnalysisPanelProps) {
   const [selectedPrompt, setSelectedPrompt] = useState('summary')
   const [showGuidance, setShowGuidance] = useState(true)
-  const [selectedModel, setSelectedModel] = useState(AI_MODELS[0]?.id || 'google/gemini-2.0-flash-preview-05-20:free')
+  const [selectedModel, setSelectedModel] = useState(() => {
+    const models = ModelCatalog.getAllModels()
+    return models[0]?.id || 'google/gemini-2.0-flash-preview-05-20:free'
+  })
   const [showSettings, setShowSettings] = useState(false)
   const { userId, isLoaded } = useAuth()
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -593,7 +597,7 @@ export function AIAnalysisPanel({
 
             <div className="flex items-center justify-between pt-2 border-t">
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>Model: {AI_MODELS.find(m => m.id === (analysis.model || selectedModel))?.name || analysis.model}</span>
+                <span>Model: {ModelCatalog.getModel(analysis.model || selectedModel)?.name || analysis.model}</span>
                 {analysis.cached && <Badge variant="secondary">Cached</Badge>}
               </div>
               <Button

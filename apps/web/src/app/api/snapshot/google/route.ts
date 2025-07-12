@@ -49,30 +49,16 @@ export async function GET(request: NextRequest) {
     // Get storage client
     const storageClient = getStorage()
     
-    // If storage is not configured, return mock data
+    // If storage is not configured, return error
     if (!storageClient) {
-      const mockSnapshot = {
-        snapshot: {
-          id: 'mock-snapshot-google-1',
-          capturedAt: new Date().toISOString(),
-          url: 'https://policies.google.com/privacy',
-          contentHash: 'mock-hash-google-12345'
+      return NextResponse.json(
+        {
+          error: 'Storage service not configured',
+          message: 'Cannot retrieve snapshots without storage. Please configure KV_REST_API_URL and KV_REST_API_TOKEN.',
+          documentation: 'https://docs.inplain.ai/configuration'
         },
-        content: {
-          text: `This is a mock privacy policy snapshot for Google. In production with proper storage configuration, this would contain the actual privacy policy content.\n\nStorage Configuration Required:\n- KV_REST_API_URL: Vercel KV store URL\n- KV_REST_API_TOKEN: Vercel KV authentication token\n\nThe snapshot API captures and stores privacy policy content for tracking changes over time.`,
-          wordCount: 42,
-          characterCount: 328
-        },
-        _mock: true
-      }
-      
-      return NextResponse.json(mockSnapshot, {
-        headers: {
-          'Cache-Control': 'no-store',
-          'Content-Type': 'application/json',
-          'X-Mock-Data': 'true'
-        }
-      })
+        { status: 503 }
+      )
     }
     
     // Get the latest snapshot

@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { StorageClient } from '../lib/storage'
 import { OptimizedStorageClient } from '../lib/storage-optimized'
-import { PolicyAnalysisService, AI_MODELS } from '../lib/ai-service'
+// Removed unused PolicyAnalysisService import
 import { RiskScorer } from '@/lib/analytics/risk-scorer'
 import { formatTimestamp } from '@inplain.ai/shared'
 
 // Initialize storage clients
 const storage = new StorageClient()
 const optimizedStorage = new OptimizedStorageClient()
-const analysisService = new PolicyAnalysisService(
-  process.env.OPENROUTER_API_KEY || '',
-  undefined,
-  'google/gemini-2.5-flash-preview-05-20'
-)
 
 // Static companies data - in production this would come from database
 const getCompanies = () => Promise.resolve([

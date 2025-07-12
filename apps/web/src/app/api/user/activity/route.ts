@@ -88,42 +88,13 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Activity fetch error:', error)
     
-    // Return mock data for demo purposes if storage is not available
-    const mockActivities = [
-      {
-        id: '1',
-        date: new Date().toISOString(),
-        type: 'minor',
-        title: 'Google updated data retention policy',
-        description: 'Extended data retention period from 18 to 24 months',
-        impact: 'medium',
-        tags: ['Google', 'Data Retention']
+    // Return error instead of mock data
+    return NextResponse.json(
+      { 
+        error: 'Failed to fetch activities',
+        message: error instanceof Error ? error.message : 'Unknown error'
       },
-      {
-        id: '2',
-        date: new Date(Date.now() - 86400000).toISOString(),
-        type: 'major',
-        title: 'Facebook added new data sharing partners',
-        description: 'Added 5 new third-party data sharing agreements',
-        impact: 'high',
-        tags: ['Facebook', 'Data Sharing']
-      },
-      {
-        id: '3',
-        date: new Date(Date.now() - 172800000).toISOString(),
-        type: 'moderate',
-        title: 'Amazon updated cookies policy',
-        description: 'New tracking technologies and third-party cookies disclosed',
-        impact: 'medium',
-        tags: ['Amazon', 'Cookies']
-      }
-    ]
-    
-    return NextResponse.json({
-      activities: mockActivities,
-      total: mockActivities.length,
-      watchlistCount: 3,
-      demo: true
-    })
+      { status: 500 }
+    )
   }
 }

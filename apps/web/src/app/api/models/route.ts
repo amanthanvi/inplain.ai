@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AI_MODELS, PolicyAnalysisService } from '../lib/ai-service'
+import { ModelCatalog } from '@/lib/ai/model-catalog'
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,8 +7,8 @@ export async function GET(request: NextRequest) {
     const recommended = searchParams.get('recommended') === 'true'
     
     const models = recommended 
-      ? AI_MODELS.filter(model => model.recommended)
-      : AI_MODELS
+      ? ModelCatalog.getRecommendedModels({})
+      : ModelCatalog.getAllModels()
 
     return NextResponse.json({
       models,
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const model = AI_MODELS.find(m => m.id === modelId)
+    const model = ModelCatalog.getModel(modelId)
     if (!model) {
       return NextResponse.json(
         { error: 'Model not found' },
@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const inputCost = (inputTokens / 1000) * model.costPer1kTokens.input
-    const outputCost = (outputTokens / 1000) * model.costPer1kTokens.output
+    const inputCost = (inputTokens / 1000) * model.capabilities.costPer1kTokens.input
+    const outputCost = (outputTokens / 1000) * model.capabilities.costPer1kTokens.output
     const totalCost = inputCost + outputCost
 
     return NextResponse.json({
@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
         total: totalCost
       },
       costBreakdown: {
-        inputCostPer1k: model.costPer1kTokens.input,
-        outputCostPer1k: model.costPer1kTokens.output
+        inputCostPer1k: model.capabilities.costPer1kTokens.input,
+        outputCostPer1k: model.capabilities.costPer1kTokens.output
       }
     })
   } catch (error) {

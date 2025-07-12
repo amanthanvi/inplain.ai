@@ -13,45 +13,10 @@ import { riskAssessmentEngine } from '@/lib/privacy/risk-assessment-engine'
 import { kv } from '@/app/api/lib/kv-wrapper'
 import { getCompanies } from '@/lib/api'
 
-// Mock storage for now
-const storage = {
-  company: {
-    get: async (slug: string) => {
-      const companies = await getCompanies({ slug })
-      return companies[0] || null
-    }
-  },
-  snapshot: {
-    list: async (params: { companySlug: string; limit: number }) => {
-      // Return mock snapshot
-      return [{
-        content: {
-          text: 'Mock privacy policy content for testing'
-        }
-      }]
-    }
-  },
-  analytics: {
-    track: async (data: any) => {
-      // Mock analytics tracking
-    }
-  }
-}
-// Mock rate limiter
-const rateLimiter = {
-  limit: async (key: string) => ({ success: true })
-}
+import { storage } from '@/lib/storage/adapter'
+import { rateLimiter } from '@/lib/rate-limiter'
 import { logger } from '@/lib/logger'
-import { unstable_cache } from 'next/cache'
-const cache = {
-  get: async (key: string) => {
-    // Simple cache using Next.js unstable_cache
-    return null
-  },
-  set: async (key: string, value: any, ttl: number) => {
-    // Simple cache using Next.js unstable_cache
-  }
-}
+import { CacheService } from '@/lib/cache'
 
 const ComprehensiveAnalysisRequestSchema = z.object({
   slug: z.string().min(1),
@@ -75,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limiting
-    const { success } = await rateLimiter.limit(userId)
+    const { allowed: success } = await rateLimiter.checkLimit(userId)
 
     if (!success) {
       return NextResponse.json(
@@ -91,7 +56,7 @@ export async function POST(request: NextRequest) {
     // Check cache first (unless refresh requested)
     const cacheKey = `comprehensive-analysis:${slug}:${industry || 'default'}`
     if (!refresh) {
-      const cached = await cache.get(cacheKey)
+      const { value: cached } = await CacheService.get(cacheKey)
       if (cached) {
         logger.info('Returning cached comprehensive analysis', { slug })
         return NextResponse.json(cached)
@@ -177,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cache the results
-    await cache.set(cacheKey, comprehensiveAnalysis, 3600) // 1 hour
+    await CacheService.set(cacheKey, comprehensiveAnalysis, { ttl: 3600 }) // 1 hour
 
     // Track analytics
     await trackAnalysisEvent(userId, slug, {

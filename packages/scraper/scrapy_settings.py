@@ -42,6 +42,8 @@ ITEM_PIPELINES = {
     'pipelines.ValidationPipeline': 100,
     'pipelines.StoragePipeline': 200,
     'pipelines.NotificationPipeline': 300,
+    'pipelines_webhook.WebhookNotificationPipeline': 400,
+    'pipelines_webhook.VercelStoragePipeline': 500,
 }
 
 AUTOTHROTTLE_ENABLED = True
@@ -71,6 +73,12 @@ DOWNLOAD_HANDLERS = {
 BLOB_STORAGE_URL = os.getenv('BLOB_STORAGE_URL', 'http://localhost:4566')
 BLOB_STORAGE_TOKEN = os.getenv('BLOB_STORAGE_TOKEN', '')
 REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379')
+
+# Webhook configuration
+WEBHOOK_URL = os.getenv('WEBHOOK_URL', '')
+WEBHOOK_API_KEY = os.getenv('WEBHOOK_API_KEY', os.getenv('SCRAPER_API_KEY', ''))
+VERCEL_API_URL = os.getenv('VERCEL_API_URL', '')
+VERCEL_API_KEY = os.getenv('VERCEL_API_KEY', '')
 
 PLAYWRIGHT_BROWSER_TYPE = 'chromium'
 PLAYWRIGHT_LAUNCH_OPTIONS = {

@@ -11,43 +11,11 @@ import { privacyGradingEngine } from '@/lib/privacy/production-grading-engine'
 import { riskAssessmentEngine } from '@/lib/privacy/risk-assessment-engine'
 import { kv } from '@/app/api/lib/kv-wrapper'
 import { getCompanies } from '@/lib/api'
-
-// Mock storage for now
-const storage = {
-  company: {
-    get: async (slug: string) => {
-      const companies = await getCompanies({ slug })
-      return companies[0] || null
-    }
-  },
-  snapshot: {
-    list: async (params: { companySlug: string; limit: number }) => {
-      // Return mock snapshot
-      return [{
-        content: {
-          text: 'Mock privacy policy content for testing'
-        }
-      }]
-    }
-  },
-  diff: {
-    list: async (params: { companySlug: string; limit: number }) => {
-      // Return mock diffs
-      return []
-    }
-  }
-}
-const cache = {
-  get: async <T>(key: string): Promise<T | null> => {
-    // Simple cache implementation
-    return null
-  },
-  set: async (key: string, value: any, ttl: number) => {
-    // Simple cache implementation
-  }
-}
+import { storage } from '@/lib/storage/adapter'
+import { CacheService } from '@/lib/cache'
 import { logger } from '@/lib/logger'
 import { PrivacyMetricsService } from '@/lib/analytics/privacy-metrics'
+import { triggerScraping } from '@/lib/scraping-queue'
 
 const MetricsRequestSchema = z.object({
   companySlugs: z.array(z.string().min(1)).max(50) // Limit to 50 companies
@@ -84,7 +52,7 @@ export async function POST(request: NextRequest) {
     logger.info('Fetching metrics for companies', { count: companySlugs.length })
 
     const metricsService = PrivacyMetricsService.getInstance()
-    const metrics: Record<string, CompanyMetric | { error: string }> = {}
+    const metrics: Record<string, CompanyMetric | { error: string; pending?: boolean; message?: string }> = {}
 
     // Process companies in parallel with rate limiting
     const batchSize = 10
@@ -100,7 +68,7 @@ export async function POST(request: NextRequest) {
           try {
             // Check cache first
             const cacheKey = `company-metrics:${slug}`
-            const cached = await cache.get<CompanyMetric>(cacheKey)
+            const { value: cached } = await CacheService.get<CompanyMetric>(cacheKey)
             
             if (cached) {
               metrics[slug] = cached
@@ -121,19 +89,37 @@ export async function POST(request: NextRequest) {
             })
 
             if (!snapshots || snapshots.length === 0) {
-              // Return default metrics if no snapshot available
-              metrics[slug] = await generateDefaultMetrics(slug, company)
+              // Trigger scraping for this company
+              await triggerScraping(slug, company.url)
+              
+              // Return pending status instead of mock data
+              metrics[slug] = {
+                error: 'Data collection in progress',
+                pending: true,
+                message: 'Privacy policy analysis will be available shortly'
+              }
               return
             }
 
             const snapshot = snapshots[0]
+            if (!snapshot) {
+              metrics[slug] = { error: 'No snapshot available' }
+              return
+            }
+            
+            // Fetch the actual content
+            const content = await storage.getSnapshotContent(slug, snapshot.id)
+            if (!content) {
+              metrics[slug] = { error: 'Content not available' }
+              return
+            }
             
             // Perform quick grading analysis
             const grading = await privacyGradingEngine.analyzePolicy(
-              snapshot.content.text,
+              content,
               { 
                 company: company.name,
-                industry: company.industry
+                industry: (company.category || 'technology') as 'healthcare' | 'finance' | 'education' | 'social_media' | 'ecommerce' | 'news_media' | 'government' | 'technology'
               }
             )
 
@@ -169,7 +155,7 @@ export async function POST(request: NextRequest) {
             }
 
             // Cache the result
-            await cache.set(cacheKey, metric, 3600) // 1 hour cache
+            await CacheService.set(cacheKey, metric, { ttl: 3600 }) // 1 hour cache
 
             metrics[slug] = metric
 
@@ -241,39 +227,7 @@ function calculateChangeMetrics(diffs: any[]): {
   }
 }
 
-async function generateDefaultMetrics(
-  slug: string, 
-  company: any
-): Promise<CompanyMetric> {
-  // Generate consistent default metrics based on company data
-  const seed = slug.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  const baseScore = 65 + (seed % 25) // Scores between 65-90
-  
-  const metricsService = PrivacyMetricsService.getInstance()
-  const watcherCount = await metricsService.getWatcherCount(slug)
-  
-  return {
-    privacyScore: baseScore,
-    scoreBreakdown: {
-      dataCollection: 60 + (seed % 30),
-      thirdPartySharing: 65 + ((seed * 2) % 25),
-      userRights: 70 + ((seed * 3) % 20),
-      retention: 55 + ((seed * 4) % 35),
-      security: 75 + ((seed * 5) % 15)
-    },
-    riskLevel: getRiskLevelFromScore(baseScore),
-    complianceStatus: {
-      gdpr: baseScore > 75,
-      ccpa: baseScore > 70,
-      coppa: false
-    },
-    changeFrequency: 'Occasionally',
-    totalChanges: seed % 10,
-    lastChecked: new Date(),
-    watchers: watcherCount,
-    grade: getGradeFromScore(baseScore)
-  }
-}
+// Removed generateDefaultMetrics function - no more mock data!
 
 function getGradeFromScore(score: number): string {
   if (score >= 95) return 'A+'

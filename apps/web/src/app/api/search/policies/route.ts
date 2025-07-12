@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { WATCHED_COMPANIES } from '@inplain.ai/shared'
 import { auth } from '@clerk/nextjs/server'
+import { storage } from '@/lib/storage/adapter'
+import { logger } from '@/lib/logger'
 
 interface PolicySearchResult {
   id: string
@@ -25,82 +27,7 @@ interface PolicySearchResult {
   }
 }
 
-// Mock policy data - in production this would come from a database
-const mockPolicyData = [
-  {
-    companySlug: 'google',
-    companyName: 'Google',
-    policies: [
-      {
-        slug: 'privacy-policy',
-        name: 'Privacy Policy',
-        lastUpdated: '2024-01-15',
-        version: '2.3',
-        content: `Google Privacy Policy. Information we collect. How we use information. 
-        We collect information to provide better services to all our users. 
-        Data protection and security. User rights and choices.`,
-        sections: [
-          {
-            id: 'intro',
-            title: 'Introduction',
-            content: 'This Privacy Policy describes how Google collects and uses data.'
-          },
-          {
-            id: 'data-collection',
-            title: 'Data Collection',
-            content: 'We collect information you provide, usage data, and device information.'
-          }
-        ],
-        changes: [
-          {
-            type: 'modified',
-            date: '2024-01-15',
-            content: 'Updated data retention policy to comply with new regulations.'
-          }
-        ]
-      },
-      {
-        slug: 'terms-of-service',
-        name: 'Terms of Service',
-        lastUpdated: '2024-01-10',
-        version: '3.0',
-        content: `Google Terms of Service. Using our services. Your content in our services.
-        Privacy and copyright protection. Software in our services.`,
-        sections: [],
-        changes: []
-      }
-    ]
-  },
-  {
-    companySlug: 'facebook',
-    companyName: 'Facebook',
-    policies: [
-      {
-        slug: 'privacy-policy',
-        name: 'Privacy Policy',
-        lastUpdated: '2024-01-20',
-        version: '5.1',
-        content: `Facebook Privacy Policy. What information do we collect? 
-        How do we use this information? How is this information shared?
-        Data retention and deletion. Privacy controls.`,
-        sections: [
-          {
-            id: 'info-collect',
-            title: 'Information We Collect',
-            content: 'We collect the content, communications and other information you provide.'
-          }
-        ],
-        changes: [
-          {
-            type: 'added',
-            date: '2024-01-20',
-            content: 'Added section on AI training data usage.'
-          }
-        ]
-      }
-    ]
-  }
-]
+// TODO: Remove mock data once search service is implemented
 
 export async function POST(request: NextRequest) {
   try {
@@ -131,22 +58,46 @@ export async function POST(request: NextRequest) {
     const results: PolicySearchResult[] = []
     const searchTerms = query.toLowerCase().split(' ').filter(Boolean)
 
-    // Search through mock data
-    for (const company of mockPolicyData) {
+    // Check if storage is configured
+    if (!storage) {
+      return NextResponse.json(
+        {
+          error: 'Search service not configured',
+          message: 'Policy search requires proper storage configuration',
+          documentation: 'https://docs.inplain.ai/configuration'
+        },
+        { status: 503 }
+      )
+    }
+
+    // Search through real company data
+    const companyList = Object.values(WATCHED_COMPANIES)
+    for (const company of companyList) {
       // Filter by company if specified
-      if (companies.length > 0 && !companies.includes(company.companySlug)) {
+      if (companies.length > 0 && !companies.includes(company.slug)) {
         continue
       }
 
-      for (const policy of company.policies) {
-        // Filter by policy type if specified
-        if (policyTypes.length > 0 && !policyTypes.some((type: string) => policy.slug.includes(type))) {
+      try {
+        // Get latest snapshot for this company
+        const snapshots = await storage.snapshot.list({
+          companySlug: company.slug,
+          limit: 1
+        })
+        
+        if (!snapshots || snapshots.length === 0) {
           continue
         }
-
+        
+        const snapshot = snapshots[0]
+        const policyContent = await storage.getSnapshotContent(snapshot.blobKey)
+        
+        if (!policyContent) {
+          continue
+        }
         // Filter by date range if specified
         if (dateRange) {
-          const policyDate = new Date(policy.lastUpdated)
+          const policyDate = new Date(snapshot.capturedAt)
           const startDate = new Date(dateRange.start)
           const endDate = new Date(dateRange.end)
           
@@ -156,77 +107,71 @@ export async function POST(request: NextRequest) {
         }
 
         // Search in policy content
-        const contentScore = calculateScore(policy.content, searchTerms)
+        const contentScore = calculateScore(policyContent, searchTerms)
         if (contentScore > 0) {
-          const excerpt = extractExcerpt(policy.content, searchTerms[0], 150)
+          const excerpt = extractExcerpt(policyContent, searchTerms[0], 150)
           results.push({
-            id: `${company.companySlug}-${policy.slug}`,
+            id: `${company.slug}-privacy-policy`,
             type: 'policy',
-            companySlug: company.companySlug,
-            companyName: company.companyName,
-            policySlug: policy.slug,
-            policyName: policy.name,
-            title: `${company.companyName} - ${policy.name}`,
+            companySlug: company.slug,
+            companyName: company.name,
+            policySlug: 'privacy-policy',
+            policyName: 'Privacy Policy',
+            title: `${company.name} - Privacy Policy`,
             excerpt,
             matchedContent: highlightMatches(excerpt, searchTerms),
             score: contentScore,
             metadata: {
-              lastUpdated: policy.lastUpdated,
-              version: policy.version,
-              wordCount: policy.content.split(/\s+/).length,
-              readingTime: Math.ceil(policy.content.split(/\s+/).length / 200)
+              lastUpdated: snapshot.capturedAt,
+              version: snapshot.id,
+              wordCount: policyContent.split(/\s+/).length,
+              readingTime: Math.ceil(policyContent.split(/\s+/).length / 200)
             }
           })
         }
 
-        // Search in sections
-        for (const section of policy.sections) {
-          const sectionScore = calculateScore(section.content, searchTerms)
-          if (sectionScore > 0) {
-            const excerpt = extractExcerpt(section.content, searchTerms[0], 150)
-            results.push({
-              id: `${company.companySlug}-${policy.slug}-${section.id}`,
-              type: 'section',
-              companySlug: company.companySlug,
-              companyName: company.companyName,
-              policySlug: policy.slug,
-              policyName: policy.name,
-              title: section.title,
-              excerpt,
-              matchedContent: highlightMatches(excerpt, searchTerms),
-              score: sectionScore * 0.8, // Slightly lower score for sections
-              metadata: {
-                lastUpdated: policy.lastUpdated,
-                version: policy.version,
-                sectionId: section.id
-              }
-            })
+        // Get recent diffs for changes
+        const diffs = await storage.diff.list({
+          companySlug: company.slug,
+          limit: 5
+        })
+        
+        // Search in recent changes
+        for (const diff of diffs || []) {
+          try {
+            const diffContent = await storage.getDiffContent(diff.diffBlobKey)
+            if (!diffContent) continue
+            
+            // Search in additions
+            const additions = diffContent.additions?.join(' ') || ''
+            const changeScore = calculateScore(additions, searchTerms)
+            if (changeScore > 0 && additions) {
+              const excerpt = extractExcerpt(additions, searchTerms[0], 150)
+              results.push({
+                id: `${company.slug}-change-${diff.id}`,
+                type: 'change',
+                companySlug: company.slug,
+                companyName: company.name,
+                policySlug: 'privacy-policy',
+                policyName: 'Privacy Policy',
+                title: `Recent change in ${company.name} Privacy Policy`,
+                excerpt,
+                matchedContent: highlightMatches(excerpt, searchTerms),
+                score: changeScore * 1.2, // Higher score for recent changes
+                metadata: {
+                  lastUpdated: diff.createdAt,
+                  changeType: 'modified' as const,
+                  changeDate: diff.createdAt,
+                  riskLevel: diff.riskLevel || 'medium'
+                }
+              })
+            }
+          } catch (diffError) {
+            logger.error('Error searching diff', { diffId: diff.id, error: diffError })
           }
         }
-
-        // Search in changes
-        for (const change of policy.changes) {
-          const changeScore = calculateScore(change.content, searchTerms)
-          if (changeScore > 0) {
-            results.push({
-              id: `${company.companySlug}-${policy.slug}-change-${change.date}`,
-              type: 'change',
-              companySlug: company.companySlug,
-              companyName: company.companyName,
-              policySlug: policy.slug,
-              policyName: policy.name,
-              title: `Change in ${policy.name}`,
-              excerpt: change.content,
-              matchedContent: highlightMatches(change.content, searchTerms),
-              score: changeScore * 1.2, // Higher score for recent changes
-              metadata: {
-                lastUpdated: policy.lastUpdated,
-                changeType: change.type as 'added' | 'removed' | 'modified',
-                changeDate: change.date
-              }
-            })
-          }
-        }
+      } catch (error) {
+        logger.error('Error searching company policies', { company: company.slug, error })
       }
     }
 
@@ -334,10 +279,11 @@ export async function GET(request: NextRequest) {
     const suggestions = new Set<string>()
     const lowerQuery = query.toLowerCase()
 
-    // Add company names
-    for (const company of mockPolicyData) {
-      if (company.companyName.toLowerCase().includes(lowerQuery)) {
-        suggestions.add(company.companyName)
+    // Add company names from real data
+    const companies = Object.values(WATCHED_COMPANIES)
+    for (const company of companies) {
+      if (company.name.toLowerCase().includes(lowerQuery)) {
+        suggestions.add(company.name)
       }
     }
 

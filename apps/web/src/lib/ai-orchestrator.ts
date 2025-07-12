@@ -1,4 +1,4 @@
-import { AIService, PolicyAnalysisService } from '@/app/api/lib/ai-service';
+import { getUnifiedAIService } from '@/lib/ai/unified-ai-service';
 import { getEnvVar } from '@/lib/env';
 
 interface ModelCapability {
@@ -30,8 +30,7 @@ interface WebSearchResult {
 }
 
 export class AIOrchestrator {
-  private aiService: AIService;
-  private policyService: PolicyAnalysisService;
+  private aiService: ReturnType<typeof getUnifiedAIService>;
   private modelCapabilities: Map<string, ModelCapability>;
   private readonly apiKey: string;
 
@@ -40,8 +39,7 @@ export class AIOrchestrator {
     if (!this.apiKey) {
       throw new Error('OpenRouter API key is required');
     }
-    this.aiService = new AIService(this.apiKey);
-    this.policyService = new PolicyAnalysisService(this.apiKey);
+    this.aiService = getUnifiedAIService();
     this.modelCapabilities = this.initializeModelCapabilities();
   }
 
@@ -321,12 +319,16 @@ export class AIOrchestrator {
     Format as JSON array.`;
 
     try {
-      const response = await this.aiService.sendRequest(model, prompt, { 
+      const result = await this.aiService.analyze(prompt, {
+        model,
         temperature: 0.3,
-        response_format: { type: 'json_object' }
+        useWebSearch: true,
       });
       
-      return JSON.parse(response).results || [];
+      if (typeof result.content === 'object' && 'results' in result.content) {
+        return result.content.results || [];
+      }
+      return [];
     } catch {
       return [];
     }
@@ -357,13 +359,13 @@ ${result.snippet}
   ): Promise<any> {
     const prompt = this.generateTaskPrompt(task, content);
     
-    const response = await this.aiService.sendRequest(model.id, prompt, {
+    const result = await this.aiService.analyze(prompt, {
+      model: model.id,
       temperature: task.complexity === 'complex' ? 0.3 : 0.5,
-      max_tokens: Math.min(4000, model.maxTokens),
-      response_format: { type: 'json_object' }
+      maxTokens: Math.min(4000, model.maxTokens),
     });
 
-    return JSON.parse(response);
+    return result.content;
   }
 
   private generateTaskPrompt(task: AnalysisTask, content: string): string {
@@ -445,13 +447,14 @@ Create a comprehensive synthesis that:
 
 Return as JSON with clear structure.`;
 
-    const response = await this.aiService.sendRequest(reasoningModel.id, prompt, {
+    const result = await this.aiService.analyze(prompt, {
+      model: reasoningModel.id,
       temperature: 0.2,
-      max_tokens: 4000,
-      response_format: { type: 'json_object' }
+      maxTokens: 4000,
+      useThinking: true
     });
 
-    return JSON.parse(response);
+    return result.content;
   }
 
   private composeAnalysisResult(taskResults: any[], additionalResults: Map<string, any>): any {

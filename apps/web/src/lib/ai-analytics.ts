@@ -1,4 +1,4 @@
-import { PolicyAnalysisService } from '@/app/api/lib/ai-service'
+import { getUnifiedAIService } from '@/lib/ai/unified-ai-service'
 
 export interface TrendAnalysis {
 	trend: 'improving' | 'stable' | 'declining'
@@ -47,7 +47,13 @@ export interface PolicyInsight {
 	relatedChanges?: string[]
 }
 
-export class AIAnalyticsService extends PolicyAnalysisService {
+export class AIAnalyticsService {
+	private aiService: ReturnType<typeof getUnifiedAIService>
+
+	constructor() {
+		this.aiService = getUnifiedAIService()
+	}
+
 	async analyzeTrends(
 		policyHistory: Array<{
 			date: Date
@@ -88,10 +94,11 @@ Focus on:
 3. Pattern recognition in policy updates
 4. Industry-specific considerations`
 
-		const response = await this.generateResponse(prompt, {
-			systemPrompt: 'You are a privacy policy trend analyst specializing in longitudinal analysis of privacy practices.',
+		const response = await this.aiService.analyze(prompt, {
+			task: 'comprehensive',
 			maxTokens: 1500,
-			temperature: 0.4
+			temperature: 0.4,
+			useTools: true,
 		})
 
 		try {
@@ -161,10 +168,11 @@ Consider:
 5. Transparency and clarity
 6. Compliance with regulations (GDPR, CCPA, etc.)`
 
-		const response = await this.generateResponse(prompt, {
-			systemPrompt: 'You are a privacy risk assessment expert specializing in quantitative risk scoring.',
+		const response = await this.aiService.analyze(prompt, {
+			task: 'comprehensive',
 			maxTokens: 2000,
-			temperature: 0.3
+			temperature: 0.3,
+			useTools: true,
 		})
 
 		try {
@@ -231,10 +239,11 @@ Focus on:
 4. Emerging privacy trends
 5. User experience considerations`
 
-		const response = await this.generateResponse(prompt, {
-			systemPrompt: 'You are a privacy policy consultant providing strategic insights and recommendations.',
+		const response = await this.aiService.analyze(prompt, {
+			task: 'comprehensive',
 			maxTokens: 2000,
-			temperature: 0.5
+			temperature: 0.5,
+			useTools: true,
 		})
 
 		try {
@@ -281,10 +290,11 @@ Provide a JSON response:
   "recommendations": ["specific actions to improve"]
 }`
 
-		const response = await this.generateResponse(prompt, {
-			systemPrompt: 'You are a competitive privacy analysis expert.',
+		const response = await this.aiService.analyze(prompt, {
+			task: 'comprehensive',
 			maxTokens: 1500,
-			temperature: 0.4
+			temperature: 0.4,
+			useTools: false,
 		})
 
 		try {
@@ -355,10 +365,11 @@ Provide predictions as JSON:
   "factors": ["key factors influencing predictions"]
 }`
 
-		const response = await this.generateResponse(prompt, {
-			systemPrompt: 'You are a predictive analytics expert specializing in privacy policy evolution.',
+		const response = await this.aiService.analyze(prompt, {
+			task: 'comprehensive',
 			maxTokens: 1500,
-			temperature: 0.6
+			temperature: 0.6,
+			useTools: true,
 		})
 
 		try {

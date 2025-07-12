@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PolicyAnalysisService } from '../../lib/ai-service'
+import { getUnifiedAIService } from '@/lib/ai/unified-ai-service'
+import { ModelCatalog } from '@/lib/ai/model-catalog'
 
 export async function POST(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     // Test 2: Initialize AI service
     let aiService
     try {
-      aiService = new PolicyAnalysisService(OPENROUTER_API_KEY, undefined, DEFAULT_MODEL)
+      aiService = getUnifiedAIService()
     } catch (error) {
       return NextResponse.json({
         error: 'Failed to initialize AI service',
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     // Test 3: Get available models
     let models
     try {
-      models = aiService.getAvailableModels()
+      models = ModelCatalog.getAllModels()
     } catch (error) {
       return NextResponse.json({
         error: 'Failed to get available models',
@@ -47,10 +48,12 @@ export async function POST(request: NextRequest) {
     // Test 4: Test simple prompt
     let response
     try {
-      response = await aiService.generateResponse('Reply with "OK" if you receive this message.', {
+      response = await aiService.analyze('Reply with "OK" if you receive this message.', {
         model: DEFAULT_MODEL,
         maxTokens: 10,
-        temperature: 0
+        temperature: 0,
+        useTools: false,
+        useThinking: false
       })
     } catch (error) {
       return NextResponse.json({
@@ -65,16 +68,21 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
     
-    // Test 5: Test analyzePolicyChanges method
+    // Test 5: Test policy analysis
     let analysisResponse
     try {
-      analysisResponse = await aiService.analyzePolicyChanges({
-        additions: 100,
-        deletions: 50,
-        changeCount: 10,
-        changeType: 'minor',
-        htmlDiff: '<div>Test diff content</div>'
+      const analysisResult = await aiService.analyze('Analyze privacy policy changes with 100 additions and 50 deletions', {
+        model: DEFAULT_MODEL,
+        task: 'differential',
+        useTools: true,
+        useThinking: true
       })
+      
+      analysisResponse = {
+        summary: analysisResult.content,
+        highlights: [],
+        riskLevel: 'medium'
+      }
     } catch (error) {
       return NextResponse.json({
         error: 'Failed to analyze policy changes',

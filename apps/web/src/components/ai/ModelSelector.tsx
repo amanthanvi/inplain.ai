@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Info, Zap, Brain, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ModelCatalog } from '@/lib/ai/model-catalog'
 
-export interface AIModel {
+interface UIModel {
   id: string
   name: string
   provider: string
@@ -18,58 +19,46 @@ export interface AIModel {
   features?: string[]
 }
 
-export const AI_MODELS: AIModel[] = [
-  {
-    id: 'google/gemini-2.0-flash-preview-05-20:free',
-    name: 'Gemini 2.0 Flash',
-    provider: 'Google',
-    description: 'Fast and efficient for quick analysis',
-    speed: 'fast',
-    quality: 'good',
-    cost: 'free',
-    features: ['Quick summaries', 'Basic analysis']
-  },
-  {
-    id: 'anthropic/claude-3-haiku',
-    name: 'Claude 3 Haiku',
-    provider: 'Anthropic',
-    description: 'Fast and cost-effective',
-    speed: 'fast',
-    quality: 'good',
-    cost: 'low',
-    features: ['Fast analysis', 'Good accuracy']
-  },
-  {
-    id: 'anthropic/claude-3.5-sonnet',
-    name: 'Claude 3.5 Sonnet',
-    provider: 'Anthropic',
-    description: 'Balanced performance and quality',
-    speed: 'medium',
-    quality: 'better',
-    cost: 'medium',
-    features: ['Detailed analysis', 'High accuracy', 'Nuanced insights']
-  },
-  {
-    id: 'openai/gpt-4o',
-    name: 'GPT-4 Turbo',
-    provider: 'OpenAI',
-    description: 'Advanced analysis with visual understanding',
-    speed: 'medium',
-    quality: 'best',
-    cost: 'medium',
-    features: ['Comprehensive analysis', 'Visual processing', 'Complex reasoning']
-  },
-  {
-    id: 'anthropic/claude-3-opus',
-    name: 'Claude 3 Opus',
-    provider: 'Anthropic',
-    description: 'Highest quality, most thorough analysis',
-    speed: 'slow',
-    quality: 'best',
-    cost: 'high',
-    features: ['Expert-level analysis', 'Maximum accuracy', 'Deep insights']
+// Map model categories to UI attributes
+const getModelAttributes = (modelId: string): UIModel | null => {
+  const model = ModelCatalog.getModel(modelId)
+  if (!model) return null
+  
+  // Map speed from capabilities  
+  let speed: 'fast' | 'medium' | 'slow' = 'medium'
+  if (model.capabilities.speed === 'fast') speed = 'fast'
+  else if (model.capabilities.speed === 'slow') speed = 'slow'
+  else speed = 'medium' // for 'balanced'
+  
+  // Map quality to UI representation
+  let quality: 'good' | 'better' | 'best' = 'good'
+  if (model.capabilities.quality === 'good') quality = 'better'
+  else if (model.capabilities.quality === 'excellent') quality = 'best'
+  
+  // Determine cost based on pricing
+  let cost: 'free' | 'low' | 'medium' | 'high' = 'medium'
+  if (model.id.includes(':free')) cost = 'free'
+  else if (model.capabilities.costPer1kTokens.input < 0.001) cost = 'low'
+  else if (model.capabilities.costPer1kTokens.input > 0.01) cost = 'high'
+  
+  // Map features from capabilities
+  const features = []
+  if (model.capabilities.supportsWebSearch) features.push('Web search')
+  if (model.capabilities.supportsTools) features.push('Tool usage')
+  if (model.capabilities.supportsStreaming) features.push('Streaming')
+  if (model.capabilities.supportsThinking) features.push('Advanced reasoning')
+  
+  return {
+    id: model.id,
+    name: model.name,
+    provider: model.provider,
+    description: `${model.capabilities.quality} model with ${model.capabilities.speed} performance`,
+    speed,
+    quality,
+    cost,
+    features
   }
-]
+}
 
 interface ModelSelectorProps {
   value: string
@@ -79,7 +68,14 @@ interface ModelSelectorProps {
 }
 
 export function ModelSelector({ value, onChange, disabled, className }: ModelSelectorProps) {
-  const selectedModel = AI_MODELS.find(m => m.id === value) || AI_MODELS[0]
+  const models = useMemo(() => {
+    const allModels = ModelCatalog.getAllModels()
+    return allModels
+      .map(model => getModelAttributes(model.id))
+      .filter((m): m is UIModel => m !== null)
+  }, [])
+  
+  const selectedModel = models.find(m => m.id === value) || models[0]
 
   const getQualityColor = (quality: string) => {
     switch (quality) {
@@ -119,7 +115,7 @@ export function ModelSelector({ value, onChange, disabled, className }: ModelSel
           <SelectValue placeholder="Select a model" />
         </SelectTrigger>
         <SelectContent>
-          {AI_MODELS.map((model) => (
+          {models.map((model) => (
             <SelectItem key={model.id} value={model.id} className="py-3">
               <div className="flex items-start justify-between w-full gap-2">
                 <div className="flex-1">

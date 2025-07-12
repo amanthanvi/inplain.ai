@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AI_MODELS, PolicyAnalysisService } from '../../lib/ai-service'
+import { AI_MODELS } from '../../lib/ai-service'
 
 export async function GET(request: NextRequest) {
   try {
