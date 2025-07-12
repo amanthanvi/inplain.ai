@@ -52,29 +52,20 @@ export async function GET(
       const latestSnapshot = snapshots[0]
       
       if (!latestSnapshot) {
-        // Return mock data if no snapshot exists yet in development
-        if (process.env.NODE_ENV === 'development' || isDemoMode()) {
-          const mockText = `This is mock privacy policy content for ${company.name}. In production, this would contain the actual privacy policy text scraped from ${company.url}.`
-          return NextResponse.json({
-            id: `mock-${slug}-${Date.now()}`,
-            companyId: slug,
-            content: mockText,
-            text: mockText,
-            url: company.url,
-            hash: 'mock-hash-' + slug,
-            scrapedAt: new Date().toISOString(),
-            createdAt: new Date().toISOString()
-          }, {
-            headers: {
-              'Cache-Control': 'no-store'
-            }
-          })
+        // Trigger scraping for this company
+        try {
+          const { triggerScraping } = await import('@/lib/scraping-queue')
+          await triggerScraping(slug, company.url, 'high')
+        } catch (error) {
+          console.error('Failed to trigger scraping', { slug, error })
         }
         
-        // In production, return 404 if no snapshot
+        // Return pending status
         return NextResponse.json({
-          error: 'No policy snapshots available yet',
-          message: 'No policy snapshots available yet. Check back later.'
+          error: 'Policy data not available',
+          message: 'Privacy policy is being collected. Please check back in a few minutes.',
+          pending: true,
+          companySlug: slug
         }, {
           status: 404,
           headers: {
@@ -129,27 +120,8 @@ export async function GET(
           error: storageError instanceof Error ? storageError.message : 'Unknown error' 
         })
         
-        const mockText = `This is mock privacy policy content for ${company.name}. In production, this would contain the actual privacy policy text scraped from ${company.url}.`
-        return NextResponse.json({
-          id: `mock-${slug}-${Date.now()}`,
-          companyId: slug,
-          content: mockText,
-          text: mockText,
-          url: company.url,
-          hash: 'mock-hash-' + slug,
-          scrapedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          snapshot: {
-            id: `mock-${slug}-${Date.now()}`,
-            capturedAt: new Date().toISOString(),
-            url: company.url,
-            contentHash: 'mock-hash-' + slug
-          }
-        }, {
-          headers: {
-            'Cache-Control': 'no-store'
-          }
-        })
+        // Don't return mock data - throw the error instead
+        throw storageError
       }
       
       throw storageError

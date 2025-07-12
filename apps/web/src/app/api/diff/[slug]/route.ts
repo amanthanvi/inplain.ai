@@ -38,40 +38,16 @@ export async function GET(
     const unifiedStorage = getUnifiedStorage()
     const storageClient = unifiedStorage || getStorage()
     
-    // If storage is not configured, return mock data
+    // If storage is not configured, return error
     if (!storageClient) {
-      const mockDiff = {
-        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', // Valid UUID for mock diff
-        slug,
-        fromSnapshotId: 'a47ac10b-58cc-4372-a567-0e02b2c3d479',
-        toSnapshotId: 'b47ac10b-58cc-4372-a567-0e02b2c3d479',
-        createdAt: formatTimestamp(),
-        changeCount: 5,
-        changeType: 'moderate' as const,
-        additions: 3,
-        deletions: 2,
-        diffBlobKey: `diffs/${slug}/mock.json`
-      }
-      
-      return NextResponse.json({
-        diff: mockDiff,
-        htmlDiff: '<div class="diff"><p>This is a mock diff. In production with proper storage configuration, this would show actual privacy policy changes.</p><p class="added">+ Added: Enhanced user privacy controls</p><p class="removed">- Removed: Outdated data collection practices</p></div>',
-        fromSnapshot: {
-          id: 'a47ac10b-58cc-4372-a567-0e02b2c3d479',
-          capturedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      return NextResponse.json(
+        {
+          error: 'Storage service not configured',
+          message: 'Diff functionality requires proper storage configuration',
+          documentation: 'https://docs.inplain.ai/configuration'
         },
-        toSnapshot: {
-          id: 'b47ac10b-58cc-4372-a567-0e02b2c3d479',
-          capturedAt: new Date().toISOString()
-        },
-        _mock: true
-      }, {
-        headers: {
-          'Cache-Control': 'no-store',
-          'Content-Type': 'application/json',
-          'X-Mock-Data': 'true'
-        }
-      })
+        { status: 503 }
+      )
     }
 
     const snapshots = await storageClient.getLatestSnapshots(slug, 2)

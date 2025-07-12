@@ -24,22 +24,14 @@ export async function GET(
     const kvToken = getEnvVar('KV_REST_API_TOKEN')
     
     if (!kvUrl || !kvToken) {
-      // Return mock metrics if storage not configured
-      return NextResponse.json({
-        metrics: {
-          checkInterval: company.checkInterval / 3600,
-          totalChanges: Math.floor(Math.random() * 30) + 5,
-          privacyScore: ['Excellent', 'Good', 'Fair'][Math.floor(Math.random() * 3)],
-          riskLevel: ['Low', 'Medium'][Math.floor(Math.random() * 2)],
-          lastChecked: new Date().toISOString(),
-          changeFrequency: 'Weekly'
+      return NextResponse.json(
+        {
+          error: 'Storage service not configured',
+          message: 'Metrics require KV storage configuration',
+          documentation: 'https://docs.inplain.ai/configuration'
         },
-        mock: true
-      }, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
-        }
-      })
+        { status: 503 }
+      )
     }
     
     // Get real metrics from storage

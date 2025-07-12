@@ -3,7 +3,7 @@ import { StorageClient } from '../../lib/storage'
 import { ContentExtractor } from '../../../../lib/content-extractor'
 import { getUnifiedAIService, AnalysisTask } from '../../../../lib/ai/unified-ai-service'
 import { ModelSelector, UserTier } from '../../../../lib/ai/model-selector'
-import { MockAIService } from '../../../../lib/mock-ai-service'
+// Mock AI service removed - no more demo mode fallbacks
 import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDevAuthEnabled } from '@/lib/dev-auth'
 
@@ -38,20 +38,14 @@ export async function POST(
     }
     
     if (!OPENROUTER_API_KEY) {
-      console.warn('OPENROUTER_API_KEY not configured - using mock AI service for demo')
-      
-      // Use mock service for demo purposes
-      const mockService = new MockAIService()
-      const stream = mockService.getStreamingResponse()
-      
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'X-Mock-Mode': 'true'
-        }
-      })
+      return NextResponse.json(
+        { 
+          error: 'AI service not configured', 
+          message: 'Please configure OPENROUTER_API_KEY in your environment variables',
+          documentation: 'https://docs.inplain.ai/configuration'
+        },
+        { status: 503 }
+      )
     }
     
     // Get the latest snapshot

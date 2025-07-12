@@ -386,7 +386,7 @@ export class PrivacyGradingEngine {
     // Calculate dimension score
     const dimensionScore = Object.entries(criteriaScores).reduce(
       (total, [key, score]) => {
-        const criterion = dimension.criteria[key as keyof typeof dimension.criteria]
+        const criterion = dimension.criteria[key as keyof typeof dimension.criteria] as any
         const weight = criterion ? criterion.weight : 0
         return total + (score * weight)
       },

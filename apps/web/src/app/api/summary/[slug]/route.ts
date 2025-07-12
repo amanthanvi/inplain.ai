@@ -129,84 +129,21 @@ export async function POST(
     }
 
     if (!OPENROUTER_API_KEY) {
-      console.warn('OPENROUTER_API_KEY not configured - returning mock summary for demo')
-      
-      // Return a mock summary for demo purposes
-      const mockSummary = {
-        id: crypto.randomUUID(),
-        diffId,
-        createdAt: formatTimestamp(),
-        model: 'demo-mode',
-        prompt: 'Mock AI analysis for demonstration',
-        summary: 'This is a demonstration summary. The privacy policy has been updated with changes to data collection practices and user rights. In production, this would show actual AI-generated analysis of the specific changes.',
-        highlights: [
-          'Enhanced user data control options',
-          'Updated third-party sharing policies',
-          'New data retention guidelines',
-          'Improved security measures'
-        ],
-        riskLevel: 'low' as const,
-        categories: ['data_collection', 'user_rights', 'security'],
-        tokensUsed: 0
-      }
-      
-      return NextResponse.json({
-        summary: mockSummary,
-        cached: false,
-        mockMode: true,
-        warning: 'AI service not configured. Set OPENROUTER_API_KEY environment variable for real analysis.'
-      }, {
-        headers: {
-          'Cache-Control': 'private, s-maxage=60',
-          'Content-Type': 'application/json',
-          'X-Mock-Mode': 'true'
-        }
-      })
+      return NextResponse.json(
+        { 
+          error: 'AI service not configured', 
+          message: 'Please configure OPENROUTER_API_KEY in your environment variables',
+          documentation: 'https://docs.inplain.ai/configuration'
+        },
+        { status: 503 }
+      )
     }
     
     // Get storage client
     const storageClient = getStorage()
     
-    // If storage is not configured, return enhanced mock summary
+    // If storage is not configured, return error
     if (!storageClient) {
-      console.warn('Storage not configured, returning mock summary')
-      
-      // Check if this is the mock diff ID
-      if (diffId === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') {
-        const mockSummary = {
-          id: crypto.randomUUID(),
-          diffId,
-          createdAt: formatTimestamp(),
-          model: model || 'google/gemini-2.0-flash-thinking-exp-1219:free',
-          prompt: 'Mock AI analysis for demonstration',
-          summary: 'This privacy policy update includes several important changes. The company has enhanced user data control options, giving users more granular control over their personal information. Third-party data sharing policies have been updated to be more transparent, with clearer explanations of which partners have access to user data. New data retention guidelines limit how long personal information is stored, and improved security measures including encryption at rest have been implemented.',
-          highlights: [
-            'Enhanced user data control options with new privacy dashboard',
-            'Updated third-party sharing policies with partner transparency',
-            'New 90-day data retention limit for non-essential data',
-            'Improved security with end-to-end encryption',
-            'Simplified opt-out process for marketing communications'
-          ],
-          riskLevel: 'low' as const,
-          categories: ['data_collection', 'user_rights', 'security', 'third_party_sharing'],
-          tokensUsed: 0
-        }
-        
-        return NextResponse.json({
-          summary: mockSummary,
-          cached: false,
-          mockMode: true,
-          warning: 'Demo mode: Using mock data. Configure storage (KV_REST_API_URL and KV_REST_API_TOKEN) for real analysis.'
-        }, {
-          headers: {
-            'Cache-Control': 'private, s-maxage=60',
-            'Content-Type': 'application/json',
-            'X-Mock-Mode': 'true'
-          }
-        })
-      }
-      
-      // If not the mock diff ID, we can't proceed without storage
       return NextResponse.json(
         { 
           error: 'Storage service not configured',

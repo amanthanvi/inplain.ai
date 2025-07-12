@@ -3,7 +3,7 @@ import { StorageClient } from '../lib/storage'
 import { SnapshotMetaSchema, CrawlJobSchema } from '@inplain.ai/shared'
 import { formatTimestamp, hashContent } from '@inplain.ai/shared'
 import { WatchlistService } from '@/lib/watchlist'
-import { AIService } from '../lib/ai-service'
+import { getUnifiedAIService } from '@/lib/ai/unified-ai-service'
 import { notifyPolicyChange, notifyRiskAlert } from '@/lib/notifications/monitoring-integration'
 
 const storage = new StorageClient()
@@ -316,29 +316,27 @@ async function generateChangeSummary(
   currentContent: string
 ): Promise<string> {
   try {
-    // Use AI for smarter summary if available
+    // Use unified AI service for smarter summary
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (apiKey) {
-      const aiService = new AIService(apiKey);
-      const prompt = `Compare these two privacy policy versions and provide a brief 1-sentence summary of the main change:
-
-Previous (excerpt): ${previousContent.substring(0, 1000)}...
-
-Current (excerpt): ${currentContent.substring(0, 1000)}...
-
-Summary:`;
-
-      const response = await aiService.sendRequest(
-        'google/gemini-2.5-flash-preview-05-20',
-        prompt,
-        { max_tokens: 100 }
-      );
+      const aiService = getUnifiedAIService();
+      const diffContent = `Previous version (excerpt): ${previousContent.substring(0, 1000)}...
       
-      if (typeof response === 'object' && response && 'choices' in response) {
-        const res = response as any;
-        if (res.choices?.[0]?.message?.content) {
-          return res.choices[0].message.content.trim();
-        }
+Current version (excerpt): ${currentContent.substring(0, 1000)}...`;
+
+      const result = await aiService.analyze(diffContent, {
+        task: 'differential',
+        useTools: true,
+        useThinking: true,
+        maxTokens: 200,
+        temperature: 0.3
+      });
+      
+      // Extract summary from structured result
+      if (result.content && typeof result.content === 'object' && 'summary' in result.content) {
+        return result.content.summary || 'Privacy policy updated';
+      } else if (typeof result.content === 'string') {
+        return result.content;
       }
     }
   } catch (error) {

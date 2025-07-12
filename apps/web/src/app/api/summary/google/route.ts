@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { StorageClient } from '../../lib/storage'
-import { PolicyAnalysisService } from '../../lib/ai-service'
+import { getUnifiedAIService } from '@/lib/ai/unified-ai-service'
 import { SummarySchema } from '@inplain.ai/shared'
 import { formatTimestamp } from '@inplain.ai/shared'
 import { getEnvVar } from '@/lib/env'
@@ -98,82 +98,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (!OPENROUTER_API_KEY) {
-      console.warn('OPENROUTER_API_KEY not configured - returning mock summary for demo')
-      
-      // Return a mock summary for demo purposes
-      const mockSummary = {
-        id: crypto.randomUUID(),
-        diffId,
-        createdAt: formatTimestamp(),
-        model: 'demo-mode',
-        prompt: 'Mock AI analysis for demonstration',
-        summary: 'This is a demonstration summary for Google\'s privacy policy. The privacy policy has been updated with changes to data collection practices and user rights. In production, this would show actual AI-generated analysis of the specific changes.',
-        highlights: [
-          'Enhanced user data control options',
-          'Updated third-party sharing policies',
-          'New data retention guidelines',
-          'Improved security measures'
-        ],
-        riskLevel: 'low' as const,
-        categories: ['data_collection', 'user_rights', 'security'] as const,
-        tokensUsed: 0
-      }
-      
-      return NextResponse.json({
-        summary: mockSummary,
-        cached: false,
-        mockMode: true,
-        warning: 'AI service not configured. Set OPENROUTER_API_KEY environment variable for real analysis.'
-      }, {
-        headers: {
-          'Cache-Control': 'private, s-maxage=60',
-          'Content-Type': 'application/json',
-          'X-Mock-Mode': 'true'
-        }
-      })
+      return NextResponse.json(
+        {
+          error: 'AI service not configured',
+          message: 'Please configure OPENROUTER_API_KEY in your environment variables',
+          documentation: 'https://docs.inplain.ai/configuration'
+        },
+        { status: 503 }
+      )
     }
     
     const storageClient = getStorage()
     
     if (!storageClient) {
-      console.warn('Storage not configured for Google summary API')
-      
-      // Check if this is the mock diff ID
-      if (diffId === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') {
-        const mockSummary = {
-          id: crypto.randomUUID(),
-          diffId,
-          createdAt: formatTimestamp(),
-          model: model || DEFAULT_MODEL,
-          prompt: 'Mock AI analysis for Google demonstration',
-          summary: 'Google has updated its privacy policy with several important changes. The company has enhanced user data control options through a new privacy dashboard, giving users more granular control over their personal information. Third-party data sharing policies have been updated to be more transparent, with clearer explanations of which partners have access to user data. New data retention guidelines limit how long personal information is stored, and improved security measures including encryption at rest have been implemented.',
-          highlights: [
-            'New privacy dashboard for enhanced user control',
-            'Transparent third-party data sharing disclosures',
-            '90-day data retention limit for non-essential data',
-            'End-to-end encryption for sensitive user data',
-            'Simplified one-click opt-out for all marketing'
-          ],
-          riskLevel: 'low' as const,
-          categories: ['data_collection', 'user_rights', 'security', 'data_sharing'] as const,
-          tokensUsed: 0
-        }
-        
-        return NextResponse.json({
-          summary: mockSummary,
-          cached: false,
-          mockMode: true,
-          warning: 'Demo mode: Using mock data. Configure storage for real analysis.'
-        }, {
-          headers: {
-            'Cache-Control': 'private, s-maxage=60',
-            'Content-Type': 'application/json',
-            'X-Mock-Mode': 'true'
-          }
-        })
-      }
-      
-      // If not the mock diff ID, return error
       return NextResponse.json({
         error: 'Storage not configured',
         message: 'Cannot generate summaries without storage. Please configure Vercel KV.',
@@ -205,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Initialize AI service
-    const aiService = new PolicyAnalysisService(OPENROUTER_API_KEY)
+    const aiService = getUnifiedAIService()
     
     // Generate the summary
     const summaryPrompt = `Analyze this privacy policy diff and provide a summary:
@@ -224,14 +161,14 @@ export async function POST(request: NextRequest) {
     - categories: Array of categories affected. Use ONLY these exact values: data_collection, data_sharing, data_retention, user_rights, security, cookies, third_parties, children, other
     `
     
-    const response = await aiService.generateResponse(summaryPrompt, {
+    const result = await aiService.analyze(summaryPrompt, {
       model: model || DEFAULT_MODEL,
-      systemPrompt: 'You are a privacy policy expert. Analyze changes and provide clear summaries.',
-      response_format: { type: 'json_object' }
+      task: 'differential',
+      useTools: true
     })
     
     // Parse and validate the response
-    const parsedResponse = JSON.parse(response.content)
+    const parsedResponse = typeof result.content === 'object' ? result.content : JSON.parse(result.content)
     
     // Normalize categories to match enum values
     const normalizeCategory = (category: string): string => {
@@ -261,13 +198,13 @@ export async function POST(request: NextRequest) {
       id: crypto.randomUUID(),
       diffId,
       createdAt: formatTimestamp(),
-      model: response.model,
+      model: result.model,
       prompt: summaryPrompt,
       summary: parsedResponse.summary || 'No summary generated',
       highlights: parsedResponse.highlights || [],
       riskLevel: parsedResponse.riskLevel || 'medium',
       categories: (parsedResponse.categories || []).map(normalizeCategory),
-      tokensUsed: response.tokensUsed.total
+      tokensUsed: result.tokensUsed.total
     }
     
     const validatedSummary = SummarySchema.parse(summary)
