@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
-import copy from 'vite-plugin-copy'
+import { viteStaticCopy as copy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
   plugins: [
