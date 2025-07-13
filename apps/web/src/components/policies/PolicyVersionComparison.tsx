@@ -146,12 +146,12 @@ export function PolicyVersionComparison({
         // Since v2 is the newer version, its diff should contain the changes from v1
         const targetDiff = v2._diffMeta
         
-        if (targetDiff && targetDiff.diffBlobKey) {
+        if (targetDiff && targetDiff.id) {
           // Fetch the actual diff content
           fetch('/api/storage/diff-content', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ blobKey: targetDiff.diffBlobKey })
+            body: JSON.stringify({ slug: companySlug, diffId: targetDiff.id })
           })
             .then(res => res.json())
             .then(diffContent => {
@@ -450,28 +450,3 @@ export function PolicyVersionComparison({
   )
 }
 
-function generateMockPolicyContent(index: number): string {
-  const sections = [
-    "Data Collection: We collect information you provide directly to us, such as when you create an account, make a purchase, or contact us for support.",
-    "Information Usage: We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.",
-    "Data Sharing: We may share your information with third-party service providers who perform services on our behalf, such as payment processing and data analytics.",
-    "Data Security: We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.",
-    "User Rights: You have the right to access, update, or delete your personal information. You may also opt out of certain communications from us.",
-    "Cookies: We use cookies and similar tracking technologies to track activity on our service and hold certain information to improve your experience.",
-    "Children's Privacy: Our service is not directed to children under 13, and we do not knowingly collect personal information from children under 13.",
-    "Changes to Policy: We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page.",
-    "Contact Information: If you have any questions about this privacy policy, please contact us at privacy@example.com.",
-    "International Transfers: Your information may be transferred to and maintained on servers located outside of your state, province, country, or other governmental jurisdiction."
-  ]
-  
-  // Shuffle and modify sections based on index to simulate changes
-  return sections
-    .map((section, i) => {
-      if ((index + i) % 3 === 0) {
-        return section + " [Updated section with additional details and clarifications.]"
-      }
-      return section
-    })
-    .slice(0, 7 + (index % 3))
-    .join("\n\n")
-}

@@ -2,3 +2,171 @@
 > @inplain.ai/web@1.0.0 build
 > NODE_OPTIONS='--max-old-space-size=4096' NEXT_TELEMETRY_DISABLED=1 next build
 
+  ▲ Next.js 15.0.0
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (149kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled successfully
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+(node:300989) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+   Generating static pages (0/139) ...
+   Generating static pages (34/139) 
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+(node:301246) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+   Generating static pages (69/139) 
+   Generating static pages (104/139) 
+ ✓ Generating static pages (139/139)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                          Size     First Load JS
+┌ ○ /                                                14.6 kB         196 kB
+├ ƒ /_not-found                                      386 B           100 kB
+├ ● /[slug]                                          77.4 kB         320 kB
+├   ├ /google
+├   ├ /microsoft
+├   ├ /apple
+├   └ [+82 more paths]
+├ ƒ /[slug]/analytics                                21.9 kB         303 kB
+├ ƒ /about                                           177 B           109 kB
+├ ƒ /api/activity                                    386 B           100 kB
+├ ƒ /api/admin/email-stats                           387 B           100 kB
+├ ƒ /api/admin/scrape                                387 B           100 kB
+├ ƒ /api/admin/scraper-status                        386 B           100 kB
+├ ƒ /api/ai-health                                   387 B           100 kB
+├ ƒ /api/alerts                                      386 B           100 kB
+├ ƒ /api/alerts/[id]                                 386 B           100 kB
+├ ƒ /api/analysis/comprehensive                      386 B           100 kB
+├ ƒ /api/analysis/real-time                          386 B           100 kB
+├ ƒ /api/analytics/[slug]                            387 B           100 kB
+├ ƒ /api/analytics/benchmark                         386 B           100 kB
+├ ƒ /api/analytics/compliance                        386 B           100 kB
+├ ƒ /api/analytics/dashboard                         386 B           100 kB
+├ ƒ /api/analytics/performance                       386 B           100 kB
+├ ƒ /api/analytics/risk-score                        386 B           100 kB
+├ ƒ /api/analytics/timeline-events                   387 B           100 kB
+├ ƒ /api/analytics/trends                            387 B           100 kB
+├ ƒ /api/analyze-advanced-stream/[slug]              386 B           100 kB
+├ ƒ /api/analyze-advanced/[slug]                     387 B           100 kB
+├ ƒ /api/analyze-premium/[slug]                      386 B           100 kB
+├ ƒ /api/analyze-stream/[slug]                       387 B           100 kB
+├ ƒ /api/analyze/[slug]                              386 B           100 kB
+├ ƒ /api/auth/preferences                            387 B           100 kB
+├ ƒ /api/auth/session                                386 B           100 kB
+├ ƒ /api/cache                                       386 B           100 kB
+├ ƒ /api/companies                                   387 B           100 kB
+├ ƒ /api/companies/[slug]                            387 B           100 kB
+├ ƒ /api/companies/[slug]/policy                     387 B           100 kB
+├ ƒ /api/companies/metrics                           386 B           100 kB
+├ ƒ /api/cron/monitor                                386 B           100 kB
+├ ƒ /api/cron/monitor-policies                       387 B           100 kB
+├ ƒ /api/cron/notifications                          386 B           100 kB
+├ ƒ /api/cron/process-alerts                         387 B           100 kB
+├ ƒ /api/debug                                       386 B           100 kB
+├ ƒ /api/debug-monitor                               386 B           100 kB
+├ ƒ /api/debug/ai-test                               387 B           100 kB
+├ ƒ /api/debug/auth                                  386 B           100 kB
+├ ƒ /api/debug/deployment                            386 B           100 kB
+├ ƒ /api/debug/dev-auth                              386 B           100 kB
+├ ƒ /api/debug/env-status                            386 B           100 kB
+├ ƒ /api/diff/[slug]                                 387 B           100 kB
+├ ƒ /api/diff/[slug]/history                         386 B           100 kB
+├ ƒ /api/diffs                                       386 B           100 kB
+├ ƒ /api/diffs/generate                              386 B           100 kB
+├ ƒ /api/docs                                        387 B           100 kB
+├ ƒ /api/email/preferences                           387 B           100 kB
+├ ƒ /api/env-test                                    386 B           100 kB
+├ ƒ /api/example/protected                           386 B           100 kB
+├ ƒ /api/export                                      386 B           100 kB
+├ ƒ /api/feed                                        386 B           100 kB
+├ ƒ /api/feed-optimized                              386 B           100 kB
+├ ƒ /api/feedback                                    386 B           100 kB
+├ ƒ /api/feedback/[id]                               386 B           100 kB
+├ ƒ /api/feedback/analytics                          387 B           100 kB
+├ ƒ /api/feedback/upload                             386 B           100 kB
+├ ƒ /api/health                                      386 B           100 kB
+├ ƒ /api/health/detailed                             387 B           100 kB
+├ ƒ /api/metrics                                     387 B           100 kB
+├ ƒ /api/metrics/[slug]                              386 B           100 kB
+├ ƒ /api/models                                      386 B           100 kB
+├ ƒ /api/monitoring/dashboard                        386 B           100 kB
+├ ƒ /api/notifications                               387 B           100 kB
+├ ƒ /api/notifications/preferences                   387 B           100 kB
+├ ƒ /api/notifications/stream                        387 B           100 kB
+├ ƒ /api/notifications/subscriptions                 386 B           100 kB
+├ ƒ /api/notifications/test                          386 B           100 kB
+├ ƒ /api/policies/summarize                          387 B           100 kB
+├ ƒ /api/privacy/analysis-cache                      386 B           100 kB
+├ ƒ /api/privacy/analyze-advanced                    387 B           100 kB
+├ ƒ /api/search                                      386 B           100 kB
+├ ƒ /api/search/policies                             386 B           100 kB
+├ ƒ /api/snapshot/[slug]                             387 B           100 kB
+├ ƒ /api/snapshot/google                             386 B           100 kB
+├ ƒ /api/snapshots/[slug]                            387 B           100 kB
+├ ƒ /api/status                                      387 B           100 kB
+├ ƒ /api/storage/diff-content                        387 B           100 kB
+├ ƒ /api/summary/[slug]                              386 B           100 kB
+├ ƒ /api/summary/google                              387 B           100 kB
+├ ƒ /api/test                                        386 B           100 kB
+├ ƒ /api/test-fetch                                  386 B           100 kB
+├ ƒ /api/unsubscribe                                 385 B           100 kB
+├ ƒ /api/user/activity                               386 B           100 kB
+├ ƒ /api/user/api-key                                386 B           100 kB
+├ ƒ /api/user/api-keys                               386 B           100 kB
+├ ƒ /api/user/portfolio-risk                         386 B           100 kB
+├ ƒ /api/user/settings                               386 B           100 kB
+├ ƒ /api/user/watchlist                              386 B           100 kB
+├ ƒ /api/v1/changes/recent                           387 B           100 kB
+├ ƒ /api/v1/companies/[slug]                         387 B           100 kB
+├ ƒ /api/v1/docs                                     386 B           100 kB
+├ ƒ /api/v1/notifications/settings                   386 B           100 kB
+├ ƒ /api/v1/policies/summarize                       386 B           100 kB
+├ ƒ /api/v1/watchlist                                386 B           100 kB
+├ ƒ /api/watchlists                                  386 B           100 kB
+├ ƒ /api/watchlists/[id]                             386 B           100 kB
+├ ƒ /api/watchlists/[id]/sites                       386 B           100 kB
+├ ƒ /api/webhooks                                    387 B           100 kB
+├ ƒ /api/webhooks/scraper                            386 B           100 kB
+├ ƒ /api/webhooks/user-created                       386 B           100 kB
+├ ○ /companies                                       6.53 kB         233 kB
+├ ƒ /companies/[slug]                                8.37 kB         224 kB
+├ ƒ /companies/[slug]/policies                       236 B           180 kB
+├ ƒ /companies/[slug]/policies/[policySlug]          5.22 kB         185 kB
+├ ƒ /companies/[slug]/policies/[policySlug]/compare  5.47 kB         163 kB
+├ ○ /dashboard                                       16.3 kB         203 kB
+├ ƒ /feedback                                        13.6 kB         281 kB
+├ ƒ /login                                           2.4 kB          132 kB
+├ ƒ /login/factor-one                                2.4 kB          132 kB
+├ ƒ /login/factor-two                                2.4 kB          132 kB
+├ ○ /notifications                                   10 kB           209 kB
+├ ○ /onboarding                                      14.3 kB         186 kB
+├ ○ /performance                                     3 kB            109 kB
+├ ƒ /roadmap                                         5.65 kB         141 kB
+├ ƒ /search                                          15.3 kB         209 kB
+├ ○ /settings                                        4.97 kB         139 kB
+├ ƒ /signup                                          2.4 kB          132 kB
+├ ○ /signup/verify                                   2.11 kB         133 kB
+├ ○ /unsubscribe                                     8.28 kB         129 kB
+└ ƒ /watchlist                                       765 B           154 kB
++ First Load JS shared by all                        99.7 kB
+  ├ chunks/8765-e7f551711fbc82f8.js                  44.9 kB
+  ├ chunks/87c73c54-f485f139699f50b1.js              52.6 kB
+  └ other shared chunks (total)                      2.19 kB
+
+
+ƒ Middleware                                         90.3 kB
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

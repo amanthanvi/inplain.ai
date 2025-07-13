@@ -70,17 +70,17 @@ describe('Utils', () => {
   })
 
   describe('hashContent', () => {
-    it('generates consistent hash for content', () => {
+    it('generates consistent hash for content', async () => {
       const content = 'Hello World'
-      const hash1 = hashContent(content)
-      const hash2 = hashContent(content)
+      const hash1 = await hashContent(content)
+      const hash2 = await hashContent(content)
       expect(hash1).toBe(hash2)
       expect(hash1).toHaveLength(64)
     })
 
-    it('generates different hashes for different content', () => {
-      const hash1 = hashContent('Hello World')
-      const hash2 = hashContent('Hello World!')
+    it('generates different hashes for different content', async () => {
+      const hash1 = await hashContent('Hello World')
+      const hash2 = await hashContent('Hello World!')
       expect(hash1).not.toBe(hash2)
     })
   })

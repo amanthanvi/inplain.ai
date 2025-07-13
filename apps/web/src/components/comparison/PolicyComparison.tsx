@@ -135,12 +135,23 @@ export function PolicyComparison({
           return
         }
 
-        // Perform new analysis
+        // First fetch the actual policy content
+        const policyResponse = await fetch(`/api/companies/${slug}/policy`)
+        if (!policyResponse.ok) {
+          throw new Error('Failed to fetch policy content')
+        }
+        
+        const policyData = await policyResponse.json()
+        if (!policyData.content) {
+          throw new Error('No policy content available')
+        }
+
+        // Perform new analysis with actual policy content
         const response = await fetch('/api/privacy/analyze-advanced', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            policyText: 'Sample policy...', // In production, fetch actual policy
+            policyText: policyData.content,
             company: company.name,
             industry: company.category,
             analysisType: 'comparison'
