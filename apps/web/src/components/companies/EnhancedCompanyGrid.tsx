@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { extractDomain } from '@inplain.ai/shared/utils'
 import { getCompanies } from '@/lib/api'
 import type { Company } from '@inplain.ai/shared'
@@ -26,9 +27,28 @@ interface CompanyGridProps {
   viewMode?: 'grid' | 'list'
 }
 
-interface CompanyStats extends Omit<PrivacyMetrics, 'lastAnalyzed'> {
+interface CompanyStats {
+  privacyScore?: number | null
+  scoreBreakdown?: {
+    dataCollection: number
+    thirdPartySharing: number
+    userRights: number
+    retention: number
+    security: number
+  } | null
+  riskLevel?: 'Low' | 'Medium' | 'High' | null
+  complianceStatus?: {
+    gdpr: boolean
+    ccpa: boolean
+    coppa: boolean
+  } | null
+  changeFrequency?: 'Rarely' | 'Occasionally' | 'Frequently' | null
+  totalChanges: number
   lastChecked: Date
   watchers: number
+  pending?: boolean
+  message?: string
+  error?: string
 }
 
 export function EnhancedCompanyGrid({ 
@@ -71,59 +91,52 @@ export function EnhancedCompanyGrid({
         // Convert to CompanyStats format
         const stats: Record<string, CompanyStats> = {}
         for (const [slug, metric] of Object.entries(metrics)) {
-          if ((metric as any).error) {
-            console.error(`Failed to load metrics for ${slug}:`, (metric as any).error)
-            // Use fallback values
-            stats[slug] = {
-              privacyScore: 75,
-              scoreBreakdown: {
-                dataCollection: 70,
-                thirdPartySharing: 75,
-                userRights: 80,
-                retention: 70,
-                security: 75
-              },
-              riskLevel: 'Medium' as const,
-              complianceStatus: {
-                gdpr: false,
-                ccpa: false,
-                coppa: false
-              },
-              changeFrequency: 'Occasionally' as const,
-              totalChanges: 0,
-              lastChecked: new Date(),
-              watchers: 0
+          const metricData = metric as any
+          if (metricData.error) {
+            if (metricData.pending) {
+              // Data collection in progress - show pending state
+              stats[slug] = {
+                privacyScore: null,
+                scoreBreakdown: null,
+                riskLevel: null,
+                complianceStatus: null,
+                changeFrequency: null,
+                totalChanges: 0,
+                lastChecked: new Date(),
+                watchers: 0,
+                pending: true,
+                message: metricData.message
+              }
+            } else {
+              // Actual error - show error state
+              stats[slug] = {
+                privacyScore: null,
+                scoreBreakdown: null,
+                riskLevel: null,
+                complianceStatus: null,
+                changeFrequency: null,
+                totalChanges: 0,
+                lastChecked: new Date(),
+                watchers: 0,
+                error: metricData.error
+              }
             }
           } else {
-            stats[slug] = metric as CompanyStats
+            stats[slug] = metricData as CompanyStats
           }
         }
         
         setCompanyStats(stats)
       } catch (error) {
         console.error('Failed to load company metrics:', error)
-        // Use fallback values for all companies
+        // Show error state for all companies instead of mock data
         const stats: Record<string, CompanyStats> = {}
         data.forEach(company => {
           stats[company.slug] = {
-            privacyScore: 75,
-            scoreBreakdown: {
-              dataCollection: 70,
-              thirdPartySharing: 75,
-              userRights: 80,
-              retention: 70,
-              security: 75
-            },
-            riskLevel: 'Medium' as const,
-            complianceStatus: {
-              gdpr: false,
-              ccpa: false,
-              coppa: false
-            },
-            changeFrequency: 'Occasionally' as const,
             totalChanges: 0,
             lastChecked: new Date(),
-            watchers: 0
+            watchers: 0,
+            error: 'Failed to load metrics'
           }
         })
         setCompanyStats(stats)
@@ -197,7 +210,8 @@ export function EnhancedCompanyGrid({
 
   if (viewMode === 'list') {
     return (
-      <div className="space-y-4">
+      <TooltipProvider>
+        <div className="space-y-4">
         {companies.map((company, index) => {
           const stats = companyStats[company.slug]
           const CategoryIcon = getCategoryIcon(company.category)
@@ -235,9 +249,33 @@ export function EnhancedCompanyGrid({
                           </div>
                           
                           <div className="text-right">
-                            <div className={cn("text-2xl font-bold", getScoreColor(stats?.privacyScore || 0))}>
-                              {stats?.privacyScore || 0}
-                            </div>
+                            {stats?.pending ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-2xl font-bold text-muted-foreground animate-pulse cursor-help">
+                                    ...
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{stats.message || 'Privacy policy analysis in progress'}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : stats?.error ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="text-2xl font-bold text-muted-foreground cursor-help">
+                                    —
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{stats.error}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              <div className={cn("text-2xl font-bold", getScoreColor(stats?.privacyScore || 0))}>
+                                {stats?.privacyScore || 0}
+                              </div>
+                            )}
                             <p className="text-xs text-muted-foreground">Privacy Score</p>
                           </div>
                         </div>
@@ -246,9 +284,19 @@ export function EnhancedCompanyGrid({
                           <div className="flex items-center gap-2">
                             <AlertCircle className="h-4 w-4 text-muted-foreground" />
                             <div>
-                              <Badge className={cn("text-xs", getRiskColor(stats?.riskLevel || 'Low'))}>
-                                {stats?.riskLevel || 'Low'} Risk
-                              </Badge>
+                              {stats?.pending ? (
+                                <Badge className="text-xs bg-gray-100 text-gray-500 animate-pulse">
+                                  Analyzing...
+                                </Badge>
+                              ) : stats?.error ? (
+                                <Badge className="text-xs bg-gray-100 text-gray-500">
+                                  Unavailable
+                                </Badge>
+                              ) : (
+                                <Badge className={cn("text-xs", getRiskColor(stats?.riskLevel || 'Low'))}>
+                                  {stats?.riskLevel || 'Low'} Risk
+                                </Badge>
+                              )}
                             </div>
                           </div>
                           
@@ -284,12 +332,14 @@ export function EnhancedCompanyGrid({
             </AnimatedContainer>
           )
         })}
-      </div>
+        </div>
+      </TooltipProvider>
     )
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <TooltipProvider>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {companies.map((company, index) => {
         const stats = companyStats[company.slug]
         const CategoryIcon = getCategoryIcon(company.category)
@@ -325,19 +375,75 @@ export function EnhancedCompanyGrid({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs text-muted-foreground">Privacy Score</p>
-                      <p className={cn("text-2xl font-bold", getScoreColor(stats?.privacyScore || 0))}>
-                        {stats?.privacyScore || 0}
-                      </p>
+                      {stats?.pending ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-2xl font-bold text-muted-foreground animate-pulse cursor-help">
+                              ...
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{stats.message || 'Privacy policy analysis in progress'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : stats?.error ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-2xl font-bold text-muted-foreground cursor-help">
+                              —
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{stats.error}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <p className={cn("text-2xl font-bold", getScoreColor(stats?.privacyScore || 0))}>
+                          {stats?.privacyScore || 0}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground">Risk Level</p>
-                      <Badge className={cn("mt-1", getRiskColor(stats?.riskLevel || 'Low'))}>
-                        {stats?.riskLevel || 'Low'}
-                      </Badge>
+                      {stats?.pending ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="mt-1 bg-gray-100 text-gray-500 animate-pulse cursor-help">
+                              Analyzing...
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{stats.message || 'Privacy policy analysis in progress'}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : stats?.error ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className="mt-1 bg-gray-100 text-gray-500 cursor-help">
+                              Unavailable
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{stats.error}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <Badge className={cn("mt-1", getRiskColor(stats?.riskLevel || 'Low'))}>
+                          {stats?.riskLevel || 'Low'}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                   
-                  <Progress value={stats?.privacyScore || 0} className="h-2" />
+                  {stats?.pending ? (
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gray-300 animate-pulse rounded-full w-1/3"></div>
+                    </div>
+                  ) : stats?.error ? (
+                    <div className="h-2 bg-gray-100 rounded-full"></div>
+                  ) : (
+                    <Progress value={stats?.privacyScore || 0} className="h-2" />
+                  )}
                   
                   <Separator />
                   
@@ -395,6 +501,7 @@ export function EnhancedCompanyGrid({
           </AnimatedContainer>
         )
       })}
-    </div>
+      </div>
+    </TooltipProvider>
   )
 }
