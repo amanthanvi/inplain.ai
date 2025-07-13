@@ -19,13 +19,11 @@ export async function GET(request: NextRequest) {
     const slug = 'google'
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '10')
-    const offset = parseInt(searchParams.get('offset') || '0')
 
     // Get diffs from storage
     const diffs = await storage.diff.list({
       companySlug: slug,
-      limit,
-      offset
+      limit
     })
 
     if (!diffs || diffs.length === 0) {
@@ -45,14 +43,14 @@ export async function GET(request: NextRequest) {
           return {
             id: diff.id,
             createdAt: diff.createdAt,
-            significance: diff.significance || 'minor',
-            changeType: diff.changeType || 'update',
-            summary: diff.summary || 'Policy update detected',
-            sections: diff.sections || [],
+            significance: diff.changeType, // changeType is already 'minor' | 'moderate' | 'major'
+            changeType: diff.changeType,
+            summary: 'Policy update detected', // TODO: Add summary generation
+            sections: [], // TODO: Extract sections from diff content
             metrics: {
-              additions: content?.additions || 0,
-              deletions: content?.deletions || 0,
-              modifications: content?.modifications || 0
+              additions: diff.additions || 0,
+              deletions: diff.deletions || 0,
+              modifications: 0 // Not available in DiffMeta
             },
             hasDetails: !!content
           }
@@ -61,10 +59,10 @@ export async function GET(request: NextRequest) {
           return {
             id: diff.id,
             createdAt: diff.createdAt,
-            significance: diff.significance || 'minor',
-            changeType: diff.changeType || 'update',
-            summary: diff.summary || 'Policy update detected',
-            sections: diff.sections || [],
+            significance: diff.changeType, // changeType is already 'minor' | 'moderate' | 'major'
+            changeType: diff.changeType,
+            summary: 'Policy update detected', // TODO: Add summary generation
+            sections: [], // TODO: Extract sections from diff content
             metrics: {
               additions: 0,
               deletions: 0,
