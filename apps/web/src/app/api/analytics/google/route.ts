@@ -73,8 +73,8 @@ export async function GET(request: NextRequest) {
         totalChanges: diffs?.length || 0,
         recentChanges: diffs?.slice(0, 5).map(diff => ({
           date: diff.createdAt,
-          type: diff.changeType || 'update',
-          significance: diff.significance || 'minor'
+          type: 'update', // Generic type for all changes
+          significance: diff.changeType // This is already 'minor' | 'moderate' | 'major'
         })) || []
       },
       compliance: metrics.complianceStatus,
