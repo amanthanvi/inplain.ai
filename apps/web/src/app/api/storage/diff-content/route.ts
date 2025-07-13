@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getStorage } from '../../lib/storage-utils'
+import { storage } from '@/lib/storage/adapter'
 import { z } from 'zod'
 
 const requestSchema = z.object({
-  blobKey: z.string()
+  slug: z.string(),
+  diffId: z.string()
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { blobKey } = requestSchema.parse(body)
+    const { slug, diffId } = requestSchema.parse(body)
 
-    const storage = getStorage()
     if (!storage) {
       return NextResponse.json(
         { error: 'Storage not configured' },
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const content = await storage.getDiffContent(blobKey)
+    const content = await storage.getDiffContent(slug, diffId)
     
     if (!content) {
       return NextResponse.json(

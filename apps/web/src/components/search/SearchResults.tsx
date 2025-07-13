@@ -141,117 +141,102 @@ export function SearchResults() {
   }, [debouncedQuery, categories, riskLevels, timeRange, changeTypes, sortBy])
 
   const performSearch = async () => {
+    if (!debouncedQuery && !categories.length && !riskLevels.length && !changeTypes.length) {
+      setResults([])
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     
     try {
-      // In production, this would be an API call
-      // For now, simulate search results
-      const mockResults: SearchResult[] = []
-      
-      // Search companies
-      const companyResults = WATCHED_COMPANIES
-        .filter(company => {
-          if (query && !company.name.toLowerCase().includes(query.toLowerCase())) {
-            return false
-          }
-          if (categories.length && !categories.includes(company.category || '')) {
-            return false
-          }
-          return true
+      // Call the real search API
+      const response = await fetch('/api/search/policies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: debouncedQuery,
+          companies: categories.length > 0 ? categories : [],
+          policyTypes: [],
+          dateRange: timeRange !== 'all' ? {
+            start: new Date(Date.now() - (timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90) * 24 * 60 * 60 * 1000).toISOString(),
+            end: new Date().toISOString()
+          } : undefined,
+          limit: 50,
+          offset: 0
         })
-        .map(company => ({
-          type: 'company' as const,
-          id: company.slug,
-          title: company.name,
-          description: `Monitor privacy policy changes for ${company.name}`,
-          url: `/${company.slug}`,
-          metadata: {
-            category: company.category,
-            relevanceScore: query ? 
-              (company.name.toLowerCase().includes(query.toLowerCase()) ? 1 : 0.5) : 
-              0.8
-          }
-        }))
-      
-      mockResults.push(...companyResults)
-      
-      // Simulate policy change results
-      if (query || changeTypes.length || riskLevels.length) {
-        const changeResults: SearchResult[] = [
-          {
-            type: 'change',
-            id: 'change-1',
-            title: 'Google Updates Data Retention Policy',
-            description: 'Major changes to how long user data is stored and processed',
-            url: '/google#changes',
-            metadata: {
-              company: 'Google',
-              changeType: 'major',
-              riskLevel: 'high',
-              date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-              relevanceScore: 0.9
-            }
-          },
-          {
-            type: 'change',
-            id: 'change-2',
-            title: 'Meta Introduces New AI Data Usage Terms',
-            description: 'Updated terms for using user data in AI model training',
-            url: '/meta#changes',
-            metadata: {
-              company: 'Meta',
-              changeType: 'major',
-              riskLevel: 'critical',
-              date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-              relevanceScore: 0.85
-            }
-          },
-          {
-            type: 'change',
-            id: 'change-3',
-            title: 'Apple Enhances Privacy Controls',
-            description: 'New user controls for data sharing and tracking prevention',
-            url: '/apple#changes',
-            metadata: {
-              company: 'Apple',
-              changeType: 'moderate',
-              riskLevel: 'low',
-              date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-              relevanceScore: 0.7
-            }
-          }
-        ]
-        
-        // Filter change results based on filters
-        const filteredChanges = changeResults.filter(result => {
-          if (changeTypes.length && !changeTypes.includes(result.metadata.changeType || '')) {
-            return false
-          }
-          if (riskLevels.length && !riskLevels.includes(result.metadata.riskLevel || '')) {
-            return false
-          }
-          return true
-        })
-        
-        mockResults.push(...filteredChanges)
+      })
+
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.statusText}`)
       }
+
+      const searchData = await response.json()
       
-      // Add AI insights if query contains certain keywords
-      if (query && (query.includes('ai') || query.includes('data') || query.includes('privacy'))) {
-        mockResults.push({
-          type: 'insight',
-          id: 'insight-1',
-          title: 'AI Data Collection Trends Across Tech Companies',
-          description: 'Analysis of how major tech companies are updating their policies for AI data usage',
-          url: '/insights/ai-data-trends',
-          metadata: {
-            relevanceScore: 0.95
+      // Transform API response to match our SearchResult interface
+      const transformedResults: SearchResult[] = []
+      
+      // The API returns { results: PolicySearchResult[], total, offset, limit, query }
+      if (searchData.results && Array.isArray(searchData.results)) {
+        searchData.results.forEach((result: any) => {
+          if (result.type === 'policy') {
+            transformedResults.push({
+              type: 'policy',
+              id: result.id,
+              title: result.title,
+              description: result.excerpt,
+              url: `/${result.companySlug}`,
+              metadata: {
+                company: result.companyName,
+                category: 'privacy-policy',
+                date: result.metadata.lastUpdated,
+                relevanceScore: result.score / 100 // Normalize score
+              }
+            })
+          } else if (result.type === 'change') {
+            transformedResults.push({
+              type: 'change',
+              id: result.id,
+              title: result.title,
+              description: result.excerpt,
+              url: `/${result.companySlug}/changes`,
+              metadata: {
+                company: result.companyName,
+                changeType: result.metadata.changeType,
+                riskLevel: result.metadata.riskLevel,
+                date: result.metadata.changeDate,
+                relevanceScore: result.score / 100 // Normalize score
+              }
+            })
           }
         })
       }
       
-      // Sort results
-      const sortedResults = mockResults.sort((a, b) => {
+      // Add company results if no policy results found but query matches company names
+      if (transformedResults.length === 0 && debouncedQuery) {
+        const matchingCompanies = WATCHED_COMPANIES.filter(company => 
+          company.name.toLowerCase().includes(debouncedQuery.toLowerCase())
+        ).slice(0, 5)
+        
+        matchingCompanies.forEach(company => {
+          transformedResults.push({
+            type: 'company',
+            id: company.slug,
+            title: company.name,
+            description: `Monitor privacy policy changes for ${company.name}`,
+            url: `/${company.slug}`,
+            metadata: {
+              category: company.category,
+              relevanceScore: 0.8
+            }
+          })
+        })
+      }
+
+      // Sort results by relevance score or date
+      const sortedResults = transformedResults.sort((a, b) => {
         if (sortBy === 'relevance') {
           return (b.metadata.relevanceScore || 0) - (a.metadata.relevanceScore || 0)
         } else if (sortBy === 'date') {
@@ -261,11 +246,40 @@ export function SearchResults() {
         }
         return 0
       })
-      
+
       setResults(sortedResults)
     } catch (error) {
       console.error('Search failed:', error)
-      setResults([])
+      
+      // On error, show a limited company search as fallback
+      if (debouncedQuery) {
+        const fallbackResults = WATCHED_COMPANIES
+          .filter(company => {
+            if (!company.name.toLowerCase().includes(debouncedQuery.toLowerCase())) {
+              return false
+            }
+            if (categories.length && !categories.includes(company.category || '')) {
+              return false
+            }
+            return true
+          })
+          .slice(0, 3)
+          .map(company => ({
+            type: 'company' as const,
+            id: company.slug,
+            title: company.name,
+            description: `Search unavailable. Browse ${company.name} privacy policy directly.`,
+            url: `/${company.slug}`,
+            metadata: {
+              category: company.category,
+              relevanceScore: company.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ? 1 : 0.5
+            }
+          }))
+        
+        setResults(fallbackResults)
+      } else {
+        setResults([])
+      }
     } finally {
       setLoading(false)
     }

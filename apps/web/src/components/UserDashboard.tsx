@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { PremiumCard, PremiumCardContent, PremiumCardHeader, PremiumCardTitle } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { PremiumTimeline } from './PremiumTimeline'
 import { GlobalSearchBar } from './GlobalSearchBar'
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard'
@@ -36,20 +37,9 @@ export function UserDashboard() {
 	const [showAnalytics, setShowAnalytics] = useState(false)
 	const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
 	
-	// Mock data for demo
-	const mockRiskData = {
-		overall: 6.8,
-		categories: {
-			dataCollection: 7.2,
-			thirdPartySharing: 5.4,
-			dataRetention: 6.1,
-			userRights: 8.3,
-			transparency: 7.8
-		},
-		trend: 'up' as const,
-		lastUpdated: '2 hours ago',
-		alerts: 2
-	}
+	// Risk data state
+	const [portfolioRiskData, setPortfolioRiskData] = useState<any>(null)
+	const [riskDataLoading, setRiskDataLoading] = useState(false)
 
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -60,8 +50,12 @@ export function UserDashboard() {
 			fetchWatchlistData()
 			// Fetch recent activity
 			fetchRecentActivity()
+			// Fetch portfolio risk data if analytics shown
+			if (showAnalytics) {
+				fetchPortfolioRiskData()
+			}
 		}
-	}, [isLoaded, user])
+	}, [isLoaded, user, showAnalytics])
 
 	const fetchWatchlistData = async () => {
 		try {
@@ -86,6 +80,39 @@ export function UserDashboard() {
 			setError('Failed to load watchlist')
 		} finally {
 			setLoading(false)
+		}
+	}
+
+	const fetchPortfolioRiskData = async () => {
+		try {
+			setRiskDataLoading(true)
+			const response = await fetch('/api/user/portfolio-risk')
+			
+			if (!response.ok) {
+				throw new Error('Failed to fetch portfolio risk data')
+			}
+			
+			const data = await response.json()
+			setPortfolioRiskData(data)
+		} catch (err) {
+			console.error('Failed to fetch portfolio risk:', err)
+			// Set default risk data on error
+			setPortfolioRiskData({
+				overall: 0,
+				categories: {
+					dataCollection: 0,
+					thirdPartySharing: 0,
+					dataRetention: 0,
+					userRights: 0,
+					transparency: 0
+				},
+				trend: 'stable' as const,
+				lastUpdated: 'Unable to load',
+				alerts: 0,
+				error: true
+			})
+		} finally {
+			setRiskDataLoading(false)
 		}
 	}
 
@@ -267,7 +294,19 @@ export function UserDashboard() {
 				{/* Analytics Dashboard */}
 				{showAnalytics && (
 					<div className="mb-8 space-y-6">
-						<RiskScoreCard company="Overall Portfolio" riskData={mockRiskData} />
+						{riskDataLoading ? (
+							<Card className="animate-pulse">
+								<CardContent className="p-6">
+									<div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
+									<div className="h-32 bg-muted rounded"></div>
+								</CardContent>
+							</Card>
+						) : portfolioRiskData ? (
+							<RiskScoreCard 
+								company="Overall Portfolio" 
+								riskData={portfolioRiskData} 
+							/>
+						) : null}
 						<AnalyticsDashboard />
 					</div>
 				)}

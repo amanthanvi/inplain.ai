@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -33,67 +33,6 @@ interface TimelineEvent {
   tags: string[]
 }
 
-const mockEvents: TimelineEvent[] = [
-  {
-    id: '1',
-    date: '2024-01-15T10:30:00Z',
-    company: 'Meta',
-    type: 'policy-update',
-    title: 'Major Privacy Policy Update',
-    description: 'Updated data collection practices for Instagram and Facebook',
-    severity: 'high',
-    changes: {
-      added: ['Biometric data collection', 'Cross-platform tracking'],
-      removed: ['User data download limits'],
-      modified: ['Data retention periods', 'Third-party sharing clauses']
-    },
-    riskImpact: { before: 4.2, after: 3.8 },
-    tags: ['GDPR', 'Data Collection', 'Cross-platform']
-  },
-  {
-    id: '2',
-    date: '2024-01-12T14:20:00Z',
-    company: 'Google',
-    type: 'risk-change',
-    title: 'Risk Score Update',
-    description: 'Improved transparency in data usage policies',
-    severity: 'medium',
-    riskImpact: { before: 6.5, after: 6.8 },
-    tags: ['Transparency', 'Data Usage']
-  },
-  {
-    id: '3',
-    date: '2024-01-10T09:15:00Z',
-    company: 'TikTok',
-    type: 'alert',
-    title: 'Critical Privacy Alert',
-    description: 'New data sharing agreements with undisclosed third parties',
-    severity: 'critical',
-    changes: {
-      added: ['Third-party data sharing', 'International data transfers'],
-      removed: [],
-      modified: ['Privacy controls']
-    },
-    riskImpact: { before: 3.1, after: 2.8 },
-    tags: ['Third-party', 'International', 'Critical']
-  },
-  {
-    id: '4',
-    date: '2024-01-08T16:45:00Z',
-    company: 'Apple',
-    type: 'policy-update',
-    title: 'App Tracking Transparency Update',
-    description: 'Enhanced user controls for app tracking permissions',
-    severity: 'low',
-    changes: {
-      added: ['Granular tracking controls', 'Privacy nutrition labels'],
-      removed: [],
-      modified: ['App permissions system']
-    },
-    riskImpact: { before: 9.2, after: 9.4 },
-    tags: ['App Tracking', 'Transparency', 'User Controls']
-  }
-]
 
 const eventTypeConfig = {
   'policy-update': {
@@ -132,7 +71,34 @@ const severityConfig = {
 export function PolicyTimeline() {
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('all')
-  const [events] = useState(mockEvents)
+  const [events, setEvents] = useState<TimelineEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  useEffect(() => {
+    fetchTimelineEvents()
+  }, [])
+  
+  const fetchTimelineEvents = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/analytics/timeline-events')
+      if (!response.ok) {
+        throw new Error(`Failed to fetch timeline events: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      setEvents(data.events || [])
+    } catch (err) {
+      console.error('Failed to fetch timeline events:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load timeline')
+      setEvents([])
+    } finally {
+      setLoading(false)
+    }
+  }
   
   const toggleEvent = (eventId: string) => {
     const newExpanded = new Set(expandedEvents)
@@ -191,13 +157,47 @@ export function PolicyTimeline() {
         </div>
         
         {/* Timeline */}
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-4 md:left-6 top-0 bottom-0 w-px bg-border" />
-          
-          <div className="space-y-4 md:space-y-6">
-            <AnimatePresence>
-              {filteredEvents.map((event, index) => {
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-4">
+                  <div className="h-5 bg-muted rounded w-1/3 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-2/3 mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : error ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button onClick={fetchTimelineEvents} size="sm" variant="outline">
+                Try Again
+              </Button>
+            </CardContent>
+          </Card>
+        ) : filteredEvents.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Calendar className="h-8 w-8 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                {filter === 'all' 
+                  ? 'No timeline events available yet' 
+                  : `No ${filter.replace('-', ' ')} events found`}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="relative">
+            {/* Timeline line */}
+            <div className="absolute left-4 md:left-6 top-0 bottom-0 w-px bg-border" />
+            
+            <div className="space-y-4 md:space-y-6">
+              <AnimatePresence>
+                {filteredEvents.map((event, index) => {
                 const config = eventTypeConfig[event.type]
                 const Icon = config.icon
                 const isExpanded = expandedEvents.has(event.id)
@@ -370,16 +370,8 @@ export function PolicyTimeline() {
               })}
             </AnimatePresence>
           </div>
-          
-          {filteredEvents.length === 0 && (
-            <FadeIn>
-              <div className="text-center py-12">
-                <Clock className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">No events found for the selected filter</p>
-              </div>
-            </FadeIn>
-          )}
         </div>
+        )}
       </CardContent>
     </Card>
   )
