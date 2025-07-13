@@ -71,6 +71,10 @@ export function EnhancedCompanyGrid({
       setCompanies(data)
       
       // Load real metrics for each company via API
+      if (data.length === 0) {
+        return // No companies to fetch metrics for
+      }
+      
       try {
         const response = await fetch('/api/companies/metrics', {
           method: 'POST',
