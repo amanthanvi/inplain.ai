@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
 import { 
   BarChart3, TrendingUp, TrendingDown, AlertTriangle, Shield,
   Calendar, Filter, Download, RefreshCw, Eye, Users,
-  Clock, Globe, Zap, Target, Brain, Star
+  Clock, Globe, Zap, Target, Brain, Star, Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { 
@@ -17,39 +18,43 @@ import {
   Counter, PulseAnimation 
 } from '@/components/ui/framer-animations'
 
-// Mock data generators for analytics
-const generateTrendData = (points: number) => {
-  return Array.from({ length: points }, (_, i) => ({
-    date: new Date(Date.now() - (points - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    value: Math.floor(Math.random() * 100) + 20
-  }))
+interface AnalyticsData {
+  metrics: {
+    avgPrivacyScore: number
+    policyChanges: number
+    riskAlerts: number
+    coverage: number
+    trends: {
+      avgPrivacyScore: number
+      policyChanges: number
+      riskAlerts: number
+      coverage: number
+    }
+  }
+  trendData: Array<{ date: string; value: number }>
+  changeData: Array<{ date: string; value: number }>
+  riskMetrics: Array<{
+    label: string
+    current: number
+    previous: number
+    trend: 'up' | 'down' | 'stable'
+  }>
+  companyRankings: Array<{
+    company: string
+    slug: string
+    score: number
+    change: string
+    category: string
+  }>
+  industryTrends: Array<{
+    sector: string
+    avgScore: number
+    change: number
+    companies: number
+  }>
+  loading?: boolean
+  error?: string
 }
-
-const riskMetrics = [
-  { label: 'Data Collection', current: 7.2, previous: 6.8, trend: 'up' },
-  { label: 'Third-Party Sharing', current: 5.4, previous: 5.9, trend: 'down' },
-  { label: 'Retention Policies', current: 6.1, previous: 6.0, trend: 'up' },
-  { label: 'User Rights', current: 8.3, previous: 7.9, trend: 'up' },
-  { label: 'Transparency', current: 7.8, previous: 7.5, trend: 'up' }
-]
-
-const companyRankings = [
-  { company: 'Apple', score: 9.2, change: '+0.3', category: 'tech' },
-  { company: 'Signal', score: 9.0, change: '0.0', category: 'messaging' },
-  { company: 'DuckDuckGo', score: 8.8, change: '+0.1', category: 'search' },
-  { company: 'Microsoft', score: 7.9, change: '+0.2', category: 'tech' },
-  { company: 'Google', score: 6.5, change: '-0.1', category: 'tech' },
-  { company: 'Meta', score: 4.2, change: '-0.4', category: 'social' },
-  { company: 'TikTok', score: 3.1, change: '-0.2', category: 'social' }
-]
-
-const industryTrends = [
-  { sector: 'Technology', avgScore: 6.8, change: 2.3, companies: 45 },
-  { sector: 'Social Media', avgScore: 4.1, change: -1.2, companies: 12 },
-  { sector: 'E-commerce', avgScore: 5.9, change: 0.8, companies: 28 },
-  { sector: 'Finance', avgScore: 7.2, change: 1.5, companies: 19 },
-  { sector: 'Healthcare', avgScore: 8.1, change: 0.4, companies: 15 }
-]
 
 interface ChartProps {
   data: any[]
@@ -151,15 +156,110 @@ export function AnalyticsDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [timeRange, setTimeRange] = useState('30d')
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [data, setData] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
-  const trendData = generateTrendData(30)
-  const changeData = generateTrendData(30)
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/analytics/dashboard', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch analytics: ${response.statusText}`)
+      }
+      
+      const analyticsData = await response.json()
+      setData(analyticsData)
+    } catch (err) {
+      console.error('Failed to fetch analytics data:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load analytics data')
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  useEffect(() => {
+    fetchAnalyticsData()
+  }, [timeRange])
   
   const handleRefresh = async () => {
     setIsRefreshing(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await fetchAnalyticsData()
     setIsRefreshing(false)
+  }
+  
+  // Show loading state
+  if (loading && !data) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <Skeleton className="h-10 w-48" />
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-9 w-20" />
+          </div>
+        </div>
+        
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-4">
+                <Skeleton className="h-4 w-20 mb-2" />
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-12" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="animate-pulse">
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-32 w-full" />
+            </CardContent>
+          </Card>
+          <Card className="animate-pulse">
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-32 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+  
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+            <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Failed to Load Analytics</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={fetchAnalyticsData} disabled={loading}>
+              <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
   
   return (
@@ -203,10 +303,34 @@ export function AnalyticsDashboard() {
             {/* Key Metrics */}
             <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
               {[
-                { title: 'Avg Privacy Score', value: 6.8, suffix: '/10', change: '+0.3', icon: Shield },
-                { title: 'Policy Changes', value: 47, suffix: '', change: '+12%', icon: TrendingUp },
-                { title: 'Risk Alerts', value: 8, suffix: '', change: '-25%', icon: AlertTriangle },
-                { title: 'Coverage', value: 95, suffix: '%', change: '+5%', icon: Target }
+                { 
+                  title: 'Avg Privacy Score', 
+                  value: data?.metrics.avgPrivacyScore || 0, 
+                  suffix: '/10', 
+                  change: data?.metrics.trends.avgPrivacyScore !== undefined && data?.metrics.trends.avgPrivacyScore >= 0 ? `+${data?.metrics.trends.avgPrivacyScore.toFixed(1)}` : data?.metrics.trends.avgPrivacyScore?.toFixed(1) || '0', 
+                  icon: Shield 
+                },
+                { 
+                  title: 'Policy Changes', 
+                  value: data?.metrics.policyChanges || 0, 
+                  suffix: '', 
+                  change: data?.metrics.trends.policyChanges !== undefined && data?.metrics.trends.policyChanges >= 0 ? `+${data?.metrics.trends.policyChanges}%` : `${data?.metrics.trends.policyChanges || 0}%`, 
+                  icon: TrendingUp 
+                },
+                { 
+                  title: 'Risk Alerts', 
+                  value: data?.metrics.riskAlerts || 0, 
+                  suffix: '', 
+                  change: data?.metrics.trends.riskAlerts !== undefined && data?.metrics.trends.riskAlerts >= 0 ? `+${data?.metrics.trends.riskAlerts}%` : `${data?.metrics.trends.riskAlerts || 0}%`, 
+                  icon: AlertTriangle 
+                },
+                { 
+                  title: 'Coverage', 
+                  value: data?.metrics.coverage || 0, 
+                  suffix: '%', 
+                  change: data?.metrics.trends.coverage !== undefined && data?.metrics.trends.coverage >= 0 ? `+${data?.metrics.trends.coverage}%` : `${data?.metrics.trends.coverage || 0}%`, 
+                  icon: Target 
+                }
               ].map((metric, index) => {
                 const Icon = metric.icon
                 return (
@@ -243,7 +367,13 @@ export function AnalyticsDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <TrendChart data={trendData} title="30-Day Average" />
+                  {data?.trendData ? (
+                    <TrendChart data={data.trendData} title="30-Day Average" />
+                  ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      No trend data available
+                    </div>
+                  )}
                 </CardContent>
               </Card>
               
@@ -255,7 +385,13 @@ export function AnalyticsDashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <TrendChart data={changeData} title="Monthly Changes" color="secondary" />
+                  {data?.changeData ? (
+                    <TrendChart data={data.changeData} title="Monthly Changes" color="secondary" />
+                  ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      No change data available
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -273,7 +409,8 @@ export function AnalyticsDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {industryTrends.map((industry, index) => (
+                    {data?.industryTrends && data.industryTrends.length > 0 ? (
+                      data.industryTrends.map((industry, index) => (
                       <SlideIn key={industry.sector} direction="right" delay={index * 0.05}>
                         <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                           <div>
@@ -294,7 +431,12 @@ export function AnalyticsDashboard() {
                           </div>
                         </div>
                       </SlideIn>
-                    ))}
+                    ))
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        No industry trends available
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -309,11 +451,17 @@ export function AnalyticsDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {riskMetrics.map((metric, index) => (
-                      <FadeIn key={metric.label} delay={index * 0.1}>
-                        <RiskMeter score={metric.current} label={metric.label} />
-                      </FadeIn>
-                    ))}
+                    {data?.riskMetrics && data.riskMetrics.length > 0 ? (
+                      data.riskMetrics.map((metric, index) => (
+                        <FadeIn key={metric.label} delay={index * 0.1}>
+                          <RiskMeter score={metric.current} label={metric.label} />
+                        </FadeIn>
+                      ))
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        No risk metrics available
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -330,7 +478,8 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {companyRankings.map((company, index) => (
+                  {data?.companyRankings && data.companyRankings.length > 0 ? (
+                    data.companyRankings.map((company, index) => (
                     <SlideIn key={company.company} direction="left" delay={index * 0.05}>
                       <div className="flex items-center justify-between p-3 md:p-4 rounded-xl border hover:bg-muted/50 transition-colors group">
                         <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
@@ -376,7 +525,12 @@ export function AnalyticsDashboard() {
                         </div>
                       </div>
                     </SlideIn>
-                  ))}
+                  ))
+                  ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      No company rankings available
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
