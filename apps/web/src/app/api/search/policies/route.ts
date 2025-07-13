@@ -90,7 +90,9 @@ export async function POST(request: NextRequest) {
         }
         
         const snapshot = snapshots[0]
-        const policyContent = await storage.getSnapshotContent(snapshot.blobKey)
+        if (!snapshot) continue
+        
+        const policyContent = await storage.getSnapshotContent(company.slug, snapshot.id)
         
         if (!policyContent) {
           continue
@@ -139,11 +141,11 @@ export async function POST(request: NextRequest) {
         // Search in recent changes
         for (const diff of diffs || []) {
           try {
-            const diffContent = await storage.getDiffContent(diff.diffBlobKey)
+            const diffContent = await storage.getDiffContent(company.slug, diff.id)
             if (!diffContent) continue
             
-            // Search in additions
-            const additions = diffContent.additions?.join(' ') || ''
+            // Search in HTML diff content
+            const additions = diffContent.htmlDiff || ''
             const changeScore = calculateScore(additions, searchTerms)
             if (changeScore > 0 && additions) {
               const excerpt = extractExcerpt(additions, searchTerms[0], 150)
@@ -162,7 +164,7 @@ export async function POST(request: NextRequest) {
                   lastUpdated: diff.createdAt,
                   changeType: 'modified' as const,
                   changeDate: diff.createdAt,
-                  riskLevel: diff.riskLevel || 'medium'
+                  riskLevel: (diff.changeType === 'major' ? 'high' : diff.changeType === 'moderate' ? 'medium' : 'low') as 'high' | 'medium' | 'low'
                 }
               })
             }
