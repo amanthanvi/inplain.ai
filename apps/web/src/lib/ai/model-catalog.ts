@@ -123,7 +123,7 @@ export class ModelCatalog {
     if (criteria?.maxCost !== undefined) {
       models = models.filter(m => {
         const totalCost = m.capabilities.costPer1kTokens.input + m.capabilities.costPer1kTokens.output
-        return totalCost <= criteria.maxCost
+        return totalCost <= (criteria.maxCost || Infinity)
       })
     }
 

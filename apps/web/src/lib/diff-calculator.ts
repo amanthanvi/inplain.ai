@@ -193,7 +193,7 @@ export class DiffCalculator {
       '"': '&quot;',
       "'": '&#39;'
     }
-    return text.replace(/[&<>"']/g, m => map[m])
+    return text.replace(/[&<>"']/g, m => map[m] || m)
   }
   
   /**

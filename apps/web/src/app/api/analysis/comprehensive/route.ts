@@ -81,7 +81,24 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      policyContent = snapshots[0].content.text || ''
+      // Fetch the actual content for the latest snapshot
+      const latestSnapshot = snapshots[0]
+      if (!latestSnapshot) {
+        return NextResponse.json(
+          { error: 'No policy content found for this company' },
+          { status: 404 }
+        )
+      }
+
+      const content = await storage.getSnapshotContent(slug, latestSnapshot.id)
+      if (!content) {
+        return NextResponse.json(
+          { error: 'Policy content not available' },
+          { status: 404 }
+        )
+      }
+
+      policyContent = content
     }
 
     // Perform comprehensive analysis
@@ -112,7 +129,7 @@ export async function POST(request: NextRequest) {
       company: {
         name: company?.name || slug,
         slug,
-        industry: industry || company?.industry
+        industry: industry || (company?.category as string) || 'technology'
       },
       grading: {
         overall_score: gradingAnalysis.overall_score,
@@ -240,18 +257,22 @@ async function trackAnalysisEvent(
   }
 ) {
   try {
-    // Track in analytics system
-    await storage.analytics.track({
-      userId,
-      event: 'comprehensive_analysis_completed',
-      properties: {
-        company_slug: companySlug,
-        privacy_score: results.score,
-        letter_grade: results.grade,
-        risk_level: results.risk_level,
-        timestamp: new Date().toISOString()
+    // Track in analytics system - store analytics event
+    await storage.analytics.set(
+      `analysis:${userId}:${Date.now()}`,
+      'analytics_event',
+      {
+        userId,
+        event: 'comprehensive_analysis_completed',
+        properties: {
+          company_slug: companySlug,
+          privacy_score: results.score,
+          letter_grade: results.grade,
+          risk_level: results.risk_level,
+          timestamp: new Date().toISOString()
+        }
       }
-    })
+    )
   } catch (error) {
     logger.warn('Failed to track analysis event', { error })
   }
