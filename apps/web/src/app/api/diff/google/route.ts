@@ -3,6 +3,7 @@ import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDevAuthEnabled } from '@/lib/dev-auth'
 import { storage } from '@/lib/storage/adapter'
 import { DiffEngine } from '@/app/api/lib/diff-engine'
+import type { DiffMeta } from '@inplain.ai/shared'
 
 export const runtime = 'edge'
 
@@ -139,22 +140,27 @@ export async function POST(request: NextRequest) {
 
     // Generate diff using DiffEngine
     const diffEngine = new DiffEngine()
-    const diff = await diffEngine.generateDiff(previousContent, currentContent, {
-      companySlug: slug,
-      fromSnapshot: previous.id,
-      toSnapshot: current.id
-    })
+    const diffResult = await diffEngine.computeDiff(previousContent, currentContent)
 
-    // Store the diff
-    const storedDiff = await storage.diff.create({
-      companySlug: slug,
+    // Create diff metadata
+    const diffMeta: DiffMeta = {
+      id: crypto.randomUUID(),
+      slug,
       fromSnapshotId: previous.id,
       toSnapshotId: current.id,
-      ...diff
-    })
+      createdAt: new Date().toISOString(),
+      changeCount: diffResult.changeCount,
+      changeType: diffResult.changeType,
+      additions: diffResult.additions,
+      deletions: diffResult.deletions,
+      diffBlobKey: `diff-${slug}-${Date.now()}` // TODO: Store actual diff content in blob storage
+    }
+
+    // Store the diff
+    await storage.diff.set(slug, diffMeta)
 
     return NextResponse.json({
-      diff: storedDiff,
+      diff: diffMeta,
       message: 'Diff generated successfully'
     })
   } catch (error) {
