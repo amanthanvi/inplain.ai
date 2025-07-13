@@ -32,12 +32,8 @@ export async function GET(request: NextRequest) {
     const metrics = await metricsService.calculateMetrics(company)
     
     // Get historical data for trends
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    
     const diffs = await storage.diff.list({
       companySlug: slug,
-      since: thirtyDaysAgo,
       limit: 100
     })
 
