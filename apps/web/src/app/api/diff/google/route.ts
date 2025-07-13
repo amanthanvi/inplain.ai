@@ -119,6 +119,14 @@ export async function POST(request: NextRequest) {
 
     const [current, previous] = snapshots
 
+    // TypeScript safety check
+    if (!current || !previous) {
+      return NextResponse.json({
+        error: 'Invalid snapshots',
+        message: 'Failed to retrieve valid snapshots for comparison'
+      }, { status: 500 })
+    }
+
     // Get content for both snapshots
     const currentContent = await storage.getSnapshotContent(slug, current.id)
     const previousContent = await storage.getSnapshotContent(slug, previous.id)
