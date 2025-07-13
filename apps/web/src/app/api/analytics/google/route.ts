@@ -6,6 +6,22 @@ import { storage } from '@/lib/storage/adapter'
 
 export const runtime = 'edge'
 
+function getGradeFromScore(score: number): string {
+  if (score >= 95) return 'A+'
+  if (score >= 90) return 'A'
+  if (score >= 87) return 'A-'
+  if (score >= 83) return 'B+'
+  if (score >= 80) return 'B'
+  if (score >= 77) return 'B-'
+  if (score >= 73) return 'C+'
+  if (score >= 70) return 'C'
+  if (score >= 67) return 'C-'
+  if (score >= 63) return 'D+'
+  if (score >= 60) return 'D'
+  if (score >= 57) return 'D-'
+  return 'F'
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Check authentication (skip in dev with auth bypass)
@@ -47,12 +63,12 @@ export async function GET(request: NextRequest) {
       currentMetrics: {
         privacyScore: metrics.privacyScore,
         riskLevel: metrics.riskLevel,
-        grade: metrics.grade,
+        grade: getGradeFromScore(metrics.privacyScore),
         lastAnalyzed: metrics.lastAnalyzed,
         scoreBreakdown: metrics.scoreBreakdown
       },
       trends: {
-        scoreChange: metrics.scoreChange || 0,
+        scoreChange: 0, // TODO: Calculate score change from historical data
         changeFrequency: metrics.changeFrequency,
         totalChanges: diffs?.length || 0,
         recentChanges: diffs?.slice(0, 5).map(diff => ({
@@ -61,7 +77,7 @@ export async function GET(request: NextRequest) {
           significance: diff.significance || 'minor'
         })) || []
       },
-      compliance: metrics.compliance,
+      compliance: metrics.complianceStatus,
       recommendations: [
         metrics.privacyScore < 70 ? 'Consider reviewing privacy practices' : null,
         metrics.riskLevel === 'High' ? 'High risk detected - monitor closely' : null,
