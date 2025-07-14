@@ -27,15 +27,28 @@ export function DiffCard({ diff, summary, showFullDiff = false }: DiffCardProps)
     }
   }
 
+  // Safety check for undefined diff
+  if (!diff) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-muted-foreground">
+          No diff data available
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl">Policy Update</CardTitle>
           <div className="flex gap-2">
-            <Badge variant={getChangeBadgeVariant(diff.changeType)}>
-              {diff.changeType}
-            </Badge>
+            {diff.changeType && (
+              <Badge variant={getChangeBadgeVariant(diff.changeType)}>
+                {diff.changeType}
+              </Badge>
+            )}
             {summary && (
               <Badge variant={getRiskBadgeVariant(summary.riskLevel)}>
                 {summary.riskLevel} risk

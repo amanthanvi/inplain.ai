@@ -58,34 +58,41 @@ export function Timeline({ slug }: TimelineProps) {
       <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border"></div>
       
       <div className="space-y-4">
-        {diffs.map((diff, index) => (
-          <div key={diff.id} className="relative flex items-start">
-            <div className="absolute left-4 w-2 h-2 bg-primary rounded-full -translate-x-1/2 mt-2"></div>
-            
-            <Card className="ml-8 flex-1">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <Badge variant={
-                    diff.changeType === 'major' ? 'destructive' :
-                    diff.changeType === 'moderate' ? 'warning' : 'secondary'
-                  } className="text-xs">
-                    {diff.changeType}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDuration(getTimeDiff(diff.createdAt))} ago
-                  </span>
-                </div>
-                
-                <div className="text-sm text-muted-foreground">
-                  <span className="text-green-600 dark:text-green-400">+{diff.additions}</span>
-                  {' / '}
-                  <span className="text-red-600 dark:text-red-400">-{diff.deletions}</span>
-                  {' changes'}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ))}
+        {diffs.map((diff, index) => {
+          // Skip if diff is null/undefined
+          if (!diff || !diff.id) return null;
+          
+          return (
+            <div key={diff.id} className="relative flex items-start">
+              <div className="absolute left-4 w-2 h-2 bg-primary rounded-full -translate-x-1/2 mt-2"></div>
+              
+              <Card className="ml-8 flex-1">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-1">
+                    {diff.changeType && (
+                      <Badge variant={
+                        diff.changeType === 'major' ? 'destructive' :
+                        diff.changeType === 'moderate' ? 'warning' : 'secondary'
+                      } className="text-xs">
+                        {diff.changeType}
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {formatDuration(getTimeDiff(diff.createdAt))} ago
+                    </span>
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    <span className="text-green-600 dark:text-green-400">+{diff.additions || 0}</span>
+                    {' / '}
+                    <span className="text-red-600 dark:text-red-400">-{diff.deletions || 0}</span>
+                    {' changes'}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })}
       </div>
     </div>
   )

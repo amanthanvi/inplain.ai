@@ -119,6 +119,9 @@ export default function EnhancedCompanyPage({ slug }: CompanyPageProps) {
 
 				// Calculate more realistic analysis count based on diff age and type
 				const analysisCount = recentDiffs.reduce((count, diff) => {
+					// Skip if diff is null/undefined
+					if (!diff) return count;
+					
 					// Major changes get more analyses
 					if (diff.changeType === "major") return count + 5;
 					if (diff.changeType === "moderate") return count + 3;

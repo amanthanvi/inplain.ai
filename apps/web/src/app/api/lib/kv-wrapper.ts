@@ -416,7 +416,21 @@ export function getKV(): KVClient {
   }
   
   try {
-    // Try to use createClient for explicit configuration in Edge runtime
+    // In production Vercel environment, try the default kv export first
+    // This works better with Vercel's automatic environment injection
+    if (process.env.VERCEL && process.env.NODE_ENV === 'production') {
+      try {
+        const { kv } = require('@vercel/kv')
+        kvInstance = kv
+        isConfigured = true
+        console.log('KV client initialized with default export (Vercel production)')
+        return kvInstance as KVClient
+      } catch (defaultError) {
+        console.warn('Failed to use default KV export, trying createClient:', defaultError)
+      }
+    }
+    
+    // Fallback to createClient with explicit configuration
     const { createClient } = require('@vercel/kv')
     kvInstance = createClient({
       url: kvUrl,
@@ -426,20 +440,11 @@ export function getKV(): KVClient {
     console.log('KV client successfully initialized with explicit config')
     return kvInstance as KVClient
   } catch (error) {
-    // Fallback to default kv export
-    try {
-      const { kv } = require('@vercel/kv')
-      kvInstance = kv
-      isConfigured = true
-      console.log('KV client initialized with default export')
-      return kvInstance as KVClient
-    } catch (fallbackError) {
-      console.error('Failed to initialize KV client:', fallbackError)
-      console.warn('Falling back to in-memory mock')
-      configError = fallbackError instanceof Error ? fallbackError.message : 'Failed to load @vercel/kv'
-      kvInstance = new MockKVClient()
-      return kvInstance
-    }
+    console.error('Failed to initialize KV client:', error)
+    console.warn('Falling back to in-memory mock')
+    configError = error instanceof Error ? error.message : 'Failed to load @vercel/kv'
+    kvInstance = new MockKVClient()
+    return kvInstance
   }
 }
 

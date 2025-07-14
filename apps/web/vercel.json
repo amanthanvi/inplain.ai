@@ -46,5 +46,10 @@
     "NEXT_PUBLIC_CLERK_SIGN_UP_URL": "/signup",
     "NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL": "/dashboard",
     "NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL": "/onboarding"
+  },
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
   }
 }
