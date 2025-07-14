@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/api-auth-helpers'
-import { kv } from '@/app/api/lib/kv-wrapper'
+import { kv } from '@/app/api/lib/kv-production'
 import { WATCHED_COMPANIES } from '@inplain.ai/shared'
 
 export const runtime = 'edge'

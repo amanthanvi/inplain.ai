@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { kv } from '@/app/api/lib/kv-wrapper'
+import { kv } from '@/app/api/lib/kv-production'
 import { z } from 'zod'
+
+export const runtime = 'edge'
 
 const performanceMetricSchema = z.object({
   metric: z.object({

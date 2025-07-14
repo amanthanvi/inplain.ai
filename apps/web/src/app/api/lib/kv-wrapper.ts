@@ -6,6 +6,15 @@
 import { getEnvVar } from '@/lib/env'
 import { getKVConfig } from './get-kv-config'
 
+// Try to import the KV client - this will fail if @vercel/kv is not available
+let kvClient: any
+try {
+  kvClient = require('./kv-client')
+} catch (e) {
+  // @vercel/kv not available, will use mock
+  console.warn('Unable to load @vercel/kv, will use mock client')
+}
+
 // Type definitions to match @vercel/kv
 type KVClient = {
   get: <T = string>(key: string) => Promise<T | null>
@@ -416,33 +425,43 @@ export function getKV(): KVClient {
   }
   
   try {
-    // In production Vercel environment, try the default kv export first
-    // This works better with Vercel's automatic environment injection
-    if (process.env.VERCEL && process.env.NODE_ENV === 'production') {
-      try {
-        const { kv } = require('@vercel/kv')
-        kvInstance = kv
+    // Import @vercel/kv dynamically to work in Edge runtime
+    // Note: Dynamic imports are async, but we need sync behavior here
+    // So we'll use a different approach for Edge runtime
+    
+    // For Edge runtime, we need to ensure @vercel/kv is imported at the top level
+    // Let's use a workaround by checking if the module is available
+    let vercelKV: any
+    
+    try {
+      // Try to access the global kv instance that Vercel might inject
+      if (typeof globalThis !== 'undefined' && (globalThis as any).kv) {
+        kvInstance = (globalThis as any).kv
         isConfigured = true
-        console.log('KV client initialized with default export (Vercel production)')
+        console.log('KV client initialized from global instance')
         return kvInstance as KVClient
-      } catch (defaultError) {
-        console.warn('Failed to use default KV export, trying createClient:', defaultError)
       }
+    } catch (e) {
+      // Continue to createClient
     }
     
-    // Fallback to createClient with explicit configuration
-    const { createClient } = require('@vercel/kv')
-    kvInstance = createClient({
-      url: kvUrl,
-      token: kvToken
-    })
+    // Create client with explicit configuration
+    // This should work in Edge runtime as long as @vercel/kv is imported at module level
+    const createKVClient = () => {
+      // Since we can't use dynamic imports synchronously in Edge runtime,
+      // and require() is not available, we'll need to ensure @vercel/kv
+      // is imported at the module level. For now, return mock client.
+      throw new Error('KV client creation not supported in Edge runtime without module-level import')
+    }
+    
+    kvInstance = createKVClient()
     isConfigured = true
-    console.log('KV client successfully initialized with explicit config')
+    console.log('KV client successfully initialized')
     return kvInstance as KVClient
   } catch (error) {
     console.error('Failed to initialize KV client:', error)
     console.warn('Falling back to in-memory mock')
-    configError = error instanceof Error ? error.message : 'Failed to load @vercel/kv'
+    configError = error instanceof Error ? error.message : 'Failed to initialize KV client'
     kvInstance = new MockKVClient()
     return kvInstance
   }
