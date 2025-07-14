@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server'
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/api-auth-helpers'
+import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 export const runtime = 'edge'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
 	try {
-		// Check if Clerk is properly configured
-		if (!process.env.CLERK_SECRET_KEY || !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+		// Check if Clerk is properly configured (skip in dev auth mode)
+		if (!isDevAuthEnabled() && (!process.env.CLERK_SECRET_KEY || !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)) {
 			console.error('Clerk environment variables not configured')
 			return NextResponse.json({ 
 				user: null, 
@@ -14,40 +15,13 @@ export async function GET() {
 			}, { status: 503 })
 		}
 
-		const { userId } = await auth()
+		const user = await getAuthUser(request)
 		
-		if (!userId) {
+		if (!user) {
 			return NextResponse.json({ user: null }, { status: 401 })
 		}
 
-		const clerkUser = await currentUser()
-		
-		if (!clerkUser) {
-			return NextResponse.json({ user: null }, { status: 401 })
-		}
-
-		// Transform Clerk user to our app's user format
-		const transformedUser = {
-			id: clerkUser.id,
-			email: clerkUser.emailAddresses[0]?.emailAddress || '',
-			name: clerkUser.firstName && clerkUser.lastName 
-				? `${clerkUser.firstName} ${clerkUser.lastName}`
-				: clerkUser.firstName || clerkUser.emailAddresses[0]?.emailAddress.split('@')[0] || 'User',
-			avatar: clerkUser.imageUrl,
-			plan: (clerkUser.publicMetadata?.plan as string) || 'free',
-			preferences: {
-				watchlist: (clerkUser.publicMetadata?.watchlist as string[]) || [],
-				notifications: {
-					email: (clerkUser.publicMetadata?.emailNotifications as boolean) ?? true,
-					majorChanges: (clerkUser.publicMetadata?.majorChangesOnly as boolean) ?? true,
-					weeklyDigest: (clerkUser.publicMetadata?.weeklyDigest as boolean) ?? false,
-				},
-				theme: (clerkUser.publicMetadata?.theme as 'light' | 'dark' | 'system') || 'system'
-			},
-			createdAt: new Date(clerkUser.createdAt)
-		}
-
-		return NextResponse.json({ user: transformedUser })
+		return NextResponse.json({ user })
 
 	} catch (error) {
 		console.error('Session check error:', error)

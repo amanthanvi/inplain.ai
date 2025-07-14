@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
+import { getAuthUser } from '@/lib/api-auth-helpers'
 import { PrivacyMetricsService } from '@/lib/analytics/privacy-metrics'
 import { storage } from '@/lib/storage/adapter'
 
@@ -24,12 +23,10 @@ function getGradeFromScore(score: number): string {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
-      if (!userId) {
-        return new NextResponse('Unauthorized', { status: 401 })
-      }
+    // Check authentication
+    const user = await getAuthUser(request)
+    if (!user) {
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
     const slug = 'google'

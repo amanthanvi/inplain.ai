@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { OptimizedStorageClient } from '../../lib/storage-optimized'
 import { PerformanceMonitor } from '@/lib/performance'
 import { getEnvVar } from '@/lib/env'
-import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
+import { getAuthUser } from '@/lib/api-auth-helpers'
 
 // Initialize storage with error handling
 let storage: OptimizedStorageClient | null = null
@@ -35,15 +34,13 @@ export async function GET(request: NextRequest) {
   try {
     const slug = 'google' // Hardcoded for this specific route
     
-    // Check authentication in production (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
-      if (!userId) {
-        return NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
-        )
-      }
+    // Check authentication
+    const user = await getAuthUser(request)
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
     }
     
     // Get storage client

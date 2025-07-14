@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
+import { getAuthUser } from '@/lib/api-auth-helpers'
 import { storage } from '@/lib/storage/adapter'
 import { DiffEngine } from '@/app/api/lib/diff-engine'
 import type { DiffMeta } from '@inplain.ai/shared'
@@ -9,12 +8,10 @@ export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
-      if (!userId) {
-        return new NextResponse('Unauthorized', { status: 401 })
-      }
+    // Check authentication
+    const user = await getAuthUser(request)
+    if (!user) {
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
     const slug = 'google'
@@ -96,11 +93,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
-      if (!userId) {
-        return new NextResponse('Unauthorized', { status: 401 })
-      }
+    const user = await getAuthUser(request)
+    if (!user) {
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
     const slug = 'google'
