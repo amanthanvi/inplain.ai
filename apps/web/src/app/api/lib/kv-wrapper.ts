@@ -421,7 +421,7 @@ export function getKV(): KVClient {
   }
   
   try {
-    // Dynamically import @vercel/kv only if configured
+    // For Edge runtime compatibility, use the singleton pattern
     const { kv } = require('@vercel/kv')
     kvInstance = kv
     isConfigured = true
