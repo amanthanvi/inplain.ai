@@ -22,6 +22,8 @@
     "e2e:debug": "playwright test --debug",
     "setup:test-data": "node scripts/setup-test-data.js",
     "seed": "node scripts/seed-data.js",
+    "seed:companies": "node scripts/populate-companies.js",
+    "seed:production": "node -r dotenv/config scripts/seed-data.js && node -r dotenv/config scripts/populate-companies.js",
     "test:auth": "node scripts/test-auth.js",
     "dev:auth:on": "node scripts/toggle-dev-auth.js on",
     "dev:auth:off": "node scripts/toggle-dev-auth.js off",
