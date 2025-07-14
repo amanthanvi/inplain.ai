@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { auth } from '@clerk/nextjs/server'
+import { getAuthUser } from '@/lib/api-auth-helpers'
 import { privacyGradingEngine } from '@/lib/privacy/production-grading-engine'
 import { riskAssessmentEngine } from '@/lib/privacy/risk-assessment-engine'
 import { kv } from '@/app/api/lib/kv-wrapper'
@@ -46,12 +46,11 @@ interface CompanyMetric {
 
 export async function POST(request: NextRequest) {
   try {
-    // Skip auth check for now to debug the issue
-    // TODO: Re-enable auth check after fixing production auth
-    // const session = await auth()
-    // if (process.env.NODE_ENV !== 'development' && !session?.userId) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
+    // Check authentication
+    const user = await getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     // Parse request
     const body = await request.json()
@@ -266,12 +265,11 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    // Skip auth check for now to debug the issue
-    // TODO: Re-enable auth check after fixing production auth
-    // const session = await auth()
-    // if (process.env.NODE_ENV !== 'development' && !session?.userId) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
+    // Check authentication
+    const user = await getAuthUser(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     // Get slugs from query params
     const { searchParams } = new URL(request.url)
