@@ -29,7 +29,7 @@ export function DiffViewer({ slug }: DiffViewerProps) {
       if (data) {
         setDiffData(data)
         
-        if (data.diff.summaryId) {
+        if (data.diff?.summaryId) {
           const summaryData = await getSummary(slug, data.diff.id)
           setSummary(summaryData)
         }

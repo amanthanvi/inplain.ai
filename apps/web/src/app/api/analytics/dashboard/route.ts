@@ -1,19 +1,16 @@
-import { NextResponse } from 'next/server'
-import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/api-auth-helpers'
 import { kv } from '@/app/api/lib/kv-wrapper'
 import { WATCHED_COMPANIES } from '@inplain.ai/shared'
 
 export const runtime = 'edge'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    // Check authentication (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
-      const { userId } = await getClerkAuth()
-      if (!userId) {
-        return new NextResponse('Unauthorized', { status: 401 })
-      }
+    // Check authentication
+    const user = await getAuthUser(request)
+    if (!user) {
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
     // Try to get cached stats from KV
