@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getKV, isKVConfigured, getKVConfigError } from '@/app/api/lib/kv-wrapper'
+import { kv, isKVConfigured, getKVConfigError } from '@/app/api/lib/kv-production'
 import { getKVConfig } from '@/app/api/lib/get-kv-config'
 
 export const runtime = 'edge'
@@ -20,7 +20,6 @@ export async function GET() {
     
     if (isConfigured) {
       try {
-        const kv = getKV()
         const testKey = 'health:check:' + Date.now()
         const testValue = 'ok'
         
