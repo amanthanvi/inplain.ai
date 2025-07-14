@@ -57,6 +57,12 @@ const ENV_VARS: Record<string, EnvVarConfig> = {
   },
   
   // Storage Configuration
+  KV_URL: {
+    name: 'KV_URL',
+    required: false,
+    description: 'Vercel KV store URL (primary)',
+    clientSafe: false
+  },
   KV_REST_API_URL: {
     name: 'KV_REST_API_URL',
     required: false,
@@ -67,6 +73,12 @@ const ENV_VARS: Record<string, EnvVarConfig> = {
     name: 'KV_REST_API_TOKEN',
     required: false,
     description: 'Vercel KV store authentication token',
+    clientSafe: false
+  },
+  KV_REST_API_READ_ONLY_TOKEN: {
+    name: 'KV_REST_API_READ_ONLY_TOKEN',
+    required: false,
+    description: 'Vercel KV store read-only token',
     clientSafe: false
   },
   BLOB_READ_WRITE_TOKEN: {
@@ -222,7 +234,11 @@ export function getEnvStatus(): EnvStatus {
     warnings.push('Running in demo mode - AI features are simulated')
   }
   
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+  // Check if any KV configuration is available
+  const hasKVConfig = (process.env.KV_REST_API_URL || process.env.KV_URL) && 
+                      (process.env.KV_REST_API_TOKEN || process.env.KV_REST_API_READ_ONLY_TOKEN)
+  
+  if (!hasKVConfig) {
     warnings.push('Storage not configured - data persistence is limited')
   }
   

@@ -257,16 +257,18 @@ export function RecentDiffsRealtime({
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          <Badge 
-                            variant={
-                              item.diff.changeType === 'major' ? 'destructive' :
-                              item.diff.changeType === 'moderate' ? 'warning' : 'secondary'
-                            }
-                            className="flex items-center gap-1"
-                          >
-                            {getChangeIcon(item.diff.changeType)}
-                            {item.diff.changeType}
-                          </Badge>
+                          {item.diff.changeType && (
+                            <Badge 
+                              variant={
+                                item.diff.changeType === 'major' ? 'destructive' :
+                                item.diff.changeType === 'moderate' ? 'warning' : 'secondary'
+                              }
+                              className="flex items-center gap-1"
+                            >
+                              {getChangeIcon(item.diff.changeType)}
+                              {item.diff.changeType}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </CardHeader>
@@ -279,14 +281,14 @@ export function RecentDiffsRealtime({
                             className="flex items-center gap-1 text-green-600 dark:text-green-400"
                             whileHover={{ scale: 1.05 }}
                           >
-                            <span className="font-medium">+{item.diff.additions}</span>
+                            <span className="font-medium">+{item.diff.additions || 0}</span>
                             <span className="text-muted-foreground">additions</span>
                           </motion.span>
                           <motion.span 
                             className="flex items-center gap-1 text-red-600 dark:text-red-400"
                             whileHover={{ scale: 1.05 }}
                           >
-                            <span className="font-medium">-{item.diff.deletions}</span>
+                            <span className="font-medium">-{item.diff.deletions || 0}</span>
                             <span className="text-muted-foreground">deletions</span>
                           </motion.span>
                         </div>
@@ -309,7 +311,7 @@ export function RecentDiffsRealtime({
                             className="absolute inset-y-0 left-0 bg-gradient-to-r from-green-500 to-red-500"
                             initial={{ width: 0 }}
                             animate={{ 
-                              width: `${(item.diff.additions / (item.diff.additions + item.diff.deletions)) * 100}%` 
+                              width: `${((item.diff.additions || 0) / ((item.diff.additions || 0) + (item.diff.deletions || 0))) * 100}%` 
                             }}
                             transition={{ delay: 0.3, duration: 0.5 }}
                           />

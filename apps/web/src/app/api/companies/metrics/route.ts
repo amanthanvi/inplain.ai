@@ -46,11 +46,8 @@ interface CompanyMetric {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
+    // Allow unauthenticated access for public company metrics
     const user = await getAuthUser(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     // Parse request
     const body = await request.json()
@@ -265,11 +262,8 @@ export async function OPTIONS() {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
+    // Allow unauthenticated access for public company metrics
     const user = await getAuthUser(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     // Get slugs from query params
     const { searchParams } = new URL(request.url)

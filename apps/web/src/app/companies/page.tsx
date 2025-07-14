@@ -88,11 +88,25 @@ export default function CompaniesPage() {
               </div>
               
               <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
-                <Button size="lg" className="shadow-lg">
+                <Button 
+                  size="lg" 
+                  className="shadow-lg"
+                  onClick={() => {
+                    // TODO: Implement alerts dialog
+                    alert('Alert setup coming soon! This feature will allow you to monitor privacy policy changes.')
+                  }}
+                >
                   <Bell className="mr-2 h-5 w-5" />
                   Set Up Alerts
                 </Button>
-                <Button size="lg" variant="outline">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => {
+                    // TODO: Implement AI insights
+                    alert('AI Insights coming soon! This feature will provide AI-powered analysis of privacy policies.')
+                  }}
+                >
                   <Sparkles className="mr-2 h-5 w-5" />
                   AI Insights
                 </Button>

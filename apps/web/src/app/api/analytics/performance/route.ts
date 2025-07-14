@@ -18,8 +18,35 @@ const performanceMetricSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse and validate the request body
-    const body = await request.json()
+    // Parse request body based on content type
+    let body: any;
+    const contentType = request.headers.get('content-type') || '';
+    
+    if (contentType.includes('application/json')) {
+      body = await request.json();
+    } else if (contentType.includes('text/plain')) {
+      // Handle sendBeacon which sends as text/plain
+      const text = await request.text();
+      try {
+        body = JSON.parse(text);
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid JSON in request body' },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Try to parse as JSON anyway
+      try {
+        body = await request.json();
+      } catch {
+        return NextResponse.json(
+          { error: 'Unsupported content type' },
+          { status: 415 }
+        );
+      }
+    }
+    
     const data = performanceMetricSchema.parse(body)
     
     // Store metric in KV

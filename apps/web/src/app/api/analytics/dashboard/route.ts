@@ -7,11 +7,8 @@ export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
+    // Allow unauthenticated access for public analytics
     const user = await getAuthUser(request)
-    if (!user) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
 
     // Try to get cached stats from KV
     const cacheKey = 'analytics:dashboard:stats'

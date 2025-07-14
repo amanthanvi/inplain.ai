@@ -21,8 +21,13 @@ export async function GET() {
       forceRedirectUrl: process.env.NEXT_PUBLIC_CLERK_FORCE_REDIRECT_URL || 'not set',
     },
     kv: {
+      url: !!process.env.KV_URL,
       restApiUrl: !!process.env.KV_REST_API_URL,
       restApiToken: !!process.env.KV_REST_API_TOKEN,
+      readOnlyToken: !!process.env.KV_REST_API_READ_ONLY_TOKEN,
+      // Check if any KV config is available
+      hasAnyConfig: !!(process.env.KV_URL || process.env.KV_REST_API_URL) && 
+                    !!(process.env.KV_REST_API_TOKEN || process.env.KV_REST_API_READ_ONLY_TOKEN),
     },
     vercel: {
       env: process.env.VERCEL_ENV || 'not set',

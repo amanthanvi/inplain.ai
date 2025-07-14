@@ -56,35 +56,42 @@ export function RecentDiffs({ limit = 5 }: RecentDiffsProps) {
 
   return (
     <div className="space-y-4">
-      {diffs.map((item) => (
-        <Link key={item.diff.id} href={`/${item.company.slug}`}>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-xl truncate flex-1">{item.company.name}</CardTitle>
-                <Badge 
-                  variant={
-                    item.diff.changeType === 'major' ? 'destructive' :
-                    item.diff.changeType === 'moderate' ? 'warning' : 'secondary'
-                  }
-                  className="shrink-0"
-                >
-                  {item.diff.changeType}
-                </Badge>
-              </div>
-              <CardDescription>
-                {formatDuration(getTimeDiff(item.diff.createdAt))} ago
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4 text-sm text-muted-foreground">
-                <span>+{item.diff.additions} additions</span>
-                <span>-{item.diff.deletions} deletions</span>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-      ))}
+      {diffs.map((item, index) => {
+        // Skip if item or its properties are null/undefined
+        if (!item || !item.diff || !item.company) return null;
+        
+        return (
+          <Link key={item.diff.id || index} href={`/${item.company.slug}`}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-xl truncate flex-1">{item.company.name}</CardTitle>
+                  {item.diff.changeType && (
+                    <Badge 
+                      variant={
+                        item.diff.changeType === 'major' ? 'destructive' :
+                        item.diff.changeType === 'moderate' ? 'warning' : 'secondary'
+                      }
+                      className="shrink-0"
+                    >
+                      {item.diff.changeType}
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription>
+                  {formatDuration(getTimeDiff(item.diff.createdAt))} ago
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4 text-sm text-muted-foreground">
+                  <span>+{item.diff.additions || 0} additions</span>
+                  <span>-{item.diff.deletions || 0} deletions</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        );
+      })}
     </div>
   )
 }
