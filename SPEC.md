@@ -726,6 +726,7 @@ All errors return both machine-readable code and human-readable message:
 **Client → API**
 
 -   Web app obtains a Clerk session token (JWT).
+-   For API auth, the web app should request a **JWT Template** token (e.g. `template="inplain"`) so the token’s `aud` matches `CLERK_JWT_AUDIENCE`.
 -   Send `Authorization: Bearer <token>` to API.
 
 **API verification**
