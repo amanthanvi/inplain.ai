@@ -276,7 +276,7 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 
 **Monorepo:** Yes. Single repo with separate apps/services.
 
-**Frontend:** React + TypeScript (Vite) + TanStack Router + TanStack Query.
+**Frontend:** Next.js (App Router) + React + TypeScript + TanStack Query.
 
 **API:** **Python FastAPI**
 
@@ -288,10 +288,10 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 -   Rationale: mature retries/scheduling patterns, multi-queue support, strong Python ecosystem.
 -   Separate queues: `fetch`, `render`, `diff`, `summarize`, `notify`, `maintenance`.
 
-**Scraping:** **Scrapy + scrapy-playwright**
+**Scraping:** HTTP-first fetcher (httpx) + extraction (trafilatura/readability), with an isolated Playwright renderer service.
 
--   Rationale: Scrapy handles scale, retries, caching; Playwright integration handles JS-heavy pages.
--   JS rendering is selectively triggered (cost control + quota enforcement).
+-   Rationale: keep the core fetch pipeline simple and observable; use Playwright only when needed and quota-allowed.
+-   JS rendering is selectively triggered (cost control + quota enforcement) and isolated for safety.
 
 **Database:** **Postgres** (Railway managed)
 
@@ -432,6 +432,7 @@ Maps Clerk identity → internal user row.
 -   `id` uuid pk
 -   `clerk_user_id` text unique not null
 -   `email` text not null
+-   `stripe_customer_id` text unique null
 -   `role` text not null default `user` (`user`|`admin`)
 -   `status` text not null default `active` (`active`|`banned`)
 -   `created_at`, `updated_at`
@@ -440,6 +441,7 @@ Indexes:
 
 -   unique(`clerk_user_id`)
 -   index(`email`)
+-   unique(`stripe_customer_id`)
 
 #### `entitlements`
 
@@ -757,7 +759,69 @@ All errors return both machine-readable code and human-readable message:
     -   `check_now`: 5/min, 20/min, 60/min (plus monthly quotas)
 -   Return `429` with `Retry-After`.
 
-### 9.5 Endpoints (examples)
+### 9.5 UI/UX Design Decisions
+
+#### 9.5.1 Platform & framework
+
+-   **Web**: Single Next.js app (App Router) serving both marketing pages and the authenticated app.
+-   **Mobile**: Responsive web only (no PWA/native in v0.1.0).
+
+#### 9.5.2 Diff viewer (section-first)
+
+-   **Default view**: Section-first collapsed view.
+    -   Group changes by detected section/heading.
+    -   Show section name + change indicator (additions/removals count).
+    -   Click to expand section and see inline diff.
+-   **Section detection (hybrid)**:
+    -   Primary: Heuristic detection via H1-H6 tags, bold/strong first lines, numbered sections (1., 2., I., II.), ALL CAPS lines.
+    -   Secondary: LLM semantic chunking to identify section boundaries.
+    -   Cross-reference both methods for accuracy.
+    -   Fallback: Paragraph-level grouping if no clear sections detected.
+-   **Toggle**: User can switch to traditional unified or split diff view.
+
+#### 9.5.3 Citation navigation
+
+-   When user clicks a citation in the summary:
+    -   Smooth scroll to the referenced hunk.
+    -   Apply temporary highlight (fade after 2s).
+    -   If in section view, auto-expand the containing section.
+
+#### 9.5.4 Document history
+
+-   **Recent-only in UI**: Show last 10 change events by default.
+-   **Full history via export**: Complete history available via JSON/CSV export (tier-gated).
+-   **Progressive disclosure**: "Show all history" link reveals full paginated list.
+
+#### 9.5.5 Onboarding UX (add document flow)
+
+-   **Inline URL validation**: When user enters URL in add-document form:
+    1. Immediately validate URL format.
+    2. Check robots.txt status.
+    3. Show preview of extracted content (title, first paragraph).
+    4. Display warnings if any (e.g., "This site uses heavy JavaScript, rendering may be required").
+-   **Hybrid timeout**: Attempt synchronous validation for 10 seconds. If not complete, switch to async with "Processing..." placeholder.
+
+#### 9.5.6 Error states
+
+-   **Failed summary**: Show diff with banner: "AI summary unavailable for this change. [Learn why](link to docs)". No retry button in v0.1.0.
+-   **Blocked by robots.txt**: Show specific blocking rule: "Disallow: /privacy matched by User-Agent: *". Link to view full robots.txt.
+-   **URL gone (404/410)**: Auto-pause document silently. Show "Document paused: URL no longer accessible" status in dashboard. No email notification for this.
+-   **PDF extraction failed**: "Image-based PDF could not be extracted. Text-based PDFs are supported."
+
+#### 9.5.7 Entity lifecycle
+
+-   **Rename**: Always allowed, no restrictions.
+-   **Delete**: Soft-delete cascades to all documents under the entity.
+    -   Confirmation modal: "Delete [Entity Name]? This will also delete X tracked documents and their history."
+    -   Documents are soft-deleted; data retained per retention policy.
+
+#### 9.5.8 Admin impersonation
+
+-   Admins can enter read-only impersonation mode to see a user's dashboard as they see it.
+-   **Audit trail**: Every impersonation session logged to `audit_logs` with start/end time, admin user, target user.
+-   **Visual indicator**: Clear banner in impersonation mode: "Viewing as [user@email.com] (read-only)".
+
+### 9.6 Endpoints (examples)
 
 #### Health
 
@@ -910,7 +974,7 @@ Response:
 `GET /v1/admin/jobs?status=failed&limit=50`
 `POST /v1/admin/jobs/{jobId}/retry`
 
-### 9.6 Webhooks
+### 9.7 Webhooks
 
 #### Clerk webhook (user created/updated)
 
@@ -929,71 +993,6 @@ Response:
 -   Update entitlements in **Clerk public metadata** and mirror to `entitlements` table.
 
 **Webhook ordering**: UI ensures Clerk session is confirmed before triggering Stripe Checkout. This guarantees `user.created` webhook arrives before `checkout.session.completed`. If race occurs (user row missing), Stripe webhook returns 202 and logs warning.
-
----
-
-## 9.5) UI/UX Design Decisions
-
-### 9.5.1 Platform & framework
-
--   **Marketing site**: Next.js with hybrid SSR for SEO on marketing pages.
--   **App**: React SPA (shared codebase via Next.js app router).
--   **Mobile**: Responsive web only (no PWA/native in v0.1.0).
-
-### 9.5.2 Diff viewer (section-first)
-
--   **Default view**: Section-first collapsed view.
-    -   Group changes by detected section/heading.
-    -   Show section name + change indicator (additions/removals count).
-    -   Click to expand section and see inline diff.
--   **Section detection (hybrid)**:
-    -   Primary: Heuristic detection via H1-H6 tags, bold/strong first lines, numbered sections (1., 2., I., II.), ALL CAPS lines.
-    -   Secondary: LLM semantic chunking to identify section boundaries.
-    -   Cross-reference both methods for accuracy.
-    -   Fallback: Paragraph-level grouping if no clear sections detected.
--   **Toggle**: User can switch to traditional unified or split diff view.
-
-### 9.5.3 Citation navigation
-
--   When user clicks a citation in the summary:
-    -   Smooth scroll to the referenced hunk.
-    -   Apply temporary highlight (fade after 2s).
-    -   If in section view, auto-expand the containing section.
-
-### 9.5.4 Document history
-
--   **Recent-only in UI**: Show last 10 change events by default.
--   **Full history via export**: Complete history available via JSON/CSV export (tier-gated).
--   **Progressive disclosure**: "Show all history" link reveals full paginated list.
-
-### 9.5.5 Onboarding UX (add document flow)
-
--   **Inline URL validation**: When user enters URL in add-document form:
-    1. Immediately validate URL format.
-    2. Check robots.txt status.
-    3. Show preview of extracted content (title, first paragraph).
-    4. Display warnings if any (e.g., "This site uses heavy JavaScript, rendering may be required").
--   **Hybrid timeout**: Attempt synchronous validation for 10 seconds. If not complete, switch to async with "Processing..." placeholder.
-
-### 9.5.6 Error states
-
--   **Failed summary**: Show diff with banner: "AI summary unavailable for this change. [Learn why](link to docs)". No retry button in v0.1.0.
--   **Blocked by robots.txt**: Show specific blocking rule: "Disallow: /privacy matched by User-Agent: *". Link to view full robots.txt.
--   **URL gone (404/410)**: Auto-pause document silently. Show "Document paused: URL no longer accessible" status in dashboard. No email notification for this.
--   **PDF extraction failed**: "Image-based PDF could not be extracted. Text-based PDFs are supported."
-
-### 9.5.7 Entity lifecycle
-
--   **Rename**: Always allowed, no restrictions.
--   **Delete**: Soft-delete cascades to all documents under the entity.
-    -   Confirmation modal: "Delete [Entity Name]? This will also delete X tracked documents and their history."
-    -   Documents are soft-deleted; data retained per retention policy.
-
-### 9.5.8 Admin impersonation
-
--   Admins can enter read-only impersonation mode to see a user's dashboard as they see it.
--   **Audit trail**: Every impersonation session logged to `audit_logs` with start/end time, admin user, target user.
--   **Visual indicator**: Clear banner in impersonation mode: "Viewing as [user@email.com] (read-only)".
 
 ---
 
@@ -2127,7 +2126,7 @@ This appendix documents all decisions made during the product interview process.
 | Decision | Choice | Section |
 |----------|--------|---------|
 | Race condition (scheduler vs check-now) | Dedupe by recency (5 min) | 10.1 |
-| Webhook ordering | UI ensures Clerk first | 9.6 |
+| Webhook ordering | UI ensures Clerk first | 9.7 |
 | API versioning | Short overlap (3-6 months) | 9.1 |
 | Error format | Code + message + details | 9.1 |
 | Robots.txt refresh | Daily cache | 10.1 |
