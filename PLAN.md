@@ -43,11 +43,12 @@ Acceptance:
 
 ### M2 — API core (FastAPI)
 
-- [ ] Clerk JWT verification + authz guards (user-owned + admin)
+- [x] Clerk JWT verification + authz guards (user-owned; admin pending)
 - [ ] Standard error format, rate limiting hooks, CORS
-- [ ] Entities + Documents CRUD + Check-now enqueue
-- [ ] Read-only ChangeEvent endpoints + export gates
-- [ ] Webhooks: Clerk + Stripe + idempotency (`webhook_events`)
+- [x] Entities + Documents core endpoints + check-now enqueue
+- [x] Read-only ChangeEvent endpoints + export gates
+- [x] Webhooks: Clerk + idempotency (`webhook_events`)
+- [ ] Webhooks: Stripe + idempotency (`webhook_events`)
 - [ ] Admin endpoints: jobs list + retry, user ban/plan override
 
 Acceptance:
@@ -55,40 +56,40 @@ Acceptance:
 
 ### M3 — Background system (Celery/Redis + scheduler)
 
-- [ ] Celery queues/routing/retry policies + `jobs` DB visibility
-- [ ] Scheduler service using `FOR UPDATE SKIP LOCKED` (SPEC 17.3)
-- [ ] Dead-letter semantics (`jobs.status=dead`)
+- [x] Celery queues/routing/retry policies + `jobs` DB visibility
+- [x] Scheduler service using `FOR UPDATE SKIP LOCKED` (SPEC 17.3)
+- [x] Dead-letter semantics (`jobs.status=dead`)
 
 Acceptance:
 - Scheduler can drive periodic fetches without duplicate work.
 
 ### M4 — Fetch → extract → normalize → diff pipeline
 
-- [ ] SSRF + redirect re-validation + content-type allowlist
-- [ ] robots.txt caching + block semantics
-- [ ] Conditional GET (ETag/Last-Modified); 304 is no-op update
-- [ ] HTML extraction + canonicalization rules (extract versioning)
-- [ ] PDF extraction + OCR fallback
-- [ ] Iframe resolution (src-first → render fallback)
-- [ ] Snapshot storage (raw to S3/R2; extracted in Postgres)
-- [ ] Meaningful change thresholds; diff generation + structured hunks
+- [x] SSRF + redirect re-validation + content-type allowlist
+- [x] robots.txt caching + block semantics
+- [x] Conditional GET (ETag/Last-Modified); 304 is no-op update
+- [x] HTML extraction + canonicalization rules (extract versioning)
+- [x] PDF extraction (OCR fallback pending)
+- [x] Iframe resolution (src-first; render fallback pending)
+- [ ] Snapshot raw storage to S3/R2 (currently only sha/size stored in DB)
+- [x] Meaningful change thresholds; diff generation + structured hunks
 
 Acceptance:
 - For a known test URL, system produces snapshots, detects changes, and generates hunks suitable for citations.
 
 ### M5 — AI summaries (OpenRouter) + metering
 
-- [ ] Prompt v1 JSON schema; strict validation
-- [ ] Citation validation (quote must exist in referenced hunk)
-- [ ] Quota enforcement + provider_usage metering + caching
-- [ ] Golden test fixtures for summarizer (unit tests)
+- [x] Prompt v1 JSON schema; strict validation
+- [x] Citation validation (quote must exist in referenced hunk)
+- [x] Quota enforcement + provider_usage metering + caching
+- [x] Golden test fixtures for summarizer (unit tests)
 
 Acceptance:
 - Summaries are grounded, cite real text, and fail open (diff still visible).
 
 ### M6 — Notifications + billing + web UI + ops hardening
 
-- [ ] Postmark: immediate + daily digest + unsubscribe
+- [ ] Postmark: immediate + daily digest + unsubscribe (immediate implemented)
 - [ ] Stripe Checkout + Portal + downgrade policy; update Clerk metadata
 - [ ] Web app: onboarding, dashboard, diff viewer (section-first), citations UX, settings/billing meters
 - [ ] Admin UI: jobs, users, abuse, LLM usage, impersonation banner + audit
@@ -108,3 +109,4 @@ Acceptance:
 - 2026-01-09: Clerk wired (Next.js App Router integration + API JWT verification + Clerk webhook endpoint skeleton).
 - 2026-01-09: Worker pipeline upgraded (robots + extraction + PDF + iframe attempts) and OpenRouter summarizer job added (citation validation + provider_usage metering).
 - 2026-01-09: Postmark notify job pipeline added (writes `notifications` + provider_usage).
+- 2026-01-09: Add `/v1/me`, `/v1/entities/{entityId}/documents` (list), and `/v1/documents/{documentId}` endpoints for web app wiring.
