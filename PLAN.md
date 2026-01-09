@@ -49,7 +49,7 @@ Acceptance:
 - [x] Read-only ChangeEvent endpoints + export gates
 - [x] Webhooks: Clerk + idempotency (`webhook_events`)
 - [ ] Webhooks: Stripe + idempotency (`webhook_events`)
-- [ ] Admin endpoints: jobs list + retry, user ban/plan override
+- [x] Admin endpoints: jobs list + retry, user ban/plan override
 
 Acceptance:
 - API supports the primary journeys (A–D) using only documented endpoints.
@@ -113,3 +113,4 @@ Acceptance:
 - 2026-01-09: Web app scaffolded (onboarding via Entities → Documents; document history + diff viewer).
 - 2026-01-09: Enforce entitlements on document creation; add Stripe checkout/portal + Stripe webhook sync to entitlements and Clerk metadata.
 - 2026-01-09: Add unsubscribe token + `/v1/unsubscribe`; suppress immediate emails when unsubscribed or over quota.
+- 2026-01-09: Admin endpoints added (`/v1/admin/jobs`, retry, user ban/plan override).
