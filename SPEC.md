@@ -1270,6 +1270,11 @@ After receiving LLM response, validate each citation:
 
 **Postmark** for transactional email.
 
+**Backend configuration (env)**
+
+-   `POSTMARK_SERVER_TOKEN`
+-   `POSTMARK_FROM_EMAIL` (e.g. `Inplain <noreply@inplain.ai>`)
+
 ### 12.2 Email templates (v0.1.0)
 
 1. "Change detected" (immediate)
