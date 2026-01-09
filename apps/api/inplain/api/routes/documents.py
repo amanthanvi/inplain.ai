@@ -3,9 +3,9 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
@@ -50,6 +50,23 @@ class DocumentOut(BaseModel):
     initial_job: JobOut | None = Field(default=None, alias="initialJob")
 
 
+class DocumentListItem(BaseModel):
+    id: uuid.UUID
+    url: str
+    doc_type: DocumentDocType = Field(alias="docType")
+    status: DocumentStatus
+    robots_status: str = Field(alias="robotsStatus")
+    next_due_at: datetime = Field(alias="nextDueAt")
+    last_checked_at: datetime | None = Field(alias="lastCheckedAt")
+    last_change_event_id: uuid.UUID | None = Field(alias="lastChangeEventId")
+    created_at: datetime = Field(alias="createdAt")
+
+
+class DocumentListOut(BaseModel):
+    items: list[DocumentListItem]
+    next_cursor: str | None = Field(alias="nextCursor")
+
+
 class PauseIn(BaseModel):
     paused: bool
 
@@ -57,6 +74,103 @@ class PauseIn(BaseModel):
 class CheckNowOut(BaseModel):
     job_id: uuid.UUID = Field(alias="jobId")
     status: JobStatus
+
+
+def _encode_cursor(created_at: datetime, document_id: uuid.UUID) -> str:
+    return f"{created_at.isoformat()}::{document_id}"
+
+
+def _decode_cursor(cursor: str) -> tuple[datetime, uuid.UUID]:
+    raw_dt, raw_id = cursor.split("::", maxsplit=1)
+    return datetime.fromisoformat(raw_dt), uuid.UUID(raw_id)
+
+
+@router.get("/entities/{entity_id}/documents", response_model=DocumentListOut)
+def list_documents(
+    entity_id: uuid.UUID = Path(alias="entityId"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    limit: int = Query(default=20, ge=1, le=100),
+    cursor: str | None = Query(default=None),
+) -> DocumentListOut:
+    entity = db.execute(
+        select(Entity).where(Entity.id == entity_id, Entity.user_id == user.id)
+    ).scalar_one_or_none()
+    if entity is None:
+        raise HTTPException(
+            status_code=404, detail={"error": {"code": "NOT_FOUND", "message": "Entity not found."}}
+        )
+
+    stmt = select(Document).where(
+        Document.user_id == user.id,
+        Document.entity_id == entity.id,
+        Document.deleted_at.is_(None),
+    )
+    if cursor:
+        cursor_created_at, cursor_id = _decode_cursor(cursor)
+        stmt = stmt.where(
+            or_(
+                Document.created_at < cursor_created_at,
+                and_(Document.created_at == cursor_created_at, Document.id < cursor_id),
+            )
+        )
+
+    stmt = stmt.order_by(Document.created_at.desc(), Document.id.desc()).limit(limit + 1)
+    rows = list(db.execute(stmt).scalars().all())
+
+    next_cursor: str | None = None
+    if len(rows) > limit:
+        last = rows[limit - 1]
+        next_cursor = _encode_cursor(last.created_at, last.id)
+        rows = rows[:limit]
+
+    return DocumentListOut(
+        items=[
+            DocumentListItem(
+                id=r.id,
+                url=r.url,
+                doc_type=r.doc_type,
+                status=r.status,
+                robots_status=r.robots_status.value,
+                next_due_at=r.next_due_at,
+                last_checked_at=r.last_checked_at,
+                last_change_event_id=r.last_change_event_id,
+                created_at=r.created_at,
+            )
+            for r in rows
+        ],
+        next_cursor=next_cursor,
+    )
+
+
+@router.get("/documents/{document_id}", response_model=DocumentListItem)
+def get_document(
+    document_id: uuid.UUID = Path(alias="documentId"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> DocumentListItem:
+    doc = db.execute(
+        select(Document).where(
+            Document.id == document_id, Document.user_id == user.id, Document.deleted_at.is_(None)
+        )
+    ).scalar_one_or_none()
+    if doc is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "NOT_FOUND", "message": "Document not found."}},
+        )
+
+    return DocumentListItem(
+        id=doc.id,
+        url=doc.url,
+        doc_type=doc.doc_type,
+        status=doc.status,
+        robots_status=doc.robots_status.value,
+        next_due_at=doc.next_due_at,
+        last_checked_at=doc.last_checked_at,
+        last_change_event_id=doc.last_change_event_id,
+        created_at=doc.created_at,
+    )
 
 
 @router.post("/entities/{entity_id}/documents", response_model=DocumentOut)
