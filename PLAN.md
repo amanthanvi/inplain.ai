@@ -48,7 +48,7 @@ Acceptance:
 - [x] Entities + Documents core endpoints + check-now enqueue
 - [x] Read-only ChangeEvent endpoints + export gates
 - [x] Webhooks: Clerk + idempotency (`webhook_events`)
-- [ ] Webhooks: Stripe + idempotency (`webhook_events`)
+- [x] Webhooks: Stripe + idempotency (`webhook_events`)
 - [x] Admin endpoints: jobs list + retry, user ban/plan override
 
 Acceptance:
