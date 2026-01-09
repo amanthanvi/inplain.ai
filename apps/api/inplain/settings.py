@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     clerk_webhook_secret: str | None = None
     clerk_api_base_url: str = "https://api.clerk.com"
 
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_price_id_pro: str | None = None
+    stripe_price_id_business: str | None = None
+    web_base_url: str = "http://localhost:3000"
+
     openrouter_api_key: str | None = None
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     openrouter_primary_model: str = "anthropic/claude-3.5-sonnet"
