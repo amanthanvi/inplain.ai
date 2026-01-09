@@ -1,5 +1,80 @@
 # Railway
 
-Deployment notes + env var templates.
+## Project
 
-Implementation TBD.
+- Project: `inplain-ai`
+- Services: `web`, `api`, `worker`, `scheduler`, `Postgres`, `Redis`
+- Environments: `production`, `development`
+
+## Domains
+
+Railway-provided domains (one per service per environment):
+
+- `production`
+  - `web`: `https://web-production-c6005.up.railway.app`
+  - `api`: `https://api-production-d6fa.up.railway.app`
+- `development`
+  - `web`: `https://web-development-a964.up.railway.app`
+  - `api`: `https://api-development-c110.up.railway.app`
+
+## Deploy commands
+
+All deploys use Railpack and are driven by `RAILPACK_START_CMD` per service.
+
+From repo root:
+
+```bash
+# Select env (optional; defaults to production)
+railway environment production
+railway environment development
+
+# Deploy
+railway up --service web apps/web --path-as-root
+railway up --service api apps/api --path-as-root
+railway up --service worker apps/api --path-as-root
+railway up --service scheduler apps/api --path-as-root
+```
+
+## Migrations (remote)
+
+Run Alembic inside the `api` container so it can reach `Postgres` on Railway’s private network:
+
+```bash
+railway ssh -s api -- alembic -c alembic.ini upgrade head
+```
+
+## Required env vars (by service)
+
+This repo assumes **env vars are set in Railway** (not committed).
+
+### `web`
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `INPLAIN_API_BASE_URL` (e.g. `https://${{ api.RAILWAY_PUBLIC_DOMAIN }}`)
+- `RAILPACK_START_CMD` (set to `npm run start -- -p $PORT`)
+
+### `api` / `worker` / `scheduler`
+
+- `DATABASE_URL` (from `Postgres`)
+- `REDIS_URL` (from `Redis`)
+- `ENQUEUE_JOBS` (`0` for safe boot; `1` for production processing)
+- `CLERK_ISSUER`
+- `CLERK_JWKS_URL`
+- `CLERK_JWT_AUDIENCE`
+- `CLERK_SECRET_KEY`
+- `CORS_ALLOW_ORIGINS` (api only)
+- `WEB_BASE_URL` (api only)
+- `API_PUBLIC_BASE_URL` (api only)
+- `RAILPACK_START_CMD`:
+  - `api`: `uvicorn inplain.api.main:app --host 0.0.0.0 --port $PORT`
+  - `worker`: `celery -A inplain.worker.celery_app:celery_app worker -Q fetch,summarize,notify -l info`
+  - `scheduler`: `python -m inplain.worker.scheduler`
+
+Also required for full v0.1.0 functionality (not yet configured here):
+
+- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`
+- Postmark: `POSTMARK_SERVER_TOKEN`, `POSTMARK_FROM_EMAIL`
+- OpenRouter: `OPENROUTER_API_KEY`
+- Webhooks: `CLERK_WEBHOOK_SECRET`
+- Unsubscribe: `UNSUBSCRIBE_SECRET`
