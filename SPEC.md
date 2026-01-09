@@ -737,6 +737,14 @@ All errors return both machine-readable code and human-readable message:
     -   expiration
 -   Extract entitlement claims (see [13.4](#134-entitlement-enforcement-flow)).
 
+**Backend configuration (env)**
+
+-   `CLERK_ISSUER` (e.g. `https://clerk.<your-domain>`)
+-   `CLERK_JWKS_URL` (e.g. `https://clerk.<your-domain>/.well-known/jwks.json`)
+-   `CLERK_JWT_AUDIENCE` (your configured JWT template audience)
+-   Optional: `CLERK_SECRET_KEY` for server→Clerk API calls (e.g. resolving email on first request)
+-   Local dev only: `DEV_AUTH_BYPASS=1` + `X-Dev-Email` header (never enabled in prod)
+
 **Admin role**
 
 -   `role` comes from Clerk public metadata (mirrored to JWT custom claims).
@@ -980,7 +988,7 @@ Response:
 
 `POST /v1/webhooks/clerk`
 
--   Verify signature (Clerk signing secret).
+-   Verify signature (Svix) using `CLERK_WEBHOOK_SECRET` (Clerk signing secret).
 -   Upsert `users` row.
 -   Initialize entitlements to `free` if not present.
 
@@ -1486,7 +1494,7 @@ Export:
 ```text
 /
   apps/
-    web/                # React + Vite + Clerk
+    web/                # Next.js (App Router) + Clerk
     api/                # FastAPI
     worker/             # Celery tasks + scraping pipeline
   packages/
