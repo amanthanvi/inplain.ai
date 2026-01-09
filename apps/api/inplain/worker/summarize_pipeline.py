@@ -6,12 +6,13 @@ from typing import Any, Literal
 
 import httpx
 from pydantic import BaseModel, Field, ValidationError
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from inplain.db.models.change_events import ChangeEvent
 from inplain.db.models.diffs import Diff
 from inplain.db.models.documents import Document
+from inplain.db.models.entitlements import Entitlement
 from inplain.db.models.enums import Provider, ProviderAction, SummaryStatus
 from inplain.db.models.jobs import Job
 from inplain.db.models.provider_usage import ProviderUsage
@@ -49,6 +50,14 @@ def run_summarize_job(db: Session, job: Job) -> None:
 
     doc = db.execute(select(Document).where(Document.id == job.document_id)).scalar_one_or_none()
     if doc is None or doc.deleted_at is not None:
+        return
+
+    now = datetime.now(UTC)
+    period_key = now.strftime("%Y-%m")
+    if not _has_summary_quota(db, user_id=doc.user_id, period_key=period_key):
+        change_event_id = _mark_pending_events_skipped_quota(db, doc.id)
+        if change_event_id is not None:
+            db.commit()
         return
 
     stmt = (
@@ -104,7 +113,6 @@ def run_summarize_job(db: Session, job: Job) -> None:
 
     db.add(change_event)
 
-    now = datetime.now(UTC)
     db.add(
         ProviderUsage(
             user_id=doc.user_id,
@@ -115,7 +123,7 @@ def run_summarize_job(db: Session, job: Job) -> None:
             tokens_in=usage.get("prompt_tokens"),
             tokens_out=usage.get("completion_tokens"),
             cost_usd_micros=usage.get("cost_usd_micros"),
-            period_key=now.strftime("%Y-%m"),
+            period_key=period_key,
         )
     )
 
@@ -138,6 +146,54 @@ def _mark_pending_events_failed(db: Session, document_id: Any, error: str) -> No
         ev.summary_error = error
         db.add(ev)
     db.commit()
+
+
+def _has_summary_quota(*, db: Session, user_id: Any, period_key: str) -> bool:
+    entitlement = (
+        db.execute(select(Entitlement).where(Entitlement.user_id == user_id))
+        .scalars()
+        .one_or_none()
+    )
+    limits = entitlement.limits if entitlement is not None else {}
+
+    raw_limit = limits.get("ai_summaries_per_month")
+    limit = raw_limit if isinstance(raw_limit, int) else 0
+    if limit <= 0:
+        return False
+
+    used = (
+        db.execute(
+            select(func.coalesce(func.sum(ProviderUsage.quantity), 0)).where(
+                ProviderUsage.user_id == user_id,
+                ProviderUsage.period_key == period_key,
+                ProviderUsage.provider == Provider.openrouter,
+                ProviderUsage.action == ProviderAction.summary,
+            )
+        )
+        .scalars()
+        .one()
+    )
+    return int(used) < limit
+
+
+def _mark_pending_events_skipped_quota(db: Session, document_id: Any) -> Any | None:
+    stmt = (
+        select(ChangeEvent)
+        .where(
+            ChangeEvent.document_id == document_id,
+            ChangeEvent.summary_status == SummaryStatus.pending,
+        )
+        .order_by(ChangeEvent.created_at.asc())
+        .limit(1)
+    )
+    ev = db.execute(stmt).scalars().one_or_none()
+    if ev is None:
+        return None
+
+    ev.summary_status = SummaryStatus.skipped_quota
+    ev.summary_error = "quota exceeded"
+    db.add(ev)
+    return ev.id
 
 
 def _openrouter_summary(
