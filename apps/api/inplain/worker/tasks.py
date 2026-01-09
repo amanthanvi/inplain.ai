@@ -5,10 +5,11 @@ from datetime import UTC, datetime
 
 from sqlalchemy import select
 
-from inplain.db.models.enums import JobStatus
+from inplain.db.models.enums import JobStatus, JobType
 from inplain.db.models.jobs import Job
 from inplain.db.session import SessionLocal
 from inplain.worker.celery_app import celery_app
+from inplain.worker.fetch_pipeline import run_fetch_job
 
 
 @celery_app.task(name="inplain.worker.tasks.run_job")
@@ -21,12 +22,30 @@ def run_job(job_id: str) -> None:
         if job is None:
             return
 
+        if job.status in {JobStatus.succeeded, JobStatus.dead}:
+            return
+
+        job.attempt += 1
         job.status = JobStatus.running
         job.started_at = now
+        job.error = None
         db.add(job)
         db.commit()
 
-        # TODO: route by job.job_type (fetch/render/diff/summarize/notify/cleanup)
+        try:
+            match job.job_type:
+                case JobType.fetch:
+                    run_fetch_job(db, job)
+                case _:
+                    raise NotImplementedError(f"job type not implemented: {job.job_type.value}")
+        except Exception as e:
+            job.error = str(e)
+            job.status = JobStatus.dead if job.attempt >= job.max_attempts else JobStatus.failed
+            job.finished_at = datetime.now(UTC)
+            db.add(job)
+            db.commit()
+            return
+
         job.status = JobStatus.succeeded
         job.finished_at = datetime.now(UTC)
         db.add(job)

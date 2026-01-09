@@ -4,7 +4,6 @@ import difflib
 import hashlib
 import ipaddress
 import socket
-import uuid
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urljoin, urlparse
 
@@ -60,7 +59,12 @@ def run_fetch_job(db: Session, job: Job) -> None:
 
     # Find the previous snapshot (if any).
     prev = (
-        db.execute(select(Snapshot).where(Snapshot.document_id == doc.id).order_by(Snapshot.fetched_at.desc()).limit(1))
+        db.execute(
+            select(Snapshot)
+            .where(Snapshot.document_id == doc.id)
+            .order_by(Snapshot.fetched_at.desc())
+            .limit(1)
+        )
         .scalars()
         .first()
     )
@@ -75,7 +79,6 @@ def run_fetch_job(db: Session, job: Job) -> None:
     resp = _http_fetch(url, headers=headers)
 
     doc.last_checked_at = now
-    doc.next_due_at = now + _schedule_delta(doc.schedule_tier.value)
 
     if resp.status_code == 304:
         db.add(doc)
@@ -133,7 +136,9 @@ def run_fetch_job(db: Session, job: Job) -> None:
         db.commit()
         return
 
-    unified, hunks, change_score, added_removed_chars = _compute_diff(prev.extracted_text, extracted_text)
+    unified, hunks, change_score, added_removed_chars = _compute_diff(
+        prev.extracted_text, extracted_text
+    )
     meaningful = _is_meaningful_change(change_score, added_removed_chars, unified)
 
     if meaningful:
@@ -176,14 +181,20 @@ def _http_fetch(url: str, headers: dict[str, str]) -> httpx.Response:
     for _ in range(_MAX_REDIRECTS + 1):
         _validate_fetch_url(next_url)
 
-        with httpx.Client(timeout=httpx.Timeout(20.0, connect=5.0), follow_redirects=False) as client:
+        with httpx.Client(
+            timeout=httpx.Timeout(20.0, connect=5.0),
+            follow_redirects=False,
+        ) as client:
             resp = client.get(next_url, headers=headers)
 
         if resp.status_code in (301, 302, 303, 307, 308) and resp.headers.get("location"):
             next_url = urljoin(str(resp.url), resp.headers["location"])
             continue
 
-        if resp.num_bytes_downloaded is not None and resp.num_bytes_downloaded > _MAX_RESPONSE_BYTES:
+        if (
+            resp.num_bytes_downloaded is not None
+            and resp.num_bytes_downloaded > _MAX_RESPONSE_BYTES
+        ):
             raise RuntimeError("response too large")
 
         if len(resp.content) > _MAX_RESPONSE_BYTES:
@@ -287,16 +298,6 @@ def _is_meaningful_change(change_score: float, added_removed_chars: int, unified
 
     lower = unified_diff.lower()
     return any(k in lower for k in _MEANINGFUL_KEYWORDS)
-
-
-def _schedule_delta(schedule_tier: str) -> timedelta:
-    if schedule_tier == "daily":
-        return timedelta(days=1)
-    if schedule_tier == "6h":
-        return timedelta(hours=6)
-    if schedule_tier == "1h":
-        return timedelta(hours=1)
-    return timedelta(days=1)
 
 
 def _default_event_title(doc: Document) -> str:

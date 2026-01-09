@@ -16,7 +16,6 @@ from inplain.db.models.enums import DiffFormat, SummaryStatus
 from inplain.db.models.users import User
 from inplain.db.session import get_db
 
-
 router = APIRouter(prefix="/v1")
 
 
@@ -60,15 +59,27 @@ def list_change_events(
     cursor: str | None = Query(default=None),
 ) -> ChangeEventListOut:
     doc = db.execute(
-        select(Document).where(Document.id == document_id, Document.user_id == user.id, Document.deleted_at.is_(None))
+        select(Document).where(
+            Document.id == document_id,
+            Document.user_id == user.id,
+            Document.deleted_at.is_(None),
+        )
     ).scalar_one_or_none()
     if doc is None:
-        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND", "message": "Document not found."}})
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "NOT_FOUND", "message": "Document not found."}},
+        )
 
     stmt = select(ChangeEvent).where(ChangeEvent.document_id == doc.id)
     if cursor:
         cursor_created_at, cursor_id = _decode_cursor(cursor)
-        stmt = stmt.where(and_(ChangeEvent.created_at <= cursor_created_at, ChangeEvent.id != cursor_id))
+        stmt = stmt.where(
+            and_(
+                ChangeEvent.created_at <= cursor_created_at,
+                ChangeEvent.id != cursor_id,
+            )
+        )
 
     stmt = stmt.order_by(ChangeEvent.created_at.desc(), ChangeEvent.id.desc()).limit(limit + 1)
     rows = list(db.execute(stmt).scalars().all())
@@ -95,11 +106,18 @@ def get_change_event(
         select(ChangeEvent, Document, Diff)
         .join(Document, ChangeEvent.document_id == Document.id)
         .join(Diff, ChangeEvent.diff_id == Diff.id)
-        .where(ChangeEvent.id == change_event_id, Document.user_id == user.id, Document.deleted_at.is_(None))
+        .where(
+            ChangeEvent.id == change_event_id,
+            Document.user_id == user.id,
+            Document.deleted_at.is_(None),
+        )
     )
     row = db.execute(stmt).one_or_none()
     if row is None:
-        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND", "message": "ChangeEvent not found."}})
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "NOT_FOUND", "message": "ChangeEvent not found."}},
+        )
 
     change_event, document, diff = row
 
@@ -124,7 +142,9 @@ def get_change_event(
         created_at=change_event.created_at,
         summary=summary,
         diff={
-            "format": diff.diff_format.value if isinstance(diff.diff_format, DiffFormat) else str(diff.diff_format),
+            "format": diff.diff_format.value
+            if isinstance(diff.diff_format, DiffFormat)
+            else str(diff.diff_format),
             "unified": diff.unified_diff,
             "hunks": diff.diff_hunks,
         },

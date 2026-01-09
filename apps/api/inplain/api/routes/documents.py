@@ -103,7 +103,24 @@ def create_document(
     db.refresh(job)
 
     if settings.enqueue_jobs:
-        celery_app.send_task("inplain.worker.tasks.run_job", args=[str(job.id)])
+        locked = db.execute(
+            select(Job).where(Job.id == job.id).with_for_update()
+        ).scalar_one_or_none()
+        should_enqueue = (
+            locked is not None
+            and locked.status == JobStatus.queued
+            and locked.celery_task_id is None
+        )
+        if should_enqueue:
+            async_result = celery_app.send_task(
+                "inplain.worker.tasks.run_job",
+                args=[str(locked.id)],
+                queue=locked.job_type.value,
+            )
+            locked.celery_task_id = async_result.id
+            db.add(locked)
+            db.commit()
+            db.refresh(job)
 
     return DocumentOut(
         id=doc.id,
@@ -168,7 +185,24 @@ def check_now(
     db.refresh(job)
 
     if settings.enqueue_jobs:
-        celery_app.send_task("inplain.worker.tasks.run_job", args=[str(job.id)])
+        locked = db.execute(
+            select(Job).where(Job.id == job.id).with_for_update()
+        ).scalar_one_or_none()
+        should_enqueue = (
+            locked is not None
+            and locked.status == JobStatus.queued
+            and locked.celery_task_id is None
+        )
+        if should_enqueue:
+            async_result = celery_app.send_task(
+                "inplain.worker.tasks.run_job",
+                args=[str(locked.id)],
+                queue=locked.job_type.value,
+            )
+            locked.celery_task_id = async_result.id
+            db.add(locked)
+            db.commit()
+            db.refresh(job)
 
     return CheckNowOut(job_id=job.id, status=job.status)
 
