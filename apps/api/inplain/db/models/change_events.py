@@ -29,8 +29,8 @@ class ChangeEvent(Base):
     summary_status: Mapped[SummaryStatus] = mapped_column(
         Enum(SummaryStatus, native_enum=False), nullable=False
     )
-    summary_what_changed: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    summary_why_matters: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    summary_what_changed: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
+    summary_why_matters: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
     summary_disclaimer: Mapped[str] = mapped_column(Text, nullable=False)
     summary_model: Mapped[str | None] = mapped_column(Text, nullable=True)
     summary_prompt_version: Mapped[int | None] = mapped_column(Integer, nullable=True)

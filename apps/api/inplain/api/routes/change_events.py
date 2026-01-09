@@ -131,12 +131,6 @@ def get_change_event(
             "whyItMatters": change_event.summary_why_matters,
             "disclaimer": change_event.summary_disclaimer,
         }
-    else:
-        summary = {
-            "whatChanged": change_event.summary_what_changed,
-            "whyItMatters": change_event.summary_why_matters,
-            "disclaimer": change_event.summary_disclaimer,
-        }
 
     return ChangeEventOut(
         id=change_event.id,
