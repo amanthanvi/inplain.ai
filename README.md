@@ -51,6 +51,12 @@ make migrate
 make dev-api
 ```
 
+4) Worker (optional; only needed if `ENQUEUE_JOBS=1`):
+
+```bash
+make dev-worker
+```
+
 ## Golden commands
 
 ```bash

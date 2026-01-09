@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down venv migrate dev-api dev-web lint test typecheck
+.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck
 
 PYTHON ?= python3.13
 VENV_DIR ?= .venv
@@ -23,6 +23,9 @@ dev-api:
 
 dev-web:
 	npm --prefix apps/web run dev
+
+dev-worker:
+	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/celery -A inplain.worker.celery_app:celery_app worker -Q fetch -l info
 
 lint:
 	$(VENV_DIR)/bin/ruff check apps/api
