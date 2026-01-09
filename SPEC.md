@@ -1653,4 +1653,238 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 -   [ ] Object storage bucket with lifecycle policies
 -   [ ] Sentry configured for all services
 -   [ ] OTLP export configured and dashboards created
--   [ ] Alerts configured (queue, 5xx
+-   [ ] Alerts configured (queue, 5xx rate, fetch failure rate, LLM cost budget)
+-   [ ] Robots.txt fetch + caching working; disallowed URLs blocked with clear UI copy
+-   [ ] Scheduler correctness validated (no duplicate enqueues; `SKIP LOCKED` works)
+-   [ ] Celery retry policies validated; dead-letter semantics implemented (mark `jobs.status=dead`)
+-   [ ] Renderer hardening validated (timeouts, request interception, no private IP access)
+-   [ ] Rate limiting enabled (user + IP); 429 responses include `Retry-After`
+-   [ ] Abuse controls enabled (URL add throttles, per-tier quotas)
+-   [ ] Admin dashboard working (jobs, failures, retries, user bans, plan overrides)
+-   [ ] Data retention cleanup job running daily; tier-based retention enforced
+-   [ ] Incident response contacts documented (internal)
+
+### 20.3 Security checklist (must-pass)
+
+**AppSec**
+
+-   [ ] SSRF protections implemented for:
+    -   [ ] URL validation on add
+    -   [ ] re-validation on every fetch
+    -   [ ] redirect hop checks
+    -   [ ] renderer request interception checks
+-   [ ] No fetched page content is logged (verify logs)
+-   [ ] XSS protections:
+    -   [ ] diff viewer renders as plain text (no raw HTML injection)
+    -   [ ] sanitize any user-provided display fields (entity name) before render
+-   [ ] CORS configured: allow only web origin(s)
+-   [ ] Security headers on web:
+    -   [ ] `Content-Security-Policy` (at minimum disallow `object-src`; restrict `frame-ancestors`)
+    -   [ ] `X-Content-Type-Options: nosniff`
+    -   [ ] `Referrer-Policy: strict-origin-when-cross-origin`
+    -   [ ] `Permissions-Policy` (disable unnecessary APIs)
+    -   [ ] HSTS enabled on apex + app subdomain
+-   [ ] Secrets:
+    -   [ ] no secrets shipped to client
+    -   [ ] all secrets stored in Railway env vars
+    -   [ ] Stripe/Clerk webhook secrets set and verified in staging/prod
+-   [ ] Webhooks:
+    -   [ ] signature verification implemented (Clerk + Stripe)
+    -   [ ] idempotency implemented via `webhook_events`
+-   [ ] AuthZ tests:
+    -   [ ] user cannot access another user’s entities/documents/events
+    -   [ ] admin-only endpoints blocked for non-admin
+-   [ ] Dependency scanning passing (pip-audit; npm audit report reviewed)
+-   [ ] Backups encrypted at rest (S3/R2 SSE enabled)
+
+### 20.4 Billing & entitlement checklist (v0.1.0)
+
+-   [ ] Stripe products/prices created (Free handled in-app; Pro/Business paid)
+-   [ ] Checkout flow works end-to-end
+-   [ ] Customer portal link works
+-   [ ] Stripe webhooks update Clerk `publicMetadata.plan` and `limits`
+-   [ ] API enforces entitlements for:
+    -   [ ] document limits
+    -   [ ] schedule tier limits
+    -   [ ] JS render quotas
+    -   [ ] AI summary quotas
+    -   [ ] notification quotas
+-   [ ] Downgrade policy tested (payment failure → grace → downgrade)
+-   [ ] Manual admin override documented (DB + Clerk metadata sync)
+
+### 20.5 Backup/restore checklist (production-safe)
+
+-   [ ] Railway Postgres automatic backups enabled
+-   [ ] Nightly logical backup job configured:
+    -   `pg_dump` (custom format) + upload to S3/R2
+    -   retention: 30 days (or aligned with compliance needs)
+-   [ ] Restore run tested in staging:
+    -   [ ] restore into empty DB
+    -   [ ] run migrations
+    -   [ ] validate app boot + can render a known change event
+-   [ ] Object storage lifecycle policies set:
+    -   raw HTML retention aligned to snapshot retention delete-at
+    -   delete orphaned objects job implemented
+
+---
+
+## 21) Open Questions / Future Work
+
+### 21.1 Decisions to revisit post v0.1.0
+
+1. **Robots posture overrides**
+    - Current: strict respect. Future: allow user to request monitoring even when disallowed only if legally safe (likely “no”; keep strict).
+2. **Organizations / multi-user**
+    - v0.1.0 is single-user per account. Add Clerk Organizations later:
+        - entity ownership by org
+        - roles: owner/admin/member
+        - shared billing.
+3. **Advanced ignore rules**
+    - User-configurable “ignore selectors/phrases” to further reduce noise.
+4. **Better semantic diff**
+    - Add section-aware diffs (headings) and sentence-level alignment; consider a semantic embedding-based change classifier.
+5. **Notification channels**
+    - Slack/MS Teams/webhooks.
+6. **Search**
+    - Full-text search across snapshots and events (Postgres FTS or OpenSearch).
+7. **Cost optimization**
+    - Model routing by complexity; summarize only high-impact diffs for free tier.
+8. **Domain verification for public dashboards**
+    - Allow public “watchlists” or public change feeds (careful with abuse).
+9. **Renderer isolation**
+    - Consider running renderer in a more isolated environment (separate provider) if threat model demands.
+10. **Content provenance UX**
+
+-   Inline quote cards and “jump to diff hunk” improvements; “show me the exact sentence”.
+
+### 21.2 Known constraints (accepted for v0.1.0)
+
+1. Extractor is heuristic; some pages will still be noisy.
+2. Some JS-heavy pages may block headless browsers; we’ll surface errors transparently.
+3. Summaries may occasionally be incomplete; citations enforce grounding but not perfect interpretation.
+4. Internationalized policies may be harder to summarize accurately without translation (not in v0.1.0).
+
+### 21.3 Concrete roadmap items (next releases)
+
+**v0.2**
+
+-   Clerk Organizations + team billing
+-   Slack notifications (paid)
+-   Custom ignore rules (Pro+)
+-   Per-host crawl policies and user-visible “politeness” settings
+-   Better daily digest UX
+
+**v0.3**
+
+-   Public change feeds (opt-in)
+-   Advanced diff modes (semantic sections)
+-   Search across history
+-   Export formats (PDF, CSV)
+
+---
+
+## Appendix A — Operational Details
+
+### A.1 Retention cleanup job (step-by-step)
+
+Runs daily on `maintenance` queue:
+
+1. Select snapshots where `retention_delete_at <= now()` in batches of 500.
+2. For each snapshot:
+    1. Delete S3 object if `raw_storage_key` present.
+    2. Delete dependent diffs/change events if required by retention policy:
+        - v0.1.0: retain change events as long as diff and snapshots exist; delete cascade by FK or explicit deletes.
+3. Delete snapshot row.
+4. Vacuum strategy:
+    - rely on autovacuum; monitor bloat and tune if needed.
+
+### A.2 Backup job (step-by-step)
+
+1. Run `pg_dump` with:
+    - custom format (`-Fc`)
+    - include schema + data
+2. Upload to S3/R2 with key:
+    - `backups/postgres/YYYY-MM-DD/backup.dump`
+3. Write a small manifest file including:
+    - git SHA
+    - migration head revision
+4. Emit metric `backup_success=1` or `0`.
+
+### A.3 Restore procedure (step-by-step)
+
+1. Create new Postgres instance (staging first; prod only during incident).
+2. Download desired backup dump.
+3. Restore:
+    - `pg_restore --clean --if-exists`
+4. Run migrations to current head (if restoring older dump).
+5. Verify:
+    - API `/healthz`
+    - can fetch a known entity/doc/change event
+6. Re-enable scheduler/workers.
+
+---
+
+## Appendix B — Celery Task Policies (v0.1.0)
+
+-   Default retries:
+    -   fetch/render: max 5 attempts, exponential backoff, jitter
+    -   summarize: max 3 attempts, backoff; fail open (no summary)
+    -   notify: max 5 attempts
+-   Dead-letter behavior:
+    -   on max attempts exceeded → `jobs.status = dead`, store `error`
+-   Time limits:
+    -   fetch: 60s hard
+    -   render: 90s hard
+    -   summarize: 60s hard
+
+---
+
+## Appendix C — Admin Tooling (minimum scope)
+
+Admin UI pages (behind admin role):
+
+1. **Jobs**
+    - filter by status/type
+    - view error, attempt count, related doc/user
+    - retry button
+2. **Users**
+    - search by email/clerk id
+    - ban/unban
+    - plan override (writes Clerk metadata + DB mirror)
+3. **Abuse dashboard**
+    - top users by checks/day
+    - top hosts by failures
+4. **LLM usage**
+    - daily cost estimate
+    - top users by tokens
+
+---
+
+## Appendix D — Legal/Safety UX Copy (required)
+
+-   On every summary view:
+    -   “This summary is generated by AI from the detected text changes and is provided for informational purposes only. It is not legal advice.”
+-   On add-document:
+    -   “Only add publicly accessible URLs you have the right to monitor. We respect robots.txt and apply rate limits.”
+
+---
+
+## Appendix E — Default Config Values (v0.1.0)
+
+-   Fetch:
+    -   max redirects: 5
+    -   max response size: 5 MB
+    -   connect timeout: 5s
+    -   read timeout: 20s
+-   Renderer:
+    -   navigation timeout: 30s
+    -   total budget: 45s
+-   Politeness:
+    -   per-host concurrency: 2
+    -   per-host delay: 2s
+-   Change detection:
+    -   minimum added/removed chars: 500
+    -   change_score threshold: 0.02
+-   Summaries:
+    -   max hunks: 20
+    -   prompt_version: 1
