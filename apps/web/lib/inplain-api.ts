@@ -28,7 +28,7 @@ export async function inplainFetchJson<T>(
     throw new InplainApiError("Not signed in.", 401, null);
   }
 
-  const token = await getToken();
+  const token = await getToken({ template: "inplain" });
   const devEmail = process.env.INPLAIN_DEV_EMAIL?.trim();
 
   const headers = new Headers(init.headers);
@@ -64,4 +64,3 @@ export async function inplainFetchJson<T>(
 
   return body as T;
 }
-
