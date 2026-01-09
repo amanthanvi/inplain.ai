@@ -22,11 +22,11 @@ North star: production-ready SaaS that tracks public privacy/ToS URLs over time,
 
 ### M0 — Repo bootstrap (golden commands + CI skeleton)
 
-- [ ] Create monorepo structure from SPEC 15.1
-- [ ] Add `README.md` + `CONTRIBUTING.md`
-- [ ] Add local dev env (`docker-compose.yml`: postgres, redis, (optional) s3/minio)
-- [ ] Define golden commands (lint/typecheck/test/dev/migrate) in Makefile/scripts
-- [ ] Add GitHub Actions workflow(s): lint, typecheck, tests, migrations check
+- [x] Create monorepo structure from SPEC 15.1
+- [x] Add `README.md` + `CONTRIBUTING.md`
+- [x] Add local dev env (`docker-compose.yml`: postgres, redis, (optional) s3/minio)
+- [x] Define golden commands (lint/typecheck/test/dev/migrate) in Makefile/scripts
+- [x] Add GitHub Actions workflow(s): lint, typecheck, tests, migrations check
 
 Acceptance:
 - A new dev can run one documented setup path and get `web` + `api` up locally.
@@ -34,8 +34,8 @@ Acceptance:
 
 ### M1 — Database + migrations
 
-- [ ] Implement schema from SPEC 8.x (+ `stripe_customer_id`)
-- [ ] Alembic migrations; deterministic revision history
+- [x] Implement schema from SPEC 8.x (+ `stripe_customer_id`)
+- [x] Alembic migrations; deterministic revision history
 - [ ] Minimal seed/dev helpers
 
 Acceptance:
@@ -102,3 +102,6 @@ Acceptance:
 ## Progress log (append-only)
 
 - 2026-01-09: plan approved; starting M0.
+- 2026-01-09: repo scaffolded (Next.js web, FastAPI api skeleton, CI, Makefile golden commands).
+- 2026-01-09: Postgres schema implemented + Alembic init migration; local dev ports standardized (Postgres 54321, Redis 6380).
+- 2026-01-09: `/v1/entities` and `/v1/entities/{entityId}/documents` endpoints wired (dev auth bypass mode only for now).
