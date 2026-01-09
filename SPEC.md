@@ -1059,6 +1059,10 @@ Stripe webhooks:
 
 - `POST /v1/webhooks/stripe`
 
+#### Unsubscribe
+
+`GET /v1/unsubscribe?token=...`
+
 #### Admin
 
 `GET /v1/admin/jobs?status=failed&limit=50`
