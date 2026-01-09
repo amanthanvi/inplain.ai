@@ -48,6 +48,15 @@ class DocumentOut(BaseModel):
     initial_job: JobOut | None = Field(default=None, alias="initialJob")
 
 
+class PauseIn(BaseModel):
+    paused: bool
+
+
+class CheckNowOut(BaseModel):
+    job_id: uuid.UUID = Field(alias="jobId")
+    status: JobStatus
+
+
 @router.post("/entities/{entity_id}/documents", response_model=DocumentOut)
 def create_document(
     entity_id: uuid.UUID = Path(alias="entityId"),
@@ -99,6 +108,61 @@ def create_document(
         next_due_at=doc.next_due_at,
         initial_job=JobOut(job_id=job.id, status=job.status),
     )
+
+
+@router.post("/documents/{document_id}/pause")
+def pause_document(
+    document_id: uuid.UUID = Path(alias="documentId"),
+    payload: PauseIn = ...,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict[str, str]:
+    doc = db.execute(
+        select(Document).where(
+            Document.id == document_id, Document.user_id == user.id, Document.deleted_at.is_(None)
+        )
+    ).scalar_one_or_none()
+    if doc is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "NOT_FOUND", "message": "Document not found."}},
+        )
+
+    doc.status = DocumentStatus.paused if payload.paused else DocumentStatus.active
+    db.add(doc)
+    db.commit()
+
+    return {"status": doc.status.value}
+
+
+@router.post("/documents/{document_id}/check-now", response_model=CheckNowOut)
+def check_now(
+    document_id: uuid.UUID = Path(alias="documentId"),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> CheckNowOut:
+    doc = db.execute(
+        select(Document).where(
+            Document.id == document_id, Document.user_id == user.id, Document.deleted_at.is_(None)
+        )
+    ).scalar_one_or_none()
+    if doc is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "NOT_FOUND", "message": "Document not found."}},
+        )
+
+    job = Job(
+        user_id=user.id,
+        document_id=doc.id,
+        job_type=JobType.fetch,
+        status=JobStatus.queued,
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    return CheckNowOut(job_id=job.id, status=job.status)
 
 
 def _schedule_delta(tier: ScheduleTier) -> timedelta:
