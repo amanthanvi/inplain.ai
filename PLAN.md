@@ -114,3 +114,5 @@ Acceptance:
 - 2026-01-09: Enforce entitlements on document creation; add Stripe checkout/portal + Stripe webhook sync to entitlements and Clerk metadata.
 - 2026-01-09: Add unsubscribe token + `/v1/unsubscribe`; suppress immediate emails when unsubscribed or over quota.
 - 2026-01-09: Admin endpoints added (`/v1/admin/jobs`, retry, user ban/plan override).
+- 2026-01-09: Railway infra created (project + Postgres/Redis + web/api/worker/scheduler) + production/development deploys; migrations run in both envs.
+- 2026-01-09: Fix Railway DB URL driver mismatch (`postgresql://` → `postgresql+psycopg://`) and Alembic URL normalization for remote migrations.
