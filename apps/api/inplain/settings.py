@@ -8,6 +8,14 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://inplain:inplain@localhost:54321/inplain"
     redis_url: str = "redis://localhost:6380/0"
     enqueue_jobs: bool = False
+    scheduler_interval_seconds: int = 30
+
+    clerk_issuer: str | None = None
+    clerk_jwks_url: str | None = None
+    clerk_jwt_audience: str | None = None
+    clerk_secret_key: str | None = None
+    clerk_webhook_secret: str | None = None
+    clerk_api_base_url: str = "https://api.clerk.com"
 
 
 settings = Settings()
