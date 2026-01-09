@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
@@ -22,6 +22,8 @@ from inplain.db.models.enums import (
 from inplain.db.models.jobs import Job
 from inplain.db.models.users import User
 from inplain.db.session import get_db
+from inplain.entitlements.limits import force_render_allowed, schedule_tier_allowed
+from inplain.entitlements.service import ensure_entitlement
 from inplain.settings import settings
 from inplain.url_canonicalization import canonicalize_url
 from inplain.worker.celery_app import celery_app
@@ -186,6 +188,64 @@ def create_document(
     if entity is None:
         raise HTTPException(
             status_code=404, detail={"error": {"code": "NOT_FOUND", "message": "Entity not found."}}
+        )
+
+    entitlement = ensure_entitlement(db, user.id)
+
+    limit_docs = entitlement.limits.get("tracked_documents")
+    if isinstance(limit_docs, int):
+        current_docs = db.execute(
+            select(func.count())
+            .select_from(Document)
+            .where(Document.user_id == user.id, Document.deleted_at.is_(None))
+        ).scalar_one()
+        if current_docs >= limit_docs:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": {
+                        "code": "DOCUMENT_LIMIT_EXCEEDED",
+                        "message": "You've reached your tracked documents limit.",
+                        "details": {
+                            "current": current_docs,
+                            "limit": limit_docs,
+                            "tier": entitlement.plan.value,
+                        },
+                    }
+                },
+            )
+
+    max_frequency = entitlement.limits.get("schedule_frequency")
+    if not isinstance(max_frequency, str) or not schedule_tier_allowed(
+        max_frequency, payload.schedule_tier
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": {
+                    "code": "SCHEDULE_TIER_NOT_ALLOWED",
+                    "message": "Your plan does not allow this schedule tier.",
+                    "details": {
+                        "tier": entitlement.plan.value,
+                        "requested": payload.schedule_tier.value,
+                        "maxAllowed": max_frequency,
+                    },
+                }
+            },
+        )
+
+    js_render_limit = entitlement.limits.get("js_render_fetches_per_month")
+    js_render_limit_int = js_render_limit if isinstance(js_render_limit, int) else None
+    if not force_render_allowed(js_render_limit_int, payload.fetch_mode):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": {
+                    "code": "RENDER_NOT_ALLOWED",
+                    "message": "Your plan does not include JS-rendered fetches.",
+                    "details": {"tier": entitlement.plan.value},
+                }
+            },
         )
 
     canonical = canonicalize_url(payload.url)
