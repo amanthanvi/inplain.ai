@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /_next/
-Disallow: /dashboard/
-Disallow: /settings/
-
-Sitemap: https://inplain.ai/sitemap.xml
