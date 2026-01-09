@@ -11,6 +11,7 @@ from inplain.db.session import SessionLocal
 from inplain.settings import settings
 from inplain.worker.celery_app import celery_app
 from inplain.worker.fetch_pipeline import run_fetch_job
+from inplain.worker.notify_pipeline import run_notify_job
 from inplain.worker.scheduler import enqueue_pending_jobs
 from inplain.worker.summarize_pipeline import run_summarize_job
 
@@ -41,6 +42,8 @@ def run_job(job_id: str) -> None:
                     run_fetch_job(db, job)
                 case JobType.summarize:
                     run_summarize_job(db, job)
+                case JobType.notify:
+                    run_notify_job(db, job)
                 case _:
                     raise NotImplementedError(f"job type not implemented: {job.job_type.value}")
         except Exception as e:
@@ -51,7 +54,8 @@ def run_job(job_id: str) -> None:
             db.commit()
             return
 
-        if settings.enqueue_jobs and job.job_type in {JobType.fetch, JobType.summarize}:
+        should_enqueue_next = job.job_type in {JobType.fetch, JobType.summarize, JobType.notify}
+        if settings.enqueue_jobs and should_enqueue_next:
             enqueue_pending_jobs(db)
 
         job.status = JobStatus.succeeded
