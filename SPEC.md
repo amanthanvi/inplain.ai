@@ -1,6 +1,8 @@
-# Inplain.ai — SPEC (v0.1.0)
+# Inplain.ai — SPEC (v0.1.0-rev1)
 
-“Track, diff, and understand privacy policy changes with AI-powered summaries.”
+"Track, diff, and understand privacy policy changes with AI-powered summaries."
+
+> **Revision Note (v0.1.0-rev1)**: This revision incorporates interview-driven decisions on PDF/iframe handling, URL canonicalization, UI/UX patterns, AI opinion style, crawler identity, and quota management. See Section 9.5 (UI/UX), Section 10.1 (fetch pipeline), Section 11.3-11.6 (AI behavior), and Section 16.3 (crawler identity).
 
 ## Table of Contents
 
@@ -13,6 +15,7 @@
 7. [Railway Hosting Topology](#7-railway-hosting-topology)
 8. [Data Model (Postgres)](#8-data-model-postgres)
 9. [API Design (REST)](#9-api-design-rest)
+    - 9.5 [UI/UX Design Decisions](#95-uiux-design-decisions)
 10. [Scraping + Normalization + Diff System](#10-scraping--normalization--diff-system)
 11. [AI Summarization via OpenRouter](#11-ai-summarization-via-openrouter)
 12. [Notifications (Email)](#12-notifications-email)
@@ -128,8 +131,10 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 -   conditional GET (ETag/Last-Modified)
 -   redirects with strict limits
 -   content-type validation
+-   **PDF extraction** with OCR fallback for image-based PDFs
+-   **iframe resolution** (detect iframe src first, fall back to full render if content minimal)
 
-9. Store raw HTML (compressed) + normalized extracted text for each snapshot.
+9. Store raw HTML/PDF (compressed) + normalized extracted text for each snapshot.
 
 **FR-4 Change detection** 10. Detect meaningful changes with low false positives:
 
@@ -229,15 +234,22 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 
 ### 5.4 Privacy requirements (data minimization & retention)
 
-1. Store only what’s needed:
+1. Store only what's needed:
     - URLs, snapshots, diffs, summaries, notification settings.
 2. Do **not** store:
     - user passwords (Clerk handles)
-    - third-party page form submissions (we don’t submit forms)
+    - third-party page form submissions (we don't submit forms)
 3. Retention by tier; deletion workflows:
     - user can delete a document → delete associated snapshots/diffs (async job)
     - user can delete account → purge user data (except billing records required for finance, if applicable)
 4. Redact secrets accidentally present in fetched pages where feasible (basic patterns: API keys, emails) **only in logs**; snapshots remain as-fetched.
+
+### 5.4.1 Data residency
+
+-   **v0.1.0**: US-only data residency (Railway US regions).
+-   Privacy policy clearly states: "Your data is stored in the United States."
+-   EU compliance via Standard Contractual Clauses if needed.
+-   **Future**: Monitor EU demand; build region infrastructure when there's signal.
 
 ### 5.5 Compliance considerations
 
@@ -679,6 +691,34 @@ Indexes:
 -   Cursor pagination where lists can grow.
 -   All endpoints require auth except `/healthz` and marketing content.
 
+**API versioning strategy**
+
+-   **Short overlap period**: When `/v2` is introduced, `/v1` and `/v2` coexist for 3-6 months.
+-   Deprecation warnings included in responses (`X-API-Deprecated: true`).
+-   Aggressive migration push via email and dashboard banners.
+
+**Error response format**
+
+All errors return both machine-readable code and human-readable message:
+
+```json
+{
+	"error": {
+		"code": "DOCUMENT_LIMIT_EXCEEDED",
+		"message": "You've reached your document limit. Upgrade to Pro for 25 documents.",
+		"details": {
+			"current": 3,
+			"limit": 3,
+			"tier": "free"
+		}
+	}
+}
+```
+
+-   `code`: Machine-readable, screaming snake case (e.g., `RATE_LIMIT_EXCEEDED`, `INVALID_URL`, `ROBOTS_BLOCKED`).
+-   `message`: User-friendly, suitable for direct display.
+-   `details`: Optional structured context for debugging.
+
 ### 9.2 Authentication (Clerk)
 
 **Client → API**
@@ -888,18 +928,98 @@ Response:
 -   Idempotency via `webhook_events`.
 -   Update entitlements in **Clerk public metadata** and mirror to `entitlements` table.
 
+**Webhook ordering**: UI ensures Clerk session is confirmed before triggering Stripe Checkout. This guarantees `user.created` webhook arrives before `checkout.session.completed`. If race occurs (user row missing), Stripe webhook returns 202 and logs warning.
+
+---
+
+## 9.5) UI/UX Design Decisions
+
+### 9.5.1 Platform & framework
+
+-   **Marketing site**: Next.js with hybrid SSR for SEO on marketing pages.
+-   **App**: React SPA (shared codebase via Next.js app router).
+-   **Mobile**: Responsive web only (no PWA/native in v0.1.0).
+
+### 9.5.2 Diff viewer (section-first)
+
+-   **Default view**: Section-first collapsed view.
+    -   Group changes by detected section/heading.
+    -   Show section name + change indicator (additions/removals count).
+    -   Click to expand section and see inline diff.
+-   **Section detection (hybrid)**:
+    -   Primary: Heuristic detection via H1-H6 tags, bold/strong first lines, numbered sections (1., 2., I., II.), ALL CAPS lines.
+    -   Secondary: LLM semantic chunking to identify section boundaries.
+    -   Cross-reference both methods for accuracy.
+    -   Fallback: Paragraph-level grouping if no clear sections detected.
+-   **Toggle**: User can switch to traditional unified or split diff view.
+
+### 9.5.3 Citation navigation
+
+-   When user clicks a citation in the summary:
+    -   Smooth scroll to the referenced hunk.
+    -   Apply temporary highlight (fade after 2s).
+    -   If in section view, auto-expand the containing section.
+
+### 9.5.4 Document history
+
+-   **Recent-only in UI**: Show last 10 change events by default.
+-   **Full history via export**: Complete history available via JSON/CSV export (tier-gated).
+-   **Progressive disclosure**: "Show all history" link reveals full paginated list.
+
+### 9.5.5 Onboarding UX (add document flow)
+
+-   **Inline URL validation**: When user enters URL in add-document form:
+    1. Immediately validate URL format.
+    2. Check robots.txt status.
+    3. Show preview of extracted content (title, first paragraph).
+    4. Display warnings if any (e.g., "This site uses heavy JavaScript, rendering may be required").
+-   **Hybrid timeout**: Attempt synchronous validation for 10 seconds. If not complete, switch to async with "Processing..." placeholder.
+
+### 9.5.6 Error states
+
+-   **Failed summary**: Show diff with banner: "AI summary unavailable for this change. [Learn why](link to docs)". No retry button in v0.1.0.
+-   **Blocked by robots.txt**: Show specific blocking rule: "Disallow: /privacy matched by User-Agent: *". Link to view full robots.txt.
+-   **URL gone (404/410)**: Auto-pause document silently. Show "Document paused: URL no longer accessible" status in dashboard. No email notification for this.
+-   **PDF extraction failed**: "Image-based PDF could not be extracted. Text-based PDFs are supported."
+
+### 9.5.7 Entity lifecycle
+
+-   **Rename**: Always allowed, no restrictions.
+-   **Delete**: Soft-delete cascades to all documents under the entity.
+    -   Confirmation modal: "Delete [Entity Name]? This will also delete X tracked documents and their history."
+    -   Documents are soft-deleted; data retained per retention policy.
+
+### 9.5.8 Admin impersonation
+
+-   Admins can enter read-only impersonation mode to see a user's dashboard as they see it.
+-   **Audit trail**: Every impersonation session logged to `audit_logs` with start/end time, admin user, target user.
+-   **Visual indicator**: Clear banner in impersonation mode: "Viewing as [user@email.com] (read-only)".
+
 ---
 
 ## 10) Scraping + Normalization + Diff System
 
 ### 10.1 Fetch strategy (step-by-step)
 
+**Race condition handling (scheduler vs check-now)**
+
+Before enqueueing any fetch job, check `last_checked_at`:
+- If `last_checked_at` is within the last 5 minutes, skip enqueue (dedupe by recency).
+- This prevents scheduler and "check now" from racing on the same document.
+
 **Pipeline (scheduled or on-demand)**
 
 1. **Preflight**
     1. Validate URL (scheme, host, no credentials, no private IP).
-    2. Check robots decision:
+    2. **URL canonicalization** (aggressive):
+        - Strip `www.` prefix
+        - Remove trailing slashes
+        - Remove all query parameters (except known-meaningful like `locale`, `lang`)
+        - Normalize to lowercase host
+        - Store as `url_canonical` for deduplication
+    3. Check robots decision:
         - if `robots_status != allowed`: block job and set `documents.status = blocked_robots`.
+        - **Robots refresh**: Re-validate robots.txt daily (cache decision for 24h per host).
 2. **HTTP fetch attempt**
     1. Use `httpx` with timeouts and size limits.
     2. Send conditional headers if present:
@@ -917,13 +1037,21 @@ Response:
     1. Enqueue `render` job to renderer queue.
     2. Renderer uses Playwright Chromium to load the page, wait for network idle (bounded), then serialize DOM HTML.
 5. **Store raw snapshot**
-    1. Compress HTML (zstd or gzip) and upload to S3/R2.
+    1. Compress HTML/PDF (zstd or gzip) and upload to S3/R2.
     2. Compute `raw_sha256`.
 6. **Extract & normalize text**
-    1. Parse HTML → remove scripts/styles.
-    2. Main-content extraction: `trafilatura` (preferred) or `readability-lxml` fallback.
-    3. Canonicalization rules (see [10.3](#103-canonicalization-rules-to-reduce-noise)).
-    4. Compute `extracted_sha256`.
+    1. **For HTML**: Parse HTML → remove scripts/styles.
+    2. **For PDF**:
+        - Use `pdfplumber` or `pdfminer` for text extraction.
+        - If extracted text < 500 chars, apply OCR fallback via `Tesseract`.
+        - If still minimal, mark as `error_unsupported_pdf` with message "Image-based PDF could not be extracted".
+    3. **For iframe-embedded content** (e.g., Termly, iubenda):
+        - First, parse HTML for iframes with policy-like URLs.
+        - Attempt to fetch iframe `src` directly.
+        - If content minimal (< 500 chars), fall back to full Playwright render of parent page.
+    4. Main-content extraction: `trafilatura` (preferred) or `readability-lxml` fallback.
+    5. Canonicalization rules (see [10.3](#103-canonicalization-rules-to-reduce-noise)).
+    6. Compute `extracted_sha256`.
 7. **Change detection**
     1. Compare extracted hash to previous snapshot:
         - if identical: no-op; update `last_checked_at`.
@@ -964,6 +1092,8 @@ Applied to extracted text and (where possible) DOM pre-extraction:
     - keep original language; do not translate automatically in v0.1.0.
 
 All rules are versioned via `extract_version` so changes are traceable.
+
+**Extractor version migration**: When extractor is updated, new version only applies to future fetches. Existing snapshots keep their original extraction. No background re-extraction in v0.1.0.
 
 ### 10.4 Snapshot hashing and change detection thresholds
 
@@ -1061,15 +1191,39 @@ Output JSON schema:
 }
 ```
 
-### 11.3 Safety constraints (user-facing)
+### 11.3 Language handling
 
--   Always include: “This summary is informational and not legal advice.”
+-   **Summary language matches source language**: If the policy is in French, the summary is in French.
+-   No automatic translation in v0.1.0.
+-   Language detection stored in `snapshots.language` for future use.
+
+### 11.4 Citation validation (runtime)
+
+After receiving LLM response, validate each citation:
+1. For each `citation.quote`, verify it exists as a substring in the referenced `hunkId`.
+2. If any citation fails validation:
+    - Mark the specific bullet as `citation_invalid`.
+    - Include the summary but flag: "Some citations could not be verified."
+    - Log for model quality monitoring.
+3. Never display fabricated quotes to users.
+
+### 11.5 AI opinion and tone
+
+-   **Clear opinion with caveats**: The AI may flag concerning patterns.
+-   Acceptable: "This language typically indicates data sharing with third parties, which many users find concerning."
+-   Acceptable: "This change appears to broaden the definition of 'business purposes'."
+-   Not acceptable: "You must opt out immediately" or "This violates GDPR."
+-   Always include disclaimer.
+
+### 11.6 Safety constraints (user-facing)
+
+-   Always include: "This summary is informational and not legal advice."
 -   Disallow:
-    -   telling the user what they “must” do legally
+    -   telling the user what they "must" do legally
     -   claiming compliance/noncompliance
--   If diff is ambiguous, say so (“The policy text changed, but intent is unclear…”).
+-   If diff is ambiguous, say so ("The policy text changed, but intent is unclear…").
 
-### 11.4 Cost controls
+### 11.7 Cost controls
 
 1. Only run summary on meaningful changes.
 2. Per-tier monthly summary quotas (see [13.2](#132-tiers-quotas-and-feature-gates)).
@@ -1081,9 +1235,9 @@ Output JSON schema:
 5. Metering:
     - record tokens/cost in `provider_usage`
 6. Circuit breakers:
-    - if OpenRouter error rate > threshold, mark summaries as `failed` and continue diff+notifications with “summary unavailable”.
+    - if OpenRouter error rate > threshold, mark summaries as `failed` and continue diff+notifications with "summary unavailable".
 
-### 11.5 Evaluation & regression tests
+### 11.8 Evaluation & regression tests
 
 -   Maintain a small golden dataset in repo:
     -   input: structured hunks
@@ -1105,14 +1259,16 @@ Output JSON schema:
 
 ### 12.2 Email templates (v0.1.0)
 
-1. “Change detected” (immediate)
+1. "Change detected" (immediate)
     - Subject: `[Inplain] {Entity}: {Document type} updated`
     - Body:
-        - 2–5 bullets “What changed” with citations
+        - 2–5 bullets "What changed" with citations
         - link to change event in app
         - disclaimer
-2. “Daily digest”
-    - list of changes grouped by entity
+2. "Daily digest" (Pro+ only)
+    - **Timing**: Fixed 9:00 AM UTC for all users.
+    - List of changes grouped by entity.
+    - Summary counts: "3 policies changed across 2 companies".
 
 Templates must include:
 
@@ -1132,7 +1288,9 @@ Templates must include:
 
 -   Configure domain SPF/DKIM with Postmark.
 -   Use a dedicated sender domain: `mail.inplain.ai`.
+-   **IP strategy**: Start with Postmark's shared IP pool (good inherited reputation).
 -   Monitor bounce/spam complaints via Postmark webhooks (future); for v0.1.0 log delivery failures and suppress repeated bounces.
+-   **Future**: If sending volume exceeds ~10k/month, switch to dedicated IP for reputation isolation.
 
 ---
 
@@ -1154,18 +1312,20 @@ Billing implemented in v0.1.0 using **Stripe Checkout + Customer Portal**, while
 | --------------------- | -----------------------: | -----------------------: | -----------------------: |
 | Tracked documents     |                        3 |                       25 |                      200 |
 | Schedule frequency    |                    daily |                 every 6h |                 every 1h |
-| On-demand “check now” |                   10/day |                  100/day |                  500/day |
+| On-demand "check now" |                   10/day |                  100/day |                  500/day |
 | JS-render fetches     |                     0/mo |                   200/mo |                 2,000/mo |
-| AI summaries          |                    30/mo |                   500/mo |                 5,000/mo |
+| AI summaries          |               **10/mo**  |                   500/mo |                 5,000/mo |
 | Email notifications   |    immediate (max 20/mo) | immediate + daily digest | immediate + daily digest |
 | History retention     |                  30 days |                 180 days |                 730 days |
-| Export (JSON)         | limited (last 10 events) |                     full |                     full |
-| Custom ignore rules   |                       no |              no (future) |             yes (future) |
+| Export (JSON/CSV)     | limited (last 10 events) |                     full |                     full |
+| Custom ignore rules   |                       no |              no (future) |   yes (future, text patterns) |
 
 Notes:
 
--   “Immediate (max 20/mo)” for Free prevents notification abuse and cost spikes.
+-   **Conservative free tier**: 10 AI summaries/mo (reduced from 30) to control LLM costs.
+-   "Immediate (max 20/mo)" for Free prevents notification abuse and cost spikes.
 -   Free still gets value: tracking + diff + some summaries.
+-   **Export formats**: JSON and CSV supported for paid tiers.
 
 ### 13.3 Metering strategy (what we measure)
 
@@ -1228,9 +1388,19 @@ Additionally enforce DB counters (fast to query per period):
 **Downgrade policy**
 
 -   On non-payment:
-    -   mark plan “past_due” internally (optional) for 7 days
+    -   mark plan "past_due" internally (optional) for 7 days
     -   then downgrade to Free in Clerk metadata
 -   On downgrade, jobs beyond limits are paused (documents set to `paused` with reason).
+-   **User-controlled document selection on downgrade**:
+    -   When downgrading from higher tier (e.g., Business 200 → Free 3), show UI: "Select 3 documents to keep active."
+    -   User chooses which documents to keep; others are automatically paused.
+    -   If user doesn't act within 7 days, auto-pause the oldest documents by `created_at`.
+
+**Quota display UX**
+
+-   **Passive dashboard display**: Show usage meters on settings/billing page (e.g., "8/10 AI summaries used this month").
+-   **In-app banner**: When approaching limits (e.g., 80%+), display non-blocking banner: "You've used 8/10 AI summaries this month."
+-   **Limit block UX**: When at limit and attempting action, show clear upgrade CTA: "You've reached your document limit. Upgrade to Pro for 25 documents."
 
 ### 13.6 Abuse prevention aligned with monetization
 
@@ -1418,10 +1588,28 @@ Checks:
     - primarily `text/html`, `text/plain`
     - reject binaries
 
-### 16.3 Sandboxing/headless browser safety (Playwright)
+### 16.3 Crawler identity and User-Agent
+
+**User-Agent strategy**: Use generic browser-like User-Agent to avoid blocking.
+
+-   Default UA mimics Chrome: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36`
+-   Rationale: Many sites aggressively block identified bots; generic UA provides better coverage.
+-   Trade-off accepted: Less transparent, but aligned with product goal of reliable monitoring.
+
+**Robots.txt handling**:
+-   Use `*` as the effective User-Agent for robots.txt parsing.
+-   Respect `Disallow` rules for all paths.
+-   Cache robots.txt decisions for 24 hours per host.
+
+### 16.4 Sandboxing/headless browser safety (Playwright)
 
 Renderer worker hardening:
 
+-   **Use playwright-stealth** plugin to bypass common headless detection:
+    -   Mask WebGL vendor/renderer
+    -   Add missing plugins
+    -   Fix navigator properties
+    -   Randomize canvas fingerprint
 -   Use Playwright with:
     -   downloads disabled
     -   new incognito context per job
@@ -1436,7 +1624,7 @@ Renderer worker hardening:
 -   Renderer only needs:
     -   Redis, object storage write, minimal DB (optional; can return HTML via Redis result instead)
 
-### 16.4 Webhook verification
+### 16.5 Webhook verification
 
 -   Clerk:
     -   verify with Clerk signing secret
@@ -1446,7 +1634,7 @@ Renderer worker hardening:
     -   idempotency: unique(`source`,`external_id`)
 -   Reject payloads that fail verification with 401.
 
-### 16.5 Encryption
+### 16.6 Encryption
 
 -   In transit: HTTPS/TLS.
 -   At rest:
@@ -1455,7 +1643,7 @@ Renderer worker hardening:
 -   Secrets:
     -   Railway env vars; rotate quarterly.
 
-### 16.6 Audit logging
+### 16.7 Audit logging
 
 Log these actions to `audit_logs`:
 
@@ -1888,3 +2076,84 @@ Admin UI pages (behind admin role):
 -   Summaries:
     -   max hunks: 20
     -   prompt_version: 1
+
+---
+
+## Appendix F — Interview Decisions Summary (v0.1.0-rev1)
+
+This appendix documents all decisions made during the product interview process. Each decision is cross-referenced to the relevant spec section.
+
+### Content & Extraction
+
+| Decision | Choice | Section |
+|----------|--------|---------|
+| PDF support | Handle PDFs + OCR fallback | FR-3, 10.1 |
+| Iframe handling | Detect src first, fallback to full render | 10.1 |
+| URL canonicalization | Aggressive (strip www, slashes, query params) | 10.1 |
+| Extractor migration | Future fetches only (no backfill) | 10.3 |
+
+### AI & Summaries
+
+| Decision | Choice | Section |
+|----------|--------|---------|
+| Summary language | Match source language | 11.3 |
+| Citation validation | Runtime validation (verify quotes exist) | 11.4 |
+| AI opinion style | Clear opinion with caveats | 11.5 |
+| Free tier AI limit | 10 summaries/month (conservative) | 13.2 |
+
+### UI/UX
+
+| Decision | Choice | Section |
+|----------|--------|---------|
+| Diff viewer | Section-first (collapsed) | 9.5.2 |
+| Section detection | Hybrid (heuristic + semantic) | 9.5.2 |
+| Citation navigation | Scroll + highlight + auto-expand | 9.5.3 |
+| History display | Recent 10, export for full | 9.5.4 |
+| Add document flow | Inline validation with hybrid timeout | 9.5.5 |
+| Failed summary UX | Diff only with clear message | 9.5.6 |
+| Mobile | Responsive web only | 9.5.1 |
+| Marketing site | Next.js hybrid SSR | 9.5.1 |
+
+### Quotas & Limits
+
+| Decision | Choice | Section |
+|----------|--------|---------|
+| Quota display | Dashboard + in-app banner | 13.5 |
+| Limit block | Block with upgrade CTA | 9.5.5 |
+| Downgrade handling | User chooses which docs to keep | 13.5 |
+
+### Technical
+
+| Decision | Choice | Section |
+|----------|--------|---------|
+| Race condition (scheduler vs check-now) | Dedupe by recency (5 min) | 10.1 |
+| Webhook ordering | UI ensures Clerk first | 9.6 |
+| API versioning | Short overlap (3-6 months) | 9.1 |
+| Error format | Code + message + details | 9.1 |
+| Robots.txt refresh | Daily cache | 10.1 |
+| User-Agent | Generic browser-like | 16.3 |
+| Renderer stealth | playwright-stealth enabled | 16.4 |
+| Email IP strategy | Shared (Postmark default) | 12.4 |
+| Daily digest timing | Fixed 9am UTC | 12.2 |
+| Data residency | US-only, documented | 5.4.1 |
+
+### Admin
+
+| Decision | Choice | Section |
+|----------|--------|---------|
+| Admin impersonation | Allow with audit trail | 9.5.8 |
+
+### Crawling Posture
+
+| Decision | Choice | Section |
+|----------|--------|---------|
+| Adversarial response | Committed to transparency/scrutiny | 21 |
+| URL gone (404) | Auto-pause silently | 9.5.6 |
+| Robots blocked | Show specific rule | 9.5.6 |
+
+### Future (text patterns for ignore rules)
+
+| Decision | Choice | Section |
+|----------|--------|---------|
+| Custom ignore rules | Text patterns (not CSS selectors) | 13.2 |
+| Export formats | JSON + CSV | 13.2 |
