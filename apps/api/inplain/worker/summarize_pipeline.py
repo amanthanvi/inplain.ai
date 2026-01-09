@@ -13,7 +13,7 @@ from inplain.db.models.change_events import ChangeEvent
 from inplain.db.models.diffs import Diff
 from inplain.db.models.documents import Document
 from inplain.db.models.entitlements import Entitlement
-from inplain.db.models.enums import Provider, ProviderAction, SummaryStatus
+from inplain.db.models.enums import JobStatus, JobType, Provider, ProviderAction, SummaryStatus
 from inplain.db.models.jobs import Job
 from inplain.db.models.provider_usage import ProviderUsage
 from inplain.settings import settings
@@ -124,6 +124,15 @@ def run_summarize_job(db: Session, job: Job) -> None:
             tokens_out=usage.get("completion_tokens"),
             cost_usd_micros=usage.get("cost_usd_micros"),
             period_key=period_key,
+        )
+    )
+
+    db.add(
+        Job(
+            user_id=doc.user_id,
+            document_id=doc.id,
+            job_type=JobType.notify,
+            status=JobStatus.queued,
         )
     )
 
