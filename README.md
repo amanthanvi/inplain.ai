@@ -32,6 +32,11 @@ PLAN.md
 make dev-up
 ```
 
+Default dev ports:
+
+- Postgres: `localhost:54321` (db/user/pass: `inplain` / `inplain` / `inplain`)
+- Redis: `localhost:6380`
+
 2) Web:
 
 ```bash
@@ -42,6 +47,7 @@ make dev-web
 
 ```bash
 make venv
+make migrate
 make dev-api
 ```
 
