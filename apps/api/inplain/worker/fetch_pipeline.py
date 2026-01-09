@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import difflib
 import hashlib
+import io
 import ipaddress
 import socket
 import urllib.robotparser
@@ -11,6 +12,7 @@ from urllib.parse import urljoin, urlparse
 import httpx
 import trafilatura
 from lxml import html as lxml_html
+from pdfminer.high_level import extract_text as pdf_extract_text
 from readability import Document as ReadabilityDocument
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -54,6 +56,10 @@ _MEANINGFUL_KEYWORDS = {
 }
 
 _DISCLAIMER = "This summary is informational and not legal advice."
+
+
+class UnsupportedPdfError(RuntimeError):
+    pass
 
 
 def run_fetch_job(db: Session, job: Job) -> None:
@@ -121,7 +127,13 @@ def run_fetch_job(db: Session, job: Job) -> None:
     raw_bytes = resp.content
     raw_sha256 = hashlib.sha256(raw_bytes).digest()
 
-    extracted_text = _extract_text(resp)
+    try:
+        extracted_text = _extract_text(resp)
+    except UnsupportedPdfError:
+        doc.status = DocumentStatus.error
+        db.add(doc)
+        db.commit()
+        return
     extracted_bytes = extracted_text.encode("utf-8")
     extracted_sha256 = hashlib.sha256(extracted_bytes).digest()
 
@@ -324,6 +336,17 @@ def _extract_text(resp: httpx.Response) -> str:
             content_type = "text/html"
         else:
             content_type = "text/plain"
+
+    if "application/pdf" in content_type or str(resp.url.path).lower().endswith(".pdf"):
+        try:
+            extracted = pdf_extract_text(io.BytesIO(resp.content))
+        except Exception as e:
+            raise UnsupportedPdfError("pdf extraction failed") from e
+
+        extracted = _normalize_text(extracted or "")
+        if len(extracted) < 500:
+            raise UnsupportedPdfError("pdf extraction too small")
+        return extracted
     if content_type.startswith("text/plain"):
         return _normalize_text(resp.text)
 

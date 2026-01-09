@@ -12,3 +12,4 @@ PyJWT[crypto]==2.10.1
 svix==1.84.1
 trafilatura==2.0.0
 readability-lxml==0.8.4.1
+pdfminer.six==20260107
