@@ -71,6 +71,32 @@ def fetch_user_email(clerk_user_id: str) -> str | None:
     return None
 
 
+def update_user_public_metadata(clerk_user_id: str, updates: dict[str, Any]) -> None:
+    if not settings.clerk_secret_key:
+        raise RuntimeError("CLERK_SECRET_KEY is required")
+
+    url = f"{settings.clerk_api_base_url.rstrip('/')}/v1/users/{clerk_user_id}"
+    headers = {"Authorization": f"Bearer {settings.clerk_secret_key}"}
+
+    with httpx.Client(timeout=httpx.Timeout(10.0, connect=5.0)) as client:
+        resp = client.get(url, headers=headers)
+    if resp.status_code >= 400:
+        raise RuntimeError(f"clerk api error: status {resp.status_code}")
+
+    data = resp.json()
+    public_metadata = data.get("public_metadata") or data.get("publicMetadata") or {}
+    if not isinstance(public_metadata, dict):
+        public_metadata = {}
+
+    merged = dict(public_metadata)
+    merged.update(updates)
+
+    with httpx.Client(timeout=httpx.Timeout(10.0, connect=5.0)) as client:
+        resp = client.patch(url, headers=headers, json={"public_metadata": merged})
+    if resp.status_code >= 400:
+        raise RuntimeError(f"clerk api error: status {resp.status_code}")
+
+
 _JWK_CLIENT: PyJWKClient | None = None
 
 
@@ -79,4 +105,3 @@ def _get_jwk_client(jwks_url: str) -> PyJWKClient:
     if _JWK_CLIENT is None or _JWK_CLIENT.uri != jwks_url:
         _JWK_CLIENT = PyJWKClient(jwks_url)
     return _JWK_CLIENT
-
