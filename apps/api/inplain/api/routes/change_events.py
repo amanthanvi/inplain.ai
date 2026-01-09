@@ -5,7 +5,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
@@ -75,9 +75,12 @@ def list_change_events(
     if cursor:
         cursor_created_at, cursor_id = _decode_cursor(cursor)
         stmt = stmt.where(
-            and_(
-                ChangeEvent.created_at <= cursor_created_at,
-                ChangeEvent.id != cursor_id,
+            or_(
+                ChangeEvent.created_at < cursor_created_at,
+                and_(
+                    ChangeEvent.created_at == cursor_created_at,
+                    ChangeEvent.id < cursor_id,
+                ),
             )
         )
 
