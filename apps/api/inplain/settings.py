@@ -22,5 +22,9 @@ class Settings(BaseSettings):
     openrouter_primary_model: str = "anthropic/claude-3.5-sonnet"
     openrouter_fallback_model: str = "openai/gpt-4o-mini"
 
+    postmark_server_token: str | None = None
+    postmark_from_email: str | None = None
+    postmark_base_url: str = "https://api.postmarkapp.com"
+
 
 settings = Settings()
