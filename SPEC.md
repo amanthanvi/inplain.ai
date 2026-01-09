@@ -839,6 +839,21 @@ All errors return both machine-readable code and human-readable message:
 { "ok": true }
 ```
 
+#### Me
+
+`GET /v1/me`
+
+Response includes the current plan and limits (used to render tier gating + usage UI):
+
+```json
+{
+	"id": "0f5d0c7e-...-f2b",
+	"email": "user@example.com",
+	"plan": "free",
+	"limits": { "tracked_documents": 3, "ai_summaries_per_month": 10 }
+}
+```
+
 #### Entities
 
 `POST /v1/entities`
@@ -886,6 +901,47 @@ Response includes robots status and initial job:
 	"robotsStatus": "allowed",
 	"nextDueAt": "2026-01-10T00:00:00Z",
 	"initialJob": { "jobId": "c91a...e2", "status": "queued" }
+}
+```
+
+`GET /v1/entities/{entityId}/documents?cursor=...&limit=20`
+
+Response:
+
+```json
+{
+	"items": [
+		{
+			"id": "b2d1...9a",
+			"url": "https://acme.com/privacy",
+			"docType": "privacy",
+			"status": "active",
+			"robotsStatus": "allowed",
+			"nextDueAt": "2026-01-10T00:00:00Z",
+			"lastCheckedAt": "2026-01-09T19:00:00Z",
+			"lastChangeEventId": "ce1...",
+			"createdAt": "2026-01-09T19:00:00Z"
+		}
+	],
+	"nextCursor": null
+}
+```
+
+`GET /v1/documents/{documentId}`
+
+Response:
+
+```json
+{
+	"id": "b2d1...9a",
+	"url": "https://acme.com/privacy",
+	"docType": "privacy",
+	"status": "active",
+	"robotsStatus": "allowed",
+	"nextDueAt": "2026-01-10T00:00:00Z",
+	"lastCheckedAt": "2026-01-09T19:00:00Z",
+	"lastChangeEventId": "ce1...",
+	"createdAt": "2026-01-09T19:00:00Z"
 }
 ```
 
