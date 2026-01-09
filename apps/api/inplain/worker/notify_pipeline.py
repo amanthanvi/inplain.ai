@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import httpx
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from inplain.db.models.change_events import ChangeEvent
 from inplain.db.models.documents import Document
 from inplain.db.models.enums import (
+    EmailMode,
     EmailProvider,
     NotificationChannel,
     NotificationStatus,
@@ -17,10 +19,19 @@ from inplain.db.models.enums import (
     SummaryStatus,
 )
 from inplain.db.models.jobs import Job
+from inplain.db.models.notification_preferences import NotificationPreference
 from inplain.db.models.notifications import Notification
 from inplain.db.models.provider_usage import ProviderUsage
 from inplain.db.models.users import User
+from inplain.entitlements.service import ensure_entitlement
+from inplain.notifications.unsubscribe import generate_unsubscribe_token
 from inplain.settings import settings
+
+
+@dataclass(frozen=True)
+class _EffectiveEmailPreference:
+    email_enabled: bool
+    email_mode: EmailMode
 
 
 def run_notify_job(db: Session, job: Job) -> None:
@@ -29,6 +40,10 @@ def run_notify_job(db: Session, job: Job) -> None:
 
     if not settings.postmark_server_token or not settings.postmark_from_email:
         raise RuntimeError("postmark not configured")
+    if not settings.unsubscribe_secret:
+        raise RuntimeError("unsubscribe not configured")
+    if not settings.web_base_url or not settings.api_public_base_url:
+        raise RuntimeError("base urls not configured")
 
     doc = db.execute(select(Document).where(Document.id == job.document_id)).scalar_one_or_none()
     if doc is None or doc.deleted_at is not None:
@@ -42,8 +57,34 @@ def run_notify_job(db: Session, job: Job) -> None:
     if change_event is None:
         return
 
+    pref = _effective_notification_preference(db, user_id=user.id, document_id=doc.id)
+    if not pref.email_enabled:
+        _write_suppressed_notification(db, user, change_event, reason="unsubscribed")
+        return
+
+    if pref.email_mode == EmailMode.daily_digest:
+        return
+
+    entitlement = ensure_entitlement(db, user.id)
+    email_limit = entitlement.limits.get("email_notifications_max_per_month")
+    if isinstance(email_limit, int):
+        now = datetime.now(UTC)
+        used = db.execute(
+            select(func.coalesce(func.sum(ProviderUsage.quantity), 0))
+            .where(
+                ProviderUsage.user_id == user.id,
+                ProviderUsage.provider == Provider.postmark,
+                ProviderUsage.action == ProviderAction.email_send,
+                ProviderUsage.period_key == now.strftime("%Y-%m"),
+            )
+            .limit(1)
+        ).scalar_one()
+        if isinstance(used, int) and used >= email_limit:
+            _write_suppressed_notification(db, user, change_event, reason="quota_exceeded")
+            return
+
     to_email = user.email
-    subject, body = _render_email(doc=doc, event=change_event)
+    subject, body = _render_email(user=user, doc=doc, event=change_event)
 
     notification = Notification(
         user_id=user.id,
@@ -120,11 +161,90 @@ def _next_change_event_to_notify(
     return db.execute(stmt).scalars().one_or_none()
 
 
-def _render_email(*, doc: Document, event: ChangeEvent) -> tuple[str, str]:
+def _effective_notification_preference(
+    db: Session, *, user_id, document_id
+) -> _EffectiveEmailPreference:
+    pref = (
+        db.execute(
+            select(NotificationPreference).where(
+                NotificationPreference.user_id == user_id,
+                NotificationPreference.document_id == document_id,
+            )
+        )
+        .scalars()
+        .one_or_none()
+    )
+    if pref is not None:
+        return _EffectiveEmailPreference(
+            email_enabled=pref.email_enabled,
+            email_mode=pref.email_mode,
+        )
+
+    global_pref = (
+        db.execute(
+            select(NotificationPreference)
+            .where(
+                NotificationPreference.user_id == user_id,
+                NotificationPreference.document_id.is_(None),
+            )
+            .order_by(NotificationPreference.created_at.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+    if global_pref is not None:
+        return _EffectiveEmailPreference(
+            email_enabled=global_pref.email_enabled,
+            email_mode=global_pref.email_mode,
+        )
+
+    return _EffectiveEmailPreference(email_enabled=True, email_mode=EmailMode.immediate)
+
+
+def _write_suppressed_notification(
+    db: Session,
+    user: User,
+    event: ChangeEvent,
+    *,
+    reason: str,
+) -> None:
+    status_value = (
+        NotificationStatus.suppressed_unsubscribed
+        if reason == "unsubscribed"
+        else NotificationStatus.failed
+    )
+    notification = Notification(
+        user_id=user.id,
+        change_event_id=event.id,
+        channel=NotificationChannel.email,
+        status=status_value,
+        to_email=user.email,
+        provider=EmailProvider.postmark,
+        provider_message_id=None,
+        error=reason,
+        sent_at=None,
+    )
+    db.add(notification)
+    db.commit()
+
+
+def _render_email(*, user: User, doc: Document, event: ChangeEvent) -> tuple[str, str]:
     subject = f"[Inplain] {doc.doc_type.value.capitalize()} policy updated"
+    event_link = f"{settings.web_base_url.rstrip('/')}/app/change-events/{event.id}"
+
+    secret = settings.unsubscribe_secret
+    if not secret:
+        raise RuntimeError("unsubscribe not configured")
+
+    token = generate_unsubscribe_token(user.id, secret=secret)
+    unsubscribe_link = (
+        f"{settings.api_public_base_url.rstrip('/')}/v1/unsubscribe?token={token}"
+    )
 
     lines: list[str] = []
     lines.append(f"URL: {doc.url}")
+    lines.append(f"View: {event_link}")
     lines.append("")
 
     if event.summary_status == SummaryStatus.completed and event.summary_what_changed:
@@ -137,7 +257,8 @@ def _render_email(*, doc: Document, event: ChangeEvent) -> tuple[str, str]:
 
     lines.append(_disclaimer_for_event(event))
     lines.append("")
-    lines.append("Manage notifications in the app.")
+    lines.append(f"Unsubscribe: {unsubscribe_link}")
+    lines.append(f"Manage notifications: {settings.web_base_url.rstrip('/')}/app/settings")
 
     return subject, "\n".join(lines)
 
@@ -170,4 +291,3 @@ def _postmark_send(*, to_email: str, subject: str, body: str) -> str:
     data = resp.json()
     msg_id = data.get("MessageID") or data.get("MessageId")
     return str(msg_id) if msg_id else ""
-

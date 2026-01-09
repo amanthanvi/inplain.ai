@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     stripe_price_id_pro: str | None = None
     stripe_price_id_business: str | None = None
     web_base_url: str = "http://localhost:3000"
+    api_public_base_url: str = "http://localhost:8000"
+    unsubscribe_secret: str | None = None
 
     openrouter_api_key: str | None = None
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
