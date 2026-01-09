@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from inplain.api.routes.admin import router as admin_router
 from inplain.api.routes.billing import router as billing_router
 from inplain.api.routes.change_events import router as change_events_router
 from inplain.api.routes.documents import router as documents_router
@@ -30,6 +31,7 @@ def create_app() -> FastAPI:
     app.include_router(me_router)
     app.include_router(billing_router)
     app.include_router(unsubscribe_router)
+    app.include_router(admin_router)
     app.include_router(entities_router)
     app.include_router(documents_router)
     app.include_router(change_events_router)

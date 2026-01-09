@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from inplain.auth.clerk import fetch_user_email, verify_session_token
 from inplain.db.models.entitlements import Entitlement
-from inplain.db.models.enums import Plan, UserStatus
+from inplain.db.models.enums import Plan, UserRole, UserStatus
 from inplain.db.models.users import User
 from inplain.db.session import get_db
 from inplain.entitlements.defaults import default_limits
@@ -122,4 +122,18 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
         db.add(entitlement)
         db.commit()
 
+    return user
+
+
+def require_admin(user: User = Depends(get_current_user)) -> User:
+    if user.role != UserRole.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": {
+                    "code": "FORBIDDEN",
+                    "message": "Admin access required.",
+                }
+            },
+        )
     return user
