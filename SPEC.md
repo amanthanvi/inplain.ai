@@ -1154,6 +1154,12 @@ Implementation:
 -   Model list in config; choose first available within per-user budget.
 -   Record selected model in `change_events.summary_model`.
 
+**Backend configuration (env)**
+
+-   `OPENROUTER_API_KEY`
+-   Optional: `OPENROUTER_BASE_URL` (default `https://openrouter.ai/api/v1`)
+-   Optional: `OPENROUTER_PRIMARY_MODEL`, `OPENROUTER_FALLBACK_MODEL`
+
 ### 11.2 Prompt strategy (grounded + citations)
 
 **Hard requirements**
