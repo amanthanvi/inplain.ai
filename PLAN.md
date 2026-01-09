@@ -110,3 +110,5 @@ Acceptance:
 - 2026-01-09: Worker pipeline upgraded (robots + extraction + PDF + iframe attempts) and OpenRouter summarizer job added (citation validation + provider_usage metering).
 - 2026-01-09: Postmark notify job pipeline added (writes `notifications` + provider_usage).
 - 2026-01-09: Add `/v1/me`, `/v1/entities/{entityId}/documents` (list), and `/v1/documents/{documentId}` endpoints for web app wiring.
+- 2026-01-09: Web app scaffolded (onboarding via Entities → Documents; document history + diff viewer).
+- 2026-01-09: Enforce entitlements on document creation; add Stripe checkout/portal + Stripe webhook sync to entitlements and Clerk metadata.

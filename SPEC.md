@@ -1033,6 +1033,32 @@ Response:
 }
 ```
 
+#### Billing
+
+`POST /v1/billing/checkout-session`
+
+```json
+{ "plan": "pro" }
+```
+
+Response:
+
+```json
+{ "url": "https://checkout.stripe.com/..." }
+```
+
+`POST /v1/billing/portal-session`
+
+Response:
+
+```json
+{ "url": "https://billing.stripe.com/..." }
+```
+
+Stripe webhooks:
+
+- `POST /v1/webhooks/stripe`
+
 #### Admin
 
 `GET /v1/admin/jobs?status=failed&limit=50`
