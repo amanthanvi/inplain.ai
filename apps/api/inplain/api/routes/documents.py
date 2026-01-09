@@ -22,7 +22,9 @@ from inplain.db.models.enums import (
 from inplain.db.models.jobs import Job
 from inplain.db.models.users import User
 from inplain.db.session import get_db
+from inplain.settings import settings
 from inplain.url_canonicalization import canonicalize_url
+from inplain.worker.celery_app import celery_app
 
 router = APIRouter(prefix="/v1")
 
@@ -100,6 +102,9 @@ def create_document(
     db.refresh(doc)
     db.refresh(job)
 
+    if settings.enqueue_jobs:
+        celery_app.send_task("inplain.worker.tasks.run_job", args=[str(job.id)])
+
     return DocumentOut(
         id=doc.id,
         url=doc.url,
@@ -161,6 +166,9 @@ def check_now(
     db.add(job)
     db.commit()
     db.refresh(job)
+
+    if settings.enqueue_jobs:
+        celery_app.send_task("inplain.worker.tasks.run_job", args=[str(job.id)])
 
     return CheckNowOut(job_id=job.id, status=job.status)
 
