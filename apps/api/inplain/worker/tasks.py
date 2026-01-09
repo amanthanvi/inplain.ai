@@ -8,8 +8,10 @@ from sqlalchemy import select
 from inplain.db.models.enums import JobStatus, JobType
 from inplain.db.models.jobs import Job
 from inplain.db.session import SessionLocal
+from inplain.settings import settings
 from inplain.worker.celery_app import celery_app
 from inplain.worker.fetch_pipeline import run_fetch_job
+from inplain.worker.scheduler import enqueue_pending_jobs
 from inplain.worker.summarize_pipeline import run_summarize_job
 
 
@@ -48,6 +50,9 @@ def run_job(job_id: str) -> None:
             db.add(job)
             db.commit()
             return
+
+        if settings.enqueue_jobs and job.job_type in {JobType.fetch, JobType.summarize}:
+            enqueue_pending_jobs(db)
 
         job.status = JobStatus.succeeded
         job.finished_at = datetime.now(UTC)
