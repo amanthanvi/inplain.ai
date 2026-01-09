@@ -55,6 +55,15 @@ _MEANINGFUL_KEYWORDS = {
     "opt out",
 }
 
+_IFRAME_POLICY_KEYWORDS = {
+    "privacy",
+    "terms",
+    "tos",
+    "policy",
+    "iubenda",
+    "termly",
+}
+
 _DISCLAIMER = "This summary is informational and not legal advice."
 
 
@@ -323,7 +332,7 @@ def _normalize_text(text: str) -> str:
     return normalized.strip()
 
 
-def _extract_text(resp: httpx.Response) -> str:
+def _extract_text(resp: httpx.Response, *, allow_iframe: bool = True) -> str:
     content_type = (resp.headers.get("content-type") or "").lower()
     if not content_type:
         content = resp.text.lstrip()
@@ -363,13 +372,61 @@ def _extract_text(resp: httpx.Response) -> str:
             output_format="txt",
         )
         if extracted:
-            return _normalize_text(extracted)
+            extracted_text = _normalize_text(extracted)
+        else:
+            readable = ReadabilityDocument(resp.text).summary(html_partial=True)
+            root = lxml_html.fromstring(readable)
+            extracted_text = _normalize_text(root.text_content())
 
-        readable = ReadabilityDocument(resp.text).summary(html_partial=True)
-        root = lxml_html.fromstring(readable)
-        return _normalize_text(root.text_content())
+        if allow_iframe and len(extracted_text) < 500:
+            iframe_text = _try_iframe_extraction(resp)
+            if iframe_text and len(iframe_text) > len(extracted_text):
+                return iframe_text
+
+        return extracted_text
 
     raise RuntimeError(f"disallowed content-type: {content_type}")
+
+
+def _try_iframe_extraction(resp: httpx.Response) -> str | None:
+    candidates = _iframe_candidates(resp.text, base_url=str(resp.url))
+    for url in candidates[:3]:
+        try:
+            iframe_resp = _http_fetch(url, headers={})
+            text = _extract_text(iframe_resp, allow_iframe=False)
+        except Exception:
+            continue
+
+        if len(text) >= 500:
+            return text
+
+    return None
+
+
+def _iframe_candidates(html: str, *, base_url: str) -> list[str]:
+    try:
+        root = lxml_html.fromstring(html)
+    except Exception:
+        return []
+
+    urls: list[str] = []
+    for src in root.xpath("//iframe[@src]/@src"):
+        if not isinstance(src, str) or not src:
+            continue
+
+        full = urljoin(base_url, src)
+        if any(k in full.lower() for k in _IFRAME_POLICY_KEYWORDS):
+            urls.append(full)
+
+    seen: set[str] = set()
+    unique: list[str] = []
+    for u in urls:
+        if u in seen:
+            continue
+        seen.add(u)
+        unique.append(u)
+
+    return unique
 
 
 def _compute_diff(
