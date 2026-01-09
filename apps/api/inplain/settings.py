@@ -34,5 +34,7 @@ class Settings(BaseSettings):
     postmark_from_email: str | None = None
     postmark_base_url: str = "https://api.postmarkapp.com"
 
+    cors_allow_origins: str | None = None
+
 
 settings = Settings()
