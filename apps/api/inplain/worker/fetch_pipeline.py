@@ -24,12 +24,16 @@ from inplain.db.models.enums import (
     ChangeEventType,
     DiffFormat,
     DocumentStatus,
+    JobStatus,
+    JobType,
     RobotsStatus,
     SnapshotFetchMethod,
     SummaryStatus,
 )
 from inplain.db.models.jobs import Job
 from inplain.db.models.snapshots import Snapshot
+from inplain.settings import settings
+from inplain.worker.celery_app import celery_app
 
 _DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -213,6 +217,24 @@ def run_fetch_job(db: Session, job: Job) -> None:
         db.flush()
 
         doc.last_change_event_id = event.id
+
+        summarize_job = Job(
+            user_id=doc.user_id,
+            document_id=doc.id,
+            job_type=JobType.summarize,
+            status=JobStatus.queued,
+        )
+        db.add(summarize_job)
+        db.flush()
+
+        if settings.enqueue_jobs:
+            async_result = celery_app.send_task(
+                "inplain.worker.tasks.run_job",
+                args=[str(summarize_job.id)],
+                queue=summarize_job.job_type.value,
+            )
+            summarize_job.celery_task_id = async_result.id
+            db.add(summarize_job)
 
     db.add(doc)
     db.commit()
