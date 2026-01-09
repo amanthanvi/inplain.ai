@@ -1,0 +1,40 @@
+.shell {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 12px 0 24px;
+}
+
+.brand {
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+}
+
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.link {
+  opacity: 0.8;
+}
+
+.link:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+

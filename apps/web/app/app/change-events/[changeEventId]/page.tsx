@@ -1,0 +1,159 @@
+import Link from "next/link";
+
+import { inplainFetchJson } from "../../../../lib/inplain-api";
+
+type ChangeEventResponse = {
+  id: string;
+  documentId: string;
+  title: string;
+  createdAt: string;
+  summary: {
+    whatChanged: Array<{ quote: string; hunkId: string; note: string }>;
+    whyItMatters: Array<{ quote: string; hunkId: string; note: string }>;
+    disclaimer: string;
+  } | null;
+  diff: {
+    format: "unified" | string;
+    unified: string;
+    hunks: Array<{
+      hunkId: string;
+      context: string;
+      added: string[];
+      removed: string[];
+    }>;
+  };
+};
+
+function DiffHunk({ hunk }: { hunk: ChangeEventResponse["diff"]["hunks"][number] }) {
+  return (
+    <div
+      style={{
+        borderRadius: 16,
+        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.03)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          padding: "10px 12px",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          fontSize: 12,
+          opacity: 0.75,
+        }}
+      >
+        <div>
+          <span style={{ opacity: 0.9 }}>{hunk.hunkId}</span>
+          {hunk.context ? <span> · {hunk.context}</span> : null}
+        </div>
+      </div>
+      <div
+        style={{
+          margin: 0,
+          padding: 12,
+          fontSize: 12,
+          lineHeight: 1.6,
+          overflowX: "auto",
+          whiteSpace: "pre",
+          fontFamily:
+            "var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        }}
+      >
+        {hunk.removed.map((line, idx) => (
+          <div key={`r-${idx}`} style={{ color: "#ff9aa4" }}>
+            - {line}
+          </div>
+        ))}
+        {hunk.added.map((line, idx) => (
+          <div key={`a-${idx}`} style={{ color: "#98f5c4" }}>
+            + {line}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default async function ChangeEventPage({
+  params,
+}: {
+  params: Promise<{ changeEventId: string }>;
+}) {
+  const { changeEventId } = await params;
+  const event = await inplainFetchJson<ChangeEventResponse>(`/v1/change-events/${changeEventId}`);
+
+  return (
+    <div style={{ display: "grid", gap: 16 }}>
+      <div style={{ display: "grid", gap: 8 }}>
+        <Link href={`/app/documents/${event.documentId}`} style={{ opacity: 0.7 }}>
+          ← Document
+        </Link>
+        <h1 style={{ fontSize: 18, letterSpacing: "-0.02em" }}>{event.title}</h1>
+        <div style={{ fontSize: 12, opacity: 0.75 }}>
+          {new Date(event.createdAt).toLocaleString()}
+        </div>
+      </div>
+
+      {event.summary ? (
+        <div
+          style={{
+            display: "grid",
+            gap: 10,
+            padding: 14,
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.10)",
+            background: "rgba(255,255,255,0.03)",
+          }}
+        >
+          <div style={{ fontWeight: 650 }}>Summary</div>
+          <div style={{ display: "grid", gap: 8 }}>
+            <div style={{ fontSize: 13, opacity: 0.75 }}>What changed</div>
+            <ul style={{ display: "grid", gap: 10, paddingLeft: 16 }}>
+              {event.summary.whatChanged.map((b, idx) => (
+                <li key={idx} style={{ fontSize: 14, lineHeight: 1.5 }}>
+                  {b.note}{" "}
+                  <span style={{ fontSize: 12, opacity: 0.7 }}>[{b.hunkId}]</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div style={{ display: "grid", gap: 8 }}>
+            <div style={{ fontSize: 13, opacity: 0.75 }}>Why it matters</div>
+            <ul style={{ display: "grid", gap: 10, paddingLeft: 16 }}>
+              {event.summary.whyItMatters.map((b, idx) => (
+                <li key={idx} style={{ fontSize: 14, lineHeight: 1.5 }}>
+                  {b.note}{" "}
+                  <span style={{ fontSize: 12, opacity: 0.7 }}>[{b.hunkId}]</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.7 }}>{event.summary.disclaimer}</div>
+        </div>
+      ) : (
+        <div
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.04)",
+            fontSize: 13,
+            opacity: 0.9,
+          }}
+        >
+          AI summary unavailable yet. You can still review the diff below.
+        </div>
+      )}
+
+      <div style={{ display: "grid", gap: 10 }}>
+        <h2 style={{ fontSize: 15, opacity: 0.85 }}>Diff</h2>
+        {event.diff.hunks.map((h) => (
+          <DiffHunk key={h.hunkId} hunk={h} />
+        ))}
+      </div>
+    </div>
+  );
+}
