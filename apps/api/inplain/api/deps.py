@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from inplain.auth.clerk import fetch_user_email, verify_session_token
+from inplain.api.ratelimit import enforce_user_rate_limit
 from inplain.db.models.entitlements import Entitlement
 from inplain.db.models.enums import Plan, UserRole, UserStatus
 from inplain.db.models.users import User
@@ -34,6 +35,8 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
             db.add(user)
             db.commit()
             db.refresh(user)
+
+        enforce_user_rate_limit(request, user_id=str(user.id), plan=Plan.free)
         return user
 
     authorization = request.headers.get("Authorization")
@@ -95,6 +98,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
         db.add(entitlement)
         db.commit()
         db.refresh(user)
+        enforce_user_rate_limit(request, user_id=str(user.id), plan=Plan.free)
         return user
 
     if user.status != UserStatus.active:
@@ -122,6 +126,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
         db.add(entitlement)
         db.commit()
 
+    enforce_user_rate_limit(request, user_id=str(user.id), plan=entitlement.plan)
     return user
 
 

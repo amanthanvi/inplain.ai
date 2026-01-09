@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from inplain.api.ratelimit import RateLimitMiddleware
 from inplain.api.routes.admin import router as admin_router
 from inplain.api.routes.billing import router as billing_router
 from inplain.api.routes.change_events import router as change_events_router
@@ -15,6 +16,7 @@ from inplain.settings import settings
 
 def create_app() -> FastAPI:
     app = FastAPI()
+    app.add_middleware(RateLimitMiddleware)
 
     if settings.cors_allow_origins:
         origins = [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]
