@@ -4,10 +4,14 @@ import difflib
 import hashlib
 import ipaddress
 import socket
+import urllib.robotparser
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urljoin, urlparse
 
 import httpx
+import trafilatura
+from lxml import html as lxml_html
+from readability import Document as ReadabilityDocument
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,16 +22,23 @@ from inplain.db.models.enums import (
     ChangeEventType,
     DiffFormat,
     DocumentStatus,
+    RobotsStatus,
     SnapshotFetchMethod,
     SummaryStatus,
 )
 from inplain.db.models.jobs import Job
 from inplain.db.models.snapshots import Snapshot
 
+_DEFAULT_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
 _MAX_REDIRECTS = 5
 _MAX_RESPONSE_BYTES = 5 * 1024 * 1024
-_EXTRACT_VERSION = 1
+_EXTRACT_VERSION = 2
 _RETENTION_DAYS_DEFAULT = 30
+_ROBOTS_TTL = timedelta(hours=24)
 
 _MEANINGFUL_KEYWORDS = {
     "share",
@@ -56,6 +67,12 @@ def run_fetch_job(db: Session, job: Job) -> None:
         return
 
     now = datetime.now(UTC)
+
+    if not _ensure_robots_allowed(db, doc, now):
+        doc.last_checked_at = now
+        db.add(doc)
+        db.commit()
+        return
 
     # Find the previous snapshot (if any).
     prev = (
@@ -100,7 +117,7 @@ def run_fetch_job(db: Session, job: Job) -> None:
     raw_bytes = resp.content
     raw_sha256 = hashlib.sha256(raw_bytes).digest()
 
-    extracted_text = _normalize_text(resp.text)
+    extracted_text = _extract_text(resp)
     extracted_bytes = extracted_text.encode("utf-8")
     extracted_sha256 = hashlib.sha256(extracted_bytes).digest()
 
@@ -185,7 +202,7 @@ def _http_fetch(url: str, headers: dict[str, str]) -> httpx.Response:
             timeout=httpx.Timeout(20.0, connect=5.0),
             follow_redirects=False,
         ) as client:
-            resp = client.get(next_url, headers=headers)
+            resp = client.get(next_url, headers={"User-Agent": _DEFAULT_USER_AGENT, **headers})
 
         if resp.status_code in (301, 302, 303, 307, 308) and resp.headers.get("location"):
             next_url = urljoin(str(resp.url), resp.headers["location"])
@@ -245,10 +262,87 @@ def _validate_public_hostname(hostname: str) -> None:
             raise RuntimeError("hostname resolves to non-public ip")
 
 
+def _ensure_robots_allowed(db: Session, doc: Document, now: datetime) -> bool:
+    if (
+        doc.robots_checked_at is not None
+        and now - doc.robots_checked_at < _ROBOTS_TTL
+        and doc.robots_status != RobotsStatus.unknown
+    ):
+        if doc.robots_status != RobotsStatus.allowed:
+            doc.status = DocumentStatus.blocked_robots
+            db.add(doc)
+        return doc.robots_status == RobotsStatus.allowed
+
+    parsed = urlparse(doc.url_canonical or doc.url)
+    robots_url = f"{parsed.scheme}://{parsed.netloc}/robots.txt"
+    resp = _http_fetch(robots_url, headers={})
+
+    if resp.status_code == 404:
+        doc.robots_checked_at = now
+        doc.robots_status = RobotsStatus.allowed
+        db.add(doc)
+        return True
+
+    if resp.status_code >= 400:
+        raise RuntimeError(f"robots fetch failed: status {resp.status_code}")
+
+    rp = urllib.robotparser.RobotFileParser()
+    rp.parse(resp.text.splitlines())
+
+    path = parsed.path or "/"
+    allowed = rp.can_fetch("*", path)
+
+    doc.robots_checked_at = now
+    doc.robots_status = RobotsStatus.allowed if allowed else RobotsStatus.disallowed
+    if not allowed:
+        doc.status = DocumentStatus.blocked_robots
+    db.add(doc)
+
+    return allowed
+
+
 def _normalize_text(text: str) -> str:
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
     normalized = "\n".join(line.rstrip() for line in normalized.split("\n"))
     return normalized.strip()
+
+
+def _extract_text(resp: httpx.Response) -> str:
+    content_type = (resp.headers.get("content-type") or "").lower()
+    if not content_type:
+        content = resp.text.lstrip()
+        looks_like_html = (
+            content.startswith("<!doctype")
+            or content.startswith("<html")
+            or content.startswith("<")
+        )
+        if looks_like_html:
+            content_type = "text/html"
+        else:
+            content_type = "text/plain"
+    if content_type.startswith("text/plain"):
+        return _normalize_text(resp.text)
+
+    if "text/html" in content_type or content_type.endswith("+html"):
+        extracted = trafilatura.extract(
+            resp.text,
+            url=str(resp.url),
+            include_comments=False,
+            include_tables=False,
+            include_links=False,
+            include_images=False,
+            include_formatting=False,
+            favor_precision=True,
+            output_format="txt",
+        )
+        if extracted:
+            return _normalize_text(extracted)
+
+        readable = ReadabilityDocument(resp.text).summary(html_partial=True)
+        root = lxml_html.fromstring(readable)
+        return _normalize_text(root.text_content())
+
+    raise RuntimeError(f"disallowed content-type: {content_type}")
 
 
 def _compute_diff(
