@@ -39,6 +39,7 @@ _MAX_RESPONSE_BYTES = 5 * 1024 * 1024
 _EXTRACT_VERSION = 2
 _RETENTION_DAYS_DEFAULT = 30
 _ROBOTS_TTL = timedelta(hours=24)
+_DEDUP_WINDOW = timedelta(minutes=5)
 
 _MEANINGFUL_KEYWORDS = {
     "share",
@@ -67,6 +68,9 @@ def run_fetch_job(db: Session, job: Job) -> None:
         return
 
     now = datetime.now(UTC)
+
+    if doc.last_checked_at is not None and now - doc.last_checked_at < _DEDUP_WINDOW:
+        return
 
     if not _ensure_robots_allowed(db, doc, now):
         doc.last_checked_at = now
@@ -377,6 +381,9 @@ def _compute_diff(
             current["added"].append(line[1:])
         elif line.startswith("-"):
             current["removed"].append(line[1:])
+        elif line.startswith(" "):
+            if not current["context"] and line[1:].strip():
+                current["context"] = line[1:].strip()[:200]
 
     change_score = 1.0 - difflib.SequenceMatcher(a=old_text, b=new_text).ratio()
     added_removed_chars = sum(len(s) for h in hunks for s in (h["added"] + h["removed"]))

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 _DEFAULT_INTERVAL_SECONDS = 30
 _SCHEDULE_BATCH_LIMIT = 500
 _ENQUEUE_BATCH_LIMIT = 500
+_DEDUP_WINDOW = timedelta(minutes=5)
 
 
 def run_scheduler_loop() -> None:
@@ -65,7 +66,13 @@ def schedule_due_documents(db: Session, now: datetime) -> int:
         return 0
 
     new_jobs: list[Job] = []
+    scheduled = 0
     for doc in docs:
+        if doc.last_checked_at is not None and now - doc.last_checked_at < _DEDUP_WINDOW:
+            doc.next_due_at = doc.last_checked_at + _schedule_delta(doc.schedule_tier)
+            db.add(doc)
+            continue
+
         job = Job(
             user_id=doc.user_id,
             document_id=doc.id,
@@ -74,6 +81,7 @@ def schedule_due_documents(db: Session, now: datetime) -> int:
         )
         db.add(job)
         new_jobs.append(job)
+        scheduled += 1
 
         doc.next_due_at = now + _schedule_delta(doc.schedule_tier)
         db.add(doc)
@@ -91,7 +99,7 @@ def schedule_due_documents(db: Session, now: datetime) -> int:
             db.add(job)
 
     db.commit()
-    return len(docs)
+    return scheduled
 
 
 def enqueue_pending_jobs(db: Session) -> int:
