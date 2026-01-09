@@ -1,8 +1,3 @@
-from fastapi import FastAPI
+from inplain.api.app import create_app
 
-app = FastAPI()
-
-
-@app.get("/healthz")
-def healthz() -> dict[str, bool]:
-    return {"ok": True}
+app = create_app()
