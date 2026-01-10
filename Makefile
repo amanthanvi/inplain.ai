@@ -25,7 +25,7 @@ dev-web:
 	npm --prefix apps/web run dev
 
 dev-worker:
-	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/celery -A inplain.worker.celery_app:celery_app worker -Q fetch,summarize,notify -l info
+	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/celery -A inplain.worker.celery_app:celery_app worker -Q fetch,summarize,notify,cleanup -l info
 
 dev-scheduler:
 	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python -m inplain.worker.scheduler

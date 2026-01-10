@@ -69,7 +69,7 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `API_PUBLIC_BASE_URL` (api only)
 - `RAILPACK_START_CMD`:
   - `api`: `uvicorn inplain.api.main:app --host 0.0.0.0 --port $PORT`
-  - `worker`: `celery -A inplain.worker.celery_app:celery_app worker -Q fetch,summarize,notify -l info`
+  - `worker`: `celery -A inplain.worker.celery_app:celery_app worker -Q fetch,summarize,notify,cleanup -l info`
   - `renderer`: `celery -A inplain.worker.celery_app:celery_app worker -Q render -l info`
   - `scheduler`: `python -m inplain.worker.scheduler`
 
