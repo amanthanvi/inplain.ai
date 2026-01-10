@@ -123,3 +123,4 @@ Acceptance:
 - 2026-01-10: Enforce tier-based snapshot retention using `history_retention_days` entitlement limit.
 - 2026-01-10: Add web Sentry config + Python OpenTelemetry (OTLP) scaffold; add GitHub Actions nightly Postgres backup workflow.
 - 2026-01-10: Set Clerk env vars + enable daily digest flag in Railway; redeploy all services in production and development.
+- 2026-01-10: Provision fresh Railway project (`inplain-ai-v0-1-0`) with production+development; deploy all services; set Clerk env vars + create `inplain` JWT template (aud=`inplain`); enable job processing + daily digest; install Playwright Chromium in renderer.
