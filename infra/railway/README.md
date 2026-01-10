@@ -60,10 +60,12 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `DATABASE_URL` (from `Postgres`)
 - `REDIS_URL` (from `Redis`)
 - `ENQUEUE_JOBS` (`0` for safe boot; `1` for production processing)
+- `INPLAIN_SERVICE_NAME` (`api`|`worker`|`renderer`|`scheduler`)
 - `CLERK_ISSUER`
 - `CLERK_JWKS_URL`
 - `CLERK_JWT_AUDIENCE`
 - `CLERK_SECRET_KEY`
+- Sentry (optional): `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_PROFILES_SAMPLE_RATE`
 - `CORS_ALLOW_ORIGINS` (api only)
 - `WEB_BASE_URL` (api only)
 - `API_PUBLIC_BASE_URL` (api only)

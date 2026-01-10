@@ -8,6 +8,7 @@ from sqlalchemy import select
 from inplain.db.models.enums import JobStatus, JobType
 from inplain.db.models.jobs import Job
 from inplain.db.session import SessionLocal
+from inplain.observability.sentry import init_sentry
 from inplain.settings import settings
 from inplain.worker.celery_app import celery_app
 from inplain.worker.cleanup_pipeline import run_cleanup_job
@@ -16,6 +17,8 @@ from inplain.worker.notify_pipeline import run_notify_job
 from inplain.worker.render_pipeline import run_render_job
 from inplain.worker.scheduler import enqueue_pending_jobs
 from inplain.worker.summarize_pipeline import run_summarize_job
+
+init_sentry()
 
 
 @celery_app.task(name="inplain.worker.tasks.run_job")

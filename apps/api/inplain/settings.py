@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    inplain_service_name: str = "local"
+
     dev_auth_bypass: bool = False
     database_url: str = "postgresql+psycopg://inplain:inplain@localhost:54321/inplain"
     redis_url: str = "redis://localhost:6380/0"
@@ -33,6 +35,11 @@ class Settings(BaseSettings):
     postmark_server_token: str | None = None
     postmark_from_email: str | None = None
     postmark_base_url: str = "https://api.postmarkapp.com"
+
+    sentry_dsn: str | None = None
+    sentry_environment: str | None = None
+    sentry_traces_sample_rate: float = 0.0
+    sentry_profiles_sample_rate: float = 0.0
 
     s3_bucket: str | None = None
     s3_region: str | None = None

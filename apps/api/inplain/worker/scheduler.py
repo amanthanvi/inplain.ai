@@ -11,10 +11,13 @@ from inplain.db.models.documents import Document
 from inplain.db.models.enums import DocumentStatus, JobStatus, JobType, ScheduleTier
 from inplain.db.models.jobs import Job
 from inplain.db.session import SessionLocal
+from inplain.observability.sentry import init_sentry
 from inplain.settings import settings
 from inplain.worker.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
+
+init_sentry()
 
 _DEFAULT_INTERVAL_SECONDS = 30
 _SCHEDULE_BATCH_LIMIT = 500
