@@ -80,3 +80,4 @@ Also required for full v0.1.0 functionality (not yet configured here):
 - OpenRouter: `OPENROUTER_API_KEY`
 - Webhooks: `CLERK_WEBHOOK_SECRET`
 - Unsubscribe: `UNSUBSCRIBE_SECRET`
+- S3/R2 raw snapshots + backups: `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (optional: `S3_ENDPOINT_URL`, `S3_REGION`, `S3_PREFIX`, `S3_FORCE_PATH_STYLE`)

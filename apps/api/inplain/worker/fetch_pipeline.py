@@ -32,6 +32,7 @@ from inplain.db.models.enums import (
 )
 from inplain.db.models.jobs import Job
 from inplain.db.models.snapshots import Snapshot
+from inplain.storage.s3 import upload_snapshot_raw
 
 _DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -172,6 +173,16 @@ def run_fetch_job(db: Session, job: Job) -> None:
     )
     db.add(snapshot)
     db.flush()
+
+    raw_storage_key = upload_snapshot_raw(
+        document_id=str(doc.id),
+        snapshot_id=str(snapshot.id),
+        content_type=snapshot.content_type,
+        raw_bytes=raw_bytes,
+    )
+    if raw_storage_key:
+        snapshot.raw_storage_key = raw_storage_key
+        db.add(snapshot)
 
     doc.last_snapshot_id = snapshot.id
 

@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     postmark_from_email: str | None = None
     postmark_base_url: str = "https://api.postmarkapp.com"
 
+    s3_bucket: str | None = None
+    s3_region: str | None = None
+    s3_endpoint_url: str | None = None
+    s3_access_key_id: str | None = None
+    s3_secret_access_key: str | None = None
+    s3_prefix: str = "inplain"
+    s3_force_path_style: bool = False
+
     cors_allow_origins: str | None = None
 
 
