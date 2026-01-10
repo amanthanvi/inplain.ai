@@ -390,8 +390,8 @@ Principles:
 ### 7.1 Services to create (Railway)
 
 1. `web` (public)
-    - Build Vite React app
-    - Serve via a small Node static server or Caddy
+    - Build Next.js (App Router) app
+    - Serve via `next start` (Railpack)
 2. `api` (public)
     - FastAPI + Uvicorn
 3. `worker` (private)

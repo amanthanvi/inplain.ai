@@ -44,7 +44,7 @@ Acceptance:
 ### M2 — API core (FastAPI)
 
 - [x] Clerk JWT verification + authz guards (user-owned; admin pending)
-- [ ] Standard error format, rate limiting hooks, CORS
+- [x] Standard error format, rate limiting hooks, CORS
 - [x] Entities + Documents core endpoints + check-now enqueue
 - [x] Read-only ChangeEvent endpoints + export gates
 - [x] Webhooks: Clerk + idempotency (`webhook_events`)
@@ -71,7 +71,7 @@ Acceptance:
 - [x] HTML extraction + canonicalization rules (extract versioning)
 - [x] PDF extraction (OCR fallback pending)
 - [x] Iframe resolution (src-first; render fallback pending)
-- [ ] Snapshot raw storage to S3/R2 (currently only sha/size stored in DB)
+- [x] Snapshot raw storage to S3/R2 (gzip; `raw_storage_key` persisted when configured)
 - [x] Meaningful change thresholds; diff generation + structured hunks
 
 Acceptance:
@@ -93,8 +93,8 @@ Acceptance:
 - [ ] Stripe Checkout + Portal + downgrade policy; update Clerk metadata
 - [ ] Web app: onboarding, dashboard, diff viewer (section-first), citations UX, settings/billing meters
 - [ ] Admin UI: jobs, users, abuse, LLM usage, impersonation banner + audit
-- [ ] Observability: Sentry (web/api/workers), OTLP traces/metrics, structured logs
-- [ ] Backups + restore scripts + retention cleanup job
+- [ ] Observability: Sentry (web/api/workers), OTLP traces/metrics, structured logs (Sentry wired in api/workers; env vars pending)
+- [ ] Backups + restore scripts + retention cleanup job (backup/restore scripts added; retention cleanup job wired; S3 creds pending)
 - [ ] Launch readiness checklist gates (SPEC 20.x)
 
 Acceptance:
@@ -116,3 +116,6 @@ Acceptance:
 - 2026-01-09: Admin endpoints added (`/v1/admin/jobs`, retry, user ban/plan override).
 - 2026-01-09: Railway infra created (project + Postgres/Redis + web/api/worker/scheduler) + production/development deploys; migrations run in both envs.
 - 2026-01-09: Fix Railway DB URL driver mismatch (`postgresql://` → `postgresql+psycopg://`) and Alembic URL normalization for remote migrations.
+- 2026-01-10: Add S3/R2 raw snapshot uploads (`raw_storage_key`) + retention cleanup job (deletes S3 objects + dependent rows).
+- 2026-01-10: Add Playwright renderer (`render` queue) with SSRF route blocking + quota gating.
+- 2026-01-10: Add Sentry wiring (api/workers) + backup/restore scripts; deploy all services incl. new `renderer` to Railway.
