@@ -37,6 +37,7 @@ from inplain.db.models.enums import (
 from inplain.db.models.jobs import Job
 from inplain.db.models.provider_usage import ProviderUsage
 from inplain.db.models.snapshots import Snapshot
+from inplain.settings import settings
 from inplain.storage.s3 import upload_snapshot_raw
 
 _DEFAULT_USER_AGENT = (
@@ -102,7 +103,7 @@ def run_fetch_job(db: Session, job: Job) -> None:
         return
 
     period_key = now.strftime("%Y-%m")
-    if doc.fetch_mode == FetchMode.force_render and _has_render_quota(
+    if doc.fetch_mode == FetchMode.force_render and settings.enable_rendering and _has_render_quota(
         db=db, user_id=doc.user_id, period_key=period_key
     ):
         db.add(
@@ -171,7 +172,11 @@ def run_fetch_job(db: Session, job: Job) -> None:
     extracted_bytes = extracted_text.encode("utf-8")
     extracted_sha256 = hashlib.sha256(extracted_bytes).digest()
 
-    if doc.fetch_mode != FetchMode.http_only and _should_trigger_render(resp, extracted_text):
+    if (
+        doc.fetch_mode != FetchMode.http_only
+        and settings.enable_rendering
+        and _should_trigger_render(resp, extracted_text)
+    ):
         if _has_render_quota(db=db, user_id=doc.user_id, period_key=period_key):
             db.add(
                 Job(

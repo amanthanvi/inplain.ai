@@ -23,7 +23,11 @@ class BillingSessionOut(BaseModel):
 
 
 def _stripe_configured() -> bool:
-    return bool(settings.stripe_secret_key) and bool(settings.web_base_url)
+    return (
+        bool(settings.enable_billing)
+        and bool(settings.stripe_secret_key)
+        and bool(settings.web_base_url)
+    )
 
 
 def _price_id_for_plan(plan: Plan) -> str | None:

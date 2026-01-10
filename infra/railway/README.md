@@ -62,6 +62,8 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `REDIS_URL` (from `Redis`)
 - `ENQUEUE_JOBS` (`0` for safe boot; `1` for production processing)
 - `INPLAIN_SERVICE_NAME` (`api`|`worker`|`renderer`|`scheduler`)
+- `ENABLE_RENDERING` (`0`/`1`) (worker + renderer; gate for Playwright jobs)
+- `ENABLE_BILLING` (`0`/`1`) (api only)
 - `ENABLE_DAILY_DIGEST` (`0`/`1`) (worker + scheduler only)
 - `CLERK_ISSUER`
 - `CLERK_JWKS_URL`
