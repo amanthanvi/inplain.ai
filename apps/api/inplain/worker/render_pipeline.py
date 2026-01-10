@@ -24,11 +24,10 @@ from inplain.db.models.enums import (
 from inplain.db.models.jobs import Job
 from inplain.db.models.provider_usage import ProviderUsage
 from inplain.db.models.snapshots import Snapshot
-from inplain.settings import settings
 from inplain.storage.s3 import upload_snapshot_raw
 from inplain.worker.fetch_pipeline import (
-    _DEFAULT_USER_AGENT,
     _DEDUP_WINDOW,
+    _DEFAULT_USER_AGENT,
     _EXTRACT_VERSION,
     _MAX_RESPONSE_BYTES,
     _RETENTION_DAYS_DEFAULT,

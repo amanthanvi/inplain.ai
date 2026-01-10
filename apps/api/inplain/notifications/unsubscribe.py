@@ -27,6 +27,10 @@ def verify_unsubscribe_token(token: str, *, secret: str) -> uuid.UUID | None:
     except Exception:
         return None
 
+    # Enforce canonical base64url encoding (reject variants that decode to the same bytes).
+    if not hmac.compare_digest(_b64url(actual), raw_sig):
+        return None
+
     if not hmac.compare_digest(expected, actual):
         return None
 

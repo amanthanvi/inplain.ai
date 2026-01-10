@@ -173,7 +173,9 @@ class RateLimitMiddleware:
                 for k, v in exc.headers.items():
                     headers.append((k.encode("utf-8"), v.encode("utf-8")))
 
-            await send({"type": "http.response.start", "status": exc.status_code, "headers": headers})
+            await send(
+                {"type": "http.response.start", "status": exc.status_code, "headers": headers}
+            )
             await send({"type": "http.response.body", "body": body.encode("utf-8")})
             return
 

@@ -5,8 +5,8 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from inplain.auth.clerk import fetch_user_email, verify_session_token
 from inplain.api.ratelimit import enforce_user_rate_limit
+from inplain.auth.clerk import fetch_user_email, verify_session_token
 from inplain.db.models.entitlements import Entitlement
 from inplain.db.models.enums import Plan, UserRole, UserStatus
 from inplain.db.models.users import User
