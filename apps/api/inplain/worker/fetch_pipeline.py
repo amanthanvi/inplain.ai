@@ -190,6 +190,7 @@ def run_fetch_job(db: Session, job: Job) -> None:
         db.commit()
         return
 
+    retention_days = _retention_days_for_user(db=db, user_id=doc.user_id)
     snapshot = Snapshot(
         document_id=doc.id,
         fetched_at=now,
@@ -205,7 +206,7 @@ def run_fetch_job(db: Session, job: Job) -> None:
         language=None,
         byte_size_raw=len(raw_bytes),
         byte_size_extracted=len(extracted_bytes),
-        retention_delete_at=now + timedelta(days=_RETENTION_DAYS_DEFAULT),
+        retention_delete_at=now + timedelta(days=retention_days),
     )
     db.add(snapshot)
     db.flush()
@@ -489,6 +490,19 @@ def _has_render_quota(*, db: Session, user_id: object, period_key: str) -> bool:
         .one()
     )
     return int(used) < limit
+
+
+def _retention_days_for_user(*, db: Session, user_id: object) -> int:
+    entitlement = (
+        db.execute(select(Entitlement).where(Entitlement.user_id == user_id))
+        .scalars()
+        .one_or_none()
+    )
+    limits = entitlement.limits if entitlement is not None else {}
+
+    raw_days = limits.get("history_retention_days")
+    days = raw_days if isinstance(raw_days, int) else _RETENTION_DAYS_DEFAULT
+    return max(1, days)
 
 
 def _try_iframe_extraction(resp: httpx.Response) -> str | None:

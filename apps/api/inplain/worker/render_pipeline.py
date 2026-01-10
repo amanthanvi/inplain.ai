@@ -30,12 +30,12 @@ from inplain.worker.fetch_pipeline import (
     _DEFAULT_USER_AGENT,
     _EXTRACT_VERSION,
     _MAX_RESPONSE_BYTES,
-    _RETENTION_DAYS_DEFAULT,
     _compute_diff,
     _default_event_title,
     _ensure_robots_allowed,
     _extract_text,
     _is_meaningful_change,
+    _retention_days_for_user,
     _validate_fetch_url,
 )
 
@@ -101,6 +101,7 @@ def run_render_job(db: Session, job: Job) -> None:
         db.commit()
         return
 
+    retention_days = _retention_days_for_user(db=db, user_id=doc.user_id)
     snapshot = Snapshot(
         document_id=doc.id,
         fetched_at=now,
@@ -116,7 +117,7 @@ def run_render_job(db: Session, job: Job) -> None:
         language=None,
         byte_size_raw=len(raw_bytes),
         byte_size_extracted=len(extracted_bytes),
-        retention_delete_at=now + timedelta(days=_RETENTION_DAYS_DEFAULT),
+        retention_delete_at=now + timedelta(days=retention_days),
     )
     db.add(snapshot)
     db.flush()
