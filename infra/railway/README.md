@@ -2,7 +2,7 @@
 
 ## Project
 
-- Project: `inplain-ai`
+- Project: `inplain-ai-v0-1-0`
 - Services: `web`, `api`, `worker`, `renderer`, `scheduler`, `Postgres`, `Redis`
 - Environments: `production`, `development`
 
