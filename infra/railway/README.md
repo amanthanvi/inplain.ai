@@ -3,7 +3,7 @@
 ## Project
 
 - Project: `inplain-ai`
-- Services: `web`, `api`, `worker`, `scheduler`, `Postgres`, `Redis`
+- Services: `web`, `api`, `worker`, `renderer`, `scheduler`, `Postgres`, `Redis`
 - Environments: `production`, `development`
 
 ## Domains
@@ -32,6 +32,7 @@ railway environment development
 railway up --service web apps/web --path-as-root
 railway up --service api apps/api --path-as-root
 railway up --service worker apps/api --path-as-root
+railway up --service renderer apps/api --path-as-root
 railway up --service scheduler apps/api --path-as-root
 ```
 
@@ -54,7 +55,7 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `INPLAIN_API_BASE_URL` (e.g. `https://${{ api.RAILWAY_PUBLIC_DOMAIN }}`)
 - `RAILPACK_START_CMD` (set to `npm run start -- -p $PORT`)
 
-### `api` / `worker` / `scheduler`
+### `api` / `worker` / `renderer` / `scheduler`
 
 - `DATABASE_URL` (from `Postgres`)
 - `REDIS_URL` (from `Redis`)
@@ -69,6 +70,7 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `RAILPACK_START_CMD`:
   - `api`: `uvicorn inplain.api.main:app --host 0.0.0.0 --port $PORT`
   - `worker`: `celery -A inplain.worker.celery_app:celery_app worker -Q fetch,summarize,notify -l info`
+  - `renderer`: `celery -A inplain.worker.celery_app:celery_app worker -Q render -l info`
   - `scheduler`: `python -m inplain.worker.scheduler`
 
 Also required for full v0.1.0 functionality (not yet configured here):
