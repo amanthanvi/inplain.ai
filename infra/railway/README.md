@@ -8,14 +8,7 @@
 
 ## Domains
 
-Railway-provided domains (one per service per environment):
-
-- `production`
-  - `web`: `https://web-production-c6005.up.railway.app`
-  - `api`: `https://api-production-d6fa.up.railway.app`
-- `development`
-  - `web`: `https://web-development-a964.up.railway.app`
-  - `api`: `https://api-development-c110.up.railway.app`
+Railway provides a public domain per service per environment (see Railway dashboard or `railway domain`).
 
 ## Deploy commands
 
@@ -55,6 +48,12 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 - `INPLAIN_API_BASE_URL` (e.g. `https://${{ api.RAILWAY_PUBLIC_DOMAIN }}`)
+- Sentry (optional):
+  - `NEXT_PUBLIC_SENTRY_DSN`
+  - `NEXT_PUBLIC_SENTRY_ENVIRONMENT`
+  - `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE`
+  - `NEXT_PUBLIC_SENTRY_PROFILES_SAMPLE_RATE`
+  - `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_PROFILES_SAMPLE_RATE` (server)
 - `RAILPACK_START_CMD` (set to `npm run start -- -p $PORT`)
 
 ### `api` / `worker` / `renderer` / `scheduler`
@@ -63,11 +62,14 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `REDIS_URL` (from `Redis`)
 - `ENQUEUE_JOBS` (`0` for safe boot; `1` for production processing)
 - `INPLAIN_SERVICE_NAME` (`api`|`worker`|`renderer`|`scheduler`)
+- `ENABLE_DAILY_DIGEST` (`0`/`1`) (worker + scheduler only)
 - `CLERK_ISSUER`
 - `CLERK_JWKS_URL`
 - `CLERK_JWT_AUDIENCE`
 - `CLERK_SECRET_KEY`
+- `UNSUBSCRIBE_SECRET` (api + worker; must match)
 - Sentry (optional): `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_PROFILES_SAMPLE_RATE`
+- OpenTelemetry (optional): `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`
 - `CORS_ALLOW_ORIGINS` (api only)
 - `WEB_BASE_URL` (api only)
 - `API_PUBLIC_BASE_URL` (api only)

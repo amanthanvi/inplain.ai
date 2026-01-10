@@ -1374,6 +1374,7 @@ After receiving LLM response, validate each citation:
     - **Timing**: Fixed 9:00 AM UTC for all users.
     - List of changes grouped by entity.
     - Summary counts: "3 policies changed across 2 companies".
+    - Implementation: scheduler enqueues a `notify` job (no `user_id`/`document_id`), worker expands into per-user digest sends.
 
 Templates must include:
 
@@ -1386,6 +1387,16 @@ Templates must include:
     -   signed token (HMAC) or stored token in DB
 -   Endpoint:
     -   `GET /v1/unsubscribe?token=...`
+-   Store notification preferences in `notification_preferences`:
+    -   global row: `document_id = null`
+    -   per-document override: `document_id = <doc>`
+    -   global unsubscribe (`email_enabled=false`) overrides any per-document setting
+-   Authenticated API endpoints (v0.1.0):
+    -   `GET /v1/notification-preferences` (global)
+    -   `PUT /v1/notification-preferences` (global)
+    -   `GET /v1/documents/{documentId}/notification-preference` (override)
+    -   `PUT /v1/documents/{documentId}/notification-preference` (override)
+    -   `DELETE /v1/documents/{documentId}/notification-preference` (revert to default)
 -   If unsubscribed:
     -   set a flag (store in `notification_preferences` with `document_id = null`)
 
@@ -1942,7 +1953,7 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 -   [ ] DB migrations automated on deploy
 -   [ ] Backups configured:
     -   [ ] Railway Postgres backups enabled
-    -   [ ] nightly `pg_dump` to S3/R2 configured (script + cron job service if needed)
+    -   [ ] nightly `pg_dump` to S3/R2 configured (scripts + GitHub Actions schedule)
 -   [ ] Object storage bucket with lifecycle policies
 -   [ ] Sentry configured for all services
 -   [ ] OTLP export configured and dashboards created
@@ -2011,6 +2022,7 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 -   [ ] Nightly logical backup job configured:
     -   `pg_dump` (custom format) + upload to S3/R2
     -   retention: 30 days (or aligned with compliance needs)
+    -   implementation: GitHub Actions scheduled workflow (v0.1.0)
 -   [ ] Restore run tested in staging:
     -   [ ] restore into empty DB
     -   [ ] run migrations
