@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6380/0"
     enqueue_jobs: bool = False
     scheduler_interval_seconds: int = 30
+    enable_daily_digest: bool = False
 
     clerk_issuer: str | None = None
     clerk_jwks_url: str | None = None

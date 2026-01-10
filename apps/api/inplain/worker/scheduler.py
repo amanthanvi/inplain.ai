@@ -24,6 +24,7 @@ _SCHEDULE_BATCH_LIMIT = 500
 _ENQUEUE_BATCH_LIMIT = 500
 _DEDUP_WINDOW = timedelta(minutes=5)
 _DAILY_CLEANUP_DEDUP_WINDOW = timedelta(hours=23)
+_DAILY_DIGEST_HOUR_UTC = 9
 
 
 def run_scheduler_loop() -> None:
@@ -43,12 +44,14 @@ def run_scheduler_loop() -> None:
         with SessionLocal() as db:
             try:
                 cleanup = schedule_daily_cleanup(db, now)
+                digest = schedule_daily_digest(db, now)
                 scheduled = schedule_due_documents(db, now)
                 enqueued = enqueue_pending_jobs(db)
-                if cleanup or scheduled or enqueued:
+                if cleanup or digest or scheduled or enqueued:
                     logger.info(
-                        "scheduler cycle cleanup=%s scheduled=%s enqueued=%s",
+                        "scheduler cycle cleanup=%s digest=%s scheduled=%s enqueued=%s",
                         cleanup,
+                        digest,
                         scheduled,
                         enqueued,
                     )
@@ -121,6 +124,44 @@ def schedule_daily_cleanup(db: Session, now: datetime) -> int:
         return 0
 
     job = Job(user_id=None, document_id=None, job_type=JobType.cleanup, status=JobStatus.queued)
+    db.add(job)
+    db.flush()
+
+    if settings.enqueue_jobs:
+        async_result = celery_app.send_task(
+            "inplain.worker.tasks.run_job",
+            args=[str(job.id)],
+            queue=_queue_for_job_type(job.job_type),
+        )
+        job.celery_task_id = async_result.id
+        db.add(job)
+
+    db.commit()
+    return 1
+
+
+def schedule_daily_digest(db: Session, now: datetime) -> int:
+    if not settings.enable_daily_digest:
+        return 0
+
+    scheduled_at = datetime(now.year, now.month, now.day, _DAILY_DIGEST_HOUR_UTC, tzinfo=UTC)
+    if now < scheduled_at:
+        return 0
+
+    existing = db.execute(
+        select(Job.id)
+        .where(
+            Job.job_type == JobType.notify,
+            Job.user_id.is_(None),
+            Job.document_id.is_(None),
+            Job.created_at >= scheduled_at,
+        )
+        .limit(1)
+    ).scalar_one_or_none()
+    if existing is not None:
+        return 0
+
+    job = Job(user_id=None, document_id=None, job_type=JobType.notify, status=JobStatus.queued)
     db.add(job)
     db.flush()
 

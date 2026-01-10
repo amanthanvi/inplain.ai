@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -9,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from inplain.db.models.change_events import ChangeEvent
 from inplain.db.models.documents import Document
+from inplain.db.models.entities import Entity
 from inplain.db.models.enums import (
     EmailMode,
     EmailProvider,
@@ -24,17 +27,21 @@ from inplain.db.models.notifications import Notification
 from inplain.db.models.provider_usage import ProviderUsage
 from inplain.db.models.users import User
 from inplain.entitlements.service import ensure_entitlement
+from inplain.notifications.preferences import (
+    EffectiveEmailPreference,
+    compute_effective_email_preference,
+)
 from inplain.notifications.unsubscribe import generate_unsubscribe_token
 from inplain.settings import settings
 
-
-@dataclass(frozen=True)
-class _EffectiveEmailPreference:
-    email_enabled: bool
-    email_mode: EmailMode
+logger = logging.getLogger(__name__)
 
 
 def run_notify_job(db: Session, job: Job) -> None:
+    if job.document_id is None and job.user_id is None:
+        _run_daily_digest(db)
+        return
+
     if job.document_id is None or job.user_id is None:
         raise RuntimeError("notify job missing user_id or document_id")
 
@@ -142,6 +149,12 @@ def _next_change_event_to_notify(
             and_(
                 Notification.user_id == user_id,
                 Notification.change_event_id == ChangeEvent.id,
+                Notification.status.in_(
+                    [
+                        NotificationStatus.sent,
+                        NotificationStatus.suppressed_unsubscribed,
+                    ]
+                ),
             ),
         )
         .where(
@@ -163,24 +176,8 @@ def _next_change_event_to_notify(
 
 def _effective_notification_preference(
     db: Session, *, user_id, document_id
-) -> _EffectiveEmailPreference:
-    pref = (
-        db.execute(
-            select(NotificationPreference).where(
-                NotificationPreference.user_id == user_id,
-                NotificationPreference.document_id == document_id,
-            )
-        )
-        .scalars()
-        .one_or_none()
-    )
-    if pref is not None:
-        return _EffectiveEmailPreference(
-            email_enabled=pref.email_enabled,
-            email_mode=pref.email_mode,
-        )
-
-    global_pref = (
+) -> EffectiveEmailPreference:
+    global_pref_row = (
         db.execute(
             select(NotificationPreference)
             .where(
@@ -193,13 +190,340 @@ def _effective_notification_preference(
         .scalars()
         .first()
     )
-    if global_pref is not None:
-        return _EffectiveEmailPreference(
-            email_enabled=global_pref.email_enabled,
-            email_mode=global_pref.email_mode,
+    global_pref = (
+        EffectiveEmailPreference(
+            email_enabled=global_pref_row.email_enabled,
+            email_mode=global_pref_row.email_mode,
+        )
+        if global_pref_row is not None
+        else None
+    )
+
+    doc_pref_row = (
+        db.execute(
+            select(NotificationPreference).where(
+                NotificationPreference.user_id == user_id,
+                NotificationPreference.document_id == document_id,
+            )
+        )
+        .scalars()
+        .one_or_none()
+    )
+    doc_pref = (
+        EffectiveEmailPreference(
+            email_enabled=doc_pref_row.email_enabled,
+            email_mode=doc_pref_row.email_mode,
+        )
+        if doc_pref_row is not None
+        else None
+    )
+
+    return compute_effective_email_preference(global_pref=global_pref, document_pref=doc_pref)
+
+
+@dataclass(frozen=True)
+class _DigestItem:
+    change_event: ChangeEvent
+    document: Document
+    entity: Entity
+
+
+def _run_daily_digest(db: Session) -> None:
+    if not settings.enable_daily_digest:
+        return
+
+    if not settings.postmark_server_token or not settings.postmark_from_email:
+        raise RuntimeError("postmark not configured")
+    if not settings.unsubscribe_secret:
+        raise RuntimeError("unsubscribe not configured")
+    if not settings.web_base_url or not settings.api_public_base_url:
+        raise RuntimeError("base urls not configured")
+
+    now = datetime.now(UTC)
+
+    user_ids = list(
+        db.execute(
+            select(Document.user_id)
+            .join(ChangeEvent, ChangeEvent.document_id == Document.id)
+            .outerjoin(
+                Notification,
+                and_(
+                    Notification.user_id == Document.user_id,
+                    Notification.change_event_id == ChangeEvent.id,
+                    Notification.status.in_(
+                        [
+                            NotificationStatus.sent,
+                            NotificationStatus.suppressed_unsubscribed,
+                        ]
+                    ),
+                ),
+            )
+            .where(
+                Document.deleted_at.is_(None),
+                ChangeEvent.summary_status.in_(
+                    [
+                        SummaryStatus.completed,
+                        SummaryStatus.failed,
+                        SummaryStatus.skipped_quota,
+                    ]
+                ),
+                Notification.id.is_(None),
+            )
+            .distinct()
+            .order_by(Document.user_id.asc())
+            .limit(200)
+        ).scalars()
+    )
+
+    for user_id in user_ids:
+        try:
+            _send_digest_for_user(db, user_id=user_id, now=now)
+        except Exception:
+            db.rollback()
+            logger.exception("daily digest failed for user_id=%s", user_id)
+
+
+def _send_digest_for_user(db: Session, *, user_id, now: datetime) -> None:
+    user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    if user is None:
+        return
+
+    entitlement = ensure_entitlement(db, user.id)
+    allowed = entitlement.limits.get("email_notifications") == "immediate_and_daily_digest"
+    if not allowed:
+        return
+
+    global_pref_row = (
+        db.execute(
+            select(NotificationPreference)
+            .where(
+                NotificationPreference.user_id == user.id,
+                NotificationPreference.document_id.is_(None),
+            )
+            .order_by(NotificationPreference.created_at.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+    global_pref = (
+        EffectiveEmailPreference(
+            email_enabled=global_pref_row.email_enabled,
+            email_mode=global_pref_row.email_mode,
+        )
+        if global_pref_row is not None
+        else None
+    )
+    if global_pref is not None and global_pref.email_enabled is False:
+        _suppress_pending_notifications_for_user(db, user=user, now=now)
+        return
+
+    rows = list(
+        db.execute(
+            select(ChangeEvent, Document, Entity)
+            .join(Document, ChangeEvent.document_id == Document.id)
+            .join(Entity, Document.entity_id == Entity.id)
+            .outerjoin(
+                Notification,
+                and_(
+                    Notification.user_id == user.id,
+                    Notification.change_event_id == ChangeEvent.id,
+                    Notification.status.in_(
+                        [
+                            NotificationStatus.sent,
+                            NotificationStatus.suppressed_unsubscribed,
+                        ]
+                    ),
+                ),
+            )
+            .where(
+                Document.user_id == user.id,
+                Document.deleted_at.is_(None),
+                ChangeEvent.summary_status.in_(
+                    [
+                        SummaryStatus.completed,
+                        SummaryStatus.failed,
+                        SummaryStatus.skipped_quota,
+                    ]
+                ),
+                Notification.id.is_(None),
+            )
+            .order_by(ChangeEvent.created_at.asc())
+            .limit(50)
+        ).all()
+    )
+
+    if not rows:
+        return
+
+    doc_ids = [doc.id for _, doc, _ in rows]
+    prefs = list(
+        db.execute(
+            select(NotificationPreference).where(
+                NotificationPreference.user_id == user.id,
+                NotificationPreference.document_id.in_(doc_ids),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    prefs_by_doc = {
+        p.document_id: EffectiveEmailPreference(
+            email_enabled=p.email_enabled,
+            email_mode=p.email_mode,
+        )
+        for p in prefs
+        if p.document_id is not None
+    }
+
+    items: list[_DigestItem] = []
+    for event, doc, ent in rows:
+        doc_pref = prefs_by_doc.get(doc.id)
+        effective = compute_effective_email_preference(
+            global_pref=global_pref,
+            document_pref=doc_pref,
+        )
+        if not effective.email_enabled:
+            continue
+        if effective.email_mode != EmailMode.daily_digest:
+            continue
+        items.append(_DigestItem(change_event=event, document=doc, entity=ent))
+
+    if not items:
+        return
+
+    subject, body = _render_daily_digest_email(user=user, items=items)
+    message_id = _postmark_send(to_email=user.email, subject=subject, body=body)
+
+    sent_at = datetime.now(UTC)
+    for item in items:
+        db.add(
+            Notification(
+                user_id=user.id,
+                change_event_id=item.change_event.id,
+                channel=NotificationChannel.email,
+                status=NotificationStatus.sent,
+                to_email=user.email,
+                provider=EmailProvider.postmark,
+                provider_message_id=message_id,
+                error=None,
+                sent_at=sent_at,
+            )
         )
 
-    return _EffectiveEmailPreference(email_enabled=True, email_mode=EmailMode.immediate)
+    db.add(
+        ProviderUsage(
+            user_id=user.id,
+            document_id=None,
+            provider=Provider.postmark,
+            action=ProviderAction.email_send,
+            quantity=1,
+            tokens_in=None,
+            tokens_out=None,
+            cost_usd_micros=None,
+            period_key=sent_at.strftime("%Y-%m"),
+        )
+    )
+
+    db.commit()
+
+
+def _suppress_pending_notifications_for_user(db: Session, *, user: User, now: datetime) -> None:
+    pending = list(
+        db.execute(
+            select(ChangeEvent)
+            .join(Document, ChangeEvent.document_id == Document.id)
+            .outerjoin(
+                Notification,
+                and_(
+                    Notification.user_id == user.id,
+                    Notification.change_event_id == ChangeEvent.id,
+                    Notification.status.in_(
+                        [
+                            NotificationStatus.sent,
+                            NotificationStatus.suppressed_unsubscribed,
+                        ]
+                    ),
+                ),
+            )
+            .where(
+                Document.user_id == user.id,
+                Document.deleted_at.is_(None),
+                ChangeEvent.summary_status.in_(
+                    [
+                        SummaryStatus.completed,
+                        SummaryStatus.failed,
+                        SummaryStatus.skipped_quota,
+                    ]
+                ),
+                Notification.id.is_(None),
+            )
+            .order_by(ChangeEvent.created_at.asc())
+            .limit(200)
+        ).scalars()
+    )
+
+    for ev in pending:
+        db.add(
+            Notification(
+                user_id=user.id,
+                change_event_id=ev.id,
+                channel=NotificationChannel.email,
+                status=NotificationStatus.suppressed_unsubscribed,
+                to_email=user.email,
+                provider=EmailProvider.postmark,
+                provider_message_id=None,
+                error="unsubscribed",
+                sent_at=None,
+            )
+        )
+
+    db.commit()
+
+
+def _render_daily_digest_email(
+    *, user: User, items: list[_DigestItem]
+) -> tuple[str, str]:
+    if not settings.web_base_url or not settings.api_public_base_url:
+        raise RuntimeError("base urls not configured")
+
+    secret = settings.unsubscribe_secret
+    if not secret:
+        raise RuntimeError("unsubscribe not configured")
+
+    token = generate_unsubscribe_token(user.id, secret=secret)
+    unsubscribe_link = f"{settings.api_public_base_url.rstrip('/')}/v1/unsubscribe?token={token}"
+
+    grouped: dict[str, list[_DigestItem]] = defaultdict(list)
+    for item in items:
+        grouped[item.entity.name].append(item)
+
+    company_count = len(grouped)
+    subject = f"[Inplain] Daily digest — {len(items)} change(s)"
+
+    lines: list[str] = []
+    lines.append("Inplain daily digest")
+    lines.append("")
+    lines.append(f"{len(items)} policy change(s) across {company_count} compan(ies).")
+    lines.append("")
+
+    for entity_name in sorted(grouped.keys()):
+        lines.append(entity_name)
+        for item in grouped[entity_name]:
+            event = item.change_event
+            doc = item.document
+            when = event.created_at.astimezone(UTC).strftime("%Y-%m-%d %H:%M UTC")
+            link = f"{settings.web_base_url.rstrip('/')}/app/change-events/{event.id}"
+            lines.append(f"- {doc.doc_type.value.capitalize()} updated · {when}")
+            lines.append(f"  {link}")
+        lines.append("")
+
+    lines.append("This summary is informational and not legal advice.")
+    lines.append("")
+    lines.append(f"Unsubscribe: {unsubscribe_link}")
+    lines.append(f"Manage notifications: {settings.web_base_url.rstrip('/')}/app/settings")
+
+    return subject, "\n".join(lines).strip() + "\n"
 
 
 def _write_suppressed_notification(

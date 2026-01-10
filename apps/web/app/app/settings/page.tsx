@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 import { inplainFetchJson } from "../../../lib/inplain-api";
 
@@ -7,6 +8,13 @@ type MeResponse = {
   email: string;
   plan: "free" | "pro" | "business";
   limits: Record<string, unknown>;
+};
+
+type EmailMode = "immediate" | "daily_digest";
+
+type GlobalNotificationPreferencesResponse = {
+  effective: { emailEnabled: boolean; emailMode: EmailMode };
+  saved: { emailEnabled: boolean; emailMode: EmailMode } | null;
 };
 
 async function startCheckout(plan: "pro" | "business") {
@@ -28,12 +36,105 @@ async function openPortal() {
   redirect(session.url);
 }
 
+async function saveNotificationPreferences(formData: FormData) {
+  "use server";
+
+  const emailEnabled = String(formData.get("emailEnabled") || "") === "on";
+  const emailMode = String(formData.get("emailMode") || "immediate") as EmailMode;
+
+  await inplainFetchJson("/v1/notification-preferences", {
+    method: "PUT",
+    body: JSON.stringify({ emailEnabled, emailMode }),
+  });
+
+  revalidatePath("/app/settings");
+  redirect("/app/settings?saved=1");
+}
+
 export default async function SettingsPage() {
-  const me = await inplainFetchJson<MeResponse>("/v1/me");
+  const [me, notificationPrefs] = await Promise.all([
+    inplainFetchJson<MeResponse>("/v1/me"),
+    inplainFetchJson<GlobalNotificationPreferencesResponse>("/v1/notification-preferences"),
+  ]);
+
+  const digestAllowed = me.plan !== "free";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <h1 style={{ fontSize: 22, letterSpacing: "-0.02em" }}>Settings</h1>
+
+      <form
+        action={saveNotificationPreferences}
+        style={{
+          padding: 14,
+          borderRadius: 16,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.03)",
+          display: "grid",
+          gap: 10,
+        }}
+      >
+        <div style={{ fontWeight: 650 }}>Notifications</div>
+
+        <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}>
+          <input
+            type="checkbox"
+            name="emailEnabled"
+            defaultChecked={notificationPrefs.effective.emailEnabled}
+          />
+          <span>Email updates</span>
+        </label>
+
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={{ fontSize: 13, opacity: 0.75 }}>Email mode</div>
+          <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}>
+            <input
+              type="radio"
+              name="emailMode"
+              value="immediate"
+              defaultChecked={notificationPrefs.effective.emailMode === "immediate"}
+            />
+            <span>Immediate</span>
+          </label>
+          <label
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              fontSize: 14,
+              opacity: digestAllowed ? 1 : 0.5,
+            }}
+          >
+            <input
+              type="radio"
+              name="emailMode"
+              value="daily_digest"
+              defaultChecked={notificationPrefs.effective.emailMode === "daily_digest"}
+              disabled={!digestAllowed}
+            />
+            <span>Daily digest (9:00 UTC)</span>
+          </label>
+          {!digestAllowed ? (
+            <div style={{ fontSize: 12, opacity: 0.7 }}>
+              Daily digest is available on Pro and Business.
+            </div>
+          ) : null}
+        </div>
+
+        <button
+          type="submit"
+          style={{
+            justifySelf: "start",
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "rgba(255,255,255,0.08)",
+            color: "inherit",
+          }}
+        >
+          Save notifications
+        </button>
+      </form>
 
       <div
         style={{

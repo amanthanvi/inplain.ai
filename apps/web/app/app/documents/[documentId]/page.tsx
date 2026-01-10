@@ -28,6 +28,20 @@ type ChangeEventListResponse = {
   nextCursor: string | null;
 };
 
+type EmailMode = "immediate" | "daily_digest";
+
+type DocumentNotificationPreferenceResponse = {
+  effective: { emailEnabled: boolean; emailMode: EmailMode };
+  override: { emailEnabled: boolean; emailMode: EmailMode } | null;
+};
+
+type MeResponse = {
+  id: string;
+  email: string;
+  plan: "free" | "pro" | "business";
+  limits: Record<string, unknown>;
+};
+
 async function checkNow(documentId: string) {
   "use server";
 
@@ -36,20 +50,53 @@ async function checkNow(documentId: string) {
   redirect(`/app/documents/${documentId}?queued=1`);
 }
 
+async function saveNotificationPreference(documentId: string, formData: FormData) {
+  "use server";
+
+  const emailEnabled = String(formData.get("emailEnabled") || "") === "on";
+  const emailMode = String(formData.get("emailMode") || "immediate") as EmailMode;
+
+  await inplainFetchJson(`/v1/documents/${documentId}/notification-preference`, {
+    method: "PUT",
+    body: JSON.stringify({ emailEnabled, emailMode }),
+  });
+
+  revalidatePath(`/app/documents/${documentId}`);
+  redirect(`/app/documents/${documentId}?prefs=1`);
+}
+
+async function clearNotificationPreference(documentId: string) {
+  "use server";
+
+  await inplainFetchJson(`/v1/documents/${documentId}/notification-preference`, {
+    method: "DELETE",
+  });
+
+  revalidatePath(`/app/documents/${documentId}`);
+  redirect(`/app/documents/${documentId}?prefs=1`);
+}
+
 export default async function DocumentPage({
   params,
   searchParams,
 }: {
   params: Promise<{ documentId: string }>;
-  searchParams: Promise<{ queued?: string }>;
+  searchParams: Promise<{ queued?: string; prefs?: string }>;
 }) {
   const { documentId } = await params;
   const sp = await searchParams;
 
-  const [doc, events] = await Promise.all([
+  const [doc, events, prefs, me] = await Promise.all([
     inplainFetchJson<DocumentDetail>(`/v1/documents/${documentId}`),
     inplainFetchJson<ChangeEventListResponse>(`/v1/documents/${documentId}/change-events?limit=50`),
+    inplainFetchJson<DocumentNotificationPreferenceResponse>(
+      `/v1/documents/${documentId}/notification-preference`,
+    ),
+    inplainFetchJson<MeResponse>("/v1/me"),
   ]);
+
+  const digestAllowed = me.plan !== "free";
+  const prefValue = prefs.override ?? prefs.effective;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -83,6 +130,21 @@ export default async function DocumentPage({
         ) : null}
       </div>
 
+      {sp.prefs === "1" ? (
+        <div
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.04)",
+            fontSize: 13,
+            opacity: 0.9,
+          }}
+        >
+          Notification preferences saved.
+        </div>
+      ) : null}
+
       <form action={checkNow.bind(null, documentId)}>
         <button
           type="submit"
@@ -95,6 +157,89 @@ export default async function DocumentPage({
           }}
         >
           Check now
+        </button>
+      </form>
+
+      <form
+        action={saveNotificationPreference.bind(null, documentId)}
+        style={{
+          padding: 14,
+          borderRadius: 16,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.03)",
+          display: "grid",
+          gap: 10,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ fontWeight: 650 }}>Email notifications</div>
+          {prefs.override ? (
+            <button
+              type="submit"
+              formAction={clearNotificationPreference.bind(null, documentId)}
+              style={{
+                padding: "8px 10px",
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.18)",
+                background: "rgba(255,255,255,0.06)",
+                color: "inherit",
+              }}
+            >
+              Use default
+            </button>
+          ) : (
+            <div style={{ fontSize: 12, opacity: 0.7 }}>Using default</div>
+          )}
+        </div>
+
+        <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}>
+          <input type="checkbox" name="emailEnabled" defaultChecked={prefValue.emailEnabled} />
+          <span>Email updates for this document</span>
+        </label>
+
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={{ fontSize: 13, opacity: 0.75 }}>Mode</div>
+          <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}>
+            <input
+              type="radio"
+              name="emailMode"
+              value="immediate"
+              defaultChecked={prefValue.emailMode === "immediate"}
+            />
+            <span>Immediate</span>
+          </label>
+          <label
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              fontSize: 14,
+              opacity: digestAllowed ? 1 : 0.5,
+            }}
+          >
+            <input
+              type="radio"
+              name="emailMode"
+              value="daily_digest"
+              defaultChecked={prefValue.emailMode === "daily_digest"}
+              disabled={!digestAllowed}
+            />
+            <span>Daily digest</span>
+          </label>
+        </div>
+
+        <button
+          type="submit"
+          style={{
+            justifySelf: "start",
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "rgba(255,255,255,0.08)",
+            color: "inherit",
+          }}
+        >
+          Save
         </button>
       </form>
 
