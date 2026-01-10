@@ -1,6 +1,6 @@
 # PLAN — Inplain.ai v0.1.0
 
-Last updated: 2026-01-09
+Last updated: 2026-01-10
 
 North star: production-ready SaaS that tracks public privacy/ToS URLs over time, detects meaningful changes, shows a readable diff, and generates AI summaries **with citations**.
 
@@ -89,12 +89,12 @@ Acceptance:
 
 ### M6 — Notifications + billing + web UI + ops hardening
 
-- [ ] Postmark: immediate + daily digest + unsubscribe (immediate implemented)
+- [ ] Postmark: immediate + daily digest + unsubscribe (daily digest + prefs implemented; provider env vars pending)
 - [ ] Stripe Checkout + Portal + downgrade policy; update Clerk metadata
 - [ ] Web app: onboarding, dashboard, diff viewer (section-first), citations UX, settings/billing meters
 - [ ] Admin UI: jobs, users, abuse, LLM usage, impersonation banner + audit
-- [ ] Observability: Sentry (web/api/workers), OTLP traces/metrics, structured logs (Sentry wired in api/workers; env vars pending)
-- [ ] Backups + restore scripts + retention cleanup job (backup/restore scripts added; retention cleanup job wired; S3 creds pending)
+- [ ] Observability: Sentry (web/api/workers), OTLP traces/metrics, structured logs (web Sentry + Python OTLP scaffolded; env vars pending)
+- [ ] Backups + restore scripts + retention cleanup job (backup/restore scripts + GH nightly workflow + retention cleanup job wired; S3 creds pending)
 - [ ] Launch readiness checklist gates (SPEC 20.x)
 
 Acceptance:
@@ -119,3 +119,7 @@ Acceptance:
 - 2026-01-10: Add S3/R2 raw snapshot uploads (`raw_storage_key`) + retention cleanup job (deletes S3 objects + dependent rows).
 - 2026-01-10: Add Playwright renderer (`render` queue) with SSRF route blocking + quota gating.
 - 2026-01-10: Add Sentry wiring (api/workers) + backup/restore scripts; deploy all services incl. new `renderer` to Railway.
+- 2026-01-10: Implement daily digest scheduling + notification preferences (global + per-document) and wire into web Settings + Document pages.
+- 2026-01-10: Enforce tier-based snapshot retention using `history_retention_days` entitlement limit.
+- 2026-01-10: Add web Sentry config + Python OpenTelemetry (OTLP) scaffold; add GitHub Actions nightly Postgres backup workflow.
+- 2026-01-10: Set Clerk env vars + enable daily digest flag in Railway; redeploy all services in production and development.
