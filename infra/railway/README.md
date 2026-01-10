@@ -73,6 +73,11 @@ This repo assumes **env vars are set in Railway** (not committed).
   - `renderer`: `celery -A inplain.worker.celery_app:celery_app worker -Q render -l info`
   - `scheduler`: `python -m inplain.worker.scheduler`
 
+Renderer setup (Playwright):
+
+- Install browser binaries inside the `renderer` container (per environment):
+  - `railway ssh -s renderer python -m playwright install chromium`
+
 Also required for full v0.1.0 functionality (not yet configured here):
 
 - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`
