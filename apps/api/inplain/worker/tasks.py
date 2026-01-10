@@ -13,6 +13,7 @@ from inplain.worker.celery_app import celery_app
 from inplain.worker.cleanup_pipeline import run_cleanup_job
 from inplain.worker.fetch_pipeline import run_fetch_job
 from inplain.worker.notify_pipeline import run_notify_job
+from inplain.worker.render_pipeline import run_render_job
 from inplain.worker.scheduler import enqueue_pending_jobs
 from inplain.worker.summarize_pipeline import run_summarize_job
 
@@ -41,6 +42,8 @@ def run_job(job_id: str) -> None:
             match job.job_type:
                 case JobType.fetch:
                     run_fetch_job(db, job)
+                case JobType.render:
+                    run_render_job(db, job)
                 case JobType.cleanup:
                     run_cleanup_job(db, job)
                 case JobType.summarize:
@@ -59,6 +62,7 @@ def run_job(job_id: str) -> None:
 
         should_enqueue_next = job.job_type in {
             JobType.fetch,
+            JobType.render,
             JobType.cleanup,
             JobType.summarize,
             JobType.notify,

@@ -14,23 +14,28 @@ import trafilatura
 from lxml import html as lxml_html
 from pdfminer.high_level import extract_text as pdf_extract_text
 from readability import Document as ReadabilityDocument
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from inplain.db.models.change_events import ChangeEvent
 from inplain.db.models.diffs import Diff
 from inplain.db.models.documents import Document
+from inplain.db.models.entitlements import Entitlement
 from inplain.db.models.enums import (
     ChangeEventType,
     DiffFormat,
     DocumentStatus,
+    FetchMode,
     JobStatus,
     JobType,
+    Provider,
+    ProviderAction,
     RobotsStatus,
     SnapshotFetchMethod,
     SummaryStatus,
 )
 from inplain.db.models.jobs import Job
+from inplain.db.models.provider_usage import ProviderUsage
 from inplain.db.models.snapshots import Snapshot
 from inplain.storage.s3 import upload_snapshot_raw
 
@@ -96,6 +101,23 @@ def run_fetch_job(db: Session, job: Job) -> None:
         db.commit()
         return
 
+    period_key = now.strftime("%Y-%m")
+    if doc.fetch_mode == FetchMode.force_render and _has_render_quota(
+        db=db, user_id=doc.user_id, period_key=period_key
+    ):
+        db.add(
+            Job(
+                user_id=doc.user_id,
+                document_id=doc.id,
+                job_type=JobType.render,
+                status=JobStatus.queued,
+            )
+        )
+        doc.last_checked_at = now
+        db.add(doc)
+        db.commit()
+        return
+
     # Find the previous snapshot (if any).
     prev = (
         db.execute(
@@ -148,6 +170,20 @@ def run_fetch_job(db: Session, job: Job) -> None:
         return
     extracted_bytes = extracted_text.encode("utf-8")
     extracted_sha256 = hashlib.sha256(extracted_bytes).digest()
+
+    if doc.fetch_mode != FetchMode.http_only and _should_trigger_render(resp, extracted_text):
+        if _has_render_quota(db=db, user_id=doc.user_id, period_key=period_key):
+            db.add(
+                Job(
+                    user_id=doc.user_id,
+                    document_id=doc.id,
+                    job_type=JobType.render,
+                    status=JobStatus.queued,
+                )
+            )
+            db.add(doc)
+            db.commit()
+            return
 
     if prev is not None and prev.extracted_sha256 == extracted_sha256:
         db.add(doc)
@@ -410,6 +446,49 @@ def _extract_text(resp: httpx.Response, *, allow_iframe: bool = True) -> str:
         return extracted_text
 
     raise RuntimeError(f"disallowed content-type: {content_type}")
+
+
+def _should_trigger_render(resp: httpx.Response, extracted_text: str) -> bool:
+    content_type = (resp.headers.get("content-type") or "").lower()
+    if "text/html" not in content_type and not content_type.endswith("+html"):
+        return False
+
+    if len(extracted_text.strip()) < 500:
+        return True
+
+    page = resp.content[:200_000].lower()
+    if b"enable javascript" in page or b"turn on javascript" in page:
+        return True
+
+    return False
+
+
+def _has_render_quota(*, db: Session, user_id: object, period_key: str) -> bool:
+    entitlement = (
+        db.execute(select(Entitlement).where(Entitlement.user_id == user_id))
+        .scalars()
+        .one_or_none()
+    )
+    limits = entitlement.limits if entitlement is not None else {}
+
+    raw_limit = limits.get("js_render_fetches_per_month")
+    limit = raw_limit if isinstance(raw_limit, int) else 0
+    if limit <= 0:
+        return False
+
+    used = (
+        db.execute(
+            select(func.coalesce(func.sum(ProviderUsage.quantity), 0)).where(
+                ProviderUsage.user_id == user_id,
+                ProviderUsage.period_key == period_key,
+                ProviderUsage.provider == Provider.playwright,
+                ProviderUsage.action == ProviderAction.render_fetch,
+            )
+        )
+        .scalars()
+        .one()
+    )
+    return int(used) < limit
 
 
 def _try_iframe_extraction(resp: httpx.Response) -> str | None:

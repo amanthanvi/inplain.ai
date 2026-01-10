@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker dev-scheduler lint test typecheck
+.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker dev-renderer dev-scheduler lint test typecheck
 
 PYTHON ?= python3.13
 VENV_DIR ?= .venv
@@ -26,6 +26,9 @@ dev-web:
 
 dev-worker:
 	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/celery -A inplain.worker.celery_app:celery_app worker -Q fetch,summarize,notify,cleanup -l info
+
+dev-renderer:
+	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/celery -A inplain.worker.celery_app:celery_app worker -Q render -l info
 
 dev-scheduler:
 	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python -m inplain.worker.scheduler
