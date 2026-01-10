@@ -20,6 +20,7 @@ _DEFAULT_INTERVAL_SECONDS = 30
 _SCHEDULE_BATCH_LIMIT = 500
 _ENQUEUE_BATCH_LIMIT = 500
 _DEDUP_WINDOW = timedelta(minutes=5)
+_DAILY_CLEANUP_DEDUP_WINDOW = timedelta(hours=23)
 
 
 def run_scheduler_loop() -> None:
@@ -38,10 +39,16 @@ def run_scheduler_loop() -> None:
         now = datetime.now(UTC)
         with SessionLocal() as db:
             try:
+                cleanup = schedule_daily_cleanup(db, now)
                 scheduled = schedule_due_documents(db, now)
                 enqueued = enqueue_pending_jobs(db)
-                if scheduled or enqueued:
-                    logger.info("scheduler cycle scheduled=%s enqueued=%s", scheduled, enqueued)
+                if cleanup or scheduled or enqueued:
+                    logger.info(
+                        "scheduler cycle cleanup=%s scheduled=%s enqueued=%s",
+                        cleanup,
+                        scheduled,
+                        enqueued,
+                    )
             except Exception:
                 db.rollback()
                 logger.exception("scheduler cycle failed")
@@ -100,6 +107,31 @@ def schedule_due_documents(db: Session, now: datetime) -> int:
 
     db.commit()
     return scheduled
+
+
+def schedule_daily_cleanup(db: Session, now: datetime) -> int:
+    cutoff = now - _DAILY_CLEANUP_DEDUP_WINDOW
+    existing = db.execute(
+        select(Job.id).where(Job.job_type == JobType.cleanup, Job.created_at >= cutoff).limit(1)
+    ).scalar_one_or_none()
+    if existing is not None:
+        return 0
+
+    job = Job(user_id=None, document_id=None, job_type=JobType.cleanup, status=JobStatus.queued)
+    db.add(job)
+    db.flush()
+
+    if settings.enqueue_jobs:
+        async_result = celery_app.send_task(
+            "inplain.worker.tasks.run_job",
+            args=[str(job.id)],
+            queue=_queue_for_job_type(job.job_type),
+        )
+        job.celery_task_id = async_result.id
+        db.add(job)
+
+    db.commit()
+    return 1
 
 
 def enqueue_pending_jobs(db: Session) -> int:
