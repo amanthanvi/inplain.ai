@@ -38,7 +38,9 @@ railway up --service scheduler apps/api --path-as-root
 
 ## Migrations (remote)
 
-Run Alembic inside the `api` container so it can reach `Postgres` on Railway’s private network:
+The `api` start command runs `alembic upgrade head` on boot (v0.1.0).
+
+Manual fallback: run Alembic inside the `api` container so it can reach `Postgres` on Railway’s private network:
 
 ```bash
 railway ssh -s api -- alembic -c alembic.ini upgrade head
@@ -70,7 +72,7 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `WEB_BASE_URL` (api only)
 - `API_PUBLIC_BASE_URL` (api only)
 - `RAILPACK_START_CMD`:
-  - `api`: `uvicorn inplain.api.main:app --host 0.0.0.0 --port $PORT`
+  - `api`: `alembic -c alembic.ini upgrade head && uvicorn inplain.api.main:app --host 0.0.0.0 --port $PORT`
   - `worker`: `celery -A inplain.worker.celery_app:celery_app worker -Q fetch,summarize,notify,cleanup -l info`
   - `renderer`: `celery -A inplain.worker.celery_app:celery_app worker -Q render -l info`
   - `scheduler`: `python -m inplain.worker.scheduler`
