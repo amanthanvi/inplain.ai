@@ -12,15 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify aws cli present
-        run: aws --version
-
-      - name: Run pg_dump backup (upload to S3/R2)
+      - name: Run pg_dump backup
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT_URL }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.S3_REGION }}
         run: bash ./scripts/backup/postgres_backup.sh
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: postgres-backup-${{ github.run_id }}
+          path: .backups/postgres/
+          retention-days: 30
