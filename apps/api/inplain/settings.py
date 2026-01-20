@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     enable_billing: bool = False
     enable_rendering: bool = False
     enable_daily_digest: bool = False
+    enable_email_notifications: bool = False
 
     clerk_issuer: str | None = None
     clerk_jwks_url: str | None = None

@@ -127,14 +127,15 @@ def run_summarize_job(db: Session, job: Job) -> None:
         )
     )
 
-    db.add(
-        Job(
-            user_id=doc.user_id,
-            document_id=doc.id,
-            job_type=JobType.notify,
-            status=JobStatus.queued,
+    if settings.enable_email_notifications:
+        db.add(
+            Job(
+                user_id=doc.user_id,
+                document_id=doc.id,
+                job_type=JobType.notify,
+                status=JobStatus.queued,
+            )
         )
-    )
 
     db.commit()
 

@@ -38,6 +38,9 @@ logger = logging.getLogger(__name__)
 
 
 def run_notify_job(db: Session, job: Job) -> None:
+    if not settings.enable_email_notifications:
+        return
+
     if job.document_id is None and job.user_id is None:
         _run_daily_digest(db)
         return
