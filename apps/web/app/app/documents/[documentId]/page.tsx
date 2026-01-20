@@ -88,7 +88,7 @@ export default async function DocumentPage({
 
   const [doc, events, prefs, me] = await Promise.all([
     inplainFetchJson<DocumentDetail>(`/v1/documents/${documentId}`),
-    inplainFetchJson<ChangeEventListResponse>(`/v1/documents/${documentId}/change-events?limit=50`),
+    inplainFetchJson<ChangeEventListResponse>(`/v1/documents/${documentId}/change-events?limit=10`),
     inplainFetchJson<DocumentNotificationPreferenceResponse>(
       `/v1/documents/${documentId}/notification-preference`,
     ),
@@ -146,18 +146,23 @@ export default async function DocumentPage({
       ) : null}
 
       <form action={checkNow.bind(null, documentId)}>
-        <button
-          type="submit"
-          style={{
-            padding: "10px 12px",
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.08)",
-            color: "inherit",
-          }}
-        >
-          Check now
-        </button>
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            type="submit"
+            style={{
+              padding: "10px 12px",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.18)",
+              background: "rgba(255,255,255,0.08)",
+              color: "inherit",
+            }}
+          >
+            Check now
+          </button>
+          <a href={`/api/export/documents/${documentId}`} style={{ fontSize: 12, opacity: 0.8 }}>
+            Export history JSON →
+          </a>
+        </div>
       </form>
 
       <form

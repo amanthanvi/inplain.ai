@@ -2,14 +2,26 @@ import Link from "next/link";
 
 import { inplainFetchJson } from "../../../../lib/inplain-api";
 
+type Citation = {
+  hunkId: string;
+  quote: string;
+  side: "added" | "removed";
+};
+
+type SummaryBullet = {
+  text: string;
+  citations: Citation[];
+  citationInvalid?: boolean;
+};
+
 type ChangeEventResponse = {
   id: string;
   documentId: string;
   title: string;
   createdAt: string;
   summary: {
-    whatChanged: Array<{ quote: string; hunkId: string; note: string }>;
-    whyItMatters: Array<{ quote: string; hunkId: string; note: string }>;
+    whatChanged: SummaryBullet[];
+    whyItMatters: SummaryBullet[];
     disclaimer: string;
   } | null;
   diff: {
@@ -27,11 +39,13 @@ type ChangeEventResponse = {
 function DiffHunk({ hunk }: { hunk: ChangeEventResponse["diff"]["hunks"][number] }) {
   return (
     <div
+      id={`hunk-${hunk.hunkId}`}
       style={{
         borderRadius: 16,
         border: "1px solid rgba(255,255,255,0.10)",
         background: "rgba(255,255,255,0.03)",
         overflow: "hidden",
+        scrollMarginTop: 80,
       }}
     >
       <div
@@ -92,8 +106,23 @@ export default async function ChangeEventPage({
           ← Document
         </Link>
         <h1 style={{ fontSize: 18, letterSpacing: "-0.02em" }}>{event.title}</h1>
-        <div style={{ fontSize: 12, opacity: 0.75 }}>
-          {new Date(event.createdAt).toLocaleString()}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div style={{ fontSize: 12, opacity: 0.75 }}>
+            {new Date(event.createdAt).toLocaleString()}
+          </div>
+          <a
+            href={`/api/export/change-events/${event.id}`}
+            style={{ fontSize: 12, opacity: 0.8 }}
+          >
+            Export JSON →
+          </a>
         </div>
       </div>
 
@@ -114,8 +143,28 @@ export default async function ChangeEventPage({
             <ul style={{ display: "grid", gap: 10, paddingLeft: 16 }}>
               {event.summary.whatChanged.map((b, idx) => (
                 <li key={idx} style={{ fontSize: 14, lineHeight: 1.5 }}>
-                  {b.note}{" "}
-                  <span style={{ fontSize: 12, opacity: 0.7 }}>[{b.hunkId}]</span>
+                  <div>{b.text}</div>
+                  {b.citations?.length ? (
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+                      {b.citations.map((c, cIdx) => (
+                        <a
+                          key={cIdx}
+                          href={`#hunk-${c.hunkId}`}
+                          title={c.quote}
+                          style={{
+                            fontSize: 12,
+                            opacity: 0.75,
+                            textDecoration: "none",
+                            border: "1px solid rgba(255,255,255,0.14)",
+                            borderRadius: 999,
+                            padding: "2px 8px",
+                          }}
+                        >
+                          {c.side === "added" ? "+" : "-"} {c.hunkId}
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -125,8 +174,28 @@ export default async function ChangeEventPage({
             <ul style={{ display: "grid", gap: 10, paddingLeft: 16 }}>
               {event.summary.whyItMatters.map((b, idx) => (
                 <li key={idx} style={{ fontSize: 14, lineHeight: 1.5 }}>
-                  {b.note}{" "}
-                  <span style={{ fontSize: 12, opacity: 0.7 }}>[{b.hunkId}]</span>
+                  <div>{b.text}</div>
+                  {b.citations?.length ? (
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+                      {b.citations.map((c, cIdx) => (
+                        <a
+                          key={cIdx}
+                          href={`#hunk-${c.hunkId}`}
+                          title={c.quote}
+                          style={{
+                            fontSize: 12,
+                            opacity: 0.75,
+                            textDecoration: "none",
+                            border: "1px solid rgba(255,255,255,0.14)",
+                            borderRadius: 999,
+                            padding: "2px 8px",
+                          }}
+                        >
+                          {c.side === "added" ? "+" : "-"} {c.hunkId}
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>
