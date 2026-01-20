@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+import { PricingTable } from "@clerk/nextjs";
+
 import { inplainFetchJson } from "../../../lib/inplain-api";
 
 type MeResponse = {
@@ -16,25 +18,6 @@ type GlobalNotificationPreferencesResponse = {
   effective: { emailEnabled: boolean; emailMode: EmailMode };
   saved: { emailEnabled: boolean; emailMode: EmailMode } | null;
 };
-
-async function startCheckout(plan: "pro" | "business") {
-  "use server";
-
-  const session = await inplainFetchJson<{ url: string }>("/v1/billing/checkout-session", {
-    method: "POST",
-    body: JSON.stringify({ plan }),
-  });
-  redirect(session.url);
-}
-
-async function openPortal() {
-  "use server";
-
-  const session = await inplainFetchJson<{ url: string }>("/v1/billing/portal-session", {
-    method: "POST",
-  });
-  redirect(session.url);
-}
 
 async function saveNotificationPreferences(formData: FormData) {
   "use server";
@@ -75,6 +58,9 @@ export default async function SettingsPage() {
         }}
       >
         <div style={{ fontWeight: 650 }}>Notifications</div>
+        <div style={{ fontSize: 12, opacity: 0.7 }}>
+          Email delivery is currently disabled while we keep costs low.
+        </div>
 
         <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14 }}>
           <input
@@ -143,61 +129,14 @@ export default async function SettingsPage() {
           border: "1px solid rgba(255,255,255,0.10)",
           background: "rgba(255,255,255,0.03)",
           display: "grid",
-          gap: 8,
+          gap: 10,
         }}
       >
-        <div style={{ fontWeight: 650 }}>Plan</div>
+        <div style={{ fontWeight: 650 }}>Billing</div>
         <div style={{ opacity: 0.8 }}>
           {me.email} · <span style={{ opacity: 1 }}>{me.plan}</span>
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {me.plan !== "pro" ? (
-            <form action={startCheckout.bind(null, "pro")}>
-              <button
-                type="submit"
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  background: "rgba(255,255,255,0.08)",
-                  color: "inherit",
-                }}
-              >
-                Upgrade to Pro
-              </button>
-            </form>
-          ) : null}
-          {me.plan !== "business" ? (
-            <form action={startCheckout.bind(null, "business")}>
-              <button
-                type="submit"
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  background: "rgba(255,255,255,0.08)",
-                  color: "inherit",
-                }}
-              >
-                Upgrade to Business
-              </button>
-            </form>
-          ) : null}
-          <form action={openPortal}>
-            <button
-              type="submit"
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.18)",
-                background: "rgba(255,255,255,0.06)",
-                color: "inherit",
-              }}
-            >
-              Manage billing
-            </button>
-          </form>
-        </div>
+        <PricingTable />
       </div>
 
       <div style={{ display: "grid", gap: 10 }}>
