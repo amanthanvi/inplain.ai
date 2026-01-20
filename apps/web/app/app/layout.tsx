@@ -26,6 +26,9 @@ export default async function AppLayout({
           <Link className={styles.link} href="/app/entities">
             Entities
           </Link>
+          <Link className={styles.link} href="/app/admin">
+            Admin
+          </Link>
           <Link className={styles.link} href="/app/settings">
             Settings
           </Link>
@@ -35,4 +38,3 @@ export default async function AppLayout({
     </div>
   );
 }
-
