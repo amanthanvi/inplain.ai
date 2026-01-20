@@ -65,6 +65,7 @@ This repo assumes **env vars are set in Railway** (not committed).
 - `ENABLE_RENDERING` (`0`/`1`) (worker + renderer; gate for Playwright jobs)
 - `ENABLE_BILLING` (`0`/`1`) (api only)
 - `ENABLE_DAILY_DIGEST` (`0`/`1`) (worker + scheduler only)
+- `ENABLE_EMAIL_NOTIFICATIONS` (`0`/`1`) (worker only; email delivery is disabled by default)
 - `CLERK_ISSUER`
 - `CLERK_JWKS_URL`
 - `CLERK_JWT_AUDIENCE`
@@ -86,11 +87,9 @@ Renderer setup (Playwright):
 - Install browser binaries inside the `renderer` container (per environment):
   - `railway ssh -s renderer python -m playwright install chromium`
 
-Also required for full v0.1.0 functionality (not yet configured here):
+Also required for full v0.1.0 functionality:
 
-- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`
-- Postmark: `POSTMARK_SERVER_TOKEN`, `POSTMARK_FROM_EMAIL`
 - OpenRouter: `OPENROUTER_API_KEY`
 - Webhooks: `CLERK_WEBHOOK_SECRET`
 - Unsubscribe: `UNSUBSCRIBE_SECRET`
-- S3/R2 raw snapshots + backups: `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (optional: `S3_ENDPOINT_URL`, `S3_REGION`, `S3_PREFIX`, `S3_FORCE_PATH_STYLE`)
+- S3/R2 raw snapshots (optional): `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` (optional: `S3_ENDPOINT_URL`, `S3_REGION`, `S3_PREFIX`, `S3_FORCE_PATH_STYLE`)

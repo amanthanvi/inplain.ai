@@ -1,6 +1,6 @@
 # PLAN — Inplain.ai v0.1.0
 
-Last updated: 2026-01-10
+Last updated: 2026-01-20
 
 North star: production-ready SaaS that tracks public privacy/ToS URLs over time, detects meaningful changes, shows a readable diff, and generates AI summaries **with citations**.
 
@@ -17,6 +17,9 @@ North star: production-ready SaaS that tracks public privacy/ToS URLs over time,
 - Fetch pipeline: **HTTP-first** (`httpx`) + extraction (`trafilatura`/`readability`), with **isolated Playwright renderer** service (no Scrapy in `v0.1.0`).
 - Data model: add `users.stripe_customer_id` for stable Stripe↔Clerk mapping.
 - Spec hygiene: fix section numbering collision in API/UI/UX sections.
+- Email: **disabled by default** (Postmark deferred for cost).
+- Billing: **Clerk Billing** (`<PricingTable />`) for v0.1.0.
+- Backups: nightly `pg_dump` via GitHub Actions artifact (no S3 required).
 
 ## Milestones
 
@@ -89,12 +92,12 @@ Acceptance:
 
 ### M6 — Notifications + billing + web UI + ops hardening
 
-- [ ] Postmark: immediate + daily digest + unsubscribe (daily digest + prefs implemented; provider env vars pending)
-- [ ] Stripe Checkout + Portal + downgrade policy; update Clerk metadata
-- [ ] Web app: onboarding, dashboard, diff viewer (section-first), citations UX, settings/billing meters
-- [ ] Admin UI: jobs, users, abuse, LLM usage, impersonation banner + audit
-- [ ] Observability: Sentry (web/api/workers), OTLP traces/metrics, structured logs (web Sentry + Python OTLP scaffolded; env vars pending)
-- [ ] Backups + restore scripts + retention cleanup job (backup/restore scripts + GH nightly workflow + retention cleanup job wired; S3 creds pending)
+- [x] Email notifications: **disabled by default** (Postmark deferred); prefs + unsubscribe remain
+- [x] Billing UI: Clerk Billing `<PricingTable />` on Settings (plans TBD in Clerk)
+- [x] Web app: onboarding, dashboard, diff viewer + citations + export links
+- [x] Admin UI: jobs, users, abuse dashboard, LLM usage (audit log written for sensitive actions)
+- [ ] Observability: defer Sentry + OTLP (Railway logs only for now)
+- [x] Backups: nightly `pg_dump` via GitHub Actions artifact + restore script
 - [ ] Launch readiness checklist gates (SPEC 20.x)
 
 Acceptance:
@@ -124,3 +127,4 @@ Acceptance:
 - 2026-01-10: Add web Sentry config + Python OpenTelemetry (OTLP) scaffold; add GitHub Actions nightly Postgres backup workflow.
 - 2026-01-10: Set Clerk env vars + enable daily digest flag in Railway; redeploy all services in production and development.
 - 2026-01-10: Provision fresh Railway project (`inplain-ai-v0-1-0`) with production+development; deploy all services; set Clerk env vars + create `inplain` JWT template (aud=`inplain`); enable job processing + daily digest; install Playwright Chromium in renderer.
+- 2026-01-20: Disable email delivery (Postmark deferred); add Clerk Billing PricingTable; add export endpoints + admin dashboards; set OpenRouter keys; update backups workflow to GitHub artifacts; deploy to Railway.

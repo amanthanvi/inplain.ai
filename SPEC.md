@@ -159,12 +159,12 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 
 15. Every bullet must cite one or more **diff citations** (quotes + pointers to hunks).
 
-**FR-7 Notifications** 16. Send email notifications for meaningful changes (tier-gated). 17. User controls:
+**FR-7 Notifications (email deferred in v0.1.0)** 16. Email notifications for meaningful changes (tier-gated) are **implemented but disabled by default** to keep early costs low. 17. User controls:
 
 -   per-document enable/disable
 -   immediate vs daily digest (tier-gated)
 
-18. Include unsubscribe links and compliance-friendly headers.
+18. Unsubscribe links and compliance-friendly headers are required once email delivery is enabled.
 
 **FR-8 Admin** 19. Admin role can:
 
@@ -304,21 +304,18 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 
 **Caching/rate limiting:** Redis (Railway managed).
 
-**Observability:**
+**Observability (v0.1.0):**
 
--   **Sentry** (errors/perf)
--   **OpenTelemetry** traces + metrics exported to **Grafana Cloud OTLP** (or Honeycomb; choose one for implementation—see [14](#14-observability--operations))
--   Structured JSON logs to stdout (Railway log drain optional later)
+-   Railway logs + health checks.
+-   Sentry + OTLP are deferred until after initial launch (keep infra/cost minimal).
 
-**Email:** **Postmark**
-
--   Rationale: deliverability-first, simple templates, good API.
+**Email (v0.1.0):** Deferred (no Postmark integration enabled).
 
 **AI:** OpenRouter
 
 -   Model strings configurable; default + fallback set (see [11](#11-ai-summarization-via-openrouter)).
 
-**Billing:** Stripe for payments; Clerk remains identity + entitlement source of truth (see [13](#13-monetization--entitlements--metering)).
+**Billing (v0.1.0):** Clerk Billing (Stripe connected via Clerk) + Clerk UI components (`<PricingTable />`).
 
 ### 6.2 Component-level architecture
 
@@ -331,10 +328,8 @@ flowchart LR
   subgraph External
     Clerk[Clerk Auth]
     OR[OpenRouter LLM]
-    PM[Postmark Email]
-    Stripe[Stripe Billing]
+    Stripe[Stripe Billing via Clerk]
     S3[S3/R2 Object Storage]
-    Obs[Sentry + Grafana Cloud OTLP]
   end
 
   subgraph Railway
@@ -350,8 +345,6 @@ flowchart LR
   API --> PG
   API --> RD
   API --> Clerk
-  API --> Stripe
-  API --> Obs
 
   SCH --> RD
   W1 --> RD
@@ -360,13 +353,10 @@ flowchart LR
   W1 --> PG
   W1 --> S3
   W1 --> OR
-  W1 --> PM
-  W1 --> Obs
 
   REND --> S3
-  REND --> Obs
 
-  Stripe -->|webhook| API
+  Clerk --> Stripe
   Clerk -->|webhook| API
 ```
 
@@ -375,7 +365,7 @@ flowchart LR
 1. **Public zone**: Web + API endpoints exposed to internet.
 2. **Private app zone**: Workers, scheduler (no public ingress). Communicate via Redis + Postgres.
 3. **Data zone**: Postgres + Redis (Railway private networking).
-4. **External services**: Clerk/Stripe/OpenRouter/Postmark/S3. Access via outbound HTTPS only.
+4. **External services**: Clerk/Stripe/OpenRouter/S3. Access via outbound HTTPS only.
 
 Principles:
 
@@ -1034,31 +1024,14 @@ Response:
 }
 ```
 
-#### Billing
+#### Billing (v0.1.0)
 
-`POST /v1/billing/checkout-session`
+Billing UI uses **Clerk Billing** via web components (e.g. `<PricingTable />`).
 
-```json
-{ "plan": "pro" }
-```
+Legacy Stripe Checkout/Portal endpoints exist but are **disabled by default** behind `ENABLE_BILLING=1`:
 
-Response:
-
-```json
-{ "url": "https://checkout.stripe.com/..." }
-```
-
-`POST /v1/billing/portal-session`
-
-Response:
-
-```json
-{ "url": "https://billing.stripe.com/..." }
-```
-
-Stripe webhooks:
-
-- `POST /v1/webhooks/stripe`
+- `POST /v1/billing/checkout-session`
+- `POST /v1/billing/portal-session`
 
 #### Unsubscribe
 
@@ -1068,6 +1041,14 @@ Stripe webhooks:
 
 `GET /v1/admin/jobs?status=failed&limit=50`
 `POST /v1/admin/jobs/{jobId}/retry`
+`GET /v1/admin/users?query=...`
+`GET /v1/admin/abuse`
+`GET /v1/admin/llm-usage`
+
+#### Export (v0.1.0)
+
+`GET /v1/change-events/{changeEventId}/export`
+`GET /v1/documents/{documentId}/export`
 
 ### 9.7 Webhooks
 
@@ -1079,7 +1060,7 @@ Stripe webhooks:
 -   Upsert `users` row.
 -   Initialize entitlements to `free` if not present.
 
-#### Stripe webhook (subscription changes)
+#### Stripe webhook (subscription changes) — deferred in v0.1.0
 
 `POST /v1/webhooks/stripe`
 
@@ -1087,7 +1068,7 @@ Stripe webhooks:
 -   Idempotency via `webhook_events`.
 -   Update entitlements in **Clerk public metadata** and mirror to `entitlements` table.
 
-**Webhook ordering**: UI ensures Clerk session is confirmed before triggering Stripe Checkout. This guarantees `user.created` webhook arrives before `checkout.session.completed`. If race occurs (user row missing), Stripe webhook returns 202 and logs warning.
+**Webhook ordering**: When direct Stripe Checkout is enabled (future), ensure the Clerk session is confirmed before triggering Stripe Checkout to avoid `user.created` vs `checkout.session.completed` races.
 
 ---
 
@@ -1351,18 +1332,20 @@ After receiving LLM response, validate each citation:
 
 ---
 
-## 12) Notifications (Email)
+## 12) Notifications (Email) — deferred in v0.1.0
+
+In v0.1.0, **email delivery is disabled by default** to keep early costs low. Notification preferences + unsubscribe are implemented so email can be enabled later without a schema migration.
 
 ### 12.1 Provider choice
 
-**Postmark** for transactional email.
+**Postmark** for transactional email (future).
 
 **Backend configuration (env)**
 
 -   `POSTMARK_SERVER_TOKEN`
 -   `POSTMARK_FROM_EMAIL` (e.g. `Inplain <noreply@inplain.ai>`)
 
-### 12.2 Email templates (v0.1.0)
+### 12.2 Email templates (future)
 
 1. "Change detected" (immediate)
     - Subject: `[Inplain] {Entity}: {Document type} updated`
@@ -1400,7 +1383,7 @@ Templates must include:
 -   If unsubscribed:
     -   set a flag (store in `notification_preferences` with `document_id = null`)
 
-### 12.4 Deliverability basics
+### 12.4 Deliverability basics (future)
 
 -   Configure domain SPF/DKIM with Postmark.
 -   Use a dedicated sender domain: `mail.inplain.ai`.
@@ -1420,7 +1403,7 @@ Subscription SaaS with 3 tiers:
 -   **Pro** (individuals)
 -   **Business** (teams-lite; still single-user in v0.1.0, higher limits)
 
-Billing implemented in v0.1.0 using **Stripe Checkout + Customer Portal**, while **Clerk remains identity + entitlement source of truth**.
+Billing implemented in v0.1.0 using **Clerk Billing** (Stripe connected via Clerk).
 
 ### 13.2 Tiers, quotas, and feature gates
 
@@ -1431,9 +1414,9 @@ Billing implemented in v0.1.0 using **Stripe Checkout + Customer Portal**, while
 | On-demand "check now" |                   10/day |                  100/day |                  500/day |
 | JS-render fetches     |                     0/mo |                   200/mo |                 2,000/mo |
 | AI summaries          |               **10/mo**  |                   500/mo |                 5,000/mo |
-| Email notifications   |    immediate (max 20/mo) | immediate + daily digest | immediate + daily digest |
+| Email notifications   |                 deferred |                 deferred |                 deferred |
 | History retention     |                  30 days |                 180 days |                 730 days |
-| Export (JSON/CSV)     | limited (last 10 events) |                     full |                     full |
+| Export (JSON)         | limited (last 10 events) |                     full |                     full |
 | Custom ignore rules   |                       no |              no (future) |   yes (future, text patterns) |
 
 Notes:
@@ -1441,7 +1424,7 @@ Notes:
 -   **Conservative free tier**: 10 AI summaries/mo (reduced from 30) to control LLM costs.
 -   "Immediate (max 20/mo)" for Free prevents notification abuse and cost spikes.
 -   Free still gets value: tracking + diff + some summaries.
--   **Export formats**: JSON and CSV supported for paid tiers.
+-   **Export formats**: JSON for v0.1.0 (CSV deferred).
 
 ### 13.3 Metering strategy (what we measure)
 
@@ -1458,48 +1441,33 @@ Additionally enforce DB counters (fast to query per period):
 
 ### 13.4 Entitlement enforcement flow
 
-**Source of truth:** Clerk user identity + `publicMetadata` entitlements (plan, limits).
+**Source of truth (v0.1.0):** `entitlements` table (DB) + optional mirror to Clerk `publicMetadata`.
 
 **Flow**
 
-1. Stripe subscription changes (webhook) → API verifies signature → maps Stripe customer to Clerk user.
-2. API updates Clerk `publicMetadata`:
-    - `plan: free|pro|business`
-    - `limits: {...}`
-    - `period_end_at`
-3. API mirrors to `entitlements` table (audit + internal joins).
-4. Client UI reads plan via Clerk (and/or `/v1/me`).
-5. API enforces on:
+1. Clerk `user.created|user.updated` webhook → API upserts `users` row.
+2. API initializes `entitlements` to Free if missing.
+3. Admin overrides (optional) update both:
+    - DB `entitlements`
+    - Clerk `publicMetadata` mirror (plan/limits)
+4. Client UI reads plan via `/v1/me`.
+5. API enforces entitlements on:
     - document creation
     - schedule tier changes
     - enqueueing on-demand checks
     - JS rendering triggers
     - LLM summary calls
-    - notification sends
+    - exports
+    - notification sends (email deferred)
 
 **Implementation detail**
 
--   Configure Clerk JWT template to include:
-    -   `plan`
-    -   `limits`
-    -   `role`
--   API uses JWT claims first; optionally refresh from DB if missing.
+-   Clerk JWT template includes an `aud` for API verification; entitlements are enforced from DB.
 
-### 13.5 Stripe integration details (v0.1.0)
+### 13.5 Stripe integration details (future; legacy endpoints)
 
--   Stripe objects:
-    -   Product + Price per plan (monthly)
-    -   Customer per Clerk user
--   Checkout:
-    -   API endpoint `POST /v1/billing/checkout-session`
-    -   requires authenticated user
-    -   returns Stripe Checkout URL
--   Customer Portal:
-    -   `POST /v1/billing/portal-session`
--   Webhooks handled at `/v1/webhooks/stripe`:
-    -   `checkout.session.completed`
-    -   `customer.subscription.created|updated|deleted`
-    -   `invoice.payment_failed` (downgrade after grace period policy)
+The repo contains legacy Stripe Checkout/Portal endpoints behind `ENABLE_BILLING=1`.
+For v0.1.0, billing UI is handled by **Clerk Billing**.
 
 **Downgrade policy**
 
@@ -1535,6 +1503,8 @@ Additionally enforce DB counters (fast to query per period):
 ---
 
 ## 14) Observability & Operations
+
+In v0.1.0, observability relies on Railway logs + health checks. Sentry + OTLP export are deferred until after initial launch.
 
 ### 14.1 Logging
 
@@ -1943,7 +1913,7 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 -   [ ] App onboarding: create entity + add document within 2 minutes
 -   [ ] Diff viewer usable and readable
 -   [ ] Summaries include citations and “not legal advice”
--   [ ] Email notifications working with unsubscribe
+-   [ ] Email notifications deferred (disabled by default)
 -   [ ] Tier gating visible in UI (limits displayed)
 -   [ ] Export works per tier
 
@@ -1953,11 +1923,9 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 -   [ ] DB migrations automated on deploy
 -   [ ] Backups configured:
     -   [ ] Railway Postgres backups enabled
-    -   [ ] nightly `pg_dump` to S3/R2 configured (scripts + GitHub Actions schedule)
--   [ ] Object storage bucket with lifecycle policies
--   [ ] Sentry configured for all services
--   [ ] OTLP export configured and dashboards created
--   [ ] Alerts configured (queue, 5xx rate, fetch failure rate, LLM cost budget)
+    -   [ ] nightly `pg_dump` uploaded as a GitHub Actions artifact (30d retention)
+-   [ ] Object storage bucket with lifecycle policies (only if S3/R2 enabled)
+-   [ ] Observability: Railway logs + health checks (Sentry/OTLP/alerts deferred)
 -   [ ] Robots.txt fetch + caching working; disallowed URLs blocked with clear UI copy
 -   [ ] Scheduler correctness validated (no duplicate enqueues; `SKIP LOCKED` works)
 -   [ ] Celery retry policies validated; dead-letter semantics implemented (mark `jobs.status=dead`)
@@ -1991,43 +1959,42 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 -   [ ] Secrets:
     -   [ ] no secrets shipped to client
     -   [ ] all secrets stored in Railway env vars
-    -   [ ] Stripe/Clerk webhook secrets set and verified in staging/prod
+    -   [ ] Clerk webhook secret set and verified in staging/prod
 -   [ ] Webhooks:
-    -   [ ] signature verification implemented (Clerk + Stripe)
+    -   [ ] signature verification implemented (Clerk)
     -   [ ] idempotency implemented via `webhook_events`
 -   [ ] AuthZ tests:
     -   [ ] user cannot access another user’s entities/documents/events
     -   [ ] admin-only endpoints blocked for non-admin
 -   [ ] Dependency scanning passing (pip-audit; npm audit report reviewed)
--   [ ] Backups encrypted at rest (S3/R2 SSE enabled)
+-   [ ] Backups stored privately (GitHub Actions artifacts; retention configured)
 
 ### 20.4 Billing & entitlement checklist (v0.1.0)
 
--   [ ] Stripe products/prices created (Free handled in-app; Pro/Business paid)
--   [ ] Checkout flow works end-to-end
--   [ ] Customer portal link works
--   [ ] Stripe webhooks update Clerk `publicMetadata.plan` and `limits`
+-   [ ] Clerk Billing enabled (Stripe connected) + `<PricingTable />` renders
+-   [ ] Plans configured in Clerk (Free/Pro/Business) and visible in PricingTable
+-   [ ] Web gating uses `has()` / `<Protect />` where needed
 -   [ ] API enforces entitlements for:
     -   [ ] document limits
     -   [ ] schedule tier limits
     -   [ ] JS render quotas
     -   [ ] AI summary quotas
     -   [ ] notification quotas
--   [ ] Downgrade policy tested (payment failure → grace → downgrade)
+-   [ ] Downgrade policy tested (payment failure → grace → downgrade) (deferred until plans exist)
 -   [ ] Manual admin override documented (DB + Clerk metadata sync)
 
 ### 20.5 Backup/restore checklist (production-safe)
 
 -   [ ] Railway Postgres automatic backups enabled
 -   [ ] Nightly logical backup job configured:
-    -   `pg_dump` (custom format) + upload to S3/R2
+    -   `pg_dump` (custom format) + upload to GitHub Actions artifact
     -   retention: 30 days (or aligned with compliance needs)
     -   implementation: GitHub Actions scheduled workflow (v0.1.0)
 -   [ ] Restore run tested in staging:
     -   [ ] restore into empty DB
     -   [ ] run migrations
     -   [ ] validate app boot + can render a known change event
--   [ ] Object storage lifecycle policies set:
+-   [ ] Object storage lifecycle policies set (only if S3/R2 enabled):
     -   raw HTML retention aligned to snapshot retention delete-at
     -   delete orphaned objects job implemented
 
