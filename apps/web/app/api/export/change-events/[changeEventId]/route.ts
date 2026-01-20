@@ -1,10 +1,11 @@
 import { InplainApiError, inplainFetchJson } from "../../../../../lib/inplain-api";
+import type { NextRequest } from "next/server";
 
 export async function GET(
-  _request: Request,
-  context: { params: { changeEventId: string } },
+  _request: NextRequest,
+  context: { params: Promise<{ changeEventId: string }> },
 ) {
-  const changeEventId = context.params.changeEventId;
+  const { changeEventId } = await context.params;
 
   try {
     const data = await inplainFetchJson<unknown>(`/v1/change-events/${changeEventId}/export`);
@@ -26,4 +27,3 @@ export async function GET(
     return new Response("Internal Server Error", { status: 500 });
   }
 }
-

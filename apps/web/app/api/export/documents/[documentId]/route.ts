@@ -1,7 +1,11 @@
 import { InplainApiError, inplainFetchJson } from "../../../../../lib/inplain-api";
+import type { NextRequest } from "next/server";
 
-export async function GET(_request: Request, context: { params: { documentId: string } }) {
-  const documentId = context.params.documentId;
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ documentId: string }> },
+) {
+  const { documentId } = await context.params;
 
   try {
     const data = await inplainFetchJson<unknown>(`/v1/documents/${documentId}/export`);

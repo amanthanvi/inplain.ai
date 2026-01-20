@@ -197,8 +197,8 @@ def list_jobs(
 
 @router.post("/jobs/{job_id}/retry", response_model=RetryJobOut)
 def retry_job(
-    job_id: uuid.UUID = Path(alias="jobId"),
     request: Request,
+    job_id: uuid.UUID = Path(alias="jobId"),
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ) -> RetryJobOut:
@@ -249,9 +249,9 @@ def retry_job(
 
 @router.post("/users/{user_id}/ban")
 def ban_user(
+    request: Request,
     user_id: uuid.UUID = Path(alias="userId"),
     payload: BanUserIn = ...,
-    request: Request,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ) -> dict[str, str]:
@@ -282,9 +282,9 @@ def ban_user(
 
 @router.post("/users/{user_id}/plan")
 def set_user_plan(
+    request: Request,
     user_id: uuid.UUID = Path(alias="userId"),
     payload: SetPlanIn = ...,
-    request: Request,
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ) -> dict[str, str]:
