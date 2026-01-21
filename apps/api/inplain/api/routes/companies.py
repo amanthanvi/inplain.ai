@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
-from inplain.api.routes.documents import DocumentCreateIn, create_document
+from inplain.api.routes.documents import DocumentCreateIn, _create_document_impl
 from inplain.api.schemas import APIModel
 from inplain.catalog.company_catalog import COMPANY_CATALOG
 from inplain.db.models.entities import Entity
@@ -85,11 +85,10 @@ def watch_company(
         )
 
         try:
-            create_document(entity_id=entity.id, payload=payload, db=db, user=user)
+            _create_document_impl(entity_id=entity.id, payload=payload, db=db, user=user)
         except HTTPException as exc:
             if exc.status_code == 409:
                 continue
             raise
 
     return WatchCompanyOut(entity_id=entity.id)
-

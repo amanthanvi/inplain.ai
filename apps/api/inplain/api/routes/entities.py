@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from inplain.api.deps import get_current_user
 from inplain.api.schemas import APIModel
 from inplain.db.models.entities import Entity
+from inplain.db.models.enums import UserRole
 from inplain.db.models.users import User
 from inplain.db.session import get_db
 
@@ -50,6 +51,17 @@ def create_entity(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> EntityOut:
+    if user.role != UserRole.admin:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": {
+                    "code": "CUSTOM_TRACKING_DISABLED",
+                    "message": "Custom URL tracking is disabled. Track curated companies instead.",
+                }
+            },
+        )
+
     existing = db.execute(
         select(Entity).where(
             Entity.user_id == user.id, Entity.name == payload.name, Entity.deleted_at.is_(None)

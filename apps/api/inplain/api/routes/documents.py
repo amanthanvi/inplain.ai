@@ -20,6 +20,7 @@ from inplain.db.models.enums import (
     JobStatus,
     JobType,
     ScheduleTier,
+    UserRole,
 )
 from inplain.db.models.jobs import Job
 from inplain.db.models.users import User
@@ -183,6 +184,26 @@ def create_document(
     payload: DocumentCreateIn = ...,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+) -> DocumentOut:
+    if user.role != UserRole.admin:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": {
+                    "code": "CUSTOM_TRACKING_DISABLED",
+                    "message": "Custom URL tracking is disabled. Track curated companies instead.",
+                }
+            },
+        )
+
+    return _create_document_impl(entity_id=entity_id, payload=payload, db=db, user=user)
+
+
+def _create_document_impl(
+    entity_id: uuid.UUID,
+    payload: DocumentCreateIn,
+    db: Session,
+    user: User,
 ) -> DocumentOut:
     entity = db.execute(
         select(Entity).where(Entity.id == entity_id, Entity.user_id == user.id)
