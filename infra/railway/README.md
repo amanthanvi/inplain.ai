@@ -16,6 +16,11 @@ Clerk **production** keys + the `clerk.inplain.ai` custom domain will not work o
 
 - `web`: `inplain.ai`, `www.inplain.ai`
 
+DNS records (Cloudflare):
+
+- `CNAME` `@` → `xblzedb6.up.railway.app`
+- `CNAME` `www` → `ke39h7vy.up.railway.app`
+
 ## Deploy commands
 
 All deploys use Railpack and are driven by `RAILPACK_START_CMD` per service.

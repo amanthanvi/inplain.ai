@@ -21,6 +21,13 @@ North star: production-ready SaaS that tracks public privacy/ToS URLs over time,
 - Billing: **Clerk Billing** (`<PricingTable />`) for v0.1.0.
 - Backups: nightly `pg_dump` via GitHub Actions artifact (no S3 required).
 
+## Remaining manual ops (needed for real prod)
+
+- [ ] Cloudflare DNS: point `inplain.ai` and `www.inplain.ai` to Railway (custom domains already created in Railway).
+- [ ] Clerk prod: confirm allowed origins / redirect URLs include `https://inplain.ai` + `https://www.inplain.ai`.
+- [ ] Clerk Billing: create Free/Pro/Business plans and verify upgrade/downgrade flows.
+- [ ] Rotate any secrets that were pasted into chats/logs during setup.
+
 ## Milestones
 
 ### M0 — Repo bootstrap (golden commands + CI skeleton)
