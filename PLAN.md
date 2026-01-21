@@ -126,13 +126,14 @@ Acceptance:
 
 ### M8 — App stability + curated-only enforcement
 
-- [ ] Stabilize `/app/*` so it never bricks into generic Next.js digest pages:
-  - [ ] Catch + render safe error states (API down, 5xx, misconfig) with retry CTAs
-  - [ ] Improve server-side logging for actionable debugging (no secrets)
-- [ ] Replace generic create endpoints with curated-only watch flows:
-  - [ ] API: add `POST /v1/companies/{companySlug}/watch` (creates tracked entity + curated documents idempotently)
-  - [ ] Web: update “Watch changes” to call the watch endpoint (no client-supplied URLs)
-  - [ ] API: restrict `POST /v1/entities` and `POST /v1/entities/{entityId}/documents` to admin/internal use
+- [x] Stabilize `/app/*` so it never bricks into generic Next.js digest pages:
+  - [x] Catch + render safe error states (API down, 5xx, misconfig) with retry CTAs
+  - [x] Avoid crashes from invalid dates / partial API failures (snapshots/change events)
+  - [x] Improve server-side logging for actionable debugging (no secrets)
+- [x] Replace generic create endpoints with curated-only watch flows:
+  - [x] API: add `POST /v1/companies/{companySlug}/watch` (creates tracked entity + curated documents idempotently)
+  - [x] Web: update “Watch changes” to call the watch endpoint (no client-supplied URLs)
+  - [x] API: restrict `POST /v1/entities` and `POST /v1/entities/{entityId}/documents` to admin/internal use
 - [ ] App UX becomes company-first:
   - [ ] `/app` shows tracked companies + recent activity (or redirects to tracking view)
   - [ ] Add “Unwatch” flow (soft-delete tracked company + docs) with confirmation
@@ -191,3 +192,4 @@ Acceptance:
 - 2026-01-21: Upgrade marketing homepage + companies directory UI (reference parity), expand curated company catalog, and add per-company “All policies” page.
 - 2026-01-21: Harden app create flows for idempotency (409 duplicate entity/document redirects) and consolidate app navigation into the main header.
 - 2026-01-21: Remove custom URL / manual entity+document creation from the app; tracking is via curated Companies directory only.
+- 2026-01-21: Harden `/app/*` rendering (safe fetch + safe date formatting + billing UI fallback) to reduce server-side crash pages.
