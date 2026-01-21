@@ -29,6 +29,10 @@ export default async function CompanyPage({
     notFound();
   }
 
+  const companyName = company.name;
+  const companyWebsiteUrl = company.websiteUrl;
+  const companyDocuments = company.documents;
+
   async function watchCompany() {
     "use server";
 
@@ -60,9 +64,11 @@ export default async function CompanyPage({
       // Try to find an existing entity by name first (idempotent UX).
       let cursor: string | null = null;
       for (let page = 0; page < 5; page += 1) {
-        const url = cursor ? `/v1/entities?limit=100&cursor=${encodeURIComponent(cursor)}` : "/v1/entities?limit=100";
+        const url: string = cursor
+          ? `/v1/entities?limit=100&cursor=${encodeURIComponent(cursor)}`
+          : "/v1/entities?limit=100";
         const list = await inplainFetchJson<EntityListOut>(url);
-        const match = list.items.find((e) => e.name.toLowerCase() === company.name.toLowerCase());
+        const match = list.items.find((e) => e.name.toLowerCase() === companyName.toLowerCase());
         if (match) {
           entityId = match.id;
           break;
@@ -74,7 +80,7 @@ export default async function CompanyPage({
       if (!entityId) {
         const created = await inplainFetchJson<EntityOut>("/v1/entities", {
           method: "POST",
-          body: JSON.stringify({ name: company.name, websiteUrl: company.websiteUrl }),
+          body: JSON.stringify({ name: companyName, websiteUrl: companyWebsiteUrl }),
         });
         entityId = created.id;
       }
@@ -100,7 +106,7 @@ export default async function CompanyPage({
     }
 
     // Create documents (best-effort; handle duplicates + limits gracefully).
-    for (const doc of company.documents) {
+    for (const doc of companyDocuments) {
       try {
         await inplainFetchJson(`/v1/entities/${entityId}/documents`, {
           method: "POST",
