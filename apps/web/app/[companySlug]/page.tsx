@@ -190,6 +190,9 @@ export default async function CompanyPage({
                   </button>
                 </form>
               </SignedIn>
+              <Link className={styles.action} href={`/companies/${company.slug}/policies`}>
+                All policies
+              </Link>
               <a
                 className={styles.action}
                 href={company.documents[0].url}
