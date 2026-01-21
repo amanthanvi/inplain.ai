@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { inplainFetchJsonOrRedirect } from "../inplain-api";
+import { InplainApiError, inplainFetchJsonOrRedirect } from "../inplain-api";
 
 type Entity = {
   id: string;
@@ -27,10 +27,23 @@ async function createEntity(formData: FormData) {
     return;
   }
 
-  const entity = await inplainFetchJsonOrRedirect<Entity>("/v1/entities", {
-    method: "POST",
-    body: JSON.stringify({ name, websiteUrl }),
-  });
+  let entity: Entity;
+  try {
+    entity = await inplainFetchJsonOrRedirect<Entity>("/v1/entities", {
+      method: "POST",
+      body: JSON.stringify({ name, websiteUrl }),
+    });
+  } catch (err) {
+    if (err instanceof InplainApiError && err.status === 409) {
+      const body = err.body as { detail?: { error?: { details?: { entityId?: unknown } } } };
+      const entityId = body?.detail?.error?.details?.entityId;
+      if (typeof entityId === "string" && entityId.length) {
+        revalidatePath("/app/entities");
+        redirect(`/app/entities/${entityId}`);
+      }
+    }
+    throw err;
+  }
 
   revalidatePath("/app/entities");
   redirect(`/app/entities/${entity.id}`);

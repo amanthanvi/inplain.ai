@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { inplainFetchJsonOrRedirect } from "../../inplain-api";
+import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type DocumentListItem = {
   id: string;
@@ -33,13 +33,32 @@ async function createDocument(entityId: string, formData: FormData) {
     return;
   }
 
-  const doc = await inplainFetchJsonOrRedirect<{ id: string }>(
-    `/v1/entities/${entityId}/documents`,
-    {
+  let doc: { id: string };
+  try {
+    doc = await inplainFetchJsonOrRedirect<{ id: string }>(`/v1/entities/${entityId}/documents`, {
       method: "POST",
       body: JSON.stringify({ url, docType, scheduleTier, fetchMode }),
-    },
-  );
+    });
+  } catch (err) {
+    if (err instanceof InplainApiError && err.status === 409) {
+      const body = err.body as {
+        detail?: { error?: { details?: { documentId?: unknown; entityId?: unknown } } };
+      };
+      const docId = body?.detail?.error?.details?.documentId;
+      const existingEntityId = body?.detail?.error?.details?.entityId;
+
+      if (typeof docId === "string" && docId.length) {
+        revalidatePath(`/app/entities/${entityId}`);
+        redirect(`/app/documents/${docId}`);
+      }
+
+      if (typeof existingEntityId === "string" && existingEntityId.length) {
+        revalidatePath(`/app/entities/${entityId}`);
+        redirect(`/app/entities/${existingEntityId}`);
+      }
+    }
+    throw err;
+  }
 
   revalidatePath(`/app/entities/${entityId}`);
   redirect(`/app/documents/${doc.id}`);
