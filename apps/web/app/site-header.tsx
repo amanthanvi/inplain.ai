@@ -81,12 +81,6 @@ export function SiteHeader() {
                 >
                   Settings
                 </Link>
-                <Link
-                  className={`${styles.navLink} ${isActive(pathname, "/app/admin") ? styles.navLinkActive : ""}`}
-                  href="/app/admin"
-                >
-                  Admin
-                </Link>
               </SignedIn>
             )}
           </nav>
