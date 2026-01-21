@@ -86,10 +86,6 @@ export function CompanyDirectory({ companies }: { companies: CompanyCatalogItem[
         <span>{filtered.length} companies</span>
         <span>·</span>
         <span>Curated policy URLs</span>
-        <span>·</span>
-        <Link href="/app/entities" style={{ textDecoration: "underline", opacity: 0.9 }}>
-          Add a custom URL in the app
-        </Link>
       </div>
 
       {filtered.length ? (

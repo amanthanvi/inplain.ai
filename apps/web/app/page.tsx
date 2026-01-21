@@ -125,9 +125,9 @@ export default function Home() {
             <li className={styles.step}>
               <div className={styles.stepNum}>1</div>
               <div className={styles.stepBody}>
-                <div className={styles.stepTitle}>Pick a company (or add a custom URL)</div>
+                <div className={styles.stepTitle}>Pick a company to watch</div>
                 <div className={styles.stepText}>
-                  Start from our curated directory or track any public privacy/ToS page.
+                  Start from our curated directory and choose what matters to you.
                 </div>
               </div>
             </li>

@@ -73,7 +73,7 @@ export function SiteHeader() {
                   className={`${styles.navLink} ${isActive(pathname, "/app/entities") ? styles.navLinkActive : ""}`}
                   href="/app/entities"
                 >
-                  Entities
+                  Tracking
                 </Link>
                 <Link
                   className={`${styles.navLink} ${isActive(pathname, "/app/settings") ? styles.navLinkActive : ""}`}

@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
 
-import { InplainApiError, inplainFetchJsonOrRedirect } from "../inplain-api";
+import { inplainFetchJsonOrRedirect } from "../inplain-api";
 
 type Entity = {
   id: string;
@@ -16,101 +14,46 @@ type EntityListResponse = {
   nextCursor: string | null;
 };
 
-async function createEntity(formData: FormData) {
-  "use server";
-
-  const name = String(formData.get("name") || "").trim();
-  const websiteUrlRaw = String(formData.get("websiteUrl") || "").trim();
-  const websiteUrl = websiteUrlRaw.length ? websiteUrlRaw : null;
-
-  if (!name) {
-    return;
-  }
-
-  let entity: Entity;
-  try {
-    entity = await inplainFetchJsonOrRedirect<Entity>("/v1/entities", {
-      method: "POST",
-      body: JSON.stringify({ name, websiteUrl }),
-    });
-  } catch (err) {
-    if (err instanceof InplainApiError && err.status === 409) {
-      const body = err.body as { detail?: { error?: { details?: { entityId?: unknown } } } };
-      const entityId = body?.detail?.error?.details?.entityId;
-      if (typeof entityId === "string" && entityId.length) {
-        revalidatePath("/app/entities");
-        redirect(`/app/entities/${entityId}`);
-      }
-    }
-    throw err;
-  }
-
-  revalidatePath("/app/entities");
-  redirect(`/app/entities/${entity.id}`);
-}
-
 export default async function EntitiesPage() {
   const entities = await inplainFetchJsonOrRedirect<EntityListResponse>("/v1/entities?limit=100");
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-        <h1 style={{ fontSize: 22, letterSpacing: "-0.02em" }}>Entities</h1>
-        <div style={{ opacity: 0.7 }}>{entities.items.length} total</div>
+        <h1 style={{ fontSize: 22, letterSpacing: "-0.02em" }}>Tracking</h1>
+        <div style={{ opacity: 0.7 }}>{entities.items.length} companies</div>
       </div>
 
-      <form action={createEntity} style={{ display: "grid", gap: 10 }}>
-        <div style={{ display: "grid", gap: 6 }}>
-          <label style={{ fontSize: 13, opacity: 0.75 }} htmlFor="name">
-            Name
-          </label>
-          <input
-            id="name"
-            name="name"
-            placeholder="Acme Corp"
-            required
-            style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(255,255,255,0.04)",
-              color: "inherit",
-              outline: "none",
-            }}
-          />
+      <div
+        style={{
+          padding: 14,
+          borderRadius: 16,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.03)",
+          display: "grid",
+          gap: 8,
+        }}
+      >
+        <div style={{ fontWeight: 650 }}>Add companies</div>
+        <div style={{ fontSize: 13, opacity: 0.75 }}>
+          Browse the curated directory and click “Watch changes” on any company you want to track.
         </div>
-        <div style={{ display: "grid", gap: 6 }}>
-          <label style={{ fontSize: 13, opacity: 0.75 }} htmlFor="websiteUrl">
-            Website (optional)
-          </label>
-          <input
-            id="websiteUrl"
-            name="websiteUrl"
-            placeholder="https://acme.com"
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link
+            href="/companies"
             style={{
+              justifySelf: "start",
               padding: "10px 12px",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(255,255,255,0.04)",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.18)",
+              background: "rgba(255,255,255,0.08)",
               color: "inherit",
-              outline: "none",
             }}
-          />
+          >
+            Browse companies →
+          </Link>
         </div>
-        <button
-          type="submit"
-          style={{
-            justifySelf: "start",
-            padding: "10px 12px",
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.08)",
-            color: "inherit",
-          }}
-        >
-          Create entity
-        </button>
-      </form>
+      </div>
 
       <div style={{ display: "grid", gap: 10 }}>
         {entities.items.map((e) => (

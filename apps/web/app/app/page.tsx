@@ -20,7 +20,7 @@ export default async function DashboardPage() {
         <span style={{ opacity: 1 }}>{me.plan}</span>
       </div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <Link href="/app/entities">Manage entities →</Link>
+        <Link href="/app/entities">Manage tracking →</Link>
       </div>
     </div>
   );

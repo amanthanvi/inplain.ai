@@ -7,7 +7,7 @@ Source of truth: `SPEC.md`.
 ## Product routes
 
 - Public: `/`, `/companies`, `/about`, `/roadmap`, `/{companySlug}`, `/companies/{companySlug}/policies`
-- Authenticated app: `/app/*` (tracking, diffs, settings)
+- Authenticated app: `/app/*` (tracking (curated companies only), diffs, settings)
 - Auth aliases: `/login` → `/sign-in`, `/signup` → `/sign-up`
 
 ## Repo layout

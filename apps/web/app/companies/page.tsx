@@ -25,15 +25,15 @@ export default function CompaniesPage() {
               <h1 className={hero.heroTitle}>Tracked companies</h1>
               <p className={hero.heroLede}>
                 Monitoring {total} companies for privacy policy changes with citation-backed
-                analysis. Start with a known policy URL — or track a custom page in your dashboard.
+                analysis. Start with a known policy URL from our curated directory.
               </p>
             </div>
             <div className={hero.heroActions}>
               <Link className={`${hero.heroButton} ${hero.heroButtonPrimary}`} href="/signup">
                 Set up alerts
               </Link>
-              <Link className={hero.heroButton} href="/app/entities">
-                Track a custom URL
+              <Link className={hero.heroButton} href="/app">
+                Open app
               </Link>
             </div>
           </div>

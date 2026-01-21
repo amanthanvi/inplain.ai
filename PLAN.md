@@ -21,6 +21,7 @@ North star: production-ready SaaS that tracks public privacy/ToS URLs over time,
 - Billing: **Clerk Billing** (`<PricingTable />`) for v0.1.0.
 - Backups: nightly `pg_dump` via GitHub Actions artifact (no S3 required).
 - Reference UX target: `https://inplain.vercel.app/` (marketing pages + public companies directory + company pages).
+- Tracking surface: **curated companies only** (no custom URL / user-uploaded entities).
 
 ## Remaining manual ops (needed for real prod)
 
@@ -117,6 +118,7 @@ Acceptance:
 - [x] Add public Companies directory (search/filter) + per-company page (`/[slug]`).
 - [x] Implement “Watch changes” → creates tracked company + documents in `/app`.
 - [x] Add missing “current policy / versions” UX (requires snapshot endpoints).
+- [x] Remove custom URL / manual entity+document creation flows (curated directory only).
 - [x] Polish: terminology (“Companies” vs “Entities”) and error states.
 
 Acceptance:
@@ -152,3 +154,4 @@ Acceptance:
 - 2026-01-21: Add global Next.js error boundary + stronger API config error messages to prevent “defunct” digests from bricking the app.
 - 2026-01-21: Upgrade marketing homepage + companies directory UI (reference parity), expand curated company catalog, and add per-company “All policies” page.
 - 2026-01-21: Harden app create flows for idempotency (409 duplicate entity/document redirects) and consolidate app navigation into the main header.
+- 2026-01-21: Remove custom URL / manual entity+document creation from the app; tracking is via curated Companies directory only.

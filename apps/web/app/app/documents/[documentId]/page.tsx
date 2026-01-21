@@ -154,7 +154,7 @@ export default async function DocumentPage({
     <div style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "grid", gap: 8 }}>
         <Link href="/app/entities" style={{ opacity: 0.7 }}>
-          ← Entities
+          ← Tracking
         </Link>
         <h1 style={{ fontSize: 18, letterSpacing: "-0.02em", wordBreak: "break-word" }}>
           {doc.url}

@@ -90,7 +90,7 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 #### Journey A — Sign up and track first company
 
 1. User lands on marketing site or browses the public Companies directory.
-2. Clicks “Watch changes” on a company (or chooses “Add custom URL”).
+2. Clicks “Watch changes” on a company.
 3. Clerk auth (email magic link) → redirected into the app.
 4. App creates a tracked Company (Entity) and adds the standard documents (Privacy/ToS/Cookie) when available.
 5. System validates URL + robots posture + runs initial snapshot.
@@ -122,9 +122,13 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 
 1. Use **Clerk** for authentication (identity source of truth).
 2. Auth method: **email magic link** (passwordless). Optional OAuth (Google) can be enabled later.
-3. Require verified email to add documents.
+3. Require verified email to enable notifications and billing.
 
-**FR-2 Entities and documents** 4. Users can create/update/delete **Entities** (company/group). 5. Users can add/update/pause/delete **Documents** (tracked pages) under an Entity. 6. Each Document stores: URL, type (privacy/tos/cookie/other), fetch mode (auto), schedule tier, status.
+**FR-2 Tracking (curated companies only)**
+
+4. Users can watch/unwatch companies from the public Companies directory (curated only; no custom URL entry).
+5. Watching a company creates a tracked Company (Entity) and adds the curated documents (Privacy/ToS/Cookie) when available.
+6. Each Document stores: URL, type (privacy/tos/cookie/other), fetch mode (auto), schedule tier, status, and supports: pause/unpause, check-now, notification prefs.
 
 **FR-3 Fetching & snapshots** 7. System fetches snapshots on a schedule (tier-based) and on-demand. 8. Fetch pipeline must support:
 
@@ -183,7 +187,7 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 -   AI summary budget
 -   notification limits
 
-23. Abuse controls: rate limiting, add-URL throttles, host-level backoff.
+23. Abuse controls: rate limiting, watch throttles, host-level backoff.
 
 **FR-10 Safety and legal posture** 24. Only monitor public URLs (http/https). 25. Respect robots.txt by default; if disallowed, block monitoring and explain why. 26. Provide takedown/reporting process for site owners.
 
@@ -230,7 +234,7 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
     - in transit via TLS
     - at rest: Postgres managed encryption (Railway) + object storage encryption
     - additional app-level encryption for highly sensitive fields (minimal use in v0.1.0)
-9. Audit logging for: user bans, plan overrides, webhook processing, doc add/remove.
+9. Audit logging for: user bans, plan overrides, webhook processing, watch/unwatch, pause/unpause, exports.
 
 ### 5.4 Privacy requirements (data minimization & retention)
 
@@ -240,7 +244,7 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
     - user passwords (Clerk handles)
     - third-party page form submissions (we don't submit forms)
 3. Retention by tier; deletion workflows:
-    - user can delete a document → delete associated snapshots/diffs (async job)
+    - user can stop tracking a company → delete associated snapshots/diffs (async job)
     - user can delete account → purge user data (except billing records required for finance, if applicable)
 4. Redact secrets accidentally present in fetched pages where feasible (basic patterns: API keys, emails) **only in logs**; snapshots remain as-fetched.
 
@@ -791,14 +795,18 @@ All errors return both machine-readable code and human-readable message:
 -   **Full history via export**: Complete history available via JSON/CSV export (tier-gated).
 -   **Progressive disclosure**: "Show all history" link reveals full paginated list.
 
-#### 9.5.5 Onboarding UX (add document flow)
+#### 9.5.5 Onboarding UX (watch company flow)
 
--   **Inline URL validation**: When user enters URL in add-document form:
-    1. Immediately validate URL format.
-    2. Check robots.txt status.
-    3. Show preview of extracted content (title, first paragraph).
-    4. Display warnings if any (e.g., "This site uses heavy JavaScript, rendering may be required").
--   **Hybrid timeout**: Attempt synchronous validation for 10 seconds. If not complete, switch to async with "Processing..." placeholder.
+-   From a company page, clicking “Watch changes”:
+    1. If signed out, complete Clerk auth and return to the company page.
+    2. Create (or reuse) the tracked Company (Entity) idempotently.
+    3. Add the curated policy documents (Privacy/ToS/Cookie) when available.
+    4. Kick off an initial snapshot job for each document (best-effort).
+-   UX states:
+    -   “Setting up tracking…” immediately after click.
+    -   “First snapshot pending…” in the app until data arrives.
+    -   Clear error states for robots blocks, missing URLs, and plan gates (upgrade CTA).
+-   **No custom URL entry**: tracking is via the curated directory only in v0.1.0.
 
 #### 9.5.6 Error states
 
@@ -807,12 +815,12 @@ All errors return both machine-readable code and human-readable message:
 -   **URL gone (404/410)**: Auto-pause document silently. Show "Document paused: URL no longer accessible" status in dashboard. No email notification for this.
 -   **PDF extraction failed**: "Image-based PDF could not be extracted. Text-based PDFs are supported."
 
-#### 9.5.7 Entity lifecycle
+#### 9.5.7 Tracking lifecycle
 
--   **Rename**: Always allowed, no restrictions.
--   **Delete**: Soft-delete cascades to all documents under the entity.
-    -   Confirmation modal: "Delete [Entity Name]? This will also delete X tracked documents and their history."
+-   **Unwatch**: User can stop tracking a company; soft-delete cascades to all documents under the tracked company.
+    -   Confirmation modal: “Stop tracking [Company]? This will remove X policies and their history.”
     -   Documents are soft-deleted; data retained per retention policy.
+-   **Rename**: Not available in v0.1.0 (company names/URLs are curated).
 
 #### 9.5.8 Admin impersonation
 
@@ -1622,8 +1630,8 @@ For v0.1.0, billing UI is handled by **Clerk Billing**.
 ### 13.6 Abuse prevention aligned with monetization
 
 1. Rate limits per tier (API + job enqueue).
-2. URL add throttling:
-    - Free: max 5 new URLs/day
+2. Watch throttling:
+    - Free: max 5 newly watched companies/day
     - Paid: 50/day
 3. Host-level politeness:
     - per-host concurrency limit (default 2)
@@ -1773,7 +1781,7 @@ Checks:
 | Webhook spoofing (Clerk/Stripe)          |   High | verify signatures, idempotency keys, replay detection, store webhook events                                                           |
 | Prompt injection from policy text        | Medium | do not allow free-form browsing; only summarize provided hunks; strict JSON schema; citations required                                |
 | Data exfiltration via logs               | Medium | never log fetched content; redact tokens; structured logging                                                                          |
-| Abuse: mass URL additions / DDoS         | Medium | per-tier quotas, rate limits, email verification required, host backoff                                                               |
+| Abuse: mass tracking / DDoS              | Medium | per-tier quotas, rate limits, email verification required, host backoff                                                               |
 | Unauthorized access to other users’ data |   High | row-level authz checks everywhere; admin endpoints restricted; tests for authz                                                        |
 | Secret leakage                           |   High | env vars only; no secrets in client; rotate keys; separate service envs                                                               |
 | SQL injection                            | Medium | ORM parameterization; no string concatenation                                                                                         |
@@ -1781,7 +1789,7 @@ Checks:
 
 ### 16.2 SSRF defenses for URL fetching
 
-**Rules (enforced on add URL and before each fetch)**
+**Rules (enforced before tracking and before each fetch)**
 
 1. Allow only `http://` and `https://`.
 2. Disallow:
@@ -1866,7 +1874,7 @@ Renderer worker hardening:
 
 Log these actions to `audit_logs`:
 
--   create/delete document
+-   watch/unwatch company
 -   pause/unpause
 -   plan changes (from webhooks)
 -   admin ban/unban
@@ -2043,7 +2051,7 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 ### 20.1 Product checklist
 
 -   [ ] Landing page with clear value prop + disclaimers
--   [ ] App onboarding: create entity + add document within 2 minutes
+-   [ ] App onboarding: watch a company from the directory within 2 minutes
 -   [ ] Diff viewer usable and readable
 -   [ ] Summaries include citations and “not legal advice”
 -   [ ] Email notifications deferred (disabled by default)
@@ -2064,7 +2072,7 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 -   [ ] Celery retry policies validated; dead-letter semantics implemented (mark `jobs.status=dead`)
 -   [ ] Renderer hardening validated (timeouts, request interception, no private IP access)
 -   [ ] Rate limiting enabled (user + IP); 429 responses include `Retry-After`
--   [ ] Abuse controls enabled (URL add throttles, per-tier quotas)
+-   [ ] Abuse controls enabled (watch flow throttles, per-tier quotas)
 -   [ ] Admin dashboard working (jobs, failures, retries, user bans, plan overrides)
 -   [ ] Data retention cleanup job running daily; tier-based retention enforced
 -   [ ] Incident response contacts documented (internal)
@@ -2074,7 +2082,7 @@ This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED
 **AppSec**
 
 -   [ ] SSRF protections implemented for:
-    -   [ ] URL validation on add
+    -   [ ] URL validation before tracking
     -   [ ] re-validation on every fetch
     -   [ ] redirect hop checks
     -   [ ] renderer request interception checks
@@ -2269,8 +2277,8 @@ Admin UI pages (behind admin role):
 
 -   On every summary view:
     -   “This summary is generated by AI from the detected text changes and is provided for informational purposes only. It is not legal advice.”
--   On add-document:
-    -   “Only add publicly accessible URLs you have the right to monitor. We respect robots.txt and apply rate limits.”
+-   On “Watch changes”:
+    -   “We only monitor public policy URLs from our curated directory. We respect robots.txt and apply rate limits.”
 
 ---
 
@@ -2326,7 +2334,7 @@ This appendix documents all decisions made during the product interview process.
 | Section detection | Hybrid (heuristic + semantic) | 9.5.2 |
 | Citation navigation | Scroll + highlight + auto-expand | 9.5.3 |
 | History display | Recent 10, export for full | 9.5.4 |
-| Add document flow | Inline validation with hybrid timeout | 9.5.5 |
+| Watch company flow | Idempotent tracking + clear “no data yet” states | 9.5.5 |
 | Failed summary UX | Diff only with clear message | 9.5.6 |
 | Mobile | Responsive web only | 9.5.1 |
 | Marketing site | Next.js hybrid SSR | 9.5.1 |
