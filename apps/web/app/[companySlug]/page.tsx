@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 
@@ -35,9 +35,6 @@ export default async function CompanyPage({
 
   async function watchCompany() {
     "use server";
-
-    // eslint-disable-next-line @next/next/no-redirect-in-server-actions
-    const { redirect } = await import("next/navigation");
 
     type EntityOut = { id: string };
     type EntityListItem = { id: string; name: string };

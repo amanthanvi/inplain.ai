@@ -18,7 +18,6 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // eslint-disable-next-line no-console
     console.error("App route error:", error);
   }, [error]);
 
@@ -91,4 +90,3 @@ export default function AppError({
     </div>
   );
 }
-
