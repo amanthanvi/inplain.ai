@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker dev-renderer dev-scheduler lint test typecheck
+.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker dev-renderer dev-scheduler seed lint test typecheck
 
 PYTHON ?= python3.13
 VENV_DIR ?= .venv
@@ -32,6 +32,9 @@ dev-renderer:
 
 dev-scheduler:
 	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python -m inplain.worker.scheduler
+
+seed:
+	$(VENV_DIR)/bin/python scripts/seed/dev_seed.py
 
 lint:
 	$(VENV_DIR)/bin/ruff check apps/api

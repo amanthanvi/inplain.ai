@@ -51,6 +51,16 @@ make migrate
 make dev-api
 ```
 
+Optional: seed demo data (local/dev only). Run the API with dev auth bypass enabled, then seed:
+
+```bash
+# terminal A
+DEV_AUTH_BYPASS=1 make dev-api
+
+# terminal B
+make seed
+```
+
 4) Worker (optional; only needed if `ENQUEUE_JOBS=1`):
 
 ```bash

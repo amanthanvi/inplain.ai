@@ -39,7 +39,7 @@ Acceptance:
 
 - [x] Implement schema from SPEC 8.x (+ `stripe_customer_id`)
 - [x] Alembic migrations; deterministic revision history
-- [ ] Minimal seed/dev helpers
+- [x] Minimal seed/dev helpers
 
 Acceptance:
 - `alembic upgrade head` creates full schema; tests can run against a fresh DB.
