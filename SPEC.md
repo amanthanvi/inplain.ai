@@ -896,83 +896,24 @@ Response includes the current plan and limits (used to render tier gating + usag
 }
 ```
 
-#### Entities
+#### Tracking (curated companies only)
 
-`POST /v1/entities`
+`POST /v1/companies/{companySlug}/watch`
 
-```json
-{
-	"name": "Acme Corp",
-	"websiteUrl": "https://acme.com"
-}
-```
+Creates (or reuses) a tracked company for the signed-in user and adds the curated policy URLs.
+Users do not supply custom URLs in v0.1.0.
 
 Response:
 
 ```json
-{
-	"id": "0f5d0c7e-...-f2b",
-	"name": "Acme Corp",
-	"websiteUrl": "https://acme.com",
-	"createdAt": "2026-01-09T19:00:00Z"
-}
+{ "entityId": "0f5d0c7e-...-f2b" }
 ```
 
-If the entity already exists (same `name` for this user), return `409` with the existing ID:
-
-```json
-{
-	"detail": {
-		"error": {
-			"code": "ENTITY_ALREADY_EXISTS",
-			"message": "Entity already exists.",
-			"details": { "entityId": "0f5d0c7e-...-f2b" }
-		}
-	}
-}
-```
-
-`GET /v1/entities?cursor=...&limit=20`
+`GET /v1/entities?cursor=...&limit=20` (lists tracked companies)
 
 #### Documents
 
-`POST /v1/entities/{entityId}/documents`
-
-```json
-{
-	"url": "https://acme.com/privacy",
-	"docType": "privacy",
-	"scheduleTier": "daily",
-	"fetchMode": "auto"
-}
-```
-
-Response includes robots status and initial job:
-
-```json
-{
-	"id": "b2d1...9a",
-	"url": "https://acme.com/privacy",
-	"status": "active",
-	"robotsStatus": "allowed",
-	"nextDueAt": "2026-01-10T00:00:00Z",
-	"initialJob": { "jobId": "c91a...e2", "status": "queued" }
-}
-```
-
-If the document is already being tracked (same canonical URL for this user), return `409` with the existing IDs:
-
-```json
-{
-	"detail": {
-		"error": {
-			"code": "DOCUMENT_ALREADY_EXISTS",
-			"message": "Document is already being tracked.",
-			"details": { "documentId": "b2d1...9a", "entityId": "0f5d0c7e-...-f2b" }
-		}
-	}
-}
-```
+Documents are created automatically when a user watches a company.
 
 `GET /v1/entities/{entityId}/documents?cursor=...&limit=20`
 
