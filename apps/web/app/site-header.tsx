@@ -33,34 +33,63 @@ export function SiteHeader() {
             Inplain
           </Link>
 
-          {!inApp ? (
-            <nav className={styles.nav} aria-label="Main">
-              <Link
-                className={`${styles.navLink} ${isActive(pathname, "/") ? styles.navLinkActive : ""}`}
-                href="/"
-              >
-                Home
-              </Link>
-              <Link
-                className={`${styles.navLink} ${isActive(pathname, "/companies") ? styles.navLinkActive : ""}`}
-                href="/companies"
-              >
-                Companies
-              </Link>
-              <Link
-                className={`${styles.navLink} ${isActive(pathname, "/roadmap") ? styles.navLinkActive : ""}`}
-                href="/roadmap"
-              >
-                Roadmap
-              </Link>
-              <Link
-                className={`${styles.navLink} ${isActive(pathname, "/about") ? styles.navLinkActive : ""}`}
-                href="/about"
-              >
-                About
-              </Link>
-            </nav>
-          ) : null}
+          <nav className={styles.nav} aria-label={inApp ? "App" : "Main"}>
+            {!inApp ? (
+              <>
+                <Link
+                  className={`${styles.navLink} ${isActive(pathname, "/") ? styles.navLinkActive : ""}`}
+                  href="/"
+                >
+                  Home
+                </Link>
+                <Link
+                  className={`${styles.navLink} ${isActive(pathname, "/companies") ? styles.navLinkActive : ""}`}
+                  href="/companies"
+                >
+                  Companies
+                </Link>
+                <Link
+                  className={`${styles.navLink} ${isActive(pathname, "/roadmap") ? styles.navLinkActive : ""}`}
+                  href="/roadmap"
+                >
+                  Roadmap
+                </Link>
+                <Link
+                  className={`${styles.navLink} ${isActive(pathname, "/about") ? styles.navLinkActive : ""}`}
+                  href="/about"
+                >
+                  About
+                </Link>
+              </>
+            ) : (
+              <SignedIn>
+                <Link
+                  className={`${styles.navLink} ${isActive(pathname, "/app") ? styles.navLinkActive : ""}`}
+                  href="/app"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  className={`${styles.navLink} ${isActive(pathname, "/app/entities") ? styles.navLinkActive : ""}`}
+                  href="/app/entities"
+                >
+                  Entities
+                </Link>
+                <Link
+                  className={`${styles.navLink} ${isActive(pathname, "/app/settings") ? styles.navLinkActive : ""}`}
+                  href="/app/settings"
+                >
+                  Settings
+                </Link>
+                <Link
+                  className={`${styles.navLink} ${isActive(pathname, "/app/admin") ? styles.navLinkActive : ""}`}
+                  href="/app/admin"
+                >
+                  Admin
+                </Link>
+              </SignedIn>
+            )}
+          </nav>
         </div>
 
         <div className={styles.right}>
@@ -89,4 +118,3 @@ export function SiteHeader() {
     </header>
   );
 }
-

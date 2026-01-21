@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@clerk/nextjs/server";
@@ -17,23 +16,6 @@ export default async function AppLayout({
 
   return (
     <div className={styles.shell}>
-      <nav className={styles.nav}>
-        <div className={styles.brand}>Inplain</div>
-        <div className={styles.links}>
-          <Link className={styles.link} href="/app">
-            Dashboard
-          </Link>
-          <Link className={styles.link} href="/app/entities">
-            Entities
-          </Link>
-          <Link className={styles.link} href="/app/admin">
-            Admin
-          </Link>
-          <Link className={styles.link} href="/app/settings">
-            Settings
-          </Link>
-        </div>
-      </nav>
       <main className={styles.main}>{children}</main>
     </div>
   );
