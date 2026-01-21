@@ -124,6 +124,42 @@ Acceptance:
 Acceptance:
 - A new visitor can browse `Companies` publicly, sign up, watch a company, and land in a functional `/app` experience without server-side exceptions.
 
+### M8 — App stability + curated-only enforcement
+
+- [ ] Stabilize `/app/*` so it never bricks into generic Next.js digest pages:
+  - [ ] Catch + render safe error states (API down, 5xx, misconfig) with retry CTAs
+  - [ ] Improve server-side logging for actionable debugging (no secrets)
+- [ ] Replace generic create endpoints with curated-only watch flows:
+  - [ ] API: add `POST /v1/companies/{companySlug}/watch` (creates tracked entity + curated documents idempotently)
+  - [ ] Web: update “Watch changes” to call the watch endpoint (no client-supplied URLs)
+  - [ ] API: restrict `POST /v1/entities` and `POST /v1/entities/{entityId}/documents` to admin/internal use
+- [ ] App UX becomes company-first:
+  - [ ] `/app` shows tracked companies + recent activity (or redirects to tracking view)
+  - [ ] Add “Unwatch” flow (soft-delete tracked company + docs) with confirmation
+
+Acceptance:
+- A signed-in user can always reach `/app`, `/app/entities`, `/app/settings` without server-side exceptions.
+- Users cannot create arbitrary entities/documents; only curated companies can be tracked.
+
+### M9 — Billing (Clerk Billing) readiness
+
+- [ ] Clerk Billing plans created (Free/Pro/Business) + `<PricingTable />` renders without errors
+- [ ] Web gating uses Clerk Billing `has()` / `<Protect />` where appropriate
+- [ ] API entitlement enforcement verified against real paid tiers (doc limits, schedule tiers, JS render quota, AI summaries)
+
+Acceptance:
+- Upgrades/downgrades change entitlements and are reflected in both UI and API behavior.
+
+### M10 — Launch readiness closeout
+
+- [ ] Runbooks updated (deploy, rollback, incident basics)
+- [ ] Backup + restore drill documented and performed once
+- [ ] DNS + Clerk origins verified on `https://inplain.ai` + `https://www.inplain.ai`
+- [ ] Rotate any secrets that were pasted into chats/logs during setup
+
+Acceptance:
+- `SPEC.md` launch checklists are all green (or explicitly deferred with rationale).
+
 ## Progress log (append-only)
 
 - 2026-01-09: plan approved; starting M0.
