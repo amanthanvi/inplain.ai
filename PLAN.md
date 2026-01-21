@@ -113,11 +113,11 @@ Acceptance:
 
 ### M7 — UX parity (marketing + companies directory)
 
-- [ ] Update marketing IA: Home / Companies / Roadmap / About.
-- [ ] Add public Companies directory (search/filter) + per-company page (`/[slug]`).
-- [ ] Implement “Watch changes” → creates tracked company + documents in `/app`.
-- [ ] Add missing “current policy / versions” UX (requires snapshot endpoints).
-- [ ] Polish: terminology (“Companies” vs “Entities”) and error states.
+- [x] Update marketing IA: Home / Companies / Roadmap / About.
+- [x] Add public Companies directory (search/filter) + per-company page (`/[slug]`).
+- [x] Implement “Watch changes” → creates tracked company + documents in `/app`.
+- [x] Add missing “current policy / versions” UX (requires snapshot endpoints).
+- [x] Polish: terminology (“Companies” vs “Entities”) and error states.
 
 Acceptance:
 - A new visitor can browse `Companies` publicly, sign up, watch a company, and land in a functional `/app` experience without server-side exceptions.
@@ -149,3 +149,6 @@ Acceptance:
 - 2026-01-20: Disable email delivery (Postmark deferred); add Clerk Billing PricingTable; add export endpoints + admin dashboards; set OpenRouter keys; update backups workflow to GitHub artifacts; deploy to Railway.
 - 2026-01-21: Add Railway custom domains for `web` in production (`inplain.ai`, `www.inplain.ai`) to resolve Clerk `origin_invalid` on `*.up.railway.app` domains.
 - 2026-01-21: Fix API 500s from Pydantic v2 alias validation; remove deprecated Next `middleware.ts` in favor of `proxy.ts` so Clerk middleware runs in production.
+- 2026-01-21: Add global Next.js error boundary + stronger API config error messages to prevent “defunct” digests from bricking the app.
+- 2026-01-21: Upgrade marketing homepage + companies directory UI (reference parity), expand curated company catalog, and add per-company “All policies” page.
+- 2026-01-21: Harden app create flows for idempotency (409 duplicate entity/document redirects) and consolidate app navigation into the main header.

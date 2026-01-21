@@ -833,6 +833,14 @@ All errors return both machine-readable code and human-readable message:
     -   Signed-out: Sign in / Start free
     -   Signed-in: Dashboard link + user menu
 
+-   Homepage sections (v0.1.0):
+    -   Hero: “Privacy policies made simple” + primary CTA to start free
+    -   Problem framing: short stats cards (change without notice / length / time cost)
+    -   Feature highlights: change detection, diff + exports, citation-backed AI
+    -   How it works: 3-step overview
+    -   Popular companies: link into the directory and per-company pages
+    -   Always-on disclaimer: informational only; not legal advice
+
 #### 9.5.10 Company page IA (`/[companySlug]`)
 
 -   Company overview page is public and supports progressive enhancement:
@@ -902,6 +910,20 @@ Response:
 }
 ```
 
+If the entity already exists (same `name` for this user), return `409` with the existing ID:
+
+```json
+{
+	"detail": {
+		"error": {
+			"code": "ENTITY_ALREADY_EXISTS",
+			"message": "Entity already exists.",
+			"details": { "entityId": "0f5d0c7e-...-f2b" }
+		}
+	}
+}
+```
+
 `GET /v1/entities?cursor=...&limit=20`
 
 #### Documents
@@ -927,6 +949,20 @@ Response includes robots status and initial job:
 	"robotsStatus": "allowed",
 	"nextDueAt": "2026-01-10T00:00:00Z",
 	"initialJob": { "jobId": "c91a...e2", "status": "queued" }
+}
+```
+
+If the document is already being tracked (same canonical URL for this user), return `409` with the existing IDs:
+
+```json
+{
+	"detail": {
+		"error": {
+			"code": "DOCUMENT_ALREADY_EXISTS",
+			"message": "Document is already being tracked.",
+			"details": { "documentId": "b2d1...9a", "entityId": "0f5d0c7e-...-f2b" }
+		}
+	}
 }
 ```
 
@@ -1001,6 +1037,68 @@ Response:
 		}
 	],
 	"nextCursor": null
+}
+```
+
+#### Snapshots
+
+`GET /v1/documents/{documentId}/snapshots?cursor=...&limit=20`
+
+Response (may be empty `items` if no snapshots captured yet):
+
+```json
+{
+	"items": [
+		{
+			"id": "snp_...",
+			"fetchedAt": "2026-01-09T19:00:00Z",
+			"fetchMethod": "http",
+			"httpStatus": 200,
+			"finalUrl": "https://acme.com/privacy",
+			"contentType": "text/html; charset=utf-8",
+			"language": "en",
+			"byteSizeRaw": 123456,
+			"byteSizeExtracted": 45678,
+			"extractVersion": 1
+		}
+	],
+	"nextCursor": null
+}
+```
+
+`GET /v1/documents/{documentId}/snapshots/latest`
+
+If the document has no snapshots yet, return `404` with `NO_SNAPSHOTS`:
+
+```json
+{
+	"detail": {
+		"error": { "code": "NO_SNAPSHOTS", "message": "No snapshots captured yet." }
+	}
+}
+```
+
+`GET /v1/snapshots/{snapshotId}`
+
+Response:
+
+```json
+{
+	"id": "snp_...",
+	"documentId": "b2d1...9a",
+	"fetchedAt": "2026-01-09T19:00:00Z",
+	"fetchMethod": "http",
+	"httpStatus": 200,
+	"finalUrl": "https://acme.com/privacy",
+	"contentType": "text/html; charset=utf-8",
+	"language": "en",
+	"byteSizeRaw": 123456,
+	"byteSizeExtracted": 45678,
+	"extractVersion": 1,
+	"rawStorageKey": null,
+	"rawSha256": "…",
+	"extractedSha256": "…",
+	"extractedText": "…"
 }
 ```
 
