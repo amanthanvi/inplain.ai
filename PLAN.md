@@ -1,6 +1,6 @@
 # PLAN — Inplain.ai v0.1.0
 
-Last updated: 2026-01-20
+Last updated: 2026-01-21
 
 North star: production-ready SaaS that tracks public privacy/ToS URLs over time, detects meaningful changes, shows a readable diff, and generates AI summaries **with citations**.
 
@@ -13,13 +13,14 @@ North star: production-ready SaaS that tracks public privacy/ToS URLs over time,
 
 ## Decisions (approved)
 
-- Web frontend: **single Next.js app** (marketing + authenticated app) + TanStack Query.
+- Web frontend: **single Next.js app** (marketing + authenticated app).
 - Fetch pipeline: **HTTP-first** (`httpx`) + extraction (`trafilatura`/`readability`), with **isolated Playwright renderer** service (no Scrapy in `v0.1.0`).
 - Data model: add `users.stripe_customer_id` for stable Stripe↔Clerk mapping.
 - Spec hygiene: fix section numbering collision in API/UI/UX sections.
 - Email: **disabled by default** (Postmark deferred for cost).
 - Billing: **Clerk Billing** (`<PricingTable />`) for v0.1.0.
 - Backups: nightly `pg_dump` via GitHub Actions artifact (no S3 required).
+- Reference UX target: `https://inplain.vercel.app/` (marketing pages + public companies directory + company pages).
 
 ## Remaining manual ops (needed for real prod)
 
@@ -110,6 +111,17 @@ Acceptance:
 Acceptance:
 - `v0.1.0` passes SPEC launch checklists; staging → prod playbook documented.
 
+### M7 — UX parity (marketing + companies directory)
+
+- [ ] Update marketing IA: Home / Companies / Roadmap / About.
+- [ ] Add public Companies directory (search/filter) + per-company page (`/[slug]`).
+- [ ] Implement “Watch changes” → creates tracked company + documents in `/app`.
+- [ ] Add missing “current policy / versions” UX (requires snapshot endpoints).
+- [ ] Polish: terminology (“Companies” vs “Entities”) and error states.
+
+Acceptance:
+- A new visitor can browse `Companies` publicly, sign up, watch a company, and land in a functional `/app` experience without server-side exceptions.
+
 ## Progress log (append-only)
 
 - 2026-01-09: plan approved; starting M0.
@@ -136,3 +148,4 @@ Acceptance:
 - 2026-01-10: Provision fresh Railway project (`inplain-ai-v0-1-0`) with production+development; deploy all services; set Clerk env vars + create `inplain` JWT template (aud=`inplain`); enable job processing + daily digest; install Playwright Chromium in renderer.
 - 2026-01-20: Disable email delivery (Postmark deferred); add Clerk Billing PricingTable; add export endpoints + admin dashboards; set OpenRouter keys; update backups workflow to GitHub artifacts; deploy to Railway.
 - 2026-01-21: Add Railway custom domains for `web` in production (`inplain.ai`, `www.inplain.ai`) to resolve Clerk `origin_invalid` on `*.up.railway.app` domains.
+- 2026-01-21: Fix API 500s from Pydantic v2 alias validation; remove deprecated Next `middleware.ts` in favor of `proxy.ts` so Clerk middleware runs in production.

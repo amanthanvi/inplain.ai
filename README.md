@@ -4,6 +4,11 @@ Track, diff, and understand privacy policy changes with grounded, citation-backe
 
 Source of truth: `SPEC.md`.
 
+## Product routes
+
+- Public: `/`, `/companies`, `/about`, `/roadmap`
+- Authenticated app: `/app/*` (tracking, diffs, settings)
+
 ## Repo layout
 
 ```text

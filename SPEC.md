@@ -89,12 +89,12 @@ v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, w
 
 #### Journey A — Sign up and track first company
 
-1. User lands on marketing site, clicks “Get started”.
-2. Clerk auth (email magic link) → redirected to app.
-3. Creates an Entity (e.g., “Acme Corp”).
-4. Adds a Document URL (Privacy Policy).
+1. User lands on marketing site or browses the public Companies directory.
+2. Clicks “Watch changes” on a company (or chooses “Add custom URL”).
+3. Clerk auth (email magic link) → redirected into the app.
+4. App creates a tracked Company (Entity) and adds the standard documents (Privacy/ToS/Cookie) when available.
 5. System validates URL + robots posture + runs initial snapshot.
-6. UI shows current extracted text + baseline snapshot metadata.
+6. UI shows a company dashboard (current policy, change timeline, AI analysis) and a clear “no data yet” state until the first run completes.
 
 #### Journey B — Change detected → diff + summary + email
 
@@ -819,6 +819,41 @@ All errors return both machine-readable code and human-readable message:
 -   Admins can enter read-only impersonation mode to see a user's dashboard as they see it.
 -   **Audit trail**: Every impersonation session logged to `audit_logs` with start/end time, admin user, target user.
 -   **Visual indicator**: Clear banner in impersonation mode: "Viewing as [user@email.com] (read-only)".
+
+#### 9.5.9 Marketing + public directory IA (reference parity)
+
+-   Primary public routes:
+    -   `/` (marketing homepage)
+    -   `/companies` (public directory: search + category filter)
+    -   `/roadmap`, `/about`
+-   CTA routes:
+    -   `/signup` and `/login` as friendly aliases for Clerk sign-up/sign-in routes.
+-   Header nav:
+    -   Home, Companies, Roadmap, About
+    -   Signed-out: Sign in / Start free
+    -   Signed-in: Dashboard link + user menu
+
+#### 9.5.10 Company page IA (`/[companySlug]`)
+
+-   Company overview page is public and supports progressive enhancement:
+    -   Signed-out users can browse and understand the product.
+    -   Signed-in users can “Watch changes” and unlock personalized tracking.
+-   Sections (tabbed UI; stack in DOM for SSR):
+    -   Overview
+    -   Current Policy (latest extracted snapshot)
+    -   Changes (recent ChangeEvents with summaries + citations)
+    -   Versions (snapshot selector + diff)
+    -   Timeline (chronological list of changes)
+    -   AI Analysis (latest summary + highlights)
+-   “No data yet” states are first-class (e.g. first snapshot not captured yet).
+
+#### 9.5.11 Watch flow
+
+-   From a company page, clicking “Watch changes”:
+    1. If signed out, redirect to sign-up and then return.
+    2. If signed in, create a tracked Company (Entity) and add available standard documents.
+    3. Navigate user to the tracked company inside `/app`.
+-   The app never blocks page render on background processing; it shows queued/running states.
 
 ### 9.6 Endpoints (examples)
 
