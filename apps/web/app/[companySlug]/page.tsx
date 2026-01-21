@@ -29,16 +29,12 @@ export default async function CompanyPage({
     notFound();
   }
 
-  const companyName = company.name;
-  const companyWebsiteUrl = company.websiteUrl;
-  const companyDocuments = company.documents;
+  const slug = company.slug;
 
   async function watchCompany() {
     "use server";
 
-    type EntityOut = { id: string };
-    type EntityListItem = { id: string; name: string };
-    type EntityListOut = { items: EntityListItem[]; nextCursor: string | null };
+    type WatchOut = { entityId: string };
 
     type ApiErrorBody = {
       detail?: { error?: { code?: string; details?: Record<string, unknown> } };
@@ -55,88 +51,28 @@ export default async function CompanyPage({
       };
     }
 
-    let entityId: string | null = null;
-
     try {
-      // Try to find an existing entity by name first (idempotent UX).
-      let cursor: string | null = null;
-      for (let page = 0; page < 5; page += 1) {
-        const url: string = cursor
-          ? `/v1/entities?limit=100&cursor=${encodeURIComponent(cursor)}`
-          : "/v1/entities?limit=100";
-        const list = await inplainFetchJson<EntityListOut>(url);
-        const match = list.items.find((e) => e.name.toLowerCase() === companyName.toLowerCase());
-        if (match) {
-          entityId = match.id;
-          break;
-        }
-        cursor = list.nextCursor;
-        if (!cursor) break;
-      }
-
-      if (!entityId) {
-        const created = await inplainFetchJson<EntityOut>("/v1/entities", {
-          method: "POST",
-          body: JSON.stringify({ name: companyName, websiteUrl: companyWebsiteUrl }),
-        });
-        entityId = created.id;
-      }
+      const out = await inplainFetchJson<WatchOut>(`/v1/companies/${slug}/watch`, {
+        method: "POST",
+      });
+      redirect(`/app/entities/${out.entityId}`);
     } catch (err) {
       if (err instanceof InplainApiError) {
         const info = apiErrorInfo(err);
-        const existingEntityId = info.details?.entityId;
         if (err.status === 401) {
           // Session expired (or direct POST). Send them to auth.
           redirect("/sign-in");
         }
-        if (err.status === 409 && typeof existingEntityId === "string") {
-          entityId = existingEntityId;
-        } else {
-          throw err;
+        if (err.status === 403) {
+          // Plan gate: send to billing.
+          redirect("/app/settings?upgrade=1");
+        }
+        if (err.status === 404 && info.code === "NOT_FOUND") {
+          redirect("/companies");
         }
       }
       throw err;
     }
-
-    if (!entityId) {
-      return;
-    }
-
-    // Create documents (best-effort; handle duplicates + limits gracefully).
-    for (const doc of companyDocuments) {
-      try {
-        await inplainFetchJson(`/v1/entities/${entityId}/documents`, {
-          method: "POST",
-          body: JSON.stringify({
-            url: doc.url,
-            docType: doc.type,
-            scheduleTier: "daily",
-            fetchMode: "auto",
-          }),
-        });
-      } catch (err) {
-        if (err instanceof InplainApiError) {
-          const info = apiErrorInfo(err);
-          const code = info.code;
-          const existingEntityId = info.details?.entityId;
-
-          if (err.status === 403) {
-            // Plan gate: send to billing.
-            redirect("/app/settings?upgrade=1");
-          }
-          if (err.status === 409 && code === "DOCUMENT_ALREADY_EXISTS") {
-            // Already tracked elsewhere; send user to the existing tracked entity.
-            if (typeof existingEntityId === "string") {
-              entityId = existingEntityId;
-            }
-            continue;
-          }
-        }
-        throw err;
-      }
-    }
-
-    redirect(`/app/entities/${entityId}`);
   }
 
   const privacyScore = company.stats?.privacyScore ?? 0;
