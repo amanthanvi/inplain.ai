@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
+import { inplainFetchJsonOrRedirect, inplainFetchJsonSafe } from "../../inplain-api";
+import { AppErrorState } from "../../app-error-state";
+import { formatDateTime } from "../../format";
 
 type JobListItem = {
   id: string;
@@ -41,11 +43,9 @@ export default async function AdminJobsPage({
   if (sp.jobType) qs.set("jobType", sp.jobType);
   if (sp.cursor) qs.set("cursor", sp.cursor);
 
-  let data: JobListOut;
-  try {
-    data = await inplainFetchJsonOrRedirect<JobListOut>(`/v1/admin/jobs?${qs.toString()}`);
-  } catch (err) {
-    if (err instanceof InplainApiError && err.status === 403) {
+  const dataResult = await inplainFetchJsonSafe<JobListOut>(`/v1/admin/jobs?${qs.toString()}`);
+  if (!dataResult.ok) {
+    if (dataResult.error.status === 403) {
       return (
         <div style={{ display: "grid", gap: 10 }}>
           <h1 style={{ fontSize: 22, letterSpacing: "-0.02em" }}>Admin · Jobs</h1>
@@ -53,8 +53,19 @@ export default async function AdminJobsPage({
         </div>
       );
     }
-    throw err;
+
+    return (
+      <AppErrorState
+        title="Admin · Jobs"
+        message={dataResult.error.message}
+        status={dataResult.error.status}
+        code={dataResult.error.code}
+        retryHref="/app/admin/jobs"
+      />
+    );
   }
+
+  const data = dataResult.data;
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
@@ -95,7 +106,7 @@ export default async function AdminJobsPage({
                 {j.jobType} · {j.status}
               </div>
               <div style={{ fontSize: 12, opacity: 0.7 }}>
-                {new Date(j.createdAt).toLocaleString()}
+                {formatDateTime(j.createdAt)}
               </div>
             </div>
             <div style={{ fontSize: 12, opacity: 0.8 }}>

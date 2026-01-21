@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { PricingTable } from "@clerk/nextjs";
-
 import { inplainFetchJsonOrRedirect, inplainFetchJsonSafe } from "../inplain-api";
 import { AppErrorState } from "../app-error-state";
+import { ClerkPricingTable } from "./clerk-pricing-table";
 
 type MeResponse = {
   id: string;
@@ -164,7 +163,13 @@ export default async function SettingsPage() {
         <div style={{ opacity: 0.8 }}>
           {me.email} · <span style={{ opacity: 1 }}>{me.plan}</span>
         </div>
-        <PricingTable />
+        <ClerkPricingTable
+          fallback={
+            <div style={{ fontSize: 13, opacity: 0.8 }}>
+              Billing UI is temporarily unavailable. Try refreshing in a moment.
+            </div>
+          }
+        />
       </div>
 
       <div style={{ display: "grid", gap: 10 }}>

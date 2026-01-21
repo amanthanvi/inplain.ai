@@ -1,6 +1,8 @@
 import Link from "next/link";
 
-import { inplainFetchJsonOrRedirect } from "../../inplain-api";
+import { inplainFetchJsonSafe } from "../../inplain-api";
+import { AppErrorState } from "../../app-error-state";
+import { formatDateTime } from "../../format";
 
 type SnapshotOut = {
   id: string;
@@ -23,7 +25,20 @@ export default async function SnapshotPage({
   params: Promise<{ snapshotId: string }>;
 }) {
   const { snapshotId } = await params;
-  const snapshot = await inplainFetchJsonOrRedirect<SnapshotOut>(`/v1/snapshots/${snapshotId}`);
+  const snapshotResult = await inplainFetchJsonSafe<SnapshotOut>(`/v1/snapshots/${snapshotId}`);
+  if (!snapshotResult.ok) {
+    return (
+      <AppErrorState
+        title="Snapshot"
+        message={snapshotResult.error.message}
+        status={snapshotResult.error.status}
+        code={snapshotResult.error.code}
+        retryHref={`/app/snapshots/${snapshotId}`}
+      />
+    );
+  }
+
+  const snapshot = snapshotResult.data;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -33,8 +48,7 @@ export default async function SnapshotPage({
         </Link>
         <h1 style={{ fontSize: 18, letterSpacing: "-0.02em" }}>Snapshot</h1>
         <div style={{ fontSize: 12, opacity: 0.75 }}>
-          {new Date(snapshot.fetchedAt).toLocaleString()} · {snapshot.fetchMethod} ·{" "}
-          {snapshot.httpStatus}
+          {formatDateTime(snapshot.fetchedAt)} · {snapshot.fetchMethod} · {snapshot.httpStatus}
         </div>
       </div>
 

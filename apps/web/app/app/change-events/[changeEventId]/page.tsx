@@ -1,6 +1,8 @@
 import Link from "next/link";
 
-import { inplainFetchJsonOrRedirect } from "../../inplain-api";
+import { inplainFetchJsonSafe } from "../../inplain-api";
+import { AppErrorState } from "../../app-error-state";
+import { formatDateTime } from "../../format";
 
 type Citation = {
   hunkId: string;
@@ -97,9 +99,20 @@ export default async function ChangeEventPage({
   params: Promise<{ changeEventId: string }>;
 }) {
   const { changeEventId } = await params;
-  const event = await inplainFetchJsonOrRedirect<ChangeEventResponse>(
-    `/v1/change-events/${changeEventId}`,
-  );
+  const eventResult = await inplainFetchJsonSafe<ChangeEventResponse>(`/v1/change-events/${changeEventId}`);
+  if (!eventResult.ok) {
+    return (
+      <AppErrorState
+        title="Change event"
+        message={eventResult.error.message}
+        status={eventResult.error.status}
+        code={eventResult.error.code}
+        retryHref={`/app/change-events/${changeEventId}`}
+      />
+    );
+  }
+
+  const event = eventResult.data;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -117,7 +130,7 @@ export default async function ChangeEventPage({
           }}
         >
           <div style={{ fontSize: 12, opacity: 0.75 }}>
-            {new Date(event.createdAt).toLocaleString()}
+            {formatDateTime(event.createdAt)}
           </div>
           <a
             href={`/api/export/change-events/${event.id}`}

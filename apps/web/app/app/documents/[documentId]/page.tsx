@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { AppErrorState } from "../../app-error-state";
-import { InplainApiError, inplainFetchJsonOrRedirect, inplainFetchJsonSafe } from "../../inplain-api";
+import { inplainFetchJsonOrRedirect, inplainFetchJsonSafe } from "../../inplain-api";
+import { formatDateTime } from "../../format";
 
 type DocumentDetail = {
   id: string;
@@ -177,26 +178,22 @@ export default async function DocumentPage({
 
   let latestSnapshot: SnapshotOut | null = null;
   let snapshots: SnapshotListItem[] = [];
+  let snapshotLoadError: string | null = null;
 
-  try {
-    latestSnapshot = await inplainFetchJsonOrRedirect<SnapshotOut>(
-      `/v1/documents/${documentId}/snapshots/latest`,
-    );
-  } catch (err) {
-    if (!(err instanceof InplainApiError && err.status === 404)) {
-      throw err;
-    }
+  const latestResult = await inplainFetchJsonSafe<SnapshotOut>(`/v1/documents/${documentId}/snapshots/latest`);
+  if (latestResult.ok) {
+    latestSnapshot = latestResult.data;
+  } else if (latestResult.error.status !== 404) {
+    snapshotLoadError = latestResult.error.message;
   }
 
-  try {
-    const list = await inplainFetchJsonOrRedirect<SnapshotListResponse>(
-      `/v1/documents/${documentId}/snapshots?limit=20`,
-    );
-    snapshots = list.items;
-  } catch (err) {
-    if (!(err instanceof InplainApiError && err.status === 404)) {
-      throw err;
-    }
+  const listResult = await inplainFetchJsonSafe<SnapshotListResponse>(
+    `/v1/documents/${documentId}/snapshots?limit=20`,
+  );
+  if (listResult.ok) {
+    snapshots = listResult.data.items;
+  } else if (listResult.error.status !== 404) {
+    snapshotLoadError = snapshotLoadError ?? listResult.error.message;
   }
 
   const digestAllowed = me.plan !== "free";
@@ -215,7 +212,7 @@ export default async function DocumentPage({
           <span>{doc.docType}</span>
           <span>· {doc.status}</span>
           <span>· robots {doc.robotsStatus}</span>
-          <span>· next {new Date(doc.nextDueAt).toLocaleString()}</span>
+          <span>· next {formatDateTime(doc.nextDueAt)}</span>
         </div>
 
         {sp.queued === "1" ? (
@@ -370,7 +367,7 @@ export default async function DocumentPage({
             >
               <div style={{ fontWeight: 650 }}>{e.title}</div>
               <div style={{ display: "flex", gap: 10, fontSize: 12, opacity: 0.7 }}>
-                <span>{new Date(e.createdAt).toLocaleString()}</span>
+                <span>{formatDateTime(e.createdAt)}</span>
                 <span>· summary {e.summaryStatus}</span>
               </div>
             </Link>
@@ -382,6 +379,20 @@ export default async function DocumentPage({
 
       <div style={{ display: "grid", gap: 10 }}>
         <h2 style={{ fontSize: 15, opacity: 0.85 }}>Current policy</h2>
+        {snapshotLoadError ? (
+          <div
+            style={{
+              padding: "10px 12px",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.04)",
+              fontSize: 13,
+              opacity: 0.9,
+            }}
+          >
+            Failed to load snapshots. {snapshotLoadError}
+          </div>
+        ) : null}
         {latestSnapshot ? (
           <div
             style={{
@@ -395,8 +406,7 @@ export default async function DocumentPage({
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <div style={{ fontSize: 12, opacity: 0.75 }}>
-                Snapshot from {new Date(latestSnapshot.fetchedAt).toLocaleString()} ·{" "}
-                {latestSnapshot.fetchMethod}
+                Snapshot from {formatDateTime(latestSnapshot.fetchedAt)} · {latestSnapshot.fetchMethod}
               </div>
               <Link
                 href={`/app/snapshots/${latestSnapshot.id}`}
@@ -455,7 +465,7 @@ export default async function DocumentPage({
               >
                 <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
                   <div style={{ fontWeight: 650 }}>
-                    {new Date(s.fetchedAt).toLocaleString()}
+                    {formatDateTime(s.fetchedAt)}
                   </div>
                   <div style={{ fontSize: 12, opacity: 0.7, overflow: "hidden" }}>
                     {s.finalUrl}

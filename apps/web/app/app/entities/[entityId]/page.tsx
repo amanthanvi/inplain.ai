@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { inplainFetchJsonSafe } from "../../inplain-api";
 import { AppErrorState } from "../../app-error-state";
+import { formatDateTime } from "../../format";
 
 type DocumentListItem = {
   id: string;
@@ -103,10 +104,10 @@ export default async function EntityDetailPage({
               </div>
               <div style={{ fontSize: 12, opacity: 0.7 }}>{d.status}</div>
             </div>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 12, opacity: 0.7 }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 12, opacity: 0.7 }}>
               <span>{d.docType}</span>
               <span>· robots {d.robotsStatus}</span>
-              <span>· next {new Date(d.nextDueAt).toLocaleString()}</span>
+              <span>· next {formatDateTime(d.nextDueAt)}</span>
             </div>
           </Link>
         ))}

@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
+import { inplainFetchJsonOrRedirect, inplainFetchJsonSafe } from "../../inplain-api";
+import { AppErrorState } from "../../app-error-state";
+import { formatDate } from "../../format";
 
 type UserListItem = {
   id: string;
@@ -53,11 +55,9 @@ export default async function AdminUsersPage({
   if (sp.query) qs.set("query", sp.query);
   if (sp.cursor) qs.set("cursor", sp.cursor);
 
-  let data: UserListOut;
-  try {
-    data = await inplainFetchJsonOrRedirect<UserListOut>(`/v1/admin/users?${qs.toString()}`);
-  } catch (err) {
-    if (err instanceof InplainApiError && err.status === 403) {
+  const dataResult = await inplainFetchJsonSafe<UserListOut>(`/v1/admin/users?${qs.toString()}`);
+  if (!dataResult.ok) {
+    if (dataResult.error.status === 403) {
       return (
         <div style={{ display: "grid", gap: 10 }}>
           <h1 style={{ fontSize: 22, letterSpacing: "-0.02em" }}>Admin · Users</h1>
@@ -65,8 +65,19 @@ export default async function AdminUsersPage({
         </div>
       );
     }
-    throw err;
+
+    return (
+      <AppErrorState
+        title="Admin · Users"
+        message={dataResult.error.message}
+        status={dataResult.error.status}
+        code={dataResult.error.code}
+        retryHref="/app/admin/users"
+      />
+    );
   }
+
+  const data = dataResult.data;
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
@@ -128,7 +139,7 @@ export default async function AdminUsersPage({
                 </div>
               </div>
               <div style={{ fontSize: 12, opacity: 0.7 }}>
-                {new Date(u.createdAt).toLocaleDateString()}
+                {formatDate(u.createdAt)}
               </div>
             </div>
 
