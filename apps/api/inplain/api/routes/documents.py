@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from pydantic import Field
 from sqlalchemy import and_, func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
@@ -250,6 +251,27 @@ def create_document(
         )
 
     canonical = canonicalize_url(payload.url)
+    existing = db.execute(
+        select(Document).where(
+            Document.user_id == user.id,
+            Document.url_canonical == canonical,
+            Document.deleted_at.is_(None),
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": {
+                    "code": "DOCUMENT_ALREADY_EXISTS",
+                    "message": "Document is already being tracked.",
+                    "details": {
+                        "documentId": str(existing.id),
+                        "entityId": str(existing.entity_id),
+                    },
+                }
+            },
+        )
     now = datetime.now(UTC)
 
     doc = Document(
@@ -264,7 +286,30 @@ def create_document(
         next_due_at=now + _schedule_delta(payload.schedule_tier),
     )
     db.add(doc)
-    db.flush()
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        existing = db.execute(
+            select(Document).where(
+                Document.user_id == user.id,
+                Document.url_canonical == canonical,
+                Document.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": {
+                    "code": "DOCUMENT_ALREADY_EXISTS",
+                    "message": "Document is already being tracked.",
+                    "details": {
+                        "documentId": str(existing.id) if existing else None,
+                        "entityId": str(existing.entity_id) if existing else None,
+                    },
+                }
+            },
+        ) from None
 
     job = Job(
         user_id=user.id,
@@ -273,7 +318,32 @@ def create_document(
         status=JobStatus.queued,
     )
     db.add(job)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing = db.execute(
+            select(Document).where(
+                Document.user_id == user.id,
+                Document.url_canonical == canonical,
+                Document.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": {
+                        "code": "DOCUMENT_ALREADY_EXISTS",
+                        "message": "Document is already being tracked.",
+                        "details": {
+                            "documentId": str(existing.id),
+                            "entityId": str(existing.entity_id),
+                        },
+                    }
+                },
+            ) from None
+        raise
     db.refresh(doc)
     db.refresh(job)
 

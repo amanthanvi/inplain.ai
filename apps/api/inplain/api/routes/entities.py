@@ -3,9 +3,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import Field
 from sqlalchemy import and_, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
@@ -49,9 +50,46 @@ def create_entity(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> EntityOut:
+    existing = db.execute(
+        select(Entity).where(
+            Entity.user_id == user.id, Entity.name == payload.name, Entity.deleted_at.is_(None)
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": {
+                    "code": "ENTITY_ALREADY_EXISTS",
+                    "message": "Entity already exists.",
+                    "details": {"entityId": str(existing.id)},
+                }
+            },
+        )
+
     entity = Entity(user_id=user.id, name=payload.name, website_url=payload.website_url)
     db.add(entity)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing = db.execute(
+            select(Entity).where(
+                Entity.user_id == user.id,
+                Entity.name == payload.name,
+                Entity.deleted_at.is_(None),
+            )
+        ).scalar_one_or_none()
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": {
+                    "code": "ENTITY_ALREADY_EXISTS",
+                    "message": "Entity already exists.",
+                    "details": {"entityId": str(existing.id) if existing else None},
+                }
+            },
+        ) from None
     db.refresh(entity)
     return EntityOut.model_validate(entity, from_attributes=True)
 
