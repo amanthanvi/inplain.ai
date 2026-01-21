@@ -1,0 +1,114 @@
+.page {
+  min-height: calc(100vh - 64px);
+  padding: 44px 16px 56px;
+  background:
+    radial-gradient(1100px 600px at 20% 0%, rgba(152, 245, 196, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 80% 20%, rgba(255, 154, 164, 0.12), transparent 58%),
+    radial-gradient(900px 520px at 60% 120%, rgba(125, 196, 255, 0.10), transparent 55%);
+}
+
+.main {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.kicker {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.titleRow {
+  display: grid;
+  gap: 10px;
+  padding: 20px 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.title {
+  font-size: 34px;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.lede {
+  max-width: 78ch;
+  opacity: 0.78;
+  line-height: 1.7;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card {
+  grid-column: span 6;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 8px;
+}
+
+.panel {
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.cardBody {
+  font-size: 13px;
+  opacity: 0.75;
+  line-height: 1.55;
+}
+
+.linkRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pillLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.pillLink:hover {
+  background: rgba(255, 255, 255, 0.12);
+  opacity: 1;
+}
+
+@media (max-width: 860px) {
+  .title {
+    font-size: 30px;
+  }
+
+  .card {
+    grid-column: span 12;
+  }
+}

@@ -7,17 +7,20 @@ export default function Home() {
       <main className={styles.main}>
         <section className={styles.hero}>
           <div className={styles.kicker}>Inplain.ai</div>
-          <h1>Track privacy policy changes — with diffs and citations.</h1>
+          <h1>Privacy policies, made plain.</h1>
           <p>
-            Add public URLs. Inplain watches for meaningful updates, generates a readable diff, and
-            produces grounded summaries that point to the exact changed text.
+            Watch the companies you care about. Inplain monitors policy updates, generates diffs,
+            and explains what changed with citations to the exact passages.
           </p>
           <div className={styles.ctas}>
-            <Link className={styles.primary} href="/app">
-              Open the app →
+            <Link className={styles.primary} href="/companies">
+              Browse companies →
             </Link>
-            <Link className={styles.secondary} href="/app/entities">
-              Add a document →
+            <Link className={styles.secondary} href="/signup">
+              Start free →
+            </Link>
+            <Link className={styles.tertiary} href="/app">
+              Open app →
             </Link>
           </div>
         </section>

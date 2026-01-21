@@ -64,13 +64,27 @@
   font-size: 14px;
 }
 
+.tertiary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.20);
+  font-size: 14px;
+  opacity: 0.85;
+}
+
 .primary {
   background: rgba(255, 255, 255, 0.10);
 }
 
 .primary:hover,
-.secondary:hover {
+.secondary:hover,
+.tertiary:hover {
   background: rgba(255, 255, 255, 0.14);
+  opacity: 1;
 }
 
 .grid {

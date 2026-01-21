@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
+
+import { SiteHeader } from "./site-header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,31 +31,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
-          <header
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              padding: 16,
-            }}
-          >
-            <Link href="/" style={{ fontWeight: 750, letterSpacing: "-0.02em" }}>
-              Inplain
-            </Link>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <SignedOut>
-                <SignInButton />
-                <SignUpButton />
-              </SignedOut>
-              <SignedIn>
-                <Link href="/app" style={{ opacity: 0.8 }}>
-                  Dashboard
-                </Link>
-                <UserButton />
-              </SignedIn>
-            </div>
-          </header>
+          <SiteHeader />
           {children}
         </body>
       </html>
