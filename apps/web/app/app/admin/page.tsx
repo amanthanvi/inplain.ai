@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-import { InplainApiError, inplainFetchJson } from "../../../lib/inplain-api";
+import { InplainApiError, inplainFetchJsonOrRedirect } from "../inplain-api";
 
 export default async function AdminHomePage() {
   try {
-    await inplainFetchJson("/v1/admin/jobs?limit=1");
+    await inplainFetchJsonOrRedirect("/v1/admin/jobs?limit=1");
   } catch (err) {
     if (err instanceof InplainApiError && err.status === 403) {
       return (
@@ -33,4 +33,3 @@ export default async function AdminHomePage() {
     </div>
   );
 }
-

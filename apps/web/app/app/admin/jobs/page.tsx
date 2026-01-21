@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { InplainApiError, inplainFetchJson } from "../../../../lib/inplain-api";
+import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type JobListItem = {
   id: string;
@@ -24,7 +24,7 @@ type JobListOut = {
 
 async function retryJob(jobId: string) {
   "use server";
-  await inplainFetchJson(`/v1/admin/jobs/${jobId}/retry`, { method: "POST" });
+  await inplainFetchJsonOrRedirect(`/v1/admin/jobs/${jobId}/retry`, { method: "POST" });
   revalidatePath("/app/admin/jobs");
   redirect("/app/admin/jobs?retried=1");
 }
@@ -43,7 +43,7 @@ export default async function AdminJobsPage({
 
   let data: JobListOut;
   try {
-    data = await inplainFetchJson<JobListOut>(`/v1/admin/jobs?${qs.toString()}`);
+    data = await inplainFetchJsonOrRedirect<JobListOut>(`/v1/admin/jobs?${qs.toString()}`);
   } catch (err) {
     if (err instanceof InplainApiError && err.status === 403) {
       return (
@@ -169,4 +169,3 @@ export default async function AdminJobsPage({
     </div>
   );
 }
-

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { inplainFetchJson } from "../../../lib/inplain-api";
+import { inplainFetchJsonOrRedirect } from "../inplain-api";
 
 type Entity = {
   id: string;
@@ -27,7 +27,7 @@ async function createEntity(formData: FormData) {
     return;
   }
 
-  const entity = await inplainFetchJson<Entity>("/v1/entities", {
+  const entity = await inplainFetchJsonOrRedirect<Entity>("/v1/entities", {
     method: "POST",
     body: JSON.stringify({ name, websiteUrl }),
   });
@@ -37,7 +37,7 @@ async function createEntity(formData: FormData) {
 }
 
 export default async function EntitiesPage() {
-  const entities = await inplainFetchJson<EntityListResponse>("/v1/entities?limit=100");
+  const entities = await inplainFetchJsonOrRedirect<EntityListResponse>("/v1/entities?limit=100");
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -127,4 +127,3 @@ export default async function EntitiesPage() {
     </div>
   );
 }
-

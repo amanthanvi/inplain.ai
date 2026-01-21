@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { inplainFetchJson } from "../../lib/inplain-api";
+import { inplainFetchJsonOrRedirect } from "./inplain-api";
 
 type MeResponse = {
   id: string;
@@ -10,7 +10,7 @@ type MeResponse = {
 };
 
 export default async function DashboardPage() {
-  const me = await inplainFetchJson<MeResponse>("/v1/me");
+  const me = await inplainFetchJsonOrRedirect<MeResponse>("/v1/me");
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
@@ -25,4 +25,3 @@ export default async function DashboardPage() {
     </div>
   );
 }
-

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { inplainFetchJson } from "../../../../lib/inplain-api";
+import { inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type DocumentListItem = {
   id: string;
@@ -33,10 +33,13 @@ async function createDocument(entityId: string, formData: FormData) {
     return;
   }
 
-  const doc = await inplainFetchJson<{ id: string }>(`/v1/entities/${entityId}/documents`, {
-    method: "POST",
-    body: JSON.stringify({ url, docType, scheduleTier, fetchMode }),
-  });
+  const doc = await inplainFetchJsonOrRedirect<{ id: string }>(
+    `/v1/entities/${entityId}/documents`,
+    {
+      method: "POST",
+      body: JSON.stringify({ url, docType, scheduleTier, fetchMode }),
+    },
+  );
 
   revalidatePath(`/app/entities/${entityId}`);
   redirect(`/app/documents/${doc.id}`);
@@ -48,7 +51,7 @@ export default async function EntityDetailPage({
   params: Promise<{ entityId: string }>;
 }) {
   const { entityId } = await params;
-  const docs = await inplainFetchJson<DocumentListResponse>(
+  const docs = await inplainFetchJsonOrRedirect<DocumentListResponse>(
     `/v1/entities/${entityId}/documents?limit=100`,
   );
 
@@ -197,4 +200,3 @@ export default async function EntityDetailPage({
     </div>
   );
 }
-

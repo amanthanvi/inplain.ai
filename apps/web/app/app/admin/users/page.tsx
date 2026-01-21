@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { InplainApiError, inplainFetchJson } from "../../../../lib/inplain-api";
+import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type UserListItem = {
   id: string;
@@ -22,7 +22,7 @@ type UserListOut = {
 
 async function setBanned(userId: string, banned: boolean) {
   "use server";
-  await inplainFetchJson(`/v1/admin/users/${userId}/ban`, {
+  await inplainFetchJsonOrRedirect(`/v1/admin/users/${userId}/ban`, {
     method: "POST",
     body: JSON.stringify({ banned }),
   });
@@ -33,7 +33,7 @@ async function setBanned(userId: string, banned: boolean) {
 async function setPlan(userId: string, formData: FormData) {
   "use server";
   const plan = String(formData.get("plan") || "free");
-  await inplainFetchJson(`/v1/admin/users/${userId}/plan`, {
+  await inplainFetchJsonOrRedirect(`/v1/admin/users/${userId}/plan`, {
     method: "POST",
     body: JSON.stringify({ plan }),
   });
@@ -55,7 +55,7 @@ export default async function AdminUsersPage({
 
   let data: UserListOut;
   try {
-    data = await inplainFetchJson<UserListOut>(`/v1/admin/users?${qs.toString()}`);
+    data = await inplainFetchJsonOrRedirect<UserListOut>(`/v1/admin/users?${qs.toString()}`);
   } catch (err) {
     if (err instanceof InplainApiError && err.status === 403) {
       return (
@@ -226,4 +226,3 @@ export default async function AdminUsersPage({
     </div>
   );
 }
-

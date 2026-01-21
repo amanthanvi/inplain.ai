@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { inplainFetchJson } from "../../../../lib/inplain-api";
+import { inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type Citation = {
   hunkId: string;
@@ -97,7 +97,9 @@ export default async function ChangeEventPage({
   params: Promise<{ changeEventId: string }>;
 }) {
   const { changeEventId } = await params;
-  const event = await inplainFetchJson<ChangeEventResponse>(`/v1/change-events/${changeEventId}`);
+  const event = await inplainFetchJsonOrRedirect<ChangeEventResponse>(
+    `/v1/change-events/${changeEventId}`,
+  );
 
   return (
     <div style={{ display: "grid", gap: 16 }}>

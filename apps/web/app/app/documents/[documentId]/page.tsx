@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { InplainApiError, inplainFetchJson } from "../../../../lib/inplain-api";
+import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type DocumentDetail = {
   id: string;
@@ -71,7 +71,7 @@ type SnapshotOut = SnapshotListItem & {
 async function checkNow(documentId: string) {
   "use server";
 
-  await inplainFetchJson(`/v1/documents/${documentId}/check-now`, { method: "POST" });
+  await inplainFetchJsonOrRedirect(`/v1/documents/${documentId}/check-now`, { method: "POST" });
   revalidatePath(`/app/documents/${documentId}`);
   redirect(`/app/documents/${documentId}?queued=1`);
 }
@@ -82,7 +82,7 @@ async function saveNotificationPreference(documentId: string, formData: FormData
   const emailEnabled = String(formData.get("emailEnabled") || "") === "on";
   const emailMode = String(formData.get("emailMode") || "immediate") as EmailMode;
 
-  await inplainFetchJson(`/v1/documents/${documentId}/notification-preference`, {
+  await inplainFetchJsonOrRedirect(`/v1/documents/${documentId}/notification-preference`, {
     method: "PUT",
     body: JSON.stringify({ emailEnabled, emailMode }),
   });
@@ -94,7 +94,7 @@ async function saveNotificationPreference(documentId: string, formData: FormData
 async function clearNotificationPreference(documentId: string) {
   "use server";
 
-  await inplainFetchJson(`/v1/documents/${documentId}/notification-preference`, {
+  await inplainFetchJsonOrRedirect(`/v1/documents/${documentId}/notification-preference`, {
     method: "DELETE",
   });
 
@@ -113,19 +113,21 @@ export default async function DocumentPage({
   const sp = await searchParams;
 
   const [doc, events, prefs, me] = await Promise.all([
-    inplainFetchJson<DocumentDetail>(`/v1/documents/${documentId}`),
-    inplainFetchJson<ChangeEventListResponse>(`/v1/documents/${documentId}/change-events?limit=10`),
-    inplainFetchJson<DocumentNotificationPreferenceResponse>(
+    inplainFetchJsonOrRedirect<DocumentDetail>(`/v1/documents/${documentId}`),
+    inplainFetchJsonOrRedirect<ChangeEventListResponse>(
+      `/v1/documents/${documentId}/change-events?limit=10`,
+    ),
+    inplainFetchJsonOrRedirect<DocumentNotificationPreferenceResponse>(
       `/v1/documents/${documentId}/notification-preference`,
     ),
-    inplainFetchJson<MeResponse>("/v1/me"),
+    inplainFetchJsonOrRedirect<MeResponse>("/v1/me"),
   ]);
 
   let latestSnapshot: SnapshotOut | null = null;
   let snapshots: SnapshotListItem[] = [];
 
   try {
-    latestSnapshot = await inplainFetchJson<SnapshotOut>(
+    latestSnapshot = await inplainFetchJsonOrRedirect<SnapshotOut>(
       `/v1/documents/${documentId}/snapshots/latest`,
     );
   } catch (err) {
@@ -135,7 +137,7 @@ export default async function DocumentPage({
   }
 
   try {
-    const list = await inplainFetchJson<SnapshotListResponse>(
+    const list = await inplainFetchJsonOrRedirect<SnapshotListResponse>(
       `/v1/documents/${documentId}/snapshots?limit=20`,
     );
     snapshots = list.items;

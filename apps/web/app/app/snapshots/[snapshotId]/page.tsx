@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { inplainFetchJson } from "../../../../lib/inplain-api";
+import { inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type SnapshotOut = {
   id: string;
@@ -23,7 +23,7 @@ export default async function SnapshotPage({
   params: Promise<{ snapshotId: string }>;
 }) {
   const { snapshotId } = await params;
-  const snapshot = await inplainFetchJson<SnapshotOut>(`/v1/snapshots/${snapshotId}`);
+  const snapshot = await inplainFetchJsonOrRedirect<SnapshotOut>(`/v1/snapshots/${snapshotId}`);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -92,4 +92,3 @@ export default async function SnapshotPage({
     </div>
   );
 }
-

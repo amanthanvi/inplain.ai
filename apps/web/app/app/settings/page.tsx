@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 
 import { PricingTable } from "@clerk/nextjs";
 
-import { inplainFetchJson } from "../../../lib/inplain-api";
+import { inplainFetchJsonOrRedirect } from "../inplain-api";
 
 type MeResponse = {
   id: string;
@@ -25,7 +25,7 @@ async function saveNotificationPreferences(formData: FormData) {
   const emailEnabled = String(formData.get("emailEnabled") || "") === "on";
   const emailMode = String(formData.get("emailMode") || "immediate") as EmailMode;
 
-  await inplainFetchJson("/v1/notification-preferences", {
+  await inplainFetchJsonOrRedirect("/v1/notification-preferences", {
     method: "PUT",
     body: JSON.stringify({ emailEnabled, emailMode }),
   });
@@ -36,8 +36,8 @@ async function saveNotificationPreferences(formData: FormData) {
 
 export default async function SettingsPage() {
   const [me, notificationPrefs] = await Promise.all([
-    inplainFetchJson<MeResponse>("/v1/me"),
-    inplainFetchJson<GlobalNotificationPreferencesResponse>("/v1/notification-preferences"),
+    inplainFetchJsonOrRedirect<MeResponse>("/v1/me"),
+    inplainFetchJsonOrRedirect<GlobalNotificationPreferencesResponse>("/v1/notification-preferences"),
   ]);
 
   const digestAllowed = me.plan !== "free";

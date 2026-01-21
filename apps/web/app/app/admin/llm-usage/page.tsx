@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { InplainApiError, inplainFetchJson } from "../../../../lib/inplain-api";
+import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type LlmUsageOut = {
   windowDays: number;
@@ -28,7 +28,7 @@ function usd(costUsdMicros: number): string {
 export default async function AdminLlmUsagePage() {
   let data: LlmUsageOut;
   try {
-    data = await inplainFetchJson<LlmUsageOut>("/v1/admin/llm-usage");
+    data = await inplainFetchJsonOrRedirect<LlmUsageOut>("/v1/admin/llm-usage");
   } catch (err) {
     if (err instanceof InplainApiError && err.status === 403) {
       return (
@@ -115,4 +115,3 @@ export default async function AdminLlmUsagePage() {
     </div>
   );
 }
-

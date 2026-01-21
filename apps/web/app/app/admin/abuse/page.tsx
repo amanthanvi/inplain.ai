@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { InplainApiError, inplainFetchJson } from "../../../../lib/inplain-api";
+import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
 
 type AbuseOut = {
   windowHours: number;
@@ -11,7 +11,7 @@ type AbuseOut = {
 export default async function AdminAbusePage() {
   let data: AbuseOut;
   try {
-    data = await inplainFetchJson<AbuseOut>("/v1/admin/abuse");
+    data = await inplainFetchJsonOrRedirect<AbuseOut>("/v1/admin/abuse");
   } catch (err) {
     if (err instanceof InplainApiError && err.status === 403) {
       return (
@@ -86,4 +86,3 @@ export default async function AdminAbusePage() {
     </div>
   );
 }
-
