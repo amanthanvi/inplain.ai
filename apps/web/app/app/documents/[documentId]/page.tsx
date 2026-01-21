@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { InplainApiError, inplainFetchJsonOrRedirect } from "../../inplain-api";
+import { AppErrorState } from "../../app-error-state";
+import { InplainApiError, inplainFetchJsonOrRedirect, inplainFetchJsonSafe } from "../../inplain-api";
 
 type DocumentDetail = {
   id: string;
@@ -112,16 +113,67 @@ export default async function DocumentPage({
   const { documentId } = await params;
   const sp = await searchParams;
 
-  const [doc, events, prefs, me] = await Promise.all([
-    inplainFetchJsonOrRedirect<DocumentDetail>(`/v1/documents/${documentId}`),
-    inplainFetchJsonOrRedirect<ChangeEventListResponse>(
-      `/v1/documents/${documentId}/change-events?limit=10`,
-    ),
-    inplainFetchJsonOrRedirect<DocumentNotificationPreferenceResponse>(
+  const [docResult, eventsResult, prefsResult, meResult] = await Promise.all([
+    inplainFetchJsonSafe<DocumentDetail>(`/v1/documents/${documentId}`),
+    inplainFetchJsonSafe<ChangeEventListResponse>(`/v1/documents/${documentId}/change-events?limit=10`),
+    inplainFetchJsonSafe<DocumentNotificationPreferenceResponse>(
       `/v1/documents/${documentId}/notification-preference`,
     ),
-    inplainFetchJsonOrRedirect<MeResponse>("/v1/me"),
+    inplainFetchJsonSafe<MeResponse>("/v1/me"),
   ]);
+
+  if (!docResult.ok) {
+    return (
+      <AppErrorState
+        title="Document"
+        message={docResult.error.message}
+        status={docResult.error.status}
+        code={docResult.error.code}
+        retryHref={`/app/documents/${documentId}`}
+      />
+    );
+  }
+
+  if (!eventsResult.ok) {
+    return (
+      <AppErrorState
+        title="Document"
+        message={eventsResult.error.message}
+        status={eventsResult.error.status}
+        code={eventsResult.error.code}
+        retryHref={`/app/documents/${documentId}`}
+      />
+    );
+  }
+
+  if (!prefsResult.ok) {
+    return (
+      <AppErrorState
+        title="Document"
+        message={prefsResult.error.message}
+        status={prefsResult.error.status}
+        code={prefsResult.error.code}
+        retryHref={`/app/documents/${documentId}`}
+      />
+    );
+  }
+
+  if (!meResult.ok) {
+    return (
+      <AppErrorState
+        title="Document"
+        message={meResult.error.message}
+        status={meResult.error.status}
+        code={meResult.error.code}
+        retryHref={`/app/documents/${documentId}`}
+      />
+    );
+  }
+
+  const doc = docResult.data;
+  const events = eventsResult.data;
+  const prefs = prefsResult.data;
+  const me = meResult.data;
 
   let latestSnapshot: SnapshotOut | null = null;
   let snapshots: SnapshotListItem[] = [];

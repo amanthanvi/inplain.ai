@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { inplainFetchJsonOrRedirect } from "../inplain-api";
+import { inplainFetchJsonSafe } from "../inplain-api";
+import { AppErrorState } from "../app-error-state";
 
 type Entity = {
   id: string;
@@ -15,7 +16,20 @@ type EntityListResponse = {
 };
 
 export default async function EntitiesPage() {
-  const entities = await inplainFetchJsonOrRedirect<EntityListResponse>("/v1/entities?limit=100");
+  const entitiesResult = await inplainFetchJsonSafe<EntityListResponse>("/v1/entities?limit=100");
+  if (!entitiesResult.ok) {
+    return (
+      <AppErrorState
+        title="Tracking"
+        message={entitiesResult.error.message}
+        status={entitiesResult.error.status}
+        code={entitiesResult.error.code}
+        retryHref="/app/entities"
+      />
+    );
+  }
+
+  const entities = entitiesResult.data;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>

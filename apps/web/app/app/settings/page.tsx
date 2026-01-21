@@ -3,7 +3,8 @@ import { revalidatePath } from "next/cache";
 
 import { PricingTable } from "@clerk/nextjs";
 
-import { inplainFetchJsonOrRedirect } from "../inplain-api";
+import { inplainFetchJsonOrRedirect, inplainFetchJsonSafe } from "../inplain-api";
+import { AppErrorState } from "../app-error-state";
 
 type MeResponse = {
   id: string;
@@ -35,10 +36,37 @@ async function saveNotificationPreferences(formData: FormData) {
 }
 
 export default async function SettingsPage() {
-  const [me, notificationPrefs] = await Promise.all([
-    inplainFetchJsonOrRedirect<MeResponse>("/v1/me"),
-    inplainFetchJsonOrRedirect<GlobalNotificationPreferencesResponse>("/v1/notification-preferences"),
+  const [meResult, prefsResult] = await Promise.all([
+    inplainFetchJsonSafe<MeResponse>("/v1/me"),
+    inplainFetchJsonSafe<GlobalNotificationPreferencesResponse>("/v1/notification-preferences"),
   ]);
+
+  if (!meResult.ok) {
+    return (
+      <AppErrorState
+        title="Settings"
+        message={meResult.error.message}
+        status={meResult.error.status}
+        code={meResult.error.code}
+        retryHref="/app/settings"
+      />
+    );
+  }
+
+  if (!prefsResult.ok) {
+    return (
+      <AppErrorState
+        title="Settings"
+        message={prefsResult.error.message}
+        status={prefsResult.error.status}
+        code={prefsResult.error.code}
+        retryHref="/app/settings"
+      />
+    );
+  }
+
+  const me = meResult.data;
+  const notificationPrefs = prefsResult.data;
 
   const digestAllowed = me.plan !== "free";
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { inplainFetchJsonOrRedirect } from "../../inplain-api";
+import { inplainFetchJsonSafe } from "../../inplain-api";
+import { AppErrorState } from "../../app-error-state";
 
 type DocumentListItem = {
   id: string;
@@ -25,9 +26,22 @@ export default async function EntityDetailPage({
   params: Promise<{ entityId: string }>;
 }) {
   const { entityId } = await params;
-  const docs = await inplainFetchJsonOrRedirect<DocumentListResponse>(
+  const docsResult = await inplainFetchJsonSafe<DocumentListResponse>(
     `/v1/entities/${entityId}/documents?limit=100`,
   );
+  if (!docsResult.ok) {
+    return (
+      <AppErrorState
+        title="Policies"
+        message={docsResult.error.message}
+        status={docsResult.error.status}
+        code={docsResult.error.code}
+        retryHref={`/app/entities/${entityId}`}
+      />
+    );
+  }
+
+  const docs = docsResult.data;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
