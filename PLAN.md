@@ -128,3 +128,4 @@ Acceptance:
 - 2026-01-10: Set Clerk env vars + enable daily digest flag in Railway; redeploy all services in production and development.
 - 2026-01-10: Provision fresh Railway project (`inplain-ai-v0-1-0`) with production+development; deploy all services; set Clerk env vars + create `inplain` JWT template (aud=`inplain`); enable job processing + daily digest; install Playwright Chromium in renderer.
 - 2026-01-20: Disable email delivery (Postmark deferred); add Clerk Billing PricingTable; add export endpoints + admin dashboards; set OpenRouter keys; update backups workflow to GitHub artifacts; deploy to Railway.
+- 2026-01-21: Add Railway custom domains for `web` in production (`inplain.ai`, `www.inplain.ai`) to resolve Clerk `origin_invalid` on `*.up.railway.app` domains.

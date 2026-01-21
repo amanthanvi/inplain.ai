@@ -10,6 +10,12 @@
 
 Railway provides a public domain per service per environment (see Railway dashboard or `railway domain`).
 
+### Custom domain (production)
+
+Clerk **production** keys + the `clerk.inplain.ai` custom domain will not work on Railway’s `*.up.railway.app` domains (you’ll see `origin_invalid`). Use the custom web domain instead.
+
+- `web`: `inplain.ai`, `www.inplain.ai`
+
 ## Deploy commands
 
 All deploys use Railpack and are driven by `RAILPACK_START_CMD` per service.
