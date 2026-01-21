@@ -29,6 +29,7 @@ function matchesQuery(company: CompanyCatalogItem, query: string): boolean {
 export function CompanyDirectory({ companies }: { companies: CompanyCatalogItem[] }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CompanyCategory | "all">("all");
+  const [view, setView] = useState<"grid" | "list">("grid");
 
   const filtered = useMemo(() => {
     return companies
@@ -63,6 +64,22 @@ export function CompanyDirectory({ companies }: { companies: CompanyCatalogItem[
             </option>
           ))}
         </select>
+        <div className={styles.viewToggle} role="group" aria-label="View">
+          <button
+            type="button"
+            className={`${styles.viewButton} ${view === "grid" ? styles.viewButtonActive : ""}`}
+            onClick={() => setView("grid")}
+          >
+            Grid
+          </button>
+          <button
+            type="button"
+            className={`${styles.viewButton} ${view === "list" ? styles.viewButtonActive : ""}`}
+            onClick={() => setView("list")}
+          >
+            List
+          </button>
+        </div>
       </div>
 
       <div className={styles.meta}>
@@ -76,7 +93,7 @@ export function CompanyDirectory({ companies }: { companies: CompanyCatalogItem[
       </div>
 
       {filtered.length ? (
-        <div className={styles.list}>
+        <div className={`${styles.list} ${view === "list" ? styles.listCompact : ""}`}>
           {filtered.map((c) => (
             <Link key={c.slug} href={`/${c.slug}`} className={styles.card}>
               <div className={styles.cardTop}>
@@ -113,4 +130,3 @@ export function CompanyDirectory({ companies }: { companies: CompanyCatalogItem[
     </div>
   );
 }
-

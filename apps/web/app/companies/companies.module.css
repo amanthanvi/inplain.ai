@@ -45,6 +45,37 @@
   font-size: 14px;
 }
 
+.viewToggle {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.viewButton {
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.viewButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.viewButtonActive {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 .meta {
   display: flex;
   align-items: center;
@@ -58,6 +89,10 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.listCompact {
+  grid-template-columns: 1fr;
 }
 
 .card {
@@ -159,4 +194,3 @@
     grid-template-columns: 1fr;
   }
 }
-
