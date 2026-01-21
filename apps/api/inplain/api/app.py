@@ -10,6 +10,7 @@ from inplain.api.routes.entities import router as entities_router
 from inplain.api.routes.health import router as health_router
 from inplain.api.routes.me import router as me_router
 from inplain.api.routes.notification_preferences import router as notification_preferences_router
+from inplain.api.routes.snapshots import router as snapshots_router
 from inplain.api.routes.unsubscribe import router as unsubscribe_router
 from inplain.api.routes.webhooks import router as webhooks_router
 from inplain.settings import settings
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_router)
     app.include_router(entities_router)
     app.include_router(documents_router)
+    app.include_router(snapshots_router)
     app.include_router(change_events_router)
     app.include_router(webhooks_router)
     return app
