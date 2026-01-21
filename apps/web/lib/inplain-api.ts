@@ -16,7 +16,15 @@ export class InplainApiError extends Error {
 
 function apiBaseUrl(): string {
   const baseUrl = process.env.INPLAIN_API_BASE_URL?.trim();
-  return baseUrl ? baseUrl.replace(/\/+$/, "") : DEFAULT_API_BASE_URL;
+  if (baseUrl) {
+    return baseUrl.replace(/\/+$/, "");
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new InplainApiError("INPLAIN_API_BASE_URL is not configured.", 500, null);
+  }
+
+  return DEFAULT_API_BASE_URL;
 }
 
 export async function inplainFetchJson<T>(
@@ -44,11 +52,18 @@ export async function inplainFetchJson<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`${apiBaseUrl()}${path}`, {
-    ...init,
-    headers,
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${apiBaseUrl()}${path}`, {
+      ...init,
+      headers,
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new InplainApiError("API request failed (network error).", 503, {
+      message: err instanceof Error ? err.message : String(err),
+    });
+  }
 
   const contentType = res.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");
