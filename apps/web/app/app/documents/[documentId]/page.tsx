@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { inplainFetchJson } from "../../../../lib/inplain-api";
+import { InplainApiError, inplainFetchJson } from "../../../../lib/inplain-api";
 
 type DocumentDetail = {
   id: string;
@@ -40,6 +40,32 @@ type MeResponse = {
   email: string;
   plan: "free" | "pro" | "business";
   limits: Record<string, unknown>;
+};
+
+type SnapshotListItem = {
+  id: string;
+  fetchedAt: string;
+  fetchMethod: string;
+  httpStatus: number;
+  finalUrl: string;
+  contentType: string | null;
+  language: string | null;
+  byteSizeRaw: number | null;
+  byteSizeExtracted: number;
+  extractVersion: number;
+};
+
+type SnapshotListResponse = {
+  items: SnapshotListItem[];
+  nextCursor: string | null;
+};
+
+type SnapshotOut = SnapshotListItem & {
+  documentId: string;
+  extractedText: string;
+  rawStorageKey: string | null;
+  rawSha256: string;
+  extractedSha256: string;
 };
 
 async function checkNow(documentId: string) {
@@ -94,6 +120,30 @@ export default async function DocumentPage({
     ),
     inplainFetchJson<MeResponse>("/v1/me"),
   ]);
+
+  let latestSnapshot: SnapshotOut | null = null;
+  let snapshots: SnapshotListItem[] = [];
+
+  try {
+    latestSnapshot = await inplainFetchJson<SnapshotOut>(
+      `/v1/documents/${documentId}/snapshots/latest`,
+    );
+  } catch (err) {
+    if (!(err instanceof InplainApiError && err.status === 404)) {
+      throw err;
+    }
+  }
+
+  try {
+    const list = await inplainFetchJson<SnapshotListResponse>(
+      `/v1/documents/${documentId}/snapshots?limit=20`,
+    );
+    snapshots = list.items;
+  } catch (err) {
+    if (!(err instanceof InplainApiError && err.status === 404)) {
+      throw err;
+    }
+  }
 
   const digestAllowed = me.plan !== "free";
   const prefValue = prefs.override ?? prefs.effective;
@@ -273,6 +323,98 @@ export default async function DocumentPage({
           ))
         ) : (
           <div style={{ opacity: 0.7, fontSize: 13 }}>No change events yet.</div>
+        )}
+      </div>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        <h2 style={{ fontSize: 15, opacity: 0.85 }}>Current policy</h2>
+        {latestSnapshot ? (
+          <div
+            style={{
+              padding: 14,
+              borderRadius: 16,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.03)",
+              display: "grid",
+              gap: 10,
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ fontSize: 12, opacity: 0.75 }}>
+                Snapshot from {new Date(latestSnapshot.fetchedAt).toLocaleString()} ·{" "}
+                {latestSnapshot.fetchMethod}
+              </div>
+              <Link
+                href={`/app/snapshots/${latestSnapshot.id}`}
+                style={{ fontSize: 12, opacity: 0.85 }}
+              >
+                Open snapshot →
+              </Link>
+            </div>
+            <div
+              style={{
+                maxHeight: 320,
+                overflow: "auto",
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: "rgba(0,0,0,0.18)",
+              }}
+            >
+              <pre
+                style={{
+                  margin: 0,
+                  padding: 12,
+                  fontSize: 12,
+                  lineHeight: 1.6,
+                  fontFamily: "var(--sans)",
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {latestSnapshot.extractedText}
+              </pre>
+            </div>
+          </div>
+        ) : (
+          <div style={{ opacity: 0.7, fontSize: 13 }}>
+            No snapshots yet. Run a check and refresh in a moment.
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        <h2 style={{ fontSize: 15, opacity: 0.85 }}>Versions</h2>
+        {snapshots.length ? (
+          <div style={{ display: "grid", gap: 10 }}>
+            {snapshots.map((s) => (
+              <Link
+                key={s.id}
+                href={`/app/snapshots/${s.id}`}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  padding: "12px 14px",
+                  borderRadius: 14,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: "rgba(255,255,255,0.03)",
+                }}
+              >
+                <div style={{ display: "grid", gap: 4, minWidth: 0 }}>
+                  <div style={{ fontWeight: 650 }}>
+                    {new Date(s.fetchedAt).toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: 12, opacity: 0.7, overflow: "hidden" }}>
+                    {s.finalUrl}
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.7, whiteSpace: "nowrap" }}>
+                  {s.fetchMethod} · {s.httpStatus}
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div style={{ opacity: 0.7, fontSize: 13 }}>No versions yet.</div>
         )}
       </div>
     </div>
