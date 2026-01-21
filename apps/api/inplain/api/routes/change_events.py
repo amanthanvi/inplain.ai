@@ -4,11 +4,12 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
-from pydantic import BaseModel, Field
+from pydantic import Field
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
+from inplain.api.schemas import APIModel
 from inplain.db.models.change_events import ChangeEvent
 from inplain.db.models.diffs import Diff
 from inplain.db.models.documents import Document
@@ -21,19 +22,19 @@ from inplain.entitlements.defaults import default_limits
 router = APIRouter(prefix="/v1")
 
 
-class ChangeEventListItem(BaseModel):
+class ChangeEventListItem(APIModel):
     id: uuid.UUID
     created_at: datetime = Field(alias="createdAt")
     title: str
     summary_status: SummaryStatus = Field(alias="summaryStatus")
 
 
-class ChangeEventListOut(BaseModel):
+class ChangeEventListOut(APIModel):
     items: list[ChangeEventListItem]
     next_cursor: str | None = Field(alias="nextCursor")
 
 
-class ChangeEventOut(BaseModel):
+class ChangeEventOut(APIModel):
     id: uuid.UUID
     document_id: uuid.UUID = Field(alias="documentId")
     title: str
@@ -43,7 +44,7 @@ class ChangeEventOut(BaseModel):
     diff: dict
 
 
-class DocumentExportOut(BaseModel):
+class DocumentExportOut(APIModel):
     document_id: uuid.UUID = Field(alias="documentId")
     exported_at: datetime = Field(alias="exportedAt")
     events: list[ChangeEventOut]

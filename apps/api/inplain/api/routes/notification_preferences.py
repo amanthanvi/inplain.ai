@@ -3,11 +3,12 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Path
-from pydantic import BaseModel, Field
+from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
+from inplain.api.schemas import APIModel
 from inplain.db.models.documents import Document
 from inplain.db.models.enums import EmailMode
 from inplain.db.models.notification_preferences import NotificationPreference
@@ -22,22 +23,22 @@ from inplain.notifications.preferences import (
 router = APIRouter(prefix="/v1")
 
 
-class NotificationPreferenceIn(BaseModel):
+class NotificationPreferenceIn(APIModel):
     email_enabled: bool = Field(alias="emailEnabled")
     email_mode: EmailMode = Field(alias="emailMode")
 
 
-class NotificationPreferenceOut(BaseModel):
+class NotificationPreferenceOut(APIModel):
     email_enabled: bool = Field(alias="emailEnabled")
     email_mode: EmailMode = Field(alias="emailMode")
 
 
-class GlobalNotificationPreferenceOut(BaseModel):
+class GlobalNotificationPreferenceOut(APIModel):
     effective: NotificationPreferenceOut
     saved: NotificationPreferenceOut | None
 
 
-class DocumentNotificationPreferenceOut(BaseModel):
+class DocumentNotificationPreferenceOut(APIModel):
     effective: NotificationPreferenceOut
     override: NotificationPreferenceOut | None
 

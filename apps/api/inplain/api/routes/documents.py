@@ -4,11 +4,12 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
-from pydantic import BaseModel, Field
+from pydantic import Field
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
+from inplain.api.schemas import APIModel
 from inplain.db.models.documents import Document
 from inplain.db.models.entities import Entity
 from inplain.db.models.enums import (
@@ -31,19 +32,19 @@ from inplain.worker.celery_app import celery_app
 router = APIRouter(prefix="/v1")
 
 
-class DocumentCreateIn(BaseModel):
+class DocumentCreateIn(APIModel):
     url: str
     doc_type: DocumentDocType = Field(alias="docType")
     schedule_tier: ScheduleTier = Field(alias="scheduleTier")
     fetch_mode: FetchMode = Field(default=FetchMode.auto, alias="fetchMode")
 
 
-class JobOut(BaseModel):
+class JobOut(APIModel):
     job_id: uuid.UUID = Field(alias="jobId")
     status: JobStatus
 
 
-class DocumentOut(BaseModel):
+class DocumentOut(APIModel):
     id: uuid.UUID
     url: str
     status: DocumentStatus
@@ -52,7 +53,7 @@ class DocumentOut(BaseModel):
     initial_job: JobOut | None = Field(default=None, alias="initialJob")
 
 
-class DocumentListItem(BaseModel):
+class DocumentListItem(APIModel):
     id: uuid.UUID
     url: str
     doc_type: DocumentDocType = Field(alias="docType")
@@ -64,16 +65,16 @@ class DocumentListItem(BaseModel):
     created_at: datetime = Field(alias="createdAt")
 
 
-class DocumentListOut(BaseModel):
+class DocumentListOut(APIModel):
     items: list[DocumentListItem]
     next_cursor: str | None = Field(alias="nextCursor")
 
 
-class PauseIn(BaseModel):
+class PauseIn(APIModel):
     paused: bool
 
 
-class CheckNowOut(BaseModel):
+class CheckNowOut(APIModel):
     job_id: uuid.UUID = Field(alias="jobId")
     status: JobStatus
 

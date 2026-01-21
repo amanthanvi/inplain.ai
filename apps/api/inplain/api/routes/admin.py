@@ -4,11 +4,12 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
-from pydantic import BaseModel, Field
+from pydantic import Field
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import require_admin
+from inplain.api.schemas import APIModel
 from inplain.auth.clerk import update_user_public_metadata
 from inplain.db.models.audit_logs import AuditLog
 from inplain.db.models.documents import Document
@@ -34,7 +35,7 @@ from inplain.worker.celery_app import celery_app
 router = APIRouter(prefix="/v1/admin")
 
 
-class JobListItem(BaseModel):
+class JobListItem(APIModel):
     id: uuid.UUID
     user_id: uuid.UUID | None = Field(alias="userId")
     document_id: uuid.UUID | None = Field(alias="documentId")
@@ -47,25 +48,25 @@ class JobListItem(BaseModel):
     created_at: datetime = Field(alias="createdAt")
 
 
-class JobListOut(BaseModel):
+class JobListOut(APIModel):
     items: list[JobListItem]
     next_cursor: str | None = Field(alias="nextCursor")
 
 
-class RetryJobOut(BaseModel):
+class RetryJobOut(APIModel):
     job_id: uuid.UUID = Field(alias="jobId")
     status: JobStatus
 
 
-class BanUserIn(BaseModel):
+class BanUserIn(APIModel):
     banned: bool
 
 
-class SetPlanIn(BaseModel):
+class SetPlanIn(APIModel):
     plan: Plan
 
 
-class UserListItem(BaseModel):
+class UserListItem(APIModel):
     id: uuid.UUID
     clerk_user_id: str = Field(alias="clerkUserId")
     email: str
@@ -76,29 +77,29 @@ class UserListItem(BaseModel):
     created_at: datetime = Field(alias="createdAt")
 
 
-class UserListOut(BaseModel):
+class UserListOut(APIModel):
     items: list[UserListItem]
     next_cursor: str | None = Field(alias="nextCursor")
 
 
-class AbuseUserItem(BaseModel):
+class AbuseUserItem(APIModel):
     user_id: uuid.UUID = Field(alias="userId")
     email: str
     checks: int
 
 
-class AbuseHostItem(BaseModel):
+class AbuseHostItem(APIModel):
     host: str
     failures: int
 
 
-class AbuseOut(BaseModel):
+class AbuseOut(APIModel):
     window_hours: int = Field(alias="windowHours")
     top_users: list[AbuseUserItem] = Field(alias="topUsers")
     top_failing_hosts: list[AbuseHostItem] = Field(alias="topFailingHosts")
 
 
-class LlmDailyItem(BaseModel):
+class LlmDailyItem(APIModel):
     day: str
     requests: int
     tokens_in: int = Field(alias="tokensIn")
@@ -106,7 +107,7 @@ class LlmDailyItem(BaseModel):
     cost_usd_micros: int = Field(alias="costUsdMicros")
 
 
-class LlmTopUserItem(BaseModel):
+class LlmTopUserItem(APIModel):
     user_id: uuid.UUID = Field(alias="userId")
     email: str
     requests: int
@@ -115,7 +116,7 @@ class LlmTopUserItem(BaseModel):
     cost_usd_micros: int = Field(alias="costUsdMicros")
 
 
-class LlmUsageOut(BaseModel):
+class LlmUsageOut(APIModel):
     window_days: int = Field(alias="windowDays")
     daily: list[LlmDailyItem]
     top_users: list[LlmTopUserItem] = Field(alias="topUsers")

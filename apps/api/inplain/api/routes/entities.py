@@ -4,11 +4,12 @@ import uuid
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field
+from pydantic import Field
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
+from inplain.api.schemas import APIModel
 from inplain.db.models.entities import Entity
 from inplain.db.models.users import User
 from inplain.db.session import get_db
@@ -16,19 +17,19 @@ from inplain.db.session import get_db
 router = APIRouter(prefix="/v1/entities")
 
 
-class EntityCreateIn(BaseModel):
+class EntityCreateIn(APIModel):
     name: str
     website_url: str | None = Field(default=None, alias="websiteUrl")
 
 
-class EntityOut(BaseModel):
+class EntityOut(APIModel):
     id: uuid.UUID
     name: str
     website_url: str | None = Field(alias="websiteUrl")
     created_at: datetime = Field(alias="createdAt")
 
 
-class EntityListOut(BaseModel):
+class EntityListOut(APIModel):
     items: list[EntityOut]
     next_cursor: str | None = Field(alias="nextCursor")
 
