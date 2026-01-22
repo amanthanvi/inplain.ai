@@ -136,7 +136,7 @@ Acceptance:
   - [x] API: restrict `POST /v1/entities` and `POST /v1/entities/{entityId}/documents` to admin/internal use
 - [ ] App UX becomes company-first:
   - [ ] `/app` shows tracked companies + recent activity (or redirects to tracking view)
-  - [ ] Add “Unwatch” flow (soft-delete tracked company + docs) with confirmation
+  - [x] Add “Unwatch” flow (soft-delete tracked company + docs) with confirmation
 
 Acceptance:
 - A signed-in user can always reach `/app`, `/app/entities`, `/app/settings` without server-side exceptions.

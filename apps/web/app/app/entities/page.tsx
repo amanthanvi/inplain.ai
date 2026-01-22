@@ -15,7 +15,12 @@ type EntityListResponse = {
   nextCursor: string | null;
 };
 
-export default async function EntitiesPage() {
+export default async function EntitiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ unwatched?: string }>;
+}) {
+  const sp = await searchParams;
   const entitiesResult = await inplainFetchJsonSafe<EntityListResponse>("/v1/entities?limit=100");
   if (!entitiesResult.ok) {
     return (
@@ -37,6 +42,21 @@ export default async function EntitiesPage() {
         <h1 style={{ fontSize: 22, letterSpacing: "-0.02em" }}>Tracking</h1>
         <div style={{ opacity: 0.7 }}>{entities.items.length} companies</div>
       </div>
+
+      {sp.unwatched === "1" ? (
+        <div
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.04)",
+            fontSize: 13,
+            opacity: 0.9,
+          }}
+        >
+          Company removed from tracking.
+        </div>
+      ) : null}
 
       <div
         style={{

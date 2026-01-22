@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_current_user
 from inplain.api.schemas import APIModel
+from inplain.db.models.documents import Document
 from inplain.db.models.entities import Entity
 from inplain.db.models.enums import UserRole
+from inplain.db.models.snapshots import Snapshot
 from inplain.db.models.users import User
 from inplain.db.session import get_db
 
@@ -140,3 +142,76 @@ def list_entities(
         items=[EntityOut.model_validate(r, from_attributes=True) for r in rows],
         next_cursor=next_cursor,
     )
+
+
+@router.get("/{entity_id}", response_model=EntityOut)
+def get_entity(
+    entity_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> EntityOut:
+    entity = db.execute(
+        select(Entity).where(
+            Entity.id == entity_id,
+            Entity.user_id == user.id,
+            Entity.deleted_at.is_(None),
+        )
+    ).scalar_one_or_none()
+    if entity is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "ENTITY_NOT_FOUND", "message": "Entity not found."}},
+        )
+
+    return EntityOut.model_validate(entity, from_attributes=True)
+
+
+@router.delete("/{entity_id}")
+def delete_entity(
+    entity_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    entity = db.execute(
+        select(Entity).where(
+            Entity.id == entity_id,
+            Entity.user_id == user.id,
+            Entity.deleted_at.is_(None),
+        )
+    ).scalar_one_or_none()
+    if entity is None:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": {"code": "ENTITY_NOT_FOUND", "message": "Entity not found."}},
+        )
+
+    now = datetime.now(UTC)
+
+    entity.deleted_at = now
+    db.add(entity)
+
+    doc_ids = (
+        db.execute(
+            select(Document.id).where(
+                Document.user_id == user.id,
+                Document.entity_id == entity_id,
+                Document.deleted_at.is_(None),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if doc_ids:
+        db.execute(
+            update(Document)
+            .where(Document.id.in_(doc_ids))
+            .values(deleted_at=now)
+        )
+        db.execute(
+            update(Snapshot)
+            .where(Snapshot.document_id.in_(doc_ids))
+            .values(retention_delete_at=now)
+        )
+
+    db.commit()
+    return {"ok": True}

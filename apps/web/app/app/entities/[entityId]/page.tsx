@@ -4,6 +4,13 @@ import { inplainFetchJsonSafe } from "../../inplain-api";
 import { AppErrorState } from "../../app-error-state";
 import { formatDateTime } from "../../format";
 
+type EntityOut = {
+  id: string;
+  name: string;
+  websiteUrl: string | null;
+  createdAt: string;
+};
+
 type DocumentListItem = {
   id: string;
   url: string;
@@ -27,9 +34,23 @@ export default async function EntityDetailPage({
   params: Promise<{ entityId: string }>;
 }) {
   const { entityId } = await params;
-  const docsResult = await inplainFetchJsonSafe<DocumentListResponse>(
-    `/v1/entities/${entityId}/documents?limit=100`,
-  );
+  const [entityResult, docsResult] = await Promise.all([
+    inplainFetchJsonSafe<EntityOut>(`/v1/entities/${entityId}`),
+    inplainFetchJsonSafe<DocumentListResponse>(`/v1/entities/${entityId}/documents?limit=100`),
+  ]);
+
+  if (!entityResult.ok) {
+    return (
+      <AppErrorState
+        title="Company"
+        message={entityResult.error.message}
+        status={entityResult.error.status}
+        code={entityResult.error.code}
+        retryHref={`/app/entities/${entityId}`}
+      />
+    );
+  }
+
   if (!docsResult.ok) {
     return (
       <AppErrorState
@@ -42,6 +63,7 @@ export default async function EntityDetailPage({
     );
   }
 
+  const entity = entityResult.data;
   const docs = docsResult.data;
 
   return (
@@ -50,8 +72,16 @@ export default async function EntityDetailPage({
         <Link href="/app/entities" style={{ opacity: 0.7 }}>
           ← Back to tracking
         </Link>
-        <h1 style={{ fontSize: 22, letterSpacing: "-0.02em" }}>Policies</h1>
-        <div style={{ fontSize: 12, opacity: 0.7 }}>Tracking ID: {entityId}</div>
+        <h1 style={{ fontSize: 22, letterSpacing: "-0.02em" }}>{entity.name}</h1>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 12, opacity: 0.75 }}>
+          <span>{docs.items.length} policies</span>
+          {entity.websiteUrl ? <span>· {entity.websiteUrl}</span> : null}
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 12 }}>
+          <Link href={`/app/entities/${entityId}/unwatch`} style={{ opacity: 0.85 }}>
+            Stop tracking →
+          </Link>
+        </div>
       </div>
 
       <div

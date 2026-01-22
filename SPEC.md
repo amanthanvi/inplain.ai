@@ -911,6 +911,16 @@ Response:
 
 `GET /v1/entities?cursor=...&limit=20` (lists tracked companies)
 
+`DELETE /v1/entities/{entityId}` (stop tracking a company)
+
+Soft-deletes the tracked company and its documents for the current user and schedules data cleanup.
+
+Response:
+
+```json
+{ "ok": true }
+```
+
 #### Documents
 
 Documents are created automatically when a user watches a company.
