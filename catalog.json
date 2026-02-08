@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "google",
+    "name": "Google",
+    "website_url": "https://google.com",
+    "category": "search",
+    "policy_urls": {
+      "privacy": "https://policies.google.com/privacy",
+      "tos": "https://policies.google.com/terms"
+    }
+  },
+  {
+    "slug": "apple",
+    "name": "Apple",
+    "website_url": "https://apple.com",
+    "category": "productivity",
+    "policy_urls": {
+      "privacy": "https://www.apple.com/legal/privacy/"
+    }
+  },
+  {
+    "slug": "openai",
+    "name": "OpenAI",
+    "website_url": "https://openai.com",
+    "category": "cloud",
+    "policy_urls": {
+      "privacy": "https://openai.com/policies/privacy-policy",
+      "tos": "https://openai.com/policies/terms-of-use"
+    }
+  }
+]
+

@@ -1,0 +1,15 @@
+name: postgres-backup
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: echo "Configure PG connection + run scripts/backup/postgres_backup.sh"
+
