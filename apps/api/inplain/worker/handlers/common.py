@@ -57,11 +57,11 @@ _REDIS_ROBOTS_TXT_PREFIX = "inplain:robots:txt:"
 _REDIS_POLITE_PREFIX = "inplain:polite:last:"
 
 _COSMETIC_LINE_PATTERNS = [
-    re.compile(r"^\\s*©\\s*\\d{4}.*$", re.IGNORECASE),
-    re.compile(r"^\\s*copyright\\b.*\\d{4}.*$", re.IGNORECASE),
-    re.compile(r"^\\s*page\\s+\\d+(\\s+of\\s+\\d+)?\\s*$", re.IGNORECASE),
+    re.compile(r"^\s*©\s*\d{4}.*$", re.IGNORECASE),
+    re.compile(r"^\s*copyright\b.*\d{4}.*$", re.IGNORECASE),
+    re.compile(r"^\s*page\s+\d+(\s+of\s+\d+)?\s*$", re.IGNORECASE),
     re.compile(
-        r"^\\s*(last\\s+updated|last\\s+modified|updated|effective\\s+date|effective)\\b.*$",
+        r"^\s*(last\s+updated|last\s+modified|updated|effective\s+date|effective)\b.*$",
         re.IGNORECASE,
     ),
 ]
