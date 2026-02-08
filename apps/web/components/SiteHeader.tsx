@@ -8,6 +8,8 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
+import { NotificationBell } from "@/components/NotificationBell";
+
 export function SiteHeader({ clerkEnabled }: { clerkEnabled: boolean }) {
   return (
     <header className="siteHeader">
@@ -43,6 +45,7 @@ export function SiteHeader({ clerkEnabled }: { clerkEnabled: boolean }) {
                 </SignUpButton>
               </SignedOut>
               <SignedIn>
+                <NotificationBell />
                 <UserButton />
               </SignedIn>
             </>

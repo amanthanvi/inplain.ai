@@ -100,6 +100,82 @@ a {
   gap: 10px;
 }
 
+.bellWrap {
+  position: relative;
+}
+
+.bellButton {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  padding: 10px 12px;
+  cursor: pointer;
+  color: rgba(20, 18, 16, 0.86);
+}
+
+.bellBadge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 1px solid rgba(255, 77, 46, 0.55);
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1;
+  padding: 5px 7px;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(255, 77, 46, 0.24);
+}
+
+.bellDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(420px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.bellHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(20, 18, 16, 0.02);
+}
+
+.bellEmpty {
+  padding: 14px 12px;
+}
+
+.bellList {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.bellItem {
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bellItem:last-child {
+  border-bottom: none;
+}
+
+.bellFooter {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  background: rgba(20, 18, 16, 0.02);
+  font-size: 12px;
+}
+
 .btn {
   border: 1px solid var(--border);
   border-radius: 999px;
