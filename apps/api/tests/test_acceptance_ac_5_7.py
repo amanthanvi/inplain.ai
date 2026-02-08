@@ -79,7 +79,9 @@ def test_ac_5_404_sets_document_paused(db: Session, monkeypatch: pytest.MonkeyPa
     assert refreshed.status == DocumentStatus.paused
 
 
-def test_ac_6_robots_disallow_sets_blocked_and_rule(db: Session, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ac_6_robots_disallow_sets_blocked_and_rule(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
     from inplain.worker.handlers import fetch as fetch_handler
 
     _, doc = _seed_doc(db)
@@ -145,4 +147,3 @@ def test_ac_7_fetch_fails_5_times_job_is_dead(db: Session, monkeypatch: pytest.M
     refreshed_doc = db.execute(select(Document).where(Document.id == doc.id)).scalar_one()
     assert refreshed_doc.status == DocumentStatus.error
     assert refreshed_doc.last_checked_at is not None
-
