@@ -186,6 +186,88 @@ a {
   align-self: flex-start;
 }
 
+.summaryList {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.summaryBullet {
+  line-height: 1.4;
+}
+
+.citationRow {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.citation {
+  border: 1px solid rgba(255, 77, 46, 0.3);
+  background: rgba(255, 77, 46, 0.12);
+  color: rgba(20, 18, 16, 0.9);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.citation:hover {
+  background: rgba(255, 77, 46, 0.18);
+}
+
+.hunk {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(20, 18, 16, 0.02);
+  overflow: hidden;
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+.hunkHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.hunkBody {
+  padding: 12px 12px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.diffContext {
+  opacity: 0.9;
+}
+
+.diffRemoved {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 86, 86, 0.12);
+  border: 1px solid rgba(255, 86, 86, 0.22);
+  text-decoration: line-through;
+}
+
+.diffAdded {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(58, 201, 122, 0.12);
+  border: 1px solid rgba(58, 201, 122, 0.22);
+}
+
+.hunkHighlight {
+  border-color: rgba(255, 77, 46, 0.55);
+  box-shadow: 0 0 0 5px rgba(255, 77, 46, 0.16);
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);

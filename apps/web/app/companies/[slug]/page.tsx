@@ -220,7 +220,12 @@ export default async function CompanyPage({ params }: { params: { slug: string }
               <div key={e.id} className="card" style={{ padding: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                   <div style={{ fontWeight: 650 }}>{e.title}</div>
-                  <span className="pill">{e.summary_status}</span>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <span className="pill">{e.summary_status}</span>
+                    <Link className="btn btnGhost" href={`/change-events/${e.id}`}>
+                      View
+                    </Link>
+                  </div>
                 </div>
                 <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
                   {new Date(e.created_at).toLocaleString()}

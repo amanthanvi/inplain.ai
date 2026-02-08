@@ -55,12 +55,23 @@ export type ChangeEventOut = {
   diff_id: string;
   title: string;
   summary_status: "pending" | "completed" | "failed" | "skipped_quota";
-  summary_what_changed: Array<Record<string, unknown>> | null;
-  summary_why_matters: Array<Record<string, unknown>> | null;
+  summary_what_changed: SummaryBullet[] | null;
+  summary_why_matters: SummaryBullet[] | null;
   summary_model: string | null;
   summary_prompt_version: number | null;
   summary_error: string | null;
   created_at: string;
+};
+
+export type Citation = { hunkId: string; quote: string };
+export type SummaryBullet = { text: string; citations: Citation[] };
+
+export type DiffHunk = {
+  hunkId: string;
+  contextBefore: string;
+  contextAfter: string;
+  added: string[];
+  removed: string[];
 };
 
 export type DiffOut = {
@@ -68,7 +79,7 @@ export type DiffOut = {
   document_id: string;
   from_snapshot_id: string;
   to_snapshot_id: string;
-  diff_hunks: Array<Record<string, unknown>>;
+  diff_hunks: DiffHunk[];
   change_score: number;
   change_classification: string;
   created_at: string;
@@ -141,4 +152,3 @@ export async function internalFetch<T>(
 
   return payload as T;
 }
-
