@@ -27,29 +27,25 @@ export default async function ChangeEventPage({ params }: { params: { id: string
 
   return (
     <main>
-      <div className="card" style={{ padding: 18 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <div className="muted" style={{ fontSize: 13 }}>
-              {new Date(ce.created_at).toLocaleString()}
-            </div>
-            <h1 style={{ margin: "8px 0 0", fontFamily: "var(--font-display)" }}>{ce.title}</h1>
+      <header className="pageHeader">
+        <div className="kicker">{new Date(ce.created_at).toLocaleString()}</div>
+        <div className="pageTop">
+          <div style={{ minWidth: 0 }}>
+            <h1 className="pageTitle">{ce.title}</h1>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div className="pageActions">
             <span className="pill">{ce.summary_status}</span>
             <Link className="btn" href="/companies">
               Companies
             </Link>
           </div>
         </div>
-      </div>
-
-      <div style={{ height: 18 }} />
+      </header>
 
       {ce.summary_status === "failed" ? (
-        <div className="card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 650 }}>Summary failed</div>
-          <div className="muted" style={{ marginTop: 6 }}>
+        <div className="card cardPad" style={{ borderColor: "rgba(255,77,46,0.35)" }}>
+          <div className="cardTitle">Summary failed</div>
+          <div className="muted" style={{ marginTop: 10 }}>
             {ce.summary_error || "Unknown error"}
           </div>
         </div>
@@ -63,4 +59,3 @@ export default async function ChangeEventPage({ params }: { params: { id: string
     </main>
   );
 }
-

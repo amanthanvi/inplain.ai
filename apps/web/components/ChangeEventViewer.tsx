@@ -45,9 +45,9 @@ export function ChangeEventViewer({
   hunks: DiffHunk[];
 }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
-      <section className="card" style={{ padding: 16 }}>
-        <h2 style={{ margin: 0, fontFamily: "var(--font-display)" }}>Summary</h2>
+    <div className="stack" style={{ gap: 14 }}>
+      <section className="card cardPad">
+        <h2 className="sectionTitle">Summary</h2>
 
         {whatChanged && whatChanged.length > 0 ? (
           <>
@@ -84,11 +84,11 @@ export function ChangeEventViewer({
         ) : null}
       </section>
 
-      <section className="card" style={{ padding: 16 }}>
-        <h2 style={{ margin: 0, fontFamily: "var(--font-display)" }}>Diff</h2>
+      <section className="card cardPad">
+        <h2 className="sectionTitle">Diff</h2>
         <div style={{ height: 10 }} />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+        <div className="stack" style={{ gap: 10 }}>
           {hunks.map((h) => (
             <article key={h.hunkId} id={`hunk-${h.hunkId}`} className="hunk">
               <div className="hunkHeader">
@@ -121,4 +121,3 @@ export function ChangeEventViewer({
     </div>
   );
 }
-

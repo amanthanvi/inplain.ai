@@ -38,24 +38,15 @@ export default async function SettingsPage() {
 
   return (
     <main>
-      <h1 style={{ margin: 0, fontFamily: "var(--font-display)" }}>Settings</h1>
-      <p className="muted" style={{ margin: "8px 0 0" }}>
-        Account and usage.
-      </p>
+      <header className="pageHeader">
+        <div className="kicker">Account</div>
+        <h1 className="pageTitle">Settings</h1>
+        <p className="pageLead">Account and usage.</p>
+      </header>
 
-      <div style={{ height: 18 }} />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 14,
-        }}
-      >
-        <div className="card" style={{ padding: 16 }}>
-          <div className="muted" style={{ fontSize: 13 }}>
-            Current plan
-          </div>
+      <div className="cardsGrid">
+        <div className="card cardPad">
+          <div className="kicker">Current plan</div>
           <div style={{ fontSize: 28, fontWeight: 750, marginTop: 6, textTransform: "capitalize" }}>
             {entitlements.tier}
           </div>
@@ -74,10 +65,8 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        <div className="card" style={{ padding: 16 }}>
-          <div className="muted" style={{ fontSize: 13 }}>
-            Tracked documents
-          </div>
+        <div className="card cardPad">
+          <div className="kicker">Tracked documents</div>
           <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
             {usage.tracked_documents}/{entitlements.trackedDocuments}
           </div>
@@ -86,20 +75,16 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        <div className="card" style={{ padding: 16 }}>
-          <div className="muted" style={{ fontSize: 13 }}>
-            Unread notifications
-          </div>
+        <div className="card cardPad">
+          <div className="kicker">Unread notifications</div>
           <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>{unread.unread}</div>
           <div className="muted" style={{ marginTop: 6 }}>
             Notifications are in-app only in v0.1.0.
           </div>
         </div>
 
-        <div className="card" style={{ padding: 16 }}>
-          <div className="muted" style={{ fontSize: 13 }}>
-            “Check now” (today)
-          </div>
+        <div className="card cardPad">
+          <div className="kicker">“Check now” (today)</div>
           <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
             {usage.check_now_used_today}/{entitlements.checkNowPerDay}
           </div>
@@ -108,10 +93,8 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        <div className="card" style={{ padding: 16 }}>
-          <div className="muted" style={{ fontSize: 13 }}>
-            AI summaries (this month)
-          </div>
+        <div className="card cardPad">
+          <div className="kicker">AI summaries (this month)</div>
           <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
             {usage.summaries_used_month}/{entitlements.summariesPerMonth}
           </div>
@@ -120,10 +103,8 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        <div className="card" style={{ padding: 16 }}>
-          <div className="muted" style={{ fontSize: 13 }}>
-            JS-render fetches (this month)
-          </div>
+        <div className="card cardPad">
+          <div className="kicker">JS-render fetches (this month)</div>
           <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
             {usage.render_used_month}/{entitlements.renderPerMonth}
           </div>
