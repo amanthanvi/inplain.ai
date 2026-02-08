@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 
 from inplain.db.models.enums import JobQueue
 from inplain.db.session import SessionLocal
+from inplain.worker.executor import execute_job
 from inplain.worker.jobs import claim_jobs, cleanup_stale_locks, mark_failed, mark_succeeded
 from inplain.worker.scheduler import schedule_due_documents
 
@@ -43,8 +44,8 @@ def main() -> None:
 
             for job in jobs:
                 try:
-                    # TODO(v0.1.0): route to real handlers
                     with SessionLocal() as db:
+                        execute_job(db=db, job_id=job.id)
                         mark_succeeded(db=db, job_id=job.id)
                 except Exception as exc:  # noqa: BLE001
                     with SessionLocal() as db:
