@@ -7,9 +7,24 @@ on:
 
 jobs:
   backup:
+    if: ${{ secrets.PROD_DATABASE_URL != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Placeholder
-        run: echo "Configure PG connection + run scripts/backup/postgres_backup.sh"
+      - name: Install Postgres client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
 
+      - name: Run backup
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          OUT_DIR: artifacts
+        run: bash scripts/backup/postgres_backup.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inplain-postgres-backup-${{ github.run_id }}
+          path: artifacts/*
+          retention-days: 7
