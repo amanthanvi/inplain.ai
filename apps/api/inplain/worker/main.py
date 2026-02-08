@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
 from datetime import UTC, datetime, timedelta
@@ -14,6 +15,12 @@ from inplain.worker.scheduler import ensure_cleanup_job, schedule_due_documents
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
+    enabled_queues = _parse_enabled_queues(os.environ.get("INPLAIN_WORKER_QUEUES"))
+    enable_scheduler = _parse_bool_env("INPLAIN_WORKER_ENABLE_SCHEDULER", default=True)
+    enable_stale_lock_cleanup = _parse_bool_env(
+        "INPLAIN_WORKER_ENABLE_STALE_LOCK_CLEANUP",
+        default=True,
+    )
 
     stop_event = threading.Event()
 
@@ -54,13 +61,18 @@ def main() -> None:
                         mark_failed(db=db, job_id=job.id, error=str(exc))
 
     threads = [
-        threading.Thread(target=scheduler_loop, name="scheduler", daemon=True),
-        threading.Thread(target=stale_lock_loop, name="stale-locks", daemon=True),
     ]
+    if enable_scheduler:
+        threads.append(threading.Thread(target=scheduler_loop, name="scheduler", daemon=True))
+    if enable_stale_lock_cleanup:
+        threads.append(threading.Thread(target=stale_lock_loop, name="stale-locks", daemon=True))
+
     worker_counts = {
         JobQueue.render: 2,
     }
     for q in JobQueue:
+        if enabled_queues is not None and q not in enabled_queues:
+            continue
         for i in range(worker_counts.get(q, 1)):
             threads.append(
                 threading.Thread(
@@ -80,6 +92,31 @@ def main() -> None:
     except KeyboardInterrupt:
         stop_event.set()
         raise
+
+
+def _parse_bool_env(key: str, *, default: bool) -> bool:
+    raw = os.environ.get(key)
+    if raw is None:
+        return default
+    return raw.strip().lower() in ("1", "true", "yes", "y", "on")
+
+
+def _parse_enabled_queues(raw: str | None) -> set[JobQueue] | None:
+    if not raw:
+        return None
+
+    allowed = {q.value: q for q in JobQueue}
+    enabled: set[JobQueue] = set()
+    for part in raw.split(","):
+        key = part.strip()
+        if not key:
+            continue
+        q = allowed.get(key)
+        if q is None:
+            raise ValueError(f"Invalid INPLAIN_WORKER_QUEUES entry: {key}")
+        enabled.add(q)
+
+    return enabled
 
 
 if __name__ == "__main__":
