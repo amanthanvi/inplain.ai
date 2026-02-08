@@ -70,3 +70,31 @@ def _schedule_delta(tier: ScheduleTier) -> timedelta:
             return timedelta(hours=6)
         case ScheduleTier.one_h:
             return timedelta(hours=1)
+
+
+def ensure_cleanup_job(db: Session, now: datetime) -> bool:
+    existing = db.execute(
+        select(Job.id).where(
+            Job.queue == JobQueue.cleanup,
+            Job.status.in_([JobStatus.queued, JobStatus.running]),
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        return False
+
+    last_finished = db.execute(
+        select(Job.finished_at)
+        .where(
+            Job.queue == JobQueue.cleanup,
+            Job.status == JobStatus.succeeded,
+            Job.finished_at.is_not(None),
+        )
+        .order_by(Job.finished_at.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    if last_finished is not None and now - last_finished < timedelta(hours=24):
+        return False
+
+    db.add(Job(queue=JobQueue.cleanup, status=JobStatus.queued, run_at=now))
+    db.commit()
+    return True

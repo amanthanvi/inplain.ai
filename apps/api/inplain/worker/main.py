@@ -9,7 +9,7 @@ from inplain.db.models.enums import JobQueue
 from inplain.db.session import SessionLocal
 from inplain.worker.executor import execute_job
 from inplain.worker.jobs import claim_jobs, cleanup_stale_locks, mark_failed, mark_succeeded
-from inplain.worker.scheduler import schedule_due_documents
+from inplain.worker.scheduler import ensure_cleanup_job, schedule_due_documents
 
 
 def main() -> None:
@@ -24,6 +24,8 @@ def main() -> None:
                 scheduled = schedule_due_documents(db=db, now=now)
                 if scheduled:
                     logging.info("scheduler scheduled=%s", scheduled)
+                if ensure_cleanup_job(db=db, now=now):
+                    logging.info("scheduler cleanup=queued")
             stop_event.wait(60)
 
     def stale_lock_loop() -> None:
@@ -55,15 +57,19 @@ def main() -> None:
         threading.Thread(target=scheduler_loop, name="scheduler", daemon=True),
         threading.Thread(target=stale_lock_loop, name="stale-locks", daemon=True),
     ]
+    worker_counts = {
+        JobQueue.render: 2,
+    }
     for q in JobQueue:
-        threads.append(
-            threading.Thread(
-                target=worker_loop,
-                args=(q,),
-                name=f"worker-{q.value}",
-                daemon=True,
+        for i in range(worker_counts.get(q, 1)):
+            threads.append(
+                threading.Thread(
+                    target=worker_loop,
+                    args=(q,),
+                    name=f"worker-{q.value}-{i + 1}",
+                    daemon=True,
+                )
             )
-        )
 
     for t in threads:
         t.start()

@@ -88,6 +88,10 @@ def strip_cosmetic(text: str) -> str:
     return "\n".join(lines).strip()
 
 
+def retention_for_schedule(tier: ScheduleTier) -> timedelta:
+    return _RETENTION_BY_SCHEDULE.get(tier, timedelta(days=90))
+
+
 def enforce_politeness_delay(url: str) -> None:
     parts = urlsplit(url)
     hostname = parts.hostname

@@ -32,6 +32,8 @@ make venv
 make migrate
 ```
 
+Optional (needed for JS-render fallback in the worker): install Playwright browsers.
+
 Env templates:
 - `apps/api/.env.example`
 - `apps/web/.env.example`

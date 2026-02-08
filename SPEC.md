@@ -32,7 +32,7 @@ C. [Default Config Values](#appendix-c--default-config-values)
 - **Title**: Inplain.ai — Privacy Policy Change Tracker
 - **Owner (DRI)**: Aman Thanvi (@amanthanvi)
 - **Status**: Implementing
-- **Last updated**: 2026-02-07
+- **Last updated**: 2026-02-08
 - **Spec version**: v0.2.0
 - **License model**: Source-available (code inspectable/contributable; full platform monetized)
 - **Links**:
@@ -791,11 +791,11 @@ Railway built-in rollback: redeploy previous image. DB migrations designed to be
 
 | Tier | Snapshot retention | Change events |
 |------|--------------------|---------------|
-| Free | 90 days | Kept indefinitely (small) |
-| Pro | 1 year | Kept indefinitely |
-| Business | 2 years | Kept indefinitely |
+| Free | 90 days | 90 days |
+| Pro | 1 year | 1 year |
+| Business | 2 years | 2 years |
 
-Daily cleanup job: delete snapshots where `retention_delete_at <= now()` in batches of 500. Cascade-delete associated diffs.
+Daily cleanup job: delete snapshots where `retention_delete_at <= now()` in batches of 500. Cascade-delete associated diffs + change events.
 
 ### 8.4 Backup strategy
 

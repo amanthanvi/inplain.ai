@@ -88,13 +88,13 @@ Acceptance:
 ### M5 — Fetch/extract/snapshot pipeline (SPEC FR-3, 4.4, 5.5)
 
 - [x] SSRF defenses + redirect re-validation (SPEC 5.5).
-- [ ] robots.txt checks cached in Redis (SPEC 4.4). (Implemented in-memory cache first.)
+- [x] robots.txt checks cached in Redis (SPEC 4.4). (Falls back to in-memory cache if Redis unset.)
 - [x] Conditional GET (ETag/Last-Modified).
 - [ ] Extraction:
   - [x] HTML: `trafilatura` (post-processing for cosmetic noise).
   - [x] PDF: `pypdf` + OCR fallback when needed (best-effort; requires `pdftoppm` + `tesseract`).
 - [x] Snapshot storage in Postgres (TOAST; no object storage in v0.2.0).
-- [ ] Render fallback via Playwright when HTTP extraction yields minimal text. (Fetch enqueues `render`; handler pending.)
+- [x] Render fallback via Playwright when HTTP extraction yields minimal text. (Requires Playwright browsers installed.)
 
 Acceptance:
 - For known test URLs, snapshots are created with stable extracted text + sha256.
@@ -169,3 +169,4 @@ Acceptance:
 - 2026-02-08: Implemented Postgres job queue + scheduler loops (SKIP LOCKED claim, retries, stale-lock cleanup).
 - 2026-02-08: Implemented fetch→extract→snapshot pipeline (HTTP + trafilatura; PDF via pypdf; conditional GET; SSRF + robots).
 - 2026-02-08: Implemented diff generation + change events + summary/notify jobs (diff-match-patch hunks; OpenRouter summary w/ citation validation).
+- 2026-02-08: Implemented Playwright render jobs + daily cleanup jobs (retention deletes snapshots; hard-deletes fully expired soft-deleted documents).
