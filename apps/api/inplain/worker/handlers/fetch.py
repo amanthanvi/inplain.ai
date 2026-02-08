@@ -167,7 +167,7 @@ def _http_fetch(url: str, etag: str | None, last_modified: str | None) -> _Fetch
     if last_modified:
         headers["if-modified-since"] = last_modified
 
-    timeout = httpx.Timeout(connect=_CONNECT_TIMEOUT_SECONDS, read=_READ_TIMEOUT_SECONDS)
+    timeout = httpx.Timeout(_READ_TIMEOUT_SECONDS, connect=_CONNECT_TIMEOUT_SECONDS)
 
     with httpx.Client(follow_redirects=False, timeout=timeout) as client:
         for _ in range(_MAX_REDIRECTS + 1):

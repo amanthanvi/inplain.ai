@@ -245,7 +245,7 @@ def _store_cached_robots_txt(cache_key: str, robots_txt: str) -> None:
 
 def _fetch_robots_txt(cache_key: str) -> str:
     robots_url = f"{cache_key}/robots.txt"
-    timeout = httpx.Timeout(connect=_CONNECT_TIMEOUT_SECONDS, read=_READ_TIMEOUT_SECONDS)
+    timeout = httpx.Timeout(_READ_TIMEOUT_SECONDS, connect=_CONNECT_TIMEOUT_SECONDS)
     try:
         with httpx.Client(timeout=timeout, follow_redirects=True) as client:
             resp = client.get(robots_url, headers={"user-agent": _ROBOTS_HEADER_UA})
