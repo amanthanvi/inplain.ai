@@ -39,7 +39,13 @@ def claim_jobs(db: Session, queue: JobQueue, limit: int) -> list[Job]:
         return []
 
     job_ids = [r[0] for r in rows]
-    jobs = list(db.execute(select(Job).where(Job.id.in_(job_ids))).scalars().all())
+    jobs = list(
+        db.execute(
+            select(Job).where(Job.id.in_(job_ids)).execution_options(populate_existing=True)
+        )
+        .scalars()
+        .all()
+    )
     jobs_by_id = {j.id: j for j in jobs}
     db.commit()
     return [jobs_by_id[job_id] for job_id in job_ids if job_id in jobs_by_id]
@@ -50,14 +56,19 @@ def mark_succeeded(db: Session, job_id: object) -> None:
     db.execute(
         update(Job)
         .where(Job.id == job_id)
-        .values(status=JobStatus.succeeded, finished_at=now, locked_at=None)
+        .values(status=JobStatus.succeeded, finished_at=now, locked_at=None),
+        execution_options={"synchronize_session": "fetch"},
     )
     db.commit()
 
 
 def mark_failed(db: Session, job_id: object, error: str, base_delay_seconds: int = 30) -> None:
     now = datetime.now(UTC)
-    job = db.execute(select(Job).where(Job.id == job_id)).scalar_one()
+    job = (
+        db.execute(select(Job).where(Job.id == job_id).execution_options(populate_existing=True))
+        .scalars()
+        .one()
+    )
 
     dead = job.attempt >= job.max_attempts
     status = JobStatus.dead if dead else JobStatus.queued
@@ -74,7 +85,8 @@ def mark_failed(db: Session, job_id: object, error: str, base_delay_seconds: int
             locked_at=None,
             error=error,
             run_at=run_at,
-        )
+        ),
+        execution_options={"synchronize_session": "fetch"},
     )
     db.commit()
 
@@ -84,8 +96,8 @@ def cleanup_stale_locks(db: Session, max_age: timedelta) -> int:
     res = db.execute(
         update(Job)
         .where(Job.status == JobStatus.running, Job.locked_at < cutoff)
-        .values(status=JobStatus.queued, locked_at=None)
+        .values(status=JobStatus.queued, locked_at=None),
+        execution_options={"synchronize_session": "fetch"},
     )
     db.commit()
     return int(res.rowcount or 0)
-

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 from collections.abc import Generator
 from datetime import UTC, datetime
@@ -26,7 +27,7 @@ def test_clerk_webhook_user_deleted_purges_user_data(
 ) -> None:
     SessionLocal = sessionmaker(bind=test_engine, class_=Session, expire_on_commit=False)
 
-    secret = "whsec_test_123"
+    secret = "whsec_" + base64.b64encode(b"test_secret_123").decode("utf-8")
     monkeypatch.setattr(settings, "clerk_webhook_secret", secret)
 
     clerk_user_id = "user_123"
