@@ -472,6 +472,7 @@ Indexes:
 - Client-side code never calls FastAPI directly
 - Auth: Server Actions verify Clerk session server-side. Calls to FastAPI use a shared service token (`INTERNAL_SERVICE_TOKEN` env var) + pass `clerk_user_id` as parameter
 - FastAPI trusts the service token; enforces row-level access by `clerk_user_id`
+- Webhooks: Clerk hits `/internal/webhooks/clerk` directly; endpoint is protected by Svix signature verification (no service token)
 
 **FastAPI endpoints** (internal, not public):
 

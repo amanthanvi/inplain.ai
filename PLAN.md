@@ -69,7 +69,7 @@ Acceptance:
   - `/internal/webhooks/clerk` (Svix verification)
   - `/internal/admin/jobs*` (admin only)
 - [x] Auth model: service token between Next.js Server Actions and FastAPI; row-level access by `clerk_user_id` (SPEC 5.1).
-- [ ] Standard error format (SPEC 4.3).
+- [x] Standard error format (SPEC 4.3).
 
 Acceptance:
 - Endpoints exist and enforce row-level isolation by `clerk_user_id`.
@@ -170,3 +170,4 @@ Acceptance:
 - 2026-02-08: Implemented fetch→extract→snapshot pipeline (HTTP + trafilatura; PDF via pypdf; conditional GET; SSRF + robots).
 - 2026-02-08: Implemented diff generation + change events + summary/notify jobs (diff-match-patch hunks; OpenRouter summary w/ citation validation).
 - 2026-02-08: Implemented Playwright render jobs + daily cleanup jobs (retention deletes snapshots; hard-deletes fully expired soft-deleted documents).
+- 2026-02-08: Added standard API error envelope + Clerk webhook signature verification (Svix) with `user.deleted` purge.
