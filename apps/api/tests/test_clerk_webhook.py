@@ -22,7 +22,7 @@ from inplain.settings import settings
 
 
 def test_clerk_webhook_user_deleted_purges_user_data(
-    test_engine: Engine, monkeypatch: pytest.MonkeyPatch
+    db: Session, test_engine: Engine, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     SessionLocal = sessionmaker(bind=test_engine, class_=Session, expire_on_commit=False)
 
@@ -31,46 +31,45 @@ def test_clerk_webhook_user_deleted_purges_user_data(
 
     clerk_user_id = "user_123"
 
-    with SessionLocal() as db:
-        entity = Entity(
-            slug="acme",
-            name="Acme",
-            website_url="https://example.com",
-            category="test",
-            policy_urls={"privacy": "https://example.com/privacy"},
-        )
-        db.add(entity)
-        db.flush()
+    entity = Entity(
+        slug="acme",
+        name="Acme",
+        website_url="https://example.com",
+        category="test",
+        policy_urls={"privacy": "https://example.com/privacy"},
+    )
+    db.add(entity)
+    db.flush()
 
-        doc = Document(
+    doc = Document(
+        clerk_user_id=clerk_user_id,
+        entity_id=entity.id,
+        url="https://example.com/privacy",
+        doc_type=DocumentDocType.privacy,
+        next_check_at=datetime.now(UTC),
+    )
+    db.add(doc)
+    db.flush()
+
+    db.add(
+        Job(
+            queue=JobQueue.fetch,
             clerk_user_id=clerk_user_id,
-            entity_id=entity.id,
-            url="https://example.com/privacy",
-            doc_type=DocumentDocType.privacy,
-            next_check_at=datetime.now(UTC),
+            document_id=doc.id,
+            status=JobStatus.queued,
+            run_at=datetime.now(UTC),
         )
-        db.add(doc)
-        db.flush()
-
-        db.add(
-            Job(
-                queue=JobQueue.fetch,
-                clerk_user_id=clerk_user_id,
-                document_id=doc.id,
-                status=JobStatus.queued,
-                run_at=datetime.now(UTC),
-            )
+    )
+    db.add(
+        Notification(
+            clerk_user_id=clerk_user_id,
+            type=NotificationType.system,
+            title="Hello",
+            body="World",
+            payload={"x": 1},
         )
-        db.add(
-            Notification(
-                clerk_user_id=clerk_user_id,
-                type=NotificationType.system,
-                title="Hello",
-                body="World",
-                payload={"x": 1},
-            )
-        )
-        db.commit()
+    )
+    db.commit()
 
     def _override_get_db() -> Generator[Session]:
         with SessionLocal() as session:
