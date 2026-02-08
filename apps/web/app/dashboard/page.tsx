@@ -54,24 +54,25 @@ export default async function DashboardPage() {
 
   return (
     <main>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <h1 style={{ margin: 0, fontFamily: "var(--font-display)" }}>Dashboard</h1>
-          <p className="muted" style={{ margin: "8px 0 0" }}>
-            Your watched companies.
-          </p>
+      <header className="pageHeader">
+        <div className="kicker">Account</div>
+        <div className="pageTop">
+          <div>
+            <h1 className="pageTitle">Dashboard</h1>
+            <p className="pageLead">Your watched companies.</p>
+          </div>
+          <div className="pageActions">
+            <Link className="btn btnPrimary" href="/companies">
+              Watch another company
+            </Link>
+          </div>
         </div>
-        <Link className="btn btnPrimary" href="/companies">
-          Watch another company
-        </Link>
-      </div>
-
-      <div style={{ height: 18 }} />
+      </header>
 
       {watched.length === 0 ? (
-        <div className="card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 650 }}>No watches yet</div>
-          <div className="muted" style={{ marginTop: 6 }}>
+        <div className="card cardPad">
+          <div className="cardTitle">No watches yet</div>
+          <div className="muted" style={{ marginTop: 10 }}>
             Browse the directory and start tracking a company.
           </div>
           <div style={{ marginTop: 12 }}>
@@ -81,13 +82,7 @@ export default async function DashboardPage() {
           </div>
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: 14,
-          }}
-        >
+        <div className="cardsGrid">
           {watched.map(({ entity, docs }) => (
             <Link key={entity.id} className="companyCard" href={`/companies/${entity.slug}`}>
               <div className="companyName">{entity.name}</div>
@@ -101,4 +96,3 @@ export default async function DashboardPage() {
     </main>
   );
 }
-

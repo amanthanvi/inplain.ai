@@ -35,46 +35,39 @@ export function CompaniesDirectory({ entities }: { entities: EntityOut[] }) {
 
   return (
     <main>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-        <div>
-          <h1 style={{ margin: 0, fontFamily: "var(--font-display)" }}>Companies</h1>
-          <p className="muted" style={{ margin: "8px 0 0" }}>
-            Curated directory. Watch a company to track policy changes.
-          </p>
+      <header className="pageHeader">
+        <div className="kicker">Directory</div>
+        <div className="pageTop">
+          <div>
+            <h1 className="pageTitle">Companies</h1>
+            <p className="pageLead">Curated directory. Watch a company to track policy changes.</p>
+          </div>
+
+          <div className="pageActions">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search companies…"
+              className="input"
+              aria-label="Search companies"
+            />
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="select"
+              aria-label="Filter by category"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c === "all" ? "All categories" : prettyCategory(c)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+      </header>
 
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search companies…"
-            className="input"
-            aria-label="Search companies"
-          />
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="select"
-            aria-label="Filter by category"
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c === "all" ? "All categories" : prettyCategory(c)}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div style={{ height: 18 }} />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 14,
-        }}
-      >
+      <div className="cardsGrid">
         {filtered.map((e) => (
           <Link key={e.id} className="companyCard" href={`/companies/${e.slug}`}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
@@ -91,9 +84,9 @@ export function CompaniesDirectory({ entities }: { entities: EntityOut[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="card" style={{ padding: 18, marginTop: 18 }}>
-          <div style={{ fontWeight: 600 }}>No results</div>
-          <div className="muted" style={{ marginTop: 6 }}>
+        <div className="card cardPad" style={{ marginTop: 18 }}>
+          <div className="cardTitle">No results</div>
+          <div className="muted" style={{ marginTop: 10 }}>
             Try a different search term or category.
           </div>
         </div>
@@ -101,4 +94,3 @@ export function CompaniesDirectory({ entities }: { entities: EntityOut[] }) {
     </main>
   );
 }
-

@@ -598,6 +598,27 @@ a {
   line-height: 1.55;
 }
 
+.pageTop {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.pageActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
 .grid2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
