@@ -48,7 +48,8 @@ export default async function CompanyPage({
   params: { slug: string };
   searchParams: { upgrade?: string; reason?: string };
 }) {
-  const { slug } = params;
+  const { slug } = await Promise.resolve(params);
+  const resolvedSearchParams = await Promise.resolve(searchParams);
 
   const entity = await internalFetch<EntityOut>(`/internal/entities/${slug}`, { cache: "no-store" });
 
@@ -85,8 +86,8 @@ export default async function CompanyPage({
 
   const isWatched = tracked.length > 0;
 
-  const upgradeBlocked = searchParams.upgrade === "1";
-  const upgradeReason = searchParams.reason;
+  const upgradeBlocked = resolvedSearchParams.upgrade === "1";
+  const upgradeReason = resolvedSearchParams.reason;
 
   const upgradeCopy =
     upgradeReason === "check_now_quota"

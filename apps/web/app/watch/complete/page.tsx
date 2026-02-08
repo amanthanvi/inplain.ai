@@ -17,7 +17,8 @@ export default async function WatchCompletePage({
 }: {
   searchParams: { entity?: string | string[] };
 }) {
-  const slug = getEntitySlug(searchParams.entity);
+  const { entity: entityParam } = await Promise.resolve(searchParams);
+  const slug = getEntitySlug(entityParam);
   if (!slug) {
     redirect("/companies");
   }

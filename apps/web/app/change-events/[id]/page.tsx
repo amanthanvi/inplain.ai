@@ -8,6 +8,8 @@ import { internalFetch, type ChangeEventDetailOut } from "@/lib/internal-api";
 export const dynamic = "force-dynamic";
 
 export default async function ChangeEventPage({ params }: { params: { id: string } }) {
+  const { id } = await Promise.resolve(params);
+
   const { userId } = await auth();
   if (!userId) {
     return (
@@ -18,7 +20,7 @@ export default async function ChangeEventPage({ params }: { params: { id: string
     );
   }
 
-  const detail = await internalFetch<ChangeEventDetailOut>(`/internal/change-events/${params.id}`, {
+  const detail = await internalFetch<ChangeEventDetailOut>(`/internal/change-events/${id}`, {
     userId,
     cache: "no-store",
   });
