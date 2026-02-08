@@ -26,7 +26,9 @@ def schedule_due_documents(db: Session, now: datetime) -> int:
     stmt = (
         select(Document)
         .where(
-            Document.status == DocumentStatus.active,
+            Document.status.in_(
+                [DocumentStatus.active, DocumentStatus.blocked_robots, DocumentStatus.error]
+            ),
             Document.deleted_at.is_(None),
             Document.next_check_at <= now,
             ~exists(pending_fetch),
@@ -50,7 +52,10 @@ def schedule_due_documents(db: Session, now: datetime) -> int:
                 run_at=now,
             )
         )
-        doc.next_check_at = now + _schedule_delta(doc.schedule_tier)
+        if doc.status == DocumentStatus.blocked_robots:
+            doc.next_check_at = now + timedelta(days=1)
+        else:
+            doc.next_check_at = now + _schedule_delta(doc.schedule_tier)
         db.add(doc)
 
     db.commit()

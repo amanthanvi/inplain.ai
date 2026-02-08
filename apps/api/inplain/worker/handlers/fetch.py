@@ -1,33 +1,30 @@
 from __future__ import annotations
 
-import hashlib
-import ipaddress
-import socket
 import subprocess
 import tempfile
-import threading
 from datetime import UTC, datetime, timedelta
-from difflib import SequenceMatcher
 from io import BytesIO
 from pathlib import Path
 from shutil import which
-from urllib import robotparser
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin
 
 import httpx
 import pytesseract
 import trafilatura
-from diff_match_patch import diff_match_patch
 from PIL import Image
 from pypdf import PdfReader
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from inplain.db.models.diffs import Diff
 from inplain.db.models.documents import Document
-from inplain.db.models.enums import DocumentStatus, JobQueue, JobStatus, RobotsStatus, ScheduleTier
+from inplain.db.models.enums import DocumentStatus, JobQueue, JobStatus, RobotsStatus
 from inplain.db.models.jobs import Job
-from inplain.db.models.snapshots import Snapshot
+from inplain.worker.handlers.common import (
+    check_robots,
+    enforce_politeness_delay,
+    process_extracted_text,
+    validate_public_http_url,
+)
 
 _MAX_REDIRECTS = 5
 _MAX_RESPONSE_BYTES = 5 * 1024 * 1024
@@ -35,15 +32,6 @@ _CONNECT_TIMEOUT_SECONDS = 5
 _READ_TIMEOUT_SECONDS = 20
 
 _MIN_EXTRACTED_CHARS = 500
-_RETENTION_BY_SCHEDULE: dict[ScheduleTier, timedelta] = {
-    ScheduleTier.daily: timedelta(days=90),
-    ScheduleTier.six_h: timedelta(days=365),
-    ScheduleTier.one_h: timedelta(days=365 * 2),
-}
-
-_ROBOTS_CACHE_TTL = timedelta(hours=24)
-_robots_cache_lock = threading.Lock()
-_robots_cache: dict[str, tuple[datetime, bool]] = {}
 
 
 def run_fetch_job(db: Session, job: Job) -> None:
@@ -56,118 +44,78 @@ def run_fetch_job(db: Session, job: Job) -> None:
 
     now = datetime.now(UTC)
 
-    _validate_public_http_url(doc.url)
+    try:
+        validate_public_http_url(doc.url)
 
-    robots_allowed = _robots_allows(url=doc.url)
-    doc.robots_checked_at = now
-    doc.robots_status = RobotsStatus.allowed if robots_allowed else RobotsStatus.disallowed
-    if not robots_allowed:
-        doc.status = DocumentStatus.blocked_robots
+        decision = check_robots(doc.url)
+        doc.robots_checked_at = now
+        doc.robots_status = RobotsStatus.allowed if decision.allowed else RobotsStatus.disallowed
+        doc.robots_rule = decision.rule if not decision.allowed else None
+        if not decision.allowed:
+            doc.status = DocumentStatus.blocked_robots
+            doc.last_checked_at = now
+            doc.next_check_at = now + timedelta(days=1)
+            db.add(doc)
+            db.flush()
+            return
+
+        enforce_politeness_delay(doc.url)
+
+        fetch = _http_fetch(url=doc.url, etag=doc.etag, last_modified=doc.last_modified)
         doc.last_checked_at = now
-        db.add(doc)
-        return
+        doc.etag = fetch.etag
+        doc.last_modified = fetch.last_modified
 
-    prev_snapshot_id = doc.last_snapshot_id
-
-    fetch = _http_fetch(url=doc.url, etag=doc.etag, last_modified=doc.last_modified)
-    doc.last_checked_at = now
-    doc.etag = fetch.etag
-    doc.last_modified = fetch.last_modified
-
-    if fetch.http_status == 304:
-        db.add(doc)
-        return
-
-    if fetch.http_status in (404, 410):
-        doc.status = DocumentStatus.paused
-        db.add(doc)
-        return
-
-    if fetch.http_status < 200 or fetch.http_status >= 300:
-        doc.status = DocumentStatus.error
-        db.add(doc)
-        return
-
-    extracted_text = _extract_text(fetch.content_bytes, content_type=fetch.content_type)
-    if len(extracted_text) < _MIN_EXTRACTED_CHARS:
-        _enqueue_render(db=db, doc=doc, now=now)
-        db.add(doc)
-        return
-
-    extracted_sha = hashlib.sha256(extracted_text.encode("utf-8")).hexdigest()
-
-    if prev_snapshot_id is not None:
-        prev_sha = db.execute(
-            select(Snapshot.extracted_sha256).where(Snapshot.id == prev_snapshot_id)
-        ).scalar_one_or_none()
-        if prev_sha == extracted_sha:
+        if fetch.http_status == 304:
+            doc.status = DocumentStatus.active
             db.add(doc)
             return
 
-    retention = _RETENTION_BY_SCHEDULE.get(doc.schedule_tier, timedelta(days=90))
-    snapshot = Snapshot(
-        document_id=doc.id,
-        fetched_at=now,
-        fetch_method="http",
-        http_status=fetch.http_status,
-        content_type=fetch.content_type,
-        extracted_text=extracted_text,
-        extracted_sha256=extracted_sha,
-        extract_version=1,
-        byte_size_extracted=len(extracted_text.encode("utf-8")),
-        retention_delete_at=now + retention,
-    )
-    db.add(snapshot)
-    db.flush()
+        if fetch.http_status in (404, 410):
+            doc.status = DocumentStatus.paused
+            db.add(doc)
+            return
 
-    doc.last_snapshot_id = snapshot.id
-    doc.status = DocumentStatus.active
-    db.add(doc)
+        if fetch.http_status < 200 or fetch.http_status >= 300:
+            doc.status = DocumentStatus.error
+            db.add(doc)
+            return
 
-    if prev_snapshot_id is None:
-        return
+        extracted_text = _extract_text(fetch.content_bytes, content_type=fetch.content_type)
+        if len(extracted_text) < _MIN_EXTRACTED_CHARS:
+            _enqueue_render(db=db, doc=doc, now=now)
+            doc.status = DocumentStatus.active
+            db.add(doc)
+            return
 
-    prev_text = db.execute(
-        select(Snapshot.extracted_text).where(Snapshot.id == prev_snapshot_id)
-    ).scalar_one_or_none()
-    if prev_text is None:
-        return
+        try:
+            process_extracted_text(
+                db,
+                doc=doc,
+                extracted_text=extracted_text,
+                http_status=fetch.http_status,
+                content_type=fetch.content_type,
+                fetch_method="http",
+                now=now,
+                robots_status=doc.robots_status,
+                robots_rule=doc.robots_rule,
+            )
+        except ValueError as exc:
+            if str(exc) == "extracted text too small":
+                _enqueue_render(db=db, doc=doc, now=now)
+                doc.status = DocumentStatus.active
+                db.add(doc)
+                return
+            raise
 
-    ratio = SequenceMatcher(None, prev_text, extracted_text).ratio()
-    change_score = max(0.0, min(1.0, 1.0 - ratio))
-
-    dmp = diff_match_patch()
-    diffs = dmp.diff_main(prev_text, extracted_text)
-    dmp.diff_cleanupSemantic(diffs)
-    changed_chars = sum(len(t) for op, t in diffs if op != 0)
-
-    if changed_chars < 500 and change_score < 0.02:
-        return
-
-    existing_diff = db.execute(
-        select(Diff.id).where(
-            Diff.from_snapshot_id == prev_snapshot_id,
-            Diff.to_snapshot_id == snapshot.id,
-        )
-    ).scalar_one_or_none()
-    if existing_diff is not None:
-        return
-
-    db.add(
-        Job(
-            queue=JobQueue.diff,
-            clerk_user_id=doc.clerk_user_id,
-            document_id=doc.id,
-            status=JobStatus.queued,
-            run_at=now,
-            payload={
-                "from_snapshot_id": str(prev_snapshot_id),
-                "to_snapshot_id": str(snapshot.id),
-                "change_score": change_score,
-                "changed_chars": changed_chars,
-            },
-        )
-    )
+        doc.status = DocumentStatus.active
+        db.add(doc)
+    except Exception:
+        doc.status = DocumentStatus.error
+        doc.last_checked_at = now
+        db.add(doc)
+        db.commit()
+        raise
 
 
 def _enqueue_render(db: Session, doc: Document, now: datetime) -> None:
@@ -229,7 +177,7 @@ def _http_fetch(url: str, etag: str | None, last_modified: str | None) -> _Fetch
                 if not location:
                     break
                 current_url = urljoin(current_url, location)
-                _validate_public_http_url(current_url)
+                validate_public_http_url(current_url)
                 continue
 
             content = resp.content
@@ -255,7 +203,7 @@ def _extract_text(content: bytes, content_type: str | None) -> str:
     extracted = trafilatura.extract(html)
     if not extracted:
         raise ValueError("extraction failed")
-    return _strip_cosmetic(extracted)
+    return str(extracted).strip()
 
 
 def _extract_pdf_text(content: bytes) -> str:
@@ -263,14 +211,14 @@ def _extract_pdf_text(content: bytes) -> str:
     parts: list[str] = []
     for page in reader.pages:
         parts.append(page.extract_text() or "")
-    extracted = _strip_cosmetic("\n".join(parts))
+    extracted = "\n".join(parts).strip()
     if len(extracted) >= _MIN_EXTRACTED_CHARS:
         return extracted
 
     # OCR fallback (best effort): requires pdftoppm + tesseract.
     if which("pdftoppm") and which("tesseract"):
         ocr_text = _ocr_pdf(content)
-        ocr_text = _strip_cosmetic(ocr_text)
+        ocr_text = ocr_text.strip()
         if len(ocr_text) >= _MIN_EXTRACTED_CHARS:
             return ocr_text
 
@@ -297,81 +245,3 @@ def _ocr_pdf(content: bytes) -> str:
             with Image.open(png) as img:
                 parts.append(pytesseract.image_to_string(img))
         return "\n".join(parts)
-
-
-def _strip_cosmetic(text: str) -> str:
-    # Minimal normalizer; refined later.
-    return "\n".join(line.rstrip() for line in text.splitlines()).strip()
-
-
-def _robots_allows(url: str) -> bool:
-    parts = urlsplit(url)
-    if not parts.scheme or not parts.hostname:
-        return False
-
-    cache_key = f"{parts.scheme}://{parts.hostname}"
-    now = datetime.now(UTC)
-
-    with _robots_cache_lock:
-        cached = _robots_cache.get(cache_key)
-        if cached and now - cached[0] < _ROBOTS_CACHE_TTL:
-            return cached[1]
-
-    robots_url = f"{cache_key}/robots.txt"
-    timeout = httpx.Timeout(connect=_CONNECT_TIMEOUT_SECONDS, read=_READ_TIMEOUT_SECONDS)
-    allowed = True
-    try:
-        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
-            resp = client.get(robots_url, headers={"user-agent": "inplain.ai (+https://inplain.ai)"})
-            if resp.status_code >= 400:
-                allowed = True
-            else:
-                rp = robotparser.RobotFileParser()
-                rp.parse(resp.text.splitlines())
-                allowed = bool(rp.can_fetch("inplain.ai", url))
-    except Exception:  # noqa: BLE001
-        allowed = True
-
-    with _robots_cache_lock:
-        _robots_cache[cache_key] = (now, allowed)
-
-    return allowed
-
-
-def _validate_public_http_url(url: str) -> None:
-    parts = urlsplit(url)
-    if parts.scheme not in ("http", "https"):
-        raise ValueError("invalid scheme")
-    if parts.username or parts.password:
-        raise ValueError("userinfo not allowed")
-    if not parts.hostname:
-        raise ValueError("missing hostname")
-
-    hostname = parts.hostname
-    try:
-        ipaddress.ip_address(hostname)
-    except ValueError:
-        pass
-    else:
-        raise ValueError("ip literal not allowed")
-
-    if parts.port is not None:
-        if parts.scheme == "http" and parts.port != 80:
-            raise ValueError("non-standard port not allowed")
-        if parts.scheme == "https" and parts.port != 443:
-            raise ValueError("non-standard port not allowed")
-
-    addrs = socket.getaddrinfo(hostname, parts.port or (443 if parts.scheme == "https" else 80))
-    for _, _, _, _, sockaddr in addrs:
-        ip = sockaddr[0]
-        ip_obj = ipaddress.ip_address(ip)
-        if (
-            ip_obj.is_private
-            or ip_obj.is_loopback
-            or ip_obj.is_link_local
-            or ip_obj.is_multicast
-            or ip_obj.is_reserved
-            or ip_obj.is_unspecified
-            or ip == "169.254.169.254"
-        ):
-            raise ValueError("blocked ip range")

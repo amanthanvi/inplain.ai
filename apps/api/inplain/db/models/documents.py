@@ -54,6 +54,7 @@ class Document(Base):
         default=RobotsStatus.unknown,
         server_default=RobotsStatus.unknown.value,
     )
+    robots_rule: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -70,9 +71,11 @@ Index(
     postgresql_where=Document.deleted_at.is_(None),
 )
 Index(
-    "ix_documents_next_check_at_active",
+    "ix_documents_next_check_at_schedulable",
     Document.next_check_at,
-    postgresql_where=(Document.status == DocumentStatus.active) & Document.deleted_at.is_(None),
+    postgresql_where=Document.status.in_(
+        [DocumentStatus.active, DocumentStatus.blocked_robots, DocumentStatus.error]
+    )
+    & Document.deleted_at.is_(None),
 )
 Index("ix_documents_clerk_user_id_status", Document.clerk_user_id, Document.status)
-

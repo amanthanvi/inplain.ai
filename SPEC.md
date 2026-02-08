@@ -343,12 +343,13 @@ A tracked URL for a specific user + entity combination.
 | `last_modified` | text | Nullable, for conditional GET |
 | `robots_checked_at` | timestamptz | Nullable |
 | `robots_status` | text | `unknown` / `allowed` / `disallowed` |
+| `robots_rule` | text | Nullable, specific blocking rule (e.g. `Disallow: /privacy`) |
 | `created_at` | timestamptz | |
 | `deleted_at` | timestamptz | Nullable, soft-delete |
 
 Indexes:
 - `(clerk_user_id, entity_id, doc_type)` unique where `deleted_at IS NULL`
-- `(next_check_at)` where `status = 'active' AND deleted_at IS NULL` (scheduler)
+- `(next_check_at)` where `status IN ('active','blocked_robots','error') AND deleted_at IS NULL` (scheduler)
 - `(clerk_user_id, status)`
 
 #### `snapshots`

@@ -48,6 +48,7 @@ class DocumentOut(BaseModel):
     last_modified: str | None
     robots_checked_at: datetime | None
     robots_status: RobotsStatus
+    robots_rule: str | None
     created_at: datetime
     deleted_at: datetime | None
 
