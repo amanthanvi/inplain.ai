@@ -355,6 +355,11 @@ a {
   color: var(--muted);
 }
 
+.finePrint {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .siteFooter {
   border-top: 1px solid var(--border);
   padding: 22px 0;

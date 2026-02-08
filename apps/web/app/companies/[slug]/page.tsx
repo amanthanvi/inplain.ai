@@ -171,6 +171,9 @@ export default async function CompanyPage({
                 Watch changes
               </Link>
             </div>
+            <div className="muted finePrint" style={{ marginTop: 10 }}>
+              Informational only. Not legal advice.
+            </div>
           </div>
         ) : tracked.length === 0 ? (
           <div className="card cardPad">
@@ -182,6 +185,9 @@ export default async function CompanyPage({
               <Link className="btn btnPrimary" href={`/watch/complete?entity=${entity.slug}`}>
                 Watch changes
               </Link>
+            </div>
+            <div className="muted finePrint" style={{ marginTop: 10 }}>
+              Informational only. Not legal advice.
             </div>
           </div>
         ) : (
