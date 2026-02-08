@@ -40,7 +40,13 @@ function formatStatus(doc: DocumentOut) {
   return "Active";
 }
 
-export default async function CompanyPage({ params }: { params: { slug: string } }) {
+export default async function CompanyPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams: { upgrade?: string };
+}) {
   const { slug } = params;
 
   const entity = await internalFetch<EntityOut>(`/internal/entities/${slug}`, { cache: "no-store" });
@@ -78,8 +84,29 @@ export default async function CompanyPage({ params }: { params: { slug: string }
 
   const isWatched = tracked.length > 0;
 
+  const upgradeBlocked = searchParams.upgrade === "1";
+
   return (
     <main>
+      {upgradeBlocked ? (
+        <>
+          <div className="card" style={{ padding: 16, borderColor: "rgba(255,77,46,0.35)" }}>
+            <div style={{ fontWeight: 650 }}>Upgrade required</div>
+            <div className="muted" style={{ marginTop: 6 }}>
+              You’ve reached the Free tier limit. Upgrade to track more documents.
+            </div>
+            <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link className="btn btnPrimary" href="/pricing">
+                See pricing
+              </Link>
+              <Link className="btn" href="/dashboard">
+                Go to dashboard
+              </Link>
+            </div>
+          </div>
+          <div style={{ height: 18 }} />
+        </>
+      ) : null}
       <div className="card" style={{ padding: 18 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
           <div style={{ minWidth: 0 }}>
