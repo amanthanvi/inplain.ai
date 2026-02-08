@@ -152,7 +152,7 @@ Acceptance:
   - worker pipeline tests (mock OpenRouter)
   - job queue claiming tests
   - SSRF + citation validation unit tests
-- [ ] CI green (lint/typecheck/tests).
+- [x] CI green (lint/typecheck/tests).
 - [x] Backup workflow + restore script documented and runnable.
 - [x] Minimal runbooks / env templates for Railway.
 
@@ -180,3 +180,5 @@ Acceptance:
 - 2026-02-08: Added DB-backed acceptance tests for AC-5…AC-7 and wired Postgres service into CI.
 - 2026-02-08: Added pipeline/webhook/scheduler integration tests (DB-backed) and internal documents endpoint coverage.
 - 2026-02-08: CI runs are currently blocked from starting due to GitHub billing/spending limits; local gate passes.
+- 2026-02-08: GitHub Actions is unblocked; CI is green on `refresh` (lint/test/typecheck).
+- 2026-02-08: Railway production deploy refreshed (web/api/worker/renderer). Postgres reset to clean-slate schema; legacy scheduler service stopped.

@@ -270,13 +270,16 @@ Sections:
 │                                             │           │
 │  ┌──────────────┐                    ┌──────▼────────┐  │
 │  │  Worker       │◄──── polls ──────│  Postgres      │  │
-│  │  (fetch/diff/ │────── writes ───→│  (DB + queue)  │  │
-│  │   summarize/  │                    └───────────────┘  │
-│  │   render)     │                                      │
-│  └──────┬────────┘                    ┌───────────────┐  │
-│         │                             │  Redis         │  │
-│         └──── cache ────────────────→│  (cache only)  │  │
-│                                       └───────────────┘  │
+│  │  (scheduler + │────── writes ───→│  (DB + queue)  │  │
+│  │   jobs)       │                    └───────────────┘  │
+│  └──────┬────────┘                                      │
+│         │                             ┌───────────────┐  │
+│         └──── cache ────────────────→│  Redis         │  │
+│                                       │  (cache only)  │  │
+│  ┌──────────────┐                    └───────────────┘  │
+│  │  Renderer     │◄──── polls ──────┐                    │
+│  │  (render)     │────── writes ───→│                    │
+│  └──────────────┘                   │                    │
 └─────────────────────────────────────────────────────────┘
                  │
                  ▼ External (outbound HTTPS)
@@ -286,17 +289,18 @@ Sections:
     └────────┘ └────────────┘ └──────────┘
 ```
 
-**Railway services** (4 services + 2 add-ons):
+**Railway services** (5 services + 2 add-ons):
 1. `web` (public) — Next.js via `next start`
 2. `api` (internal, private network) — FastAPI + Uvicorn
-3. `worker` (internal) — Python process: scheduler loop + job executor (fetch, render, diff, summarize, notify, cleanup)
-4. `postgres` — Railway Postgres (DB + job queue + snapshot storage)
-5. `redis` — Railway Redis (caching + robots.txt decisions; NOT for queue)
+3. `worker` (internal) — Python process: scheduler loop + job executor (fetch, diff, summarize, notify, cleanup)
+4. `renderer` (internal) — Python process: render queue only (Playwright)
+5. `postgres` — Railway Postgres (DB + job queue + snapshot storage)
+6. `redis` — Railway Redis (caching + robots.txt decisions; NOT for queue)
 
 Key simplifications from v0.1.0:
 - No Celery/Beat/Flower → Postgres `SELECT FOR UPDATE SKIP LOCKED` queue
 - No S3/R2 → Postgres TOAST compression for snapshot text
-- No separate renderer service → same worker process, separate queue with concurrency limits
+- Renderer runs as a separate service (Railway) to isolate Playwright deps + scale render capacity independently
 - No separate scheduler service → worker runs scheduler loop
 - FastAPI is internal-only (private network); clients never hit it directly
 
@@ -962,6 +966,7 @@ All decisions from the 9-round interview, organized by domain.
 | 2026-02-07 | Railway deployment | Fly.io, Render, Vercel + Railway | Single platform; private networking; managed Postgres |
 | 2026-02-07 | Postgres job queue (SKIP LOCKED) | Celery + Redis, BullMQ, SQS | Eliminates Redis-as-queue dependency; jobs table IS the queue; simpler ops |
 | 2026-02-07 | Same worker process for render | Separate renderer service | Simpler deployment; concurrency-limited queue protects resources |
+| 2026-02-08 | Separate renderer service (Railway) | Same worker process for render | Isolates Playwright/browser deps; enables independent scaling for render-heavy workloads |
 | 2026-02-07 | Server Actions + hey-api client | Direct client → FastAPI, tRPC | Type-safe; FastAPI stays internal; single auth boundary |
 | 2026-02-07 | Progressive auth (single app) | Separate /app route group, subdomain split | GitHub-style; less boilerplate; shared layout/nav |
 

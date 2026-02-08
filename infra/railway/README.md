@@ -6,7 +6,8 @@ Deployment notes for `SPEC.md` v0.2.0 (target: v0.1.0 review package).
 
 - `web` (public) — Next.js marketing + app (Server Actions BFF)
 - `api` (private) — FastAPI internal service (DB reads/writes)
-- `worker` (private) — Python worker (scheduler + job executor)
+- `worker` (private) — Python worker (scheduler + non-render job executor)
+- `renderer` (private) — Python worker (render-only; Playwright installed on start)
 - `postgres` — primary DB + job queue (`jobs` table)
 - `redis` — cache only (robots.txt decisions; politeness tracking)
 
@@ -15,10 +16,14 @@ Deployment notes for `SPEC.md` v0.2.0 (target: v0.1.0 review package).
 Shared:
 - `INTERNAL_SERVICE_TOKEN` — must match between `web` and `api`
 
-`api` + `worker`:
-- `DATABASE_URL` — SQLAlchemy URL (psycopg3), e.g. `postgresql+psycopg://USER:PASS@HOST:5432/DB`
+`api` + `worker` + `renderer`:
+- `DATABASE_URL` — Railway provides `postgresql://...`; the app normalizes to `postgresql+psycopg://...` at runtime.
 - `REDIS_URL` — optional but recommended (robots cache); e.g. `redis://HOST:6379/0`
+
+`worker` + `renderer`:
 - `OPENROUTER_API_KEY` — required for AI summaries
+
+`api`:
 - `CLERK_WEBHOOK_SECRET` — required for Clerk webhook verification
 
 `web`:
@@ -33,25 +38,32 @@ Create a Clerk webhook pointing to:
 
 Set `CLERK_WEBHOOK_SECRET` on `api`.
 
-## Build / start commands (suggested)
+## Railpack notes
 
-Railway can run these per service:
+- Python services build from repo root using `requirements.txt` (kept in sync with `apps/api/requirements.txt`).
+- Web deploy uses `apps/web` as the root directory (so `package.json` is at the build root).
+
+## Start commands
+
+Configured via `RAILPACK_START_CMD` per service:
 
 `web`:
-- build: `npm --prefix apps/web ci && npm --prefix apps/web run build`
-- start: `npm --prefix apps/web run start`
+- `npm run start -- -p $PORT`
 
 `api`:
-- build: `python -m pip install -r apps/api/requirements.txt`
-- start: `PYTHONPATH=apps/api uvicorn inplain.api.main:app --host 0.0.0.0 --port $PORT`
+- `PYTHONPATH=apps/api alembic -c apps/api/alembic.ini upgrade head && PYTHONPATH=apps/api uvicorn inplain.api.main:app --host 0.0.0.0 --port $PORT`
 
 `worker`:
-- build: `python -m pip install -r apps/api/requirements.txt`
-- start: `PYTHONPATH=apps/api python -m inplain.worker.main`
+- `PYTHONPATH=apps/api python -m inplain.worker.main`
+- `INPLAIN_WORKER_QUEUES=fetch,diff,summarize,notify,cleanup`
 
-If you enable JS-render fallback, install Playwright browsers during build for `worker`:
+`renderer`:
+- `python -m playwright install chromium && PYTHONPATH=apps/api python -m inplain.worker.main`
+- `INPLAIN_WORKER_QUEUES=render`
+- `INPLAIN_WORKER_ENABLE_SCHEDULER=0`
+- `INPLAIN_WORKER_ENABLE_STALE_LOCK_CLEANUP=0`
 
-- `python -m playwright install chromium`
+Note: the first `renderer` boot downloads Playwright Chromium/ffmpeg (~300MB).
 
 ## Backups
 
