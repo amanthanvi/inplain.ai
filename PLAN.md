@@ -76,10 +76,10 @@ Acceptance:
 
 ### M4 — Job queue + worker runtime (Postgres SKIP LOCKED, SPEC Appendix B)
 
-- [ ] Implement `jobs` claiming loop per queue (`fetch`, `render`, `diff`, `summarize`, `notify`, `cleanup`).
-- [ ] Scheduler loop (every 60s) enqueues due documents; dedupes; sets next check.
-- [ ] Retry/backoff + dead-letter semantics per SPEC 6.3.
-- [ ] Stale-lock cleanup (`running` + `locked_at` too old → requeue).
+- [x] Implement `jobs` claiming loop per queue (`fetch`, `render`, `diff`, `summarize`, `notify`, `cleanup`).
+- [x] Scheduler loop (every 60s) enqueues due documents; dedupes; sets next check.
+- [x] Retry/backoff + dead-letter semantics per SPEC 6.3 (baseline backoff; refined per-queue later).
+- [x] Stale-lock cleanup (`running` + `locked_at` too old → requeue).
 
 Acceptance:
 - Due documents reliably enqueue fetch jobs without duplication.
@@ -166,3 +166,4 @@ Acceptance:
 - 2026-02-08: Scaffolded monorepo + CI + golden commands (web/api skeletons; env templates).
 - 2026-02-08: Implemented initial Postgres schema + Alembic migration; `catalog.json` seeds `entities` via upsert.
 - 2026-02-08: Implemented internal FastAPI endpoints + service-token auth skeleton (entities/documents/change events/notifications/admin).
+- 2026-02-08: Implemented Postgres job queue + scheduler loops (SKIP LOCKED claim, retries, stale-lock cleanup).
