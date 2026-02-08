@@ -179,3 +179,4 @@ Acceptance:
 - 2026-02-08: Added Clerk `has()`-based entitlements (doc limit + check-now quota) and usage meters; added `/internal/usage`.
 - 2026-02-08: Added DB-backed acceptance tests for AC-5…AC-7 and wired Postgres service into CI.
 - 2026-02-08: Added pipeline/webhook/scheduler integration tests (DB-backed) and internal documents endpoint coverage.
+- 2026-02-08: CI runs are currently blocked from starting due to GitHub billing/spending limits; local gate passes.
