@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import threading
 from datetime import UTC, datetime, timedelta
+from difflib import SequenceMatcher
 from io import BytesIO
 from pathlib import Path
 from shutil import which
@@ -16,11 +17,13 @@ from urllib.parse import urljoin, urlsplit
 import httpx
 import pytesseract
 import trafilatura
+from diff_match_patch import diff_match_patch
 from PIL import Image
 from pypdf import PdfReader
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from inplain.db.models.diffs import Diff
 from inplain.db.models.documents import Document
 from inplain.db.models.enums import DocumentStatus, JobQueue, JobStatus, RobotsStatus, ScheduleTier
 from inplain.db.models.jobs import Job
@@ -121,7 +124,50 @@ def run_fetch_job(db: Session, job: Job) -> None:
     doc.status = DocumentStatus.active
     db.add(doc)
 
-    # TODO(v0.1.0): meaningful-change detection + enqueue diff job
+    if prev_snapshot_id is None:
+        return
+
+    prev_text = db.execute(
+        select(Snapshot.extracted_text).where(Snapshot.id == prev_snapshot_id)
+    ).scalar_one_or_none()
+    if prev_text is None:
+        return
+
+    ratio = SequenceMatcher(None, prev_text, extracted_text).ratio()
+    change_score = max(0.0, min(1.0, 1.0 - ratio))
+
+    dmp = diff_match_patch()
+    diffs = dmp.diff_main(prev_text, extracted_text)
+    dmp.diff_cleanupSemantic(diffs)
+    changed_chars = sum(len(t) for op, t in diffs if op != 0)
+
+    if changed_chars < 500 and change_score < 0.02:
+        return
+
+    existing_diff = db.execute(
+        select(Diff.id).where(
+            Diff.from_snapshot_id == prev_snapshot_id,
+            Diff.to_snapshot_id == snapshot.id,
+        )
+    ).scalar_one_or_none()
+    if existing_diff is not None:
+        return
+
+    db.add(
+        Job(
+            queue=JobQueue.diff,
+            clerk_user_id=doc.clerk_user_id,
+            document_id=doc.id,
+            status=JobStatus.queued,
+            run_at=now,
+            payload={
+                "from_snapshot_id": str(prev_snapshot_id),
+                "to_snapshot_id": str(snapshot.id),
+                "change_score": change_score,
+                "changed_chars": changed_chars,
+            },
+        )
+    )
 
 
 def _enqueue_render(db: Session, doc: Document, now: datetime) -> None:
