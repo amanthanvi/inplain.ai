@@ -9,37 +9,32 @@ function clerkEnabled() {
 export default function PricingPage() {
   return (
     <main>
-      <h1 style={{ margin: 0, fontFamily: "var(--font-display)" }}>Pricing</h1>
-      <p className="muted" style={{ margin: "10px 0 0" }}>
-        Start free. Upgrade when you need more coverage and faster checks.
-      </p>
+      <header className="pageHeader">
+        <div className="kicker">Pricing</div>
+        <h1 className="pageTitle">Start free. Upgrade when you need coverage.</h1>
+        <p className="pageLead">
+          Clerk Billing powers checkout. This page reflects the current target quotas in{" "}
+          <span className="pill">SPEC v0.2.0</span>.
+        </p>
+      </header>
 
-      <div style={{ height: 18 }} />
-
-      <div className="card" style={{ padding: 18 }}>
-        <div style={{ fontWeight: 700 }}>Tier limits (SPEC v0.2.0)</div>
-        <div className="muted" style={{ marginTop: 6 }}>
-          Clerk Billing powers checkout; this table shows the current target quotas.
-        </div>
+      <section className="card cardPad">
+        <div className="cardTitle">Tier limits</div>
+        <p className="muted" style={{ margin: "10px 0 0" }}>
+          If you’re just getting started, browse the directory and watch a few companies. Upgrade
+          for faster checks, rendering, and more summary capacity.
+        </p>
 
         <div style={{ height: 12 }} />
 
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <div className="tableWrap">
+          <table className="pricingTable">
             <thead>
               <tr>
-                <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>
-                  Feature / Quota
-                </th>
-                <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>
-                  Free
-                </th>
-                <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>
-                  Pro
-                </th>
-                <th style={{ textAlign: "left", padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>
-                  Business
-                </th>
+                <th>Feature / Quota</th>
+                <th>Free</th>
+                <th>Pro</th>
+                <th>Business</th>
               </tr>
             </thead>
             <tbody>
@@ -53,12 +48,10 @@ export default function PricingPage() {
                 ["Export (JSON)", "Last 10 events", "Full", "Full"],
               ].map(([k, a, b, c]) => (
                 <tr key={k}>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" }}>
-                    {k}
-                  </td>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{a}</td>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{b}</td>
-                  <td style={{ padding: "10px 8px", borderBottom: "1px solid var(--border)" }}>{c}</td>
+                  <td className="pricingKey">{k}</td>
+                  <td>{a}</td>
+                  <td>{b}</td>
+                  <td>{c}</td>
                 </tr>
               ))}
             </tbody>
@@ -75,21 +68,19 @@ export default function PricingPage() {
             Go to dashboard
           </Link>
         </div>
-      </div>
-
-      <div style={{ height: 18 }} />
+      </section>
 
       {clerkEnabled() ? (
-        <section>
-          <h2 style={{ margin: "0 0 10px", fontFamily: "var(--font-display)" }}>Checkout</h2>
-          <div className="card" style={{ padding: 18 }}>
+        <section className="section">
+          <h2 className="sectionTitle">Checkout</h2>
+          <div className="card cardPad">
             <PricingTableClient />
           </div>
         </section>
       ) : (
-        <div className="card" style={{ padding: 16 }}>
-          <div style={{ fontWeight: 650 }}>Checkout not configured</div>
-          <div className="muted" style={{ marginTop: 6 }}>
+        <div className="card cardPad">
+          <div className="cardTitle">Checkout not configured</div>
+          <div className="muted" style={{ marginTop: 10 }}>
             Set Clerk environment variables to enable the Billing UI.
           </div>
         </div>
