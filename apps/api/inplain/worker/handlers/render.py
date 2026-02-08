@@ -13,11 +13,11 @@ from playwright.sync_api import (
 from playwright.sync_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from inplain.db.models.documents import Document
-from inplain.db.models.enums import DocumentStatus, RobotsStatus
+from inplain.db.models.enums import DocumentStatus, JobQueue, JobStatus, RobotsStatus, ScheduleTier
 from inplain.db.models.jobs import Job
 from inplain.worker.handlers.common import (
     check_robots,
@@ -44,6 +44,17 @@ def run_render_job(db: Session, *, job: Job) -> None:
 
     try:
         validate_public_http_url(doc.url)
+
+        if _over_render_quota(
+            db=db,
+            clerk_user_id=doc.clerk_user_id,
+            schedule_tier=doc.schedule_tier,
+        ):
+            doc.status = DocumentStatus.error
+            doc.last_checked_at = now
+            db.add(doc)
+            db.flush()
+            return
 
         decision = check_robots(doc.url)
         doc.robots_checked_at = now
@@ -87,6 +98,42 @@ def run_render_job(db: Session, *, job: Job) -> None:
         db.add(doc)
         db.commit()
         raise
+
+
+def _over_render_quota(*, db: Session, clerk_user_id: str, schedule_tier: ScheduleTier) -> bool:
+    now = datetime.now(UTC)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    match schedule_tier:
+        case ScheduleTier.daily:
+            limit = 0
+        case ScheduleTier.six_h:
+            limit = 200
+        case ScheduleTier.one_h:
+            limit = 2000
+        case _:
+            limit = 0
+
+    if limit == 0:
+        return True
+
+    used = db.execute(
+        select(func.count(Job.id)).where(
+            Job.queue == JobQueue.render,
+            Job.clerk_user_id == clerk_user_id,
+            Job.created_at >= month_start,
+            Job.status.in_(
+                [
+                    JobStatus.queued,
+                    JobStatus.running,
+                    JobStatus.succeeded,
+                    JobStatus.failed,
+                    JobStatus.dead,
+                ]
+            ),
+        )
+    ).scalar_one()
+    return int(used or 0) > limit
 
 
 def _render_html(*, url: str, start: float) -> str:

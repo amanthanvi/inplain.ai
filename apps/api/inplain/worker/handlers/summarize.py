@@ -6,18 +6,19 @@ from datetime import UTC, datetime
 from typing import Any
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from inplain.db.models.change_events import ChangeEvent
 from inplain.db.models.diffs import Diff
 from inplain.db.models.documents import Document
-from inplain.db.models.enums import JobQueue, JobStatus, SummaryStatus
+from inplain.db.models.enums import JobQueue, JobStatus, ScheduleTier, SummaryStatus
 from inplain.db.models.jobs import Job
 from inplain.settings import settings
 
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 _PROMPT_VERSION = 1
+_MAX_HUNKS_FOR_LLM = 20
 _MODEL_CHAIN = [
     "anthropic/claude-sonnet-4-5",
     "openai/gpt-5.2",
@@ -36,6 +37,14 @@ def run_summarize_job(db: Session, *, job: Job) -> None:
     doc = db.execute(select(Document).where(Document.id == change_event.document_id)).scalar_one()
     diff = db.execute(select(Diff).where(Diff.id == change_event.diff_id)).scalar_one()
 
+    if _over_summary_quota(db=db, clerk_user_id=doc.clerk_user_id, schedule_tier=doc.schedule_tier):
+        change_event.summary_status = SummaryStatus.skipped_quota
+        change_event.summary_error = "summary quota exceeded"
+        change_event.summary_prompt_version = _PROMPT_VERSION
+        db.add(change_event)
+        _enqueue_notify(db=db, doc=doc, change_event_id=change_event.id)
+        return
+
     if not settings.openrouter_api_key:
         change_event.summary_status = SummaryStatus.failed
         change_event.summary_error = "OPENROUTER_API_KEY not set"
@@ -44,7 +53,8 @@ def run_summarize_job(db: Session, *, job: Job) -> None:
         _enqueue_notify(db=db, doc=doc, change_event_id=change_event.id)
         return
 
-    prompt = _build_prompt(diff_hunks=diff.diff_hunks)
+    llm_hunks = diff.diff_hunks[:_MAX_HUNKS_FOR_LLM]
+    prompt = _build_prompt(diff_hunks=llm_hunks)
 
     summary: dict[str, Any] | None = None
     model_used: str | None = None
@@ -165,3 +175,29 @@ def _validate_citations(*, diff_hunks: list[dict[str, Any]], bullets: list[Any])
                 raise ValueError("invalid hunkId")
             if not quote or quote not in by_id[hid]:
                 raise ValueError("invalid quote")
+
+
+def _over_summary_quota(*, db: Session, clerk_user_id: str, schedule_tier: ScheduleTier) -> bool:
+    now = datetime.now(UTC)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    match schedule_tier:
+        case ScheduleTier.daily:
+            limit = 10
+        case ScheduleTier.six_h:
+            limit = 500
+        case ScheduleTier.one_h:
+            limit = 5000
+        case _:
+            limit = 10
+
+    used = db.execute(
+        select(func.count(ChangeEvent.id))
+        .join(Document, Document.id == ChangeEvent.document_id)
+        .where(
+            Document.clerk_user_id == clerk_user_id,
+            ChangeEvent.created_at >= month_start,
+            ChangeEvent.summary_status.in_([SummaryStatus.completed, SummaryStatus.failed]),
+        )
+    ).scalar_one()
+    return int(used or 0) >= limit

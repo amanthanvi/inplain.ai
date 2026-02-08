@@ -117,7 +117,7 @@ Acceptance:
 
 - [x] OpenRouter summarizer with fallback chain (SPEC Appendix C).
 - [x] Strict JSON schema output + runtime citation validation.
-- [ ] Quota enforcement (tier-based); summary skip when over quota (diff still available).
+- [x] Quota enforcement (tier-based); summary skip when over quota (diff still available).
 - [x] In-app notification record created per meaningful change event.
 
 Acceptance:
@@ -171,3 +171,4 @@ Acceptance:
 - 2026-02-08: Implemented diff generation + change events + summary/notify jobs (diff-match-patch hunks; OpenRouter summary w/ citation validation).
 - 2026-02-08: Implemented Playwright render jobs + daily cleanup jobs (retention deletes snapshots; hard-deletes fully expired soft-deleted documents).
 - 2026-02-08: Added standard API error envelope + Clerk webhook signature verification (Svix) with `user.deleted` purge.
+- 2026-02-08: Added worker-side quota enforcement (render + summary) based on `schedule_tier`.
