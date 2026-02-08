@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { CheckAuthorizationFromSessionClaims } from "@clerk/types";
+
 export type Tier = "free" | "pro" | "business";
 
 export type Entitlements = {
@@ -18,7 +20,7 @@ function planKeys() {
   };
 }
 
-export function getEntitlementsForHas(has: (params: any) => boolean): Entitlements {
+export function getEntitlementsForHas(has: CheckAuthorizationFromSessionClaims): Entitlements {
   const plans = planKeys();
 
   const tier: Tier = has({ plan: plans.business })
