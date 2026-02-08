@@ -15,7 +15,7 @@
     "website_url": "https://apple.com",
     "category": "productivity",
     "policy_urls": {
-      "privacy": "https://www.apple.com/legal/privacy/"
+      "privacy": "https://www.apple.com/legal/privacy/en-ww/"
     }
   },
   {
@@ -29,4 +29,3 @@
     }
   }
 ]
-
