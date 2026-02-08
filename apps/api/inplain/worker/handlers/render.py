@@ -29,7 +29,12 @@ from inplain.worker.handlers.common import (
 _NAV_TIMEOUT_MS = 30_000
 _TOTAL_BUDGET_SECONDS = 45
 
-_USER_AGENT = "inplain.ai (+https://inplain.ai)"
+# Use a browser UA to avoid common WAF blocks on datacenter IPs.
+_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/122.0.0.0 Safari/537.36"
+)
 
 
 def run_render_job(db: Session, *, job: Job) -> None:

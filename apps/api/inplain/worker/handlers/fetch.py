@@ -159,8 +159,12 @@ class _FetchResult:
 def _http_fetch(url: str, etag: str | None, last_modified: str | None) -> _FetchResult:
     current_url = url
     headers: dict[str, str] = {
-        "user-agent": "inplain.ai (+https://inplain.ai)",
-        "accept": "*/*",
+        # Use a browser UA to avoid common WAF blocks on datacenter IPs.
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36",
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "accept-language": "en-US,en;q=0.9",
     }
     if etag:
         headers["if-none-match"] = etag
