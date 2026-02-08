@@ -55,6 +55,7 @@ class DocumentOut(BaseModel):
 
 class WatchRequest(BaseModel):
     entity_slug: str = Field(min_length=1)
+    schedule_tier: ScheduleTier | None = None
 
 
 class WatchResponse(BaseModel):
@@ -145,3 +146,10 @@ class SnapshotOut(BaseModel):
     extract_version: int
     byte_size_extracted: int
     created_at: datetime
+
+
+class UsageOut(BaseModel):
+    tracked_documents: int
+    check_now_used_today: int
+    render_used_month: int
+    summaries_used_month: int

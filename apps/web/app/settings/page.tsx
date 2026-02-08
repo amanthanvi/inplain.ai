@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 
-import { internalFetch, type DocumentOut, type UnreadCountOut } from "@/lib/internal-api";
+import { getEntitlementsForHas } from "@/lib/entitlements";
+import { internalFetch, type UnreadCountOut, type UsageOut } from "@/lib/internal-api";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function SettingsPage() {
     );
   }
 
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) {
     return (
       <main>
@@ -28,8 +29,10 @@ export default async function SettingsPage() {
     );
   }
 
-  const [docs, unread] = await Promise.all([
-    internalFetch<DocumentOut[]>("/internal/documents", { userId, cache: "no-store" }),
+  const entitlements = getEntitlementsForHas(has);
+
+  const [usage, unread] = await Promise.all([
+    internalFetch<UsageOut>("/internal/usage", { userId, cache: "no-store" }),
     internalFetch<UnreadCountOut>("/internal/notifications/unread-count", { userId, cache: "no-store" }),
   ]);
 
@@ -51,11 +54,35 @@ export default async function SettingsPage() {
       >
         <div className="card" style={{ padding: 16 }}>
           <div className="muted" style={{ fontSize: 13 }}>
+            Current plan
+          </div>
+          <div style={{ fontSize: 28, fontWeight: 750, marginTop: 6, textTransform: "capitalize" }}>
+            {entitlements.tier}
+          </div>
+          <div className="muted" style={{ marginTop: 6 }}>
+            Schedule:{" "}
+            {entitlements.scheduleTier === "daily"
+              ? "daily"
+              : entitlements.scheduleTier === "6h"
+                ? "every 6 hours"
+                : "every 1 hour"}
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <a className="btn btnPrimary" href="/pricing">
+              Upgrade
+            </a>
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: 16 }}>
+          <div className="muted" style={{ fontSize: 13 }}>
             Tracked documents
           </div>
-          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>{docs.length}</div>
+          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
+            {usage.tracked_documents}/{entitlements.trackedDocuments}
+          </div>
           <div className="muted" style={{ marginTop: 6 }}>
-            Free tier limit enforcement comes next.
+            Limit enforcement happens in the watch flow.
           </div>
         </div>
 
@@ -68,8 +95,43 @@ export default async function SettingsPage() {
             Notifications are in-app only in v0.1.0.
           </div>
         </div>
+
+        <div className="card" style={{ padding: 16 }}>
+          <div className="muted" style={{ fontSize: 13 }}>
+            “Check now” (today)
+          </div>
+          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
+            {usage.check_now_used_today}/{entitlements.checkNowPerDay}
+          </div>
+          <div className="muted" style={{ marginTop: 6 }}>
+            Counts only user-initiated checks.
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: 16 }}>
+          <div className="muted" style={{ fontSize: 13 }}>
+            AI summaries (this month)
+          </div>
+          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
+            {usage.summaries_used_month}/{entitlements.summariesPerMonth}
+          </div>
+          <div className="muted" style={{ marginTop: 6 }}>
+            Summaries may be skipped when over quota.
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: 16 }}>
+          <div className="muted" style={{ fontSize: 13 }}>
+            JS-render fetches (this month)
+          </div>
+          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>
+            {usage.render_used_month}/{entitlements.renderPerMonth}
+          </div>
+          <div className="muted" style={{ marginTop: 6 }}>
+            Render fallback is used when HTTP extraction yields minimal text.
+          </div>
+        </div>
       </div>
     </main>
   );
 }
-

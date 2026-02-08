@@ -27,4 +27,4 @@ jobs:
         with:
           name: inplain-postgres-backup-${{ github.run_id }}
           path: artifacts/*
-          retention-days: 7
+          retention-days: 30

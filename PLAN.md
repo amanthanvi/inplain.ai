@@ -139,7 +139,7 @@ Acceptance:
 
 ### M9 — Billing + entitlements (Clerk Billing)
 
-- [ ] Server Actions enforce tier entitlements via Clerk `has()` (doc limits, quotas).
+- [x] Server Actions enforce tier entitlements via Clerk `has()` (doc limits, quotas).
 - [x] Settings page shows usage meters + upgrade CTAs.
 
 Acceptance:
@@ -176,3 +176,4 @@ Acceptance:
 - 2026-02-08: Enforced Free tier document limit on watch (AC-4).
 - 2026-02-08: Implemented Postgres backup/restore scripts + scheduled GitHub backup workflow; added Railway deployment/runbook notes.
 - 2026-02-08: Added cheap LLM classifier gate for ambiguous diffs (skip change events for cosmetic-only changes).
+- 2026-02-08: Added Clerk `has()`-based entitlements (doc limit + check-now quota) and usage meters; added `/internal/usage`.

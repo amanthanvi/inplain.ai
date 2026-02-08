@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { getEntitlementsForHas } from "@/lib/entitlements";
 import { internalFetch, type DocumentOut, type EntityOut } from "@/lib/internal-api";
 
 export const dynamic = "force-dynamic";
@@ -21,13 +22,13 @@ export default async function WatchCompletePage({
     redirect("/companies");
   }
 
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) {
     redirect(`/companies/${slug}`);
   }
 
-  // v0.1.0: enforce Free tier doc limit (SPEC AC-4).
-  const docLimit = 3;
+  const entitlements = getEntitlementsForHas(has);
+  const docLimit = entitlements.trackedDocuments;
   const [entity, docs] = await Promise.all([
     internalFetch<EntityOut>(`/internal/entities/${slug}`, { cache: "no-store" }),
     internalFetch<DocumentOut[]>("/internal/documents", { userId, cache: "no-store" }),
@@ -44,13 +45,13 @@ export default async function WatchCompletePage({
   }).length;
 
   if (docs.length + toCreate > docLimit) {
-    redirect(`/companies/${slug}?upgrade=1`);
+    redirect(`/companies/${slug}?upgrade=1&reason=doc_limit`);
   }
 
   await internalFetch("/internal/documents/watch", {
     method: "POST",
     userId,
-    body: { entity_slug: slug },
+    body: { entity_slug: slug, schedule_tier: entitlements.scheduleTier },
     cache: "no-store",
   });
 

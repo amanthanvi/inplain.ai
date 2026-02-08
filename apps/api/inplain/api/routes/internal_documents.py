@@ -88,16 +88,23 @@ def watch_entity(
             )
         ).scalar_one_or_none()
         if existing is not None:
+            if req.schedule_tier is not None and existing.schedule_tier != req.schedule_tier:
+                existing.schedule_tier = req.schedule_tier
+                db.add(existing)
             documents.append(existing)
             continue
 
-        doc = Document(
-            clerk_user_id=clerk_user_id,
-            entity_id=entity.id,
-            url=url,
-            doc_type=doc_type,
-            next_check_at=now,
-        )
+        create_kwargs: dict[str, object] = {
+            "clerk_user_id": clerk_user_id,
+            "entity_id": entity.id,
+            "url": url,
+            "doc_type": doc_type,
+            "next_check_at": now,
+        }
+        if req.schedule_tier is not None:
+            create_kwargs["schedule_tier"] = req.schedule_tier
+
+        doc = Document(**create_kwargs)
         db.add(doc)
         documents.append(doc)
 
@@ -121,6 +128,7 @@ def watch_entity(
                 document_id=doc.id,
                 status=JobStatus.queued,
                 run_at=now,
+                payload={"reason": "watch_init"},
             )
         )
 
@@ -188,6 +196,7 @@ def check_now(
         document_id=doc.id,
         status=JobStatus.queued,
         run_at=now,
+        payload={"reason": "check_now"},
     )
     db.add(job)
     db.commit()

@@ -103,6 +103,13 @@ export type NotificationOut = {
 
 export type UnreadCountOut = { unread: number };
 
+export type UsageOut = {
+  tracked_documents: number;
+  check_now_used_today: number;
+  render_used_month: number;
+  summaries_used_month: number;
+};
+
 type InternalFetchOptions = {
   userId?: string;
   method?: "GET" | "POST" | "DELETE";

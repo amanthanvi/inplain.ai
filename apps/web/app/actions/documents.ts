@@ -2,8 +2,10 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-import { internalFetch } from "@/lib/internal-api";
+import { getEntitlementsForHas } from "@/lib/entitlements";
+import { internalFetch, type UsageOut } from "@/lib/internal-api";
 
 function getString(formData: FormData, key: string): string {
   const v = formData.get(key);
@@ -17,8 +19,18 @@ export async function checkNow(formData: FormData): Promise<void> {
   const documentId = getString(formData, "documentId");
   const slug = getString(formData, "entitySlug");
 
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) return;
+
+  const entitlements = getEntitlementsForHas(has);
+  try {
+    const usage = await internalFetch<UsageOut>("/internal/usage", { userId, cache: "no-store" });
+    if (usage.check_now_used_today >= entitlements.checkNowPerDay) {
+      redirect(`/companies/${slug}?upgrade=1&reason=check_now_quota`);
+    }
+  } catch {
+    // Fail open: quota metering is best-effort; worker-side safeguards still apply.
+  }
 
   await internalFetch(`/internal/documents/${documentId}/check-now`, {
     method: "POST",

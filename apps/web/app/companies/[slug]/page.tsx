@@ -36,7 +36,7 @@ function formatDocType(t: DocumentOut["doc_type"]) {
 
 function formatStatus(doc: DocumentOut) {
   if (doc.status === "blocked_robots") return "Blocked by robots.txt";
-  if (doc.status === "paused") return "Paused (URL not accessible)";
+  if (doc.status === "paused") return "URL no longer accessible";
   if (doc.status === "error") return "Last check failed";
   return "Active";
 }
@@ -46,7 +46,7 @@ export default async function CompanyPage({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams: { upgrade?: string };
+  searchParams: { upgrade?: string; reason?: string };
 }) {
   const { slug } = params;
 
@@ -86,15 +86,32 @@ export default async function CompanyPage({
   const isWatched = tracked.length > 0;
 
   const upgradeBlocked = searchParams.upgrade === "1";
+  const upgradeReason = searchParams.reason;
+
+  const upgradeCopy =
+    upgradeReason === "check_now_quota"
+      ? {
+          title: "Daily limit reached",
+          body: "You’ve hit your plan’s daily “Check now” limit. Upgrade to get more on‑demand checks.",
+        }
+      : upgradeReason === "doc_limit"
+        ? {
+            title: "Upgrade required",
+            body: "You’ve reached your plan’s tracked document limit. Upgrade to track more documents.",
+          }
+        : {
+            title: "Upgrade required",
+            body: "This action is blocked on your current plan. Upgrade to continue.",
+          };
 
   return (
     <main>
       {upgradeBlocked ? (
         <>
           <div className="card" style={{ padding: 16, borderColor: "rgba(255,77,46,0.35)" }}>
-            <div style={{ fontWeight: 650 }}>Upgrade required</div>
+            <div style={{ fontWeight: 650 }}>{upgradeCopy.title}</div>
             <div className="muted" style={{ marginTop: 6 }}>
-              You’ve reached the Free tier limit. Upgrade to track more documents.
+              {upgradeCopy.body}
             </div>
             <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Link className="btn btnPrimary" href="/pricing">
