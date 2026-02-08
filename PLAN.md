@@ -177,3 +177,4 @@ Acceptance:
 - 2026-02-08: Implemented Postgres backup/restore scripts + scheduled GitHub backup workflow; added Railway deployment/runbook notes.
 - 2026-02-08: Added cheap LLM classifier gate for ambiguous diffs (skip change events for cosmetic-only changes).
 - 2026-02-08: Added Clerk `has()`-based entitlements (doc limit + check-now quota) and usage meters; added `/internal/usage`.
+- 2026-02-08: Added DB-backed acceptance tests for AC-5…AC-7 and wired Postgres service into CI.
