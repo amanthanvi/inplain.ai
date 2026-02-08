@@ -108,9 +108,9 @@ export default async function CompanyPage({
     <main>
       {upgradeBlocked ? (
         <>
-          <div className="card" style={{ padding: 16, borderColor: "rgba(255,77,46,0.35)" }}>
-            <div style={{ fontWeight: 650 }}>{upgradeCopy.title}</div>
-            <div className="muted" style={{ marginTop: 6 }}>
+          <div className="card cardPad" style={{ borderColor: "rgba(255,77,46,0.35)" }}>
+            <div className="cardTitle">{upgradeCopy.title}</div>
+            <div className="muted" style={{ marginTop: 10 }}>
               {upgradeCopy.body}
             </div>
             <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -125,23 +125,19 @@ export default async function CompanyPage({
           <div style={{ height: 18 }} />
         </>
       ) : null}
-      <div className="card" style={{ padding: 18 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+      <header className="pageHeader">
+        <div className="kicker">{prettyCategory(entity.category)}</div>
+        <div className="pageTop">
           <div style={{ minWidth: 0 }}>
-            <div className="muted" style={{ fontSize: 13 }}>
-              {prettyCategory(entity.category)}
-            </div>
-            <h1 style={{ margin: "8px 0 6px", fontFamily: "var(--font-display)" }}>
-              {entity.name}
-            </h1>
-            <div className="muted" style={{ fontSize: 14 }}>
+            <h1 className="pageTitle">{entity.name}</h1>
+            <p className="pageLead">
               <a href={entity.website_url} target="_blank" rel="noreferrer">
                 {entity.website_url}
               </a>
-            </div>
+            </p>
           </div>
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <div className="pageActions">
             {isWatched ? (
               <span className="pill">Watching</span>
             ) : (
@@ -154,17 +150,20 @@ export default async function CompanyPage({
             </Link>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div style={{ height: 18 }} />
-
-      <section>
-        <h2 style={{ margin: "0 0 10px", fontFamily: "var(--font-display)" }}>Tracked documents</h2>
+      <section className="section">
+        <div className="sectionTitleRow">
+          <h2 className="sectionTitle">Tracked documents</h2>
+          <p className="sectionLead muted">
+            Watch to fetch the first snapshot, then review diffs and citations as changes happen.
+          </p>
+        </div>
 
         {!userId ? (
-          <div className="card" style={{ padding: 16 }}>
-            <div style={{ fontWeight: 650 }}>Sign in to watch {entity.name}</div>
-            <div className="muted" style={{ marginTop: 6 }}>
+          <div className="card cardPad">
+            <div className="cardTitle">Sign in to watch {entity.name}</div>
+            <div className="muted" style={{ marginTop: 10 }}>
               You can browse the catalog signed out. Watching starts after sign in.
             </div>
             <div style={{ marginTop: 12 }}>
@@ -174,9 +173,9 @@ export default async function CompanyPage({
             </div>
           </div>
         ) : tracked.length === 0 ? (
-          <div className="card" style={{ padding: 16 }}>
-            <div style={{ fontWeight: 650 }}>Not tracking yet</div>
-            <div className="muted" style={{ marginTop: 6 }}>
+          <div className="card cardPad">
+            <div className="cardTitle">Not tracking yet</div>
+            <div className="muted" style={{ marginTop: 10 }}>
               Start watching to enqueue the first snapshot fetch.
             </div>
             <div style={{ marginTop: 12 }}>
@@ -187,7 +186,11 @@ export default async function CompanyPage({
           </div>
         ) : (
           <>
-            <form action={unwatchEntity} style={{ display: "flex", justifyContent: "flex-end" }}>
+            <form
+              action={unwatchEntity}
+              className="pageActions"
+              style={{ justifyContent: "flex-end" }}
+            >
               <input type="hidden" name="entitySlug" value={entity.slug} />
               {tracked.map((d) => (
                 <input key={d.id} type="hidden" name="documentId" value={d.id} />
@@ -199,13 +202,20 @@ export default async function CompanyPage({
 
             <div style={{ height: 12 }} />
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
+            <div className="stack">
               {tracked.map((doc) => {
                 const snap = snapshotsById.get(doc.id);
                 const pending = !doc.last_snapshot_id;
                 return (
-                  <div key={doc.id} className="card" style={{ padding: 16 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <div key={doc.id} className="card cardPad">
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        flexWrap: "wrap",
+                      }}
+                    >
                       <div>
                         <div style={{ fontWeight: 650 }}>{formatDocType(doc.doc_type)}</div>
                         <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
@@ -232,23 +242,8 @@ export default async function CompanyPage({
 
                     {snap ? (
                       <details>
-                        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-                          Current policy text
-                        </summary>
-                        <div
-                          style={{
-                            marginTop: 10,
-                            border: "1px solid var(--border)",
-                            borderRadius: 12,
-                            padding: 12,
-                            background: "rgba(20,18,16,0.02)",
-                            whiteSpace: "pre-wrap",
-                            maxHeight: 320,
-                            overflow: "auto",
-                            fontSize: 14,
-                            lineHeight: 1.5,
-                          }}
-                        >
+                        <summary className="detailsSummary">Current policy text</summary>
+                        <div className="policyTextBox">
                           {snap.extracted_text}
                         </div>
                       </details>
@@ -274,23 +269,31 @@ export default async function CompanyPage({
         )}
       </section>
 
-      <div style={{ height: 26 }} />
-
-      <section>
-        <h2 style={{ margin: "0 0 10px", fontFamily: "var(--font-display)" }}>Changes</h2>
+      <section className="section">
+        <div className="sectionTitleRow">
+          <h2 className="sectionTitle">Changes</h2>
+          <p className="sectionLead muted">
+            Meaningful policy updates appear here with a diff and citation-backed summary.
+          </p>
+        </div>
         {!userId ? (
-          <div className="muted">Sign in to see your watch history and AI summaries.</div>
+          <div className="card cardPad">
+            <div className="cardTitle">Sign in to view your history</div>
+            <div className="muted" style={{ marginTop: 10 }}>
+              Changes and AI summaries appear after you start watching.
+            </div>
+          </div>
         ) : relevantEvents.length === 0 ? (
-          <div className="card" style={{ padding: 16 }}>
-            <div style={{ fontWeight: 650 }}>No changes yet</div>
-            <div className="muted" style={{ marginTop: 6 }}>
+          <div className="card cardPad">
+            <div className="cardTitle">No changes yet</div>
+            <div className="muted" style={{ marginTop: 10 }}>
               When a meaningful change is detected, you’ll see it here with a summary and citations.
             </div>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+          <div className="stack" style={{ gap: 10 }}>
             {relevantEvents.map((e) => (
-              <div key={e.id} className="card" style={{ padding: 14 }}>
+              <div key={e.id} className="card cardPad">
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                   <div style={{ fontWeight: 650 }}>{e.title}</div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>

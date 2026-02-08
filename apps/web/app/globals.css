@@ -619,6 +619,29 @@ a {
   gap: 14px;
 }
 
+.stack {
+  display: grid;
+  gap: 12px;
+}
+
+.detailsSummary {
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.policyTextBox {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(20, 18, 16, 0.02);
+  white-space: pre-wrap;
+  max-height: 320px;
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .grid2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
