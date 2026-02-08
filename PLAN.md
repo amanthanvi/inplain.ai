@@ -105,7 +105,7 @@ Acceptance:
   - [x] hash gate (skip identical extracted sha256)
   - [x] ratio gate (baseline change_score)
   - [x] cosmetic strip (baseline)
-  - [ ] cheap LLM classify for ambiguous changes
+  - [x] cheap LLM classify for ambiguous changes
   - [x] meaningful change → proceed
 - [x] Diff generation (`diff-match-patch`) → structured hunks (`hunkId`, added/removed/context).
 - [x] Create `change_events` with summary status (`pending`/`completed`/`failed`/`skipped_quota`).
@@ -175,3 +175,4 @@ Acceptance:
 - 2026-02-08: Shipped web IA + progressive auth (watch flow, dashboard, settings), notification bell, and citation-scroll diff viewer.
 - 2026-02-08: Enforced Free tier document limit on watch (AC-4).
 - 2026-02-08: Implemented Postgres backup/restore scripts + scheduled GitHub backup workflow; added Railway deployment/runbook notes.
+- 2026-02-08: Added cheap LLM classifier gate for ambiguous diffs (skip change events for cosmetic-only changes).
