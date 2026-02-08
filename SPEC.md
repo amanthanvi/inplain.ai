@@ -347,7 +347,7 @@ A tracked URL for a specific user + entity combination.
 | `deleted_at` | timestamptz | Nullable, soft-delete |
 
 Indexes:
-- `(clerk_user_id, entity_id)` unique where `deleted_at IS NULL`
+- `(clerk_user_id, entity_id, doc_type)` unique where `deleted_at IS NULL`
 - `(next_check_at)` where `status = 'active' AND deleted_at IS NULL` (scheduler)
 - `(clerk_user_id, status)`
 

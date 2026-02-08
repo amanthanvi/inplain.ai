@@ -49,10 +49,10 @@ Acceptance:
 
 ### M2 — Database schema + migrations (SPEC 4.2)
 
-- [ ] Implement Alembic migrations for the 7-table schema:
+- [x] Implement Alembic migrations for the 7-table schema:
   - `entities`, `documents`, `snapshots`, `diffs`, `change_events`, `jobs`, `notifications`
-- [ ] Indexes match SPEC.
-- [ ] `catalog.json` seed via idempotent upsert-by-slug migration step.
+- [x] Indexes match SPEC (incl. scheduler/unread indexes).
+- [x] `catalog.json` seed via idempotent upsert-by-slug migration step.
 
 Acceptance:
 - `alembic upgrade head` creates the full schema on a fresh DB.
@@ -164,3 +164,4 @@ Acceptance:
 
 - 2026-02-08: Approved. Committed clean-slate teardown baseline on `refresh`.
 - 2026-02-08: Scaffolded monorepo + CI + golden commands (web/api skeletons; env templates).
+- 2026-02-08: Implemented initial Postgres schema + Alembic migration; `catalog.json` seeds `entities` via upsert.
