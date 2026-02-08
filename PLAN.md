@@ -153,8 +153,8 @@ Acceptance:
   - job queue claiming tests
   - SSRF + citation validation unit tests
 - [ ] CI green (lint/typecheck/tests).
-- [ ] Backup workflow + restore script documented and runnable.
-- [ ] Minimal runbooks / env templates for Railway.
+- [x] Backup workflow + restore script documented and runnable.
+- [x] Minimal runbooks / env templates for Railway.
 
 Acceptance:
 - SPEC AC-5…AC-7 covered with tests and/or reproducible local steps.
@@ -174,3 +174,4 @@ Acceptance:
 - 2026-02-08: Added worker-side quota enforcement (render + summary) based on `schedule_tier`.
 - 2026-02-08: Shipped web IA + progressive auth (watch flow, dashboard, settings), notification bell, and citation-scroll diff viewer.
 - 2026-02-08: Enforced Free tier document limit on watch (AC-4).
+- 2026-02-08: Implemented Postgres backup/restore scripts + scheduled GitHub backup workflow; added Railway deployment/runbook notes.
