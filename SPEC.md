@@ -1,2335 +1,1188 @@
-# Inplain.ai — SPEC (v0.1.0-rev1)
+# Inplain.ai — SPEC (v0.2.0)
 
-"Track, diff, and understand privacy policy changes with AI-powered summaries."
+"Track, diff, and understand privacy policy changes with grounded, citation-backed AI summaries."
 
-> **Revision Note (v0.1.0-rev1)**: This revision incorporates interview-driven decisions on PDF/iframe handling, URL canonicalization, UI/UX patterns, AI opinion style, crawler identity, and quota management. See Section 9.5 (UI/UX), Section 10.1 (fetch pipeline), Section 11.3-11.6 (AI behavior), and Section 16.3 (crawler identity).
+> **v0.2.0**: Clean-slate redesign. Replaces v0.1.0-rev1. Simplified architecture: Postgres-only storage, Postgres-based job queue, Server Actions BFF, in-app notifications only. All decisions from 9 interview rounds incorporated.
 
 ## Table of Contents
 
-1. [Overview](#1-overview)
-2. [Goals / Non-goals](#2-goals--non-goals)
-3. [Personas & Primary User Journeys](#3-personas--primary-user-journeys)
-4. [Functional Requirements](#4-functional-requirements)
-5. [Non-functional Requirements](#5-non-functional-requirements)
-6. [Proposed Architecture](#6-proposed-architecture)
-7. [Railway Hosting Topology](#7-railway-hosting-topology)
-8. [Data Model (Postgres)](#8-data-model-postgres)
-9. [API Design (REST)](#9-api-design-rest)
-    - 9.5 [UI/UX Design Decisions](#95-uiux-design-decisions)
-10. [Scraping + Normalization + Diff System](#10-scraping--normalization--diff-system)
-11. [AI Summarization via OpenRouter](#11-ai-summarization-via-openrouter)
-12. [Notifications (Email)](#12-notifications-email)
-13. [Monetization + Entitlements + Metering](#13-monetization--entitlements--metering)
-14. [Observability & Operations](#14-observability--operations)
-15. [CI/CD + Environments + Migrations](#15-cicd--environments--migrations)
-16. [Security Deep Dive](#16-security-deep-dive)
-17. [Performance & Scaling Plan](#17-performance--scaling-plan)
-18. [Runbooks](#18-runbooks)
-19. [Rollout Plan](#19-rollout-plan)
-20. [Launch Readiness Checklists](#20-launch-readiness-checklists)
-21. [Open Questions / Future Work](#21-open-questions--future-work)
+0. [Metadata](#0-metadata)
+1. [Executive Summary](#1-executive-summary)
+2. [Users & UX](#2-users--ux)
+3. [Functional Requirements](#3-functional-requirements)
+4. [System Design](#4-system-design)
+5. [Security, Privacy, Compliance](#5-security-privacy-compliance)
+6. [Reliability & Failure Modes](#6-reliability--failure-modes)
+7. [Observability & Ops](#7-observability--ops)
+8. [Rollout, Migration, Compatibility](#8-rollout-migration-compatibility)
+9. [Billing & Entitlements](#9-billing--entitlements)
+10. [Testing & Acceptance Criteria](#10-testing--acceptance-criteria)
+11. [Dependencies & Integrations](#11-dependencies--integrations)
+12. [Decision Log](#12-decision-log)
+13. [Assumptions, Open Questions, Risks](#13-assumptions-open-questions-risks)
+14. [Legal/Safety UX Copy](#14-legalsafety-ux-copy)
+A. [Catalog JSON Schema](#appendix-a--catalog-json-schema)
+B. [Job Queue Schema](#appendix-b--job-queue-schema-skip-locked)
+C. [Default Config Values](#appendix-c--default-config-values)
 
 ---
 
-## 1) Overview
+## 0) Metadata
 
-Inplain.ai continuously monitors _public_ Privacy Policy and Terms of Service pages, detects meaningful changes, produces a readable diff, and generates an AI summary that explains:
-
--   **What changed**
--   **Why it matters**
--   **With provenance**: citations pointing to specific changed passages (quotes + diff locations) to reduce hallucination risk.
-
-v0.1.0 is **production-ready**, public internet-facing, hosted on **Railway**, with:
-
--   Clerk-based auth and entitlement enforcement
--   tier-based scheduling and quotas
--   job queue + retries + dead-letter handling
--   observability (logs/metrics/traces + error tracking)
--   security baseline (SSRF defenses, webhook verification, rate limits)
--   backups + restore procedures
--   operational runbooks
+- **Title**: Inplain.ai — Privacy Policy Change Tracker
+- **Owner (DRI)**: Aman Thanvi (@amanthanvi)
+- **Status**: Implementing
+- **Last updated**: 2026-02-07
+- **Spec version**: v0.2.0
+- **License model**: Source-available (code inspectable/contributable; full platform monetized)
+- **Links**:
+  - Repo: `github.com/amanthanvi/inplain.ai`
+  - Production: `inplain.ai`
 
 ---
 
-## 2) Goals / Non-goals
+## 1) Executive Summary
 
-### 2.1 Goals (v0.1.0)
+### 1.1 What we're building
 
-1. **Track pages over time**: scheduled monitoring + on-demand checks.
-2. **Reliable change detection**: reduce false positives from dynamic content (cookie banners, timestamps, nav).
-3. **Human-readable diff**: view changes clearly in the app.
-4. **AI-powered summaries with citations**: summaries must reference exact changed text.
-5. **Multi-entity support**: many companies/entities, each with multiple documents (Privacy, ToS, Cookie, etc.).
-6. **Notifications**: email alerts on meaningful changes (tier-gated).
-7. **Admin tooling**: job status, retries, failure inspection, user management.
-8. **Monetization**: free + at least two paid tiers; enforceable quotas and abuse prevention.
-9. **Legally safer posture**: public pages only, robots.txt-aware, rate-limited crawling, takedown process, “not legal advice”.
+A web app that monitors public privacy policies and terms of service, detects meaningful changes, produces readable diffs, and generates AI summaries explaining **what changed**, **why it matters**, with **citation-backed provenance** linking to exact changed passages.
 
-### 2.2 Non-goals (v0.1.0)
+### 1.2 Problem statement / why now
 
-1. **Not a legal compliance product** (no legal opinions, no guarantees).
-2. **No authenticated/behind-login document monitoring** (public URLs only).
-3. **No browser extension**.
-4. **No Slack/MS Teams native notifications** (email only; webhook export is future work).
-5. **No full-text search across all snapshots** (store data for later; basic per-document history view only).
-6. **No enterprise SSO / SCIM** (future).
+Privacy policies change without notice, are unreadable, and no tool makes changes accessible to non-lawyers. Existing solutions (ToS;DR, Visualping) either rely on volunteer curation or lack AI-powered interpretation.
 
----
+### 1.3 Success metrics (activation-focused)
 
-## 3) Personas & Primary User Journeys
+- **Primary KPI**: % of sign-ups who watch ≥1 entity within 7 days → target **40%**
+- **Secondary KPI**: % of change events where user views the summary → target **60%**
+- **Guardrail**: p95 pipeline latency < 5 min (fetch → summary available)
+- **"Done means"**: A user can watch a company, receive a change notification in-app, view an AI summary with citations that link to the exact diff hunk
 
-### 3.1 Personas
+### 1.4 Non-goals / out of scope (v0.2.0)
 
-1. **Founder / PM**: tracks competitors’ privacy/ToS changes; wants quick “why it matters” alerts.
-2. **Privacy-conscious user**: tracks apps/services they use; wants plain-language summaries.
-3. **Developer / Security engineer**: needs diffs and citations; may export data.
-4. **Admin (internal)**: monitors system health, jobs, abuse, billing/entitlements.
-
-### 3.2 Primary user journeys
-
-#### Journey A — Sign up and track first company
-
-1. User lands on marketing site or browses the public Companies directory.
-2. Clicks “Watch changes” on a company.
-3. Clerk auth (email magic link) → redirected into the app.
-4. App creates a tracked Company (Entity) and adds the standard documents (Privacy/ToS/Cookie) when available.
-5. System validates URL + robots posture + runs initial snapshot.
-6. UI shows a company dashboard (current policy, change timeline, AI analysis) and a clear “no data yet” state until the first run completes.
-
-#### Journey B — Change detected → diff + summary + email
-
-1. Scheduled job fetches URL; content normalized; change detected.
-2. System generates diff and AI summary with citations.
-3. Change event created; email notification sent per preferences.
-4. User opens app → views “What changed” + diff sections; citations link to exact added/removed passages.
-
-#### Journey C — On-demand check
-
-1. User clicks “Check now”.
-2. If within tier quota, job enqueued; UI shows “running”.
-3. Results appear; if no meaningful changes, event stored as “no-op” (optional) or only job log (config).
-
-#### Journey D — Admin triage
-
-1. Admin dashboard shows queue backlog, top failing hosts, LLM spend, scraper errors.
-2. Admin retries job, disables a document, bans an abusive user, or applies a plan override.
+1. Not a legal compliance product (no legal opinions or guarantees)
+2. No authenticated/behind-login document monitoring (public URLs only)
+3. No browser extension
+4. No email notifications (in-app only; email deferred to v0.3)
+5. No Slack/Teams/webhook notifications
+6. No full-text search across snapshots
+7. No enterprise SSO / SCIM / organizations
+8. No custom URL tracking (curated catalog only)
+9. No admin UI (DB queries + Clerk admin role for ops)
 
 ---
 
-## 4) Functional Requirements
+## 2) Users & UX
 
-**FR-1 Authentication & sessions**
+### 2.1 Personas
 
-1. Use **Clerk** for authentication (identity source of truth).
-2. Auth method: **email magic link** (passwordless). Optional OAuth (Google) can be enabled later.
-3. Require verified email to enable notifications and billing.
+1. **Privacy-conscious user**: Tracks apps/services they use; wants plain-language summaries of changes
+2. **Founder / PM**: Tracks competitors' privacy/ToS changes; wants quick "why it matters" alerts
+3. **Developer / Security engineer**: Needs diffs and citations; may export data
+4. **Admin (internal)**: Monitors system health, jobs, failures via DB + Railway console
 
-**FR-2 Tracking (curated companies only)**
+### 2.2 Primary flows
 
-4. Users can watch/unwatch companies from the public Companies directory (curated only; no custom URL entry).
-5. Watching a company creates a tracked Company (Entity) and adds the curated documents (Privacy/ToS/Cookie) when available.
-6. Each Document stores: URL, type (privacy/tos/cookie/other), fetch mode (auto), schedule tier, status, and supports: pause/unpause, check-now, notification prefs.
+#### Flow A — Sign up and watch first company
 
-**FR-3 Fetching & snapshots** 7. System fetches snapshots on a schedule (tier-based) and on-demand. 8. Fetch pipeline must support:
+1. User lands on marketing page or browses `/companies` directory
+2. Clicks "Watch changes" on a company
+3. Clerk auth (email magic link) → returned to company page
+4. System creates tracked entity, adds curated documents (Privacy/ToS/Cookie)
+5. Initial snapshot job enqueued; UI shows "First snapshot pending..."
+6. First snapshot completes; user sees current policy text
 
--   conditional GET (ETag/Last-Modified)
--   redirects with strict limits
--   content-type validation
--   **PDF extraction** with OCR fallback for image-based PDFs
--   **iframe resolution** (detect iframe src first, fall back to full render if content minimal)
+#### Flow B — Change detected → diff + summary + notification
 
-9. Store raw HTML/PDF (compressed) + normalized extracted text for each snapshot.
+1. Scheduled worker fetches URL → trafilatura extracts text → change detected
+2. diff-match-patch computes word-level diff; tiered pipeline classifies change
+3. OpenRouter generates AI summary with citations
+4. Change event created; in-app notification created
+5. User sees unread badge → opens notification → views AI summary → clicks citation → auto-scrolls to diff hunk
 
-**FR-4 Change detection** 10. Detect meaningful changes with low false positives:
+#### Flow C — On-demand check
 
--   remove boilerplate/nav/cookie banners/timestamps
--   similarity thresholds + minimum-change heuristics
+1. User clicks "Check now" (within tier quota)
+2. Job enqueued; UI shows spinner
+3. Results appear; if no meaningful change, "No changes detected" toast
 
-11. If change is meaningful, generate a diff artifact and a ChangeEvent.
+#### Flow D — Unwatch
 
-**FR-5 Diff viewing** 12. UI shows:
+1. User clicks "Stop tracking" on a company
+2. Confirmation modal: "Stop tracking [Company]? This will remove X policies and their history."
+3. Soft-delete cascades; data retained per tier retention policy
 
--   timeline of ChangeEvents per Document
--   diff viewer (inline by default; toggle split)
--   added/removed sections with anchors
+### 2.3 UX states checklist
 
-13. Allow exporting diff + summary (JSON) for a change event (tier-gated).
+- **Loading**: Skeleton screens for policy text and diff viewer; spinner for on-demand checks
+- **Empty**: "No changes detected yet" with clear explanation; "First snapshot pending..." for new watches
+- **Error**: "Last check failed" with error category (timeout, blocked, parse error); user can retry via "Check now"
+- **Permission denied**: Clerk `<SignedIn>`/`<SignedOut>` gating; upgrade CTAs for tier-limited features
+- **Offline/degraded**: Standard browser offline handling; no PWA in v0.2.0
+- **Accessibility**: Semantic HTML, ARIA labels on diff viewer, keyboard-navigable citation links
 
-**FR-6 AI summaries with provenance** 14. Generate:
+### 2.4 Frontend IA (progressive auth)
 
--   “What changed” bullet list
--   “Why it matters” bullet list
--   “Not legal advice” disclaimer
+Single Next.js app with progressive auth. No separate `/app` route group.
 
-15. Every bullet must cite one or more **diff citations** (quotes + pointers to hunks).
+**Public routes**:
+- `/` — marketing homepage
+- `/companies` — public directory (search + category filter)
+- `/companies/[slug]` — company page (public overview, latest policy, change timeline)
+- `/pricing`, `/about`
 
-**FR-7 Notifications (email deferred in v0.1.0)** 16. Email notifications for meaningful changes (tier-gated) are **implemented but disabled by default** to keep early costs low. 17. User controls:
+**Protected routes** (Clerk middleware):
+- `/dashboard` — user's watched companies
+- `/settings` — account, notification preferences, billing
 
--   per-document enable/disable
--   immediate vs daily digest (tier-gated)
+**Auth flow**: `<SignedIn>`/`<SignedOut>` components gate inline content. Watching a company from the public directory triggers Clerk auth if needed, then returns to the company page with tracking active.
 
-18. Unsubscribe links and compliance-friendly headers are required once email delivery is enabled.
+**Header nav**:
+- Signed out: Home, Companies, Pricing, About | Sign in / Start free
+- Signed in: Home, Companies, Dashboard, notification bell (unread badge) | User menu (Settings, Billing, Sign out)
 
-**FR-8 Admin** 19. Admin role can:
+### 2.5 Diff viewer
 
--   view jobs, failures, retries
--   view per-host failure rates
--   inspect fetch artifacts (sanitized)
--   manage users (ban, plan override)
+**Primary view**: AI summary with citations at top. Most users stop here.
 
-20. Admin audit log for sensitive actions.
+**Expanded view**: Section-first collapsed diff.
+- Group changes by detected section/heading
+- Each section shows heading + change count badge (additions/removals)
+- Click to expand → inline word-level diff (diff-match-patch)
+- Section detection: heuristic (H1-H6, bold first lines, numbered sections, ALL CAPS) with fallback to paragraph-level grouping
+- No LLM-based section detection in v0.2.0 (simplification from v0.1.0)
 
-**FR-9 Monetization & quotas** 21. Free + 2 paid tiers with explicit quotas and feature gates. 22. Enforce:
+**Citation navigation**:
+- Click citation → smooth scroll to referenced hunk → temporary highlight (fade after 2s) → auto-expand containing section if collapsed
 
--   per-user document limits
--   check frequency limits
--   JS-render budget
--   AI summary budget
--   notification limits
+**Toggle modes**: Unified full diff (desktop + mobile), side-by-side (desktop only) as secondary options for power users.
 
-23. Abuse controls: rate limiting, watch throttles, host-level backoff.
+**Engine**: `diff-match-patch` (Google's library) with semantic cleanup. Custom React renderer (~200-300 LOC). No off-the-shelf React diff component (none handle legal prose well).
 
-**FR-10 Safety and legal posture** 24. Only monitor public URLs (http/https). 25. Respect robots.txt by default; if disallowed, block monitoring and explain why. 26. Provide takedown/reporting process for site owners.
+### 2.6 Company page (`/companies/[slug]`)
 
----
+Public page with progressive enhancement:
+- **Signed out**: Browse company overview, see latest policy text, view change timeline (limited)
+- **Signed in**: "Watch changes" button, full history, AI summaries, export
 
-## 5) Non-functional Requirements
-
-### 5.1 Reliability & latency targets
-
-**Assumptions for v0.1.0 SLOs**
-
--   API availability: **99.9%** monthly (excluding planned maintenance).
--   Background monitoring: **95%** of scheduled checks start within **10 minutes** of due time.
--   UI/API p95 latency:
-    -   read endpoints p95 **< 300 ms**
-    -   write endpoints p95 **< 600 ms**
--   Email notifications: **95% delivered within 10 minutes** of ChangeEvent creation (provider-dependent).
-
-### 5.2 Scalability assumptions (explicit for v0.1.0)
-
-> These are sizing assumptions; see [Scaling Plan](#17-performance--scaling-plan) for adjustments.
-
--   Active users: **5,000**
--   Tracked documents: **50,000**
--   Checks/day: **200,000**
--   JS-render required: **20%** of checks (**40,000/day**)
--   Avg normalized text size: **35 KB**
--   Avg compressed raw HTML: **80 KB**
--   Retention:
-    -   Free: 30 days
-    -   Pro: 180 days
-    -   Business: 730 days
-
-### 5.3 Security requirements (OWASP baseline + platform concerns)
-
-1. TLS everywhere (Railway managed HTTPS); HSTS on web.
-2. Strict input validation for URLs and IDs.
-3. AuthN via Clerk JWT verification; AuthZ enforced server-side for every request.
-4. Rate limiting per user + per IP + per endpoint group.
-5. SSRF mitigations (see [16.2](#162-ssrf-defenses-for-url-fetching)).
-6. Secret management: Railway environment variables; no secrets in repo.
-7. Webhook verification for Clerk and Stripe; replay protection.
-8. Encryption:
-    - in transit via TLS
-    - at rest: Postgres managed encryption (Railway) + object storage encryption
-    - additional app-level encryption for highly sensitive fields (minimal use in v0.1.0)
-9. Audit logging for: user bans, plan overrides, webhook processing, watch/unwatch, pause/unpause, exports.
-
-### 5.4 Privacy requirements (data minimization & retention)
-
-1. Store only what's needed:
-    - URLs, snapshots, diffs, summaries, notification settings.
-2. Do **not** store:
-    - user passwords (Clerk handles)
-    - third-party page form submissions (we don't submit forms)
-3. Retention by tier; deletion workflows:
-    - user can stop tracking a company → delete associated snapshots/diffs (async job)
-    - user can delete account → purge user data (except billing records required for finance, if applicable)
-4. Redact secrets accidentally present in fetched pages where feasible (basic patterns: API keys, emails) **only in logs**; snapshots remain as-fetched.
-
-### 5.4.1 Data residency
-
--   **v0.1.0**: US-only data residency (Railway US regions).
--   Privacy policy clearly states: "Your data is stored in the United States."
--   EU compliance via Standard Contractual Clauses if needed.
--   **Future**: Monitor EU demand; build region infrastructure when there's signal.
-
-### 5.5 Compliance considerations
-
-**Robots posture**
-
--   v0.1.0: **Respect robots.txt**; do not fetch disallowed paths.
--   Maintain a `robots_checked_at` and `robots_decision` for transparency.
-
-**Takedown**
-
--   Provide “Report/Request removal” contact and workflow:
-    -   verify requester controls domain (email to domain or DNS token) for prioritized action
-    -   allow permanent blocklist of domains/paths
-
-**Disclaimers**
-
--   Clearly display: “AI summaries are informational and not legal advice.”
+Sections:
+- Overview (company info, tracked documents)
+- Current Policy (latest extracted snapshot)
+- Changes (recent change events with summaries + citations)
+- Timeline (chronological list)
 
 ---
 
-## 6) Proposed Architecture
+## 3) Functional Requirements
 
-### 6.1 Key technology decisions (decisive)
+**FR-1 Authentication & sessions** (MUST)
+- Clerk for authentication (identity source of truth)
+- Email magic link (passwordless); optional OAuth (Google) later
+- No `users` table; Clerk is the user store
 
-**Monorepo:** Yes. Single repo with separate apps/services.
+**FR-2 Tracking — curated companies only** (MUST)
+- Users watch/unwatch companies from curated directory
+- Watching creates tracked entity + curated documents (Privacy/ToS/Cookie)
+- No custom URL entry in v0.2.0
 
-**Frontend:** Next.js (App Router) + React + TypeScript + TanStack Query.
+**FR-3 Fetching & snapshots** (MUST)
+- Scheduled + on-demand fetches via Postgres job queue
+- HTTP-first (httpx) with conditional GET (ETag/Last-Modified)
+- JS rendering via Playwright when HTTP fetch yields minimal text
+- PDF extraction: `pypdf` with Tesseract OCR fallback for image-based PDFs
+- Text extraction: `trafilatura` only (F1 0.958); ~20 lines post-processing for timestamps/copyright
+- Snapshots stored as text in Postgres (TOAST + LZ4 compression)
+- No S3/R2 in v0.2.0; migrate to object storage when DB exceeds ~20 GB
 
-**API:** **Python FastAPI**
+**FR-4 Change detection** (MUST)
+- Tiered pipeline:
+  1. SHA256 hash gate (identical → skip)
+  2. SequenceMatcher ratio (below threshold → skip)
+  3. Cosmetic pattern strip (timestamps, copyright, counters)
+  4. LLM classify via cheap model (~$3/year) for ambiguous changes
+  5. Full AI summary for confirmed meaningful changes
 
--   Rationale: aligns with Python scraping ecosystem, shared models/validation, one primary backend language.
--   Clerk integration: verify JWT via JWKS; webhook verification; entitlement checks from JWT claims/DB.
+**FR-5 Diff viewing** (MUST)
+- Pre-computed diffs stored as JSONB in `diffs` table
+- Section-first collapsed view with inline word-level diff
+- Citation anchors linking summary bullets to diff hunks
+- Export: JSON (tier-gated); CSV deferred
 
-**Workers & queue:** **Celery + Redis**
+**FR-6 AI summaries with provenance** (MUST)
+- "What changed" bullet list with citations
+- "Why it matters" bullet list with citations
+- Every bullet must cite `hunkId` + exact quote from diff
+- Runtime citation validation (verify quotes exist as substrings)
+- "Not legal advice" disclaimer on every summary
+- Summary language matches source language
 
--   Rationale: mature retries/scheduling patterns, multi-queue support, strong Python ecosystem.
--   Separate queues: `fetch`, `render`, `diff`, `summarize`, `notify`, `maintenance`.
+**FR-7 In-app notifications** (MUST)
+- Notification feed accessible from nav bar (unread badge)
+- Dropdown panel showing recent notifications
+- Poll every 60s for unread count
+- Notification created for each meaningful change event
 
-**Scraping:** HTTP-first fetcher (httpx) + extraction (trafilatura/readability), with an isolated Playwright renderer service.
+**FR-8 Notifications — email** (SHOULD, deferred)
+- Email notifications deferred to v0.3
+- Schema supports future email (notification preferences, unsubscribe tokens)
 
--   Rationale: keep the core fetch pipeline simple and observable; use Playwright only when needed and quota-allowed.
--   JS rendering is selectively triggered (cost control + quota enforcement) and isolated for safety.
+**FR-9 Admin ops** (MUST)
+- Clerk admin role (via `publicMetadata`)
+- Admin-only FastAPI endpoints: job status/retry, user lookup
+- No admin UI; use Railway DB explorer + psql for ad-hoc queries
+- No impersonation in v0.2.0
 
-**Database:** **Postgres** (Railway managed)
+**FR-10 Monetization & quotas** (MUST)
+- 3 tiers (Free/Pro/Business) via Clerk Billing (Stripe connected)
+- Tier enforcement at Server Action middleware layer using Clerk `has()` helper
+- Quota display: usage meters on settings page + in-app banner at 80%+
 
--   Rationale: relational integrity for entities/docs/snapshots/events; good indexing; robust backups.
+**FR-11 Safety and legal posture** (MUST)
+- Public URLs only (http/https)
+- Respect robots.txt; block monitoring if disallowed with clear UI explanation
+- Takedown/reporting process for site owners
+- "Not legal advice" on every summary and watch flow
 
-**Object storage:** **S3-compatible (Cloudflare R2 or AWS S3)** for raw HTML and large artifacts
+---
 
--   Rationale: avoid bloating Postgres with large blobs; cheaper retention and lifecycle policies.
--   Hosted compute remains Railway; external storage is acceptable and standard for production.
+## 4) System Design
 
-**Caching/rate limiting:** Redis (Railway managed).
+### 4.1 Architecture
 
-**Observability (v0.1.0):**
-
--   Railway logs + health checks.
--   Sentry + OTLP are deferred until after initial launch (keep infra/cost minimal).
-
-**Email (v0.1.0):** Deferred (no Postmark integration enabled).
-
-**AI:** OpenRouter
-
--   Model strings configurable; default + fallback set (see [11](#11-ai-summarization-via-openrouter)).
-
-**Billing (v0.1.0):** Clerk Billing (Stripe connected via Clerk) + Clerk UI components (`<PricingTable />`).
-
-### 6.2 Component-level architecture
-
-```mermaid
-flowchart LR
-  subgraph Client
-    WEB[React Web App]
-  end
-
-  subgraph External
-    Clerk[Clerk Auth]
-    OR[OpenRouter LLM]
-    Stripe[Stripe Billing via Clerk]
-    S3[S3/R2 Object Storage]
-  end
-
-  subgraph Railway
-    API[FastAPI API Service]
-    W1[Celery Worker: fetch/diff/summarize/notify]
-    REND[Celery Worker: render (Playwright)]
-    SCH[Scheduler (Celery Beat / due-enqueuer)]
-    PG[(Postgres)]
-    RD[(Redis)]
-  end
-
-  WEB -->|JWT| API
-  API --> PG
-  API --> RD
-  API --> Clerk
-
-  SCH --> RD
-  W1 --> RD
-  REND --> RD
-
-  W1 --> PG
-  W1 --> S3
-  W1 --> OR
-
-  REND --> S3
-
-  Clerk --> Stripe
-  Clerk -->|webhook| API
+```
+┌─────────────────────────────────────────────────────────┐
+│  Client (Browser)                                       │
+│  Next.js App (React + TypeScript)                       │
+│  Clerk <SignedIn>/<SignedOut> components                 │
+└────────────────┬────────────────────────────────────────┘
+                 │ Server Actions (BFF)
+                 │ Clerk session verification
+                 │ Tier enforcement via has()
+                 │ hey-api generated client
+                 ▼
+┌─────────────────────────────────────────────────────────┐
+│  Railway Private Network                                │
+│                                                         │
+│  ┌──────────────┐    service token    ┌──────────────┐  │
+│  │  Next.js      │──────────────────→│  FastAPI       │  │
+│  │  (public)     │                    │  (internal)    │  │
+│  └──────────────┘                    └──────┬────────┘  │
+│                                             │           │
+│  ┌──────────────┐                    ┌──────▼────────┐  │
+│  │  Worker       │◄──── polls ──────│  Postgres      │  │
+│  │  (fetch/diff/ │────── writes ───→│  (DB + queue)  │  │
+│  │   summarize/  │                    └───────────────┘  │
+│  │   render)     │                                      │
+│  └──────┬────────┘                    ┌───────────────┐  │
+│         │                             │  Redis         │  │
+│         └──── cache ────────────────→│  (cache only)  │  │
+│                                       └───────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                 │
+                 ▼ External (outbound HTTPS)
+    ┌────────┐ ┌────────────┐ ┌──────────┐
+    │ Clerk  │ │ OpenRouter  │ │ Target   │
+    │ Auth   │ │ LLM API    │ │ Websites │
+    └────────┘ └────────────┘ └──────────┘
 ```
 
-### 6.3 Trust zones & network boundaries
+**Railway services** (4 services + 2 add-ons):
+1. `web` (public) — Next.js via `next start`
+2. `api` (internal, private network) — FastAPI + Uvicorn
+3. `worker` (internal) — Python process: scheduler loop + job executor (fetch, render, diff, summarize, notify, cleanup)
+4. `postgres` — Railway Postgres (DB + job queue + snapshot storage)
+5. `redis` — Railway Redis (caching + robots.txt decisions; NOT for queue)
 
-1. **Public zone**: Web + API endpoints exposed to internet.
-2. **Private app zone**: Workers, scheduler (no public ingress). Communicate via Redis + Postgres.
-3. **Data zone**: Postgres + Redis (Railway private networking).
-4. **External services**: Clerk/Stripe/OpenRouter/S3. Access via outbound HTTPS only.
+Key simplifications from v0.1.0:
+- No Celery/Beat/Flower → Postgres `SELECT FOR UPDATE SKIP LOCKED` queue
+- No S3/R2 → Postgres TOAST compression for snapshot text
+- No separate renderer service → same worker process, separate queue with concurrency limits
+- No separate scheduler service → worker runs scheduler loop
+- FastAPI is internal-only (private network); clients never hit it directly
 
-Principles:
+### 4.2 Data model (7 tables)
 
--   Workers have **least privilege** DB roles (read/write specific tables).
--   Renderer worker has **minimal secrets** (no Stripe keys, no Clerk admin key).
--   Separate env vars per service; no shared “god” credentials.
-
----
-
-## 7) Railway Hosting Topology
-
-### 7.1 Services to create (Railway)
-
-1. `web` (public)
-    - Build Next.js (App Router) app
-    - Serve via `next start` (Railpack)
-2. `api` (public)
-    - FastAPI + Uvicorn
-3. `worker` (private)
-    - Celery worker (queues: `fetch`, `diff`, `summarize`, `notify`, `maintenance`)
-4. `renderer` (private)
-    - Celery worker (queue: `render`) with Playwright/Chromium dependencies
-5. `scheduler` (private)
-    - Celery Beat or a custom “due enqueuer” loop (recommended: custom enqueuer to avoid Beat single-point quirks)
-6. Add-ons:
-    - `postgres` (Railway Postgres)
-    - `redis` (Railway Redis)
-
-### 7.2 Deployment model
-
--   GitHub → Railway deploy on merge to `main`.
--   Staging environment: separate Railway project or Railway “environment” (preferred).
--   Release phase:
-    -   run DB migrations (Alembic) before starting `api`.
-
----
-
-## 8) Data Model (Postgres)
-
-### 8.1 Conventions
-
--   IDs: `uuid` (generated server-side).
--   Timestamps: `timestamptz`, stored in UTC.
--   Soft-delete where needed: `deleted_at` nullable.
--   JSON columns: `jsonb` for structured artifacts (diff hunks, citations).
--   Partitioning: optional later; v0.1.0 uses indexes + retention jobs.
-
-### 8.2 Tables (core)
-
-#### `users`
-
-Maps Clerk identity → internal user row.
-
--   `id` uuid pk
--   `clerk_user_id` text unique not null
--   `email` text not null
--   `stripe_customer_id` text unique null
--   `role` text not null default `user` (`user`|`admin`)
--   `status` text not null default `active` (`active`|`banned`)
--   `created_at`, `updated_at`
-
-Indexes:
-
--   unique(`clerk_user_id`)
--   index(`email`)
--   unique(`stripe_customer_id`)
-
-#### `entitlements`
-
-Local mirror for enforcement + auditing (Clerk remains source of truth).
-
--   `user_id` uuid pk fk -> users(id)
--   `plan` text not null (`free`|`pro`|`business`)
--   `limits` jsonb not null (computed quotas; see [13.2](#132-tiers-quotas-and-feature-gates))
--   `period_start_at` timestamptz
--   `period_end_at` timestamptz
--   `updated_at`
-
-Indexes:
-
--   pk(`user_id`)
--   index(`plan`)
+No `users` table — Clerk manages identity. `clerk_user_id` is the foreign key across all user-scoped tables.
 
 #### `entities`
 
--   `id` uuid pk
--   `user_id` uuid fk -> users(id) not null
--   `name` text not null
--   `website_url` text null
--   `created_at`, `updated_at`, `deleted_at`
+Curated catalog items (companies/services).
 
-Indexes:
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `slug` | text | Unique, URL-friendly |
+| `name` | text | Display name |
+| `website_url` | text | Company website |
+| `category` | text | e.g., "social_media", "cloud", "finance" |
+| `policy_urls` | jsonb | `{"privacy": "https://...", "tos": "https://...", "cookie": "https://..."}` |
+| `created_at` | timestamptz | |
+| `updated_at` | timestamptz | |
 
--   index(`user_id`)
--   unique(`user_id`, `name`) where `deleted_at is null`
+Indexes: unique(`slug`)
+
+Seeded from `catalog.json` in repo via Alembic migration (upsert by slug). Community contributes new entities via GitHub PRs.
 
 #### `documents`
 
-A tracked public URL.
+A tracked URL for a specific user + entity combination.
 
--   `id` uuid pk
--   `user_id` uuid fk -> users(id) not null
--   `entity_id` uuid fk -> entities(id) not null
--   `url` text not null
--   `url_canonical` text not null (normalized)
--   `doc_type` text not null (`privacy`|`tos`|`cookie`|`other`)
--   `status` text not null (`active`|`paused`|`blocked_robots`|`error`)
--   `fetch_mode` text not null default `auto` (`auto`|`http_only`|`force_render`)
--   `schedule_tier` text not null (`daily`|`6h`|`1h`)
--   `next_due_at` timestamptz not null
--   `last_checked_at` timestamptz
--   `last_snapshot_id` uuid null
--   `last_change_event_id` uuid null
--   `etag` text null
--   `last_modified` text null
--   `robots_checked_at` timestamptz null
--   `robots_status` text not null default `unknown` (`unknown`|`allowed`|`disallowed`)
--   `created_at`, `updated_at`, `deleted_at`
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `clerk_user_id` | text | NOT NULL |
+| `entity_id` | uuid | FK → entities |
+| `url` | text | |
+| `doc_type` | text | `privacy` / `tos` / `cookie` / `other` |
+| `status` | text | `active` / `paused` / `blocked_robots` / `error` |
+| `schedule_tier` | text | `daily` / `6h` / `1h` |
+| `next_check_at` | timestamptz | Used by scheduler |
+| `last_checked_at` | timestamptz | |
+| `last_snapshot_id` | uuid | Nullable |
+| `etag` | text | Nullable, for conditional GET |
+| `last_modified` | text | Nullable, for conditional GET |
+| `robots_checked_at` | timestamptz | Nullable |
+| `robots_status` | text | `unknown` / `allowed` / `disallowed` |
+| `created_at` | timestamptz | |
+| `deleted_at` | timestamptz | Nullable, soft-delete |
 
 Indexes:
-
--   index(`user_id`, `status`)
--   index(`entity_id`)
--   unique(`user_id`, `url_canonical`) where `deleted_at is null`
--   index(`next_due_at`) where `status = 'active' and deleted_at is null`
+- `(clerk_user_id, entity_id)` unique where `deleted_at IS NULL`
+- `(next_check_at)` where `status = 'active' AND deleted_at IS NULL` (scheduler)
+- `(clerk_user_id, status)`
 
 #### `snapshots`
 
-One fetched version (raw + extracted).
+Fetched + extracted text for a document at a point in time.
 
--   `id` uuid pk
--   `document_id` uuid fk -> documents(id) not null
--   `fetched_at` timestamptz not null
--   `fetch_method` text not null (`http`|`render`)
--   `http_status` int not null
--   `final_url` text not null
--   `content_type` text null
--   `raw_storage_key` text null (S3 key); null if not stored due to size/error
--   `raw_sha256` bytea not null
--   `extracted_text` text not null (normalized markdown-ish)
--   `extracted_sha256` bytea not null
--   `extract_version` int not null (bump when extractor changes)
--   `language` text null (optional detection)
--   `byte_size_raw` int null
--   `byte_size_extracted` int not null
--   `retention_delete_at` timestamptz not null
--   `created_at` timestamptz not null
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `document_id` | uuid | FK → documents |
+| `fetched_at` | timestamptz | |
+| `fetch_method` | text | `http` / `render` |
+| `http_status` | int | |
+| `content_type` | text | Nullable |
+| `extracted_text` | text | Stored via TOAST + LZ4 |
+| `extracted_sha256` | text | |
+| `extract_version` | int | Bump when extractor changes |
+| `byte_size_extracted` | int | |
+| `retention_delete_at` | timestamptz | Tier-based |
+| `created_at` | timestamptz | |
 
 Indexes:
-
--   index(`document_id`, `fetched_at` desc)
--   index(`extracted_sha256`)
--   index(`retention_delete_at`)
+- `(document_id, fetched_at DESC)`
+- `(retention_delete_at)` (cleanup job)
 
 #### `diffs`
 
-Diff artifact between two snapshots.
+Pre-computed diff between two consecutive snapshots.
 
--   `id` uuid pk
--   `document_id` uuid fk -> documents(id) not null
--   `from_snapshot_id` uuid fk -> snapshots(id) not null
--   `to_snapshot_id` uuid fk -> snapshots(id) not null
--   `diff_format` text not null (`unified`|`segments_v1`)
--   `unified_diff` text not null
--   `diff_hunks` jsonb not null (structured, for citations)
--   `change_score` numeric not null (0..1)
--   `created_at`
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `document_id` | uuid | FK → documents |
+| `from_snapshot_id` | uuid | FK → snapshots |
+| `to_snapshot_id` | uuid | FK → snapshots |
+| `diff_hunks` | jsonb | Structured: `[{hunkId, context, added[], removed[], positions}]` |
+| `change_score` | numeric | 0..1 |
+| `change_classification` | text | `cosmetic` / `meaningful` / `major` |
+| `created_at` | timestamptz | |
 
 Indexes:
-
--   unique(`from_snapshot_id`, `to_snapshot_id`)
--   index(`document_id`, `created_at` desc)
+- unique(`from_snapshot_id`, `to_snapshot_id`)
+- `(document_id, created_at DESC)`
 
 #### `change_events`
 
-One meaningful change (ties diff + summary + notifications).
+User-facing change record tying diff + AI summary.
 
--   `id` uuid pk
--   `document_id` uuid fk -> documents(id) not null
--   `diff_id` uuid fk -> diffs(id) not null
--   `event_type` text not null (`meaningful_change`)
--   `title` text not null (generated, e.g., “Privacy Policy updated”)
--   `summary_status` text not null (`pending`|`completed`|`failed`|`skipped_quota`)
--   `summary_what_changed` jsonb null (bullets with citations)
--   `summary_why_matters` jsonb null (bullets with citations)
--   `summary_disclaimer` text not null
--   `summary_model` text null
--   `summary_prompt_version` int null
--   `summary_error` text null
--   `created_at`
-
-Indexes:
-
--   index(`document_id`, `created_at` desc)
--   index(`summary_status`)
-
-#### `notification_preferences`
-
--   `id` uuid pk
--   `user_id` uuid fk -> users(id) not null
--   `document_id` uuid fk -> documents(id) null (null means default)
--   `email_enabled` bool not null default true
--   `email_mode` text not null default `immediate` (`immediate`|`daily_digest`)
--   `created_at`, `updated_at`
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `document_id` | uuid | FK → documents |
+| `diff_id` | uuid | FK → diffs |
+| `title` | text | Generated, e.g., "Privacy Policy updated" |
+| `summary_status` | text | `pending` / `completed` / `failed` / `skipped_quota` |
+| `summary_what_changed` | jsonb | Bullets with citations |
+| `summary_why_matters` | jsonb | Bullets with citations |
+| `summary_model` | text | Nullable |
+| `summary_prompt_version` | int | Nullable |
+| `summary_error` | text | Nullable |
+| `created_at` | timestamptz | |
 
 Indexes:
-
--   unique(`user_id`, `document_id`)
-
-#### `notifications`
-
--   `id` uuid pk
--   `user_id` uuid fk -> users(id) not null
--   `change_event_id` uuid fk -> change_events(id) not null
--   `channel` text not null (`email`)
--   `status` text not null (`queued`|`sent`|`failed`|`suppressed_unsubscribed`)
--   `to_email` text not null
--   `provider` text not null (`postmark`)
--   `provider_message_id` text null
--   `error` text null
--   `created_at`, `sent_at`
-
-Indexes:
-
--   index(`user_id`, `created_at` desc)
--   index(`status`, `created_at`)
+- `(document_id, created_at DESC)`
 
 #### `jobs`
 
-App-level job record for audit/visibility (Celery is execution; DB is visibility).
+Postgres-based job queue. Workers poll with `SELECT FOR UPDATE SKIP LOCKED`.
 
--   `id` uuid pk
--   `user_id` uuid null fk -> users(id)
--   `document_id` uuid null fk -> documents(id)
--   `job_type` text not null (`fetch`|`render`|`diff`|`summarize`|`notify`|`cleanup`)
--   `status` text not null (`queued`|`running`|`succeeded`|`failed`|`dead`)
--   `attempt` int not null default 0
--   `max_attempts` int not null default 5
--   `celery_task_id` text null
--   `error` text null
--   `started_at` timestamptz null
--   `finished_at` timestamptz null
--   `created_at`
-
-Indexes:
-
--   index(`status`, `created_at`)
--   index(`document_id`, `created_at` desc)
--   index(`celery_task_id`)
-
-#### `provider_usage`
-
-Metering and cost controls (LLM, rendering, fetches).
-
--   `id` uuid pk
--   `user_id` uuid fk -> users(id) not null
--   `document_id` uuid fk -> documents(id) null
--   `provider` text not null (`openrouter`|`playwright`|`http_fetch`|`postmark`)
--   `action` text not null (`summary`|`render_fetch`|`http_fetch`|`email_send`)
--   `quantity` int not null default 1
--   `tokens_in` int null
--   `tokens_out` int null
--   `cost_usd_micros` bigint null
--   `period_key` text not null (e.g., `2026-01`)
--   `created_at`
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `queue` | text | `fetch` / `render` / `diff` / `summarize` / `notify` / `cleanup` |
+| `clerk_user_id` | text | Nullable |
+| `document_id` | uuid | Nullable FK → documents |
+| `status` | text | `queued` / `running` / `succeeded` / `failed` / `dead` |
+| `payload` | jsonb | Job-specific data |
+| `attempt` | int | Default 0 |
+| `max_attempts` | int | Default 5 |
+| `error` | text | Nullable |
+| `run_at` | timestamptz | For delayed execution |
+| `locked_at` | timestamptz | Nullable, set when claimed |
+| `started_at` | timestamptz | Nullable |
+| `finished_at` | timestamptz | Nullable |
+| `created_at` | timestamptz | |
 
 Indexes:
+- `(queue, status, run_at)` where `status = 'queued'` (worker polling)
+- `(document_id, created_at DESC)`
+- `(status, created_at)`
 
--   index(`user_id`, `period_key`, `provider`, `action`)
--   index(`created_at`)
+See [Appendix B](#appendix-b--job-queue-schema-skip-locked) for the polling query.
 
-#### `audit_logs`
+#### `notifications`
 
--   `id` uuid pk
--   `actor_user_id` uuid fk -> users(id) not null
--   `action` text not null
--   `target_type` text not null
--   `target_id` text not null
--   `metadata` jsonb not null default `{}`
--   `ip` inet null
--   `user_agent` text null
--   `created_at`
+In-app notification feed.
 
-Indexes:
-
--   index(`actor_user_id`, `created_at` desc)
--   index(`action`, `created_at` desc)
-
-#### `webhook_events`
-
-Idempotency + replay defense.
-
--   `id` uuid pk
--   `source` text not null (`clerk`|`stripe`|`postmark`)
--   `external_id` text not null
--   `received_at` timestamptz not null
--   `processed_at` timestamptz null
--   `status` text not null (`received`|`processed`|`failed`)
--   `payload` jsonb not null
--   `error` text null
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `clerk_user_id` | text | NOT NULL |
+| `type` | text | `change_detected` / `check_failed` / `system` |
+| `title` | text | |
+| `body` | text | Short description |
+| `payload` | jsonb | Links, entity info, change event ID |
+| `read_at` | timestamptz | Nullable |
+| `created_at` | timestamptz | |
 
 Indexes:
+- `(clerk_user_id, created_at DESC)`
+- `(clerk_user_id, read_at)` where `read_at IS NULL` (unread count)
 
--   unique(`source`, `external_id`)
--   index(`status`, `received_at`)
+### 4.3 API layer
+
+**Pattern**: Next.js Server Actions (BFF) → FastAPI (internal)
+
+- FastAPI generates OpenAPI spec
+- `hey-api/openapi-ts` generates type-safe TypeScript client from spec
+- Server Actions call FastAPI via Railway private networking (e.g., `http://api.railway.internal:8000`)
+- Client-side code never calls FastAPI directly
+- Auth: Server Actions verify Clerk session server-side. Calls to FastAPI use a shared service token (`INTERNAL_SERVICE_TOKEN` env var) + pass `clerk_user_id` as parameter
+- FastAPI trusts the service token; enforces row-level access by `clerk_user_id`
+
+**FastAPI endpoints** (internal, not public):
+
+```
+GET    /healthz
+GET    /internal/entities                    (list catalog)
+GET    /internal/entities/{slug}             (catalog detail)
+POST   /internal/documents/watch             (create tracked docs for user+entity)
+DELETE /internal/documents/{id}              (unwatch)
+GET    /internal/documents                   (user's tracked docs)
+GET    /internal/documents/{id}              (doc detail)
+POST   /internal/documents/{id}/check-now    (enqueue on-demand check)
+GET    /internal/change-events               (user's change events)
+GET    /internal/change-events/{id}          (detail with summary + diff)
+GET    /internal/notifications               (user's notifications)
+POST   /internal/notifications/mark-read     (mark notifications read)
+GET    /internal/notifications/unread-count   (polling endpoint)
+POST   /internal/webhooks/clerk              (Clerk webhook, signature verified)
+GET    /internal/admin/jobs                  (admin only)
+POST   /internal/admin/jobs/{id}/retry       (admin only)
+```
+
+**Error format**:
+```json
+{
+  "error": {
+    "code": "DOCUMENT_LIMIT_EXCEEDED",
+    "message": "You've reached your document limit. Upgrade to Pro for 25 documents.",
+    "details": { "current": 3, "limit": 3, "tier": "free" }
+  }
+}
+```
+
+### 4.4 Pipeline
+
+```
+Scheduler loop (every 60s)
+  → SELECT documents WHERE next_check_at <= now() AND no pending job
+  → INSERT INTO jobs (queue='fetch')
+
+Worker loop:
+  1. FETCH
+     - Validate URL (SSRF checks)
+     - Check robots.txt (cached 24h per host)
+     - HTTP GET with conditional headers (ETag, Last-Modified)
+     - If minimal text: enqueue render job (Playwright, same process, concurrency-limited)
+     - For PDFs: pypdf extraction; Tesseract OCR fallback if < 500 chars
+
+  2. EXTRACT
+     - trafilatura 2.0 (F1 0.958)
+     - ~20 lines post-processing: strip timestamps, copyright years, counters
+     - Store extracted text → snapshots table (TOAST compressed)
+
+  3. DETECT CHANGE (tiered)
+     - SHA256 gate: identical hash → no-op
+     - SequenceMatcher ratio: below 0.02 → skip
+     - Cosmetic pattern strip: timestamps, "© 2026", counters
+     - LLM classify (cheap model) for ambiguous cases (~$3/year)
+     - Confirmed meaningful → proceed to diff
+
+  4. DIFF
+     - diff-match-patch with semantic cleanup
+     - Generate structured hunks as JSONB
+     - Store in diffs table
+
+  5. SUMMARIZE (if within quota)
+     - OpenRouter API call with structured hunks
+     - Primary: Claude Sonnet 4.5
+     - Fallback: GPT-5.2 → Gemini 3 Flash
+     - Runtime citation validation
+     - Store in change_events
+
+  6. NOTIFY
+     - Create in-app notification
+     - (Future: email notification)
+```
+
+### 4.5 Scheduler
+
+Worker process runs a scheduler loop (no external cron, no Celery Beat):
+
+```python
+# Every 60 seconds:
+SELECT d.id FROM documents d
+WHERE d.status = 'active'
+  AND d.next_check_at <= now()
+  AND d.deleted_at IS NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM jobs j
+    WHERE j.document_id = d.id
+      AND j.queue = 'fetch'
+      AND j.status IN ('queued', 'running')
+  )
+LIMIT 200
+FOR UPDATE OF d SKIP LOCKED;
+
+# For each document:
+INSERT INTO jobs (queue, document_id, clerk_user_id, status, run_at)
+VALUES ('fetch', d.id, d.clerk_user_id, 'queued', now());
+
+UPDATE documents SET next_check_at = now() + interval_for(schedule_tier)
+WHERE id = d.id;
+```
+
+Self-contained, horizontally scalable via `SKIP LOCKED`.
+
+### 4.6 Catalog
+
+**Source**: `catalog.json` in repo root.
+
+```json
+[
+  {
+    "slug": "google",
+    "name": "Google",
+    "website_url": "https://google.com",
+    "category": "search",
+    "policy_urls": {
+      "privacy": "https://policies.google.com/privacy",
+      "tos": "https://policies.google.com/terms"
+    }
+  }
+]
+```
+
+**Seeding**: Alembic migration step runs on every deploy. Upserts by `slug` — new entities in JSON appear in DB after next deploy. Idempotent.
+
+**Community contributions**: GitHub PRs to `catalog.json`. Maintainer reviews (valid URL, robots.txt compatible, not duplicate).
+
+### 4.7 Performance targets
+
+- API (Server Actions) p95 latency: < 300ms for reads, < 600ms for writes
+- Background monitoring: 95% of scheduled checks start within 10 min of due time
+- Diff viewer render: < 200ms (pre-computed diffs, no on-demand computation)
+- Pipeline throughput: sized for ~50k checks/day at launch (1 worker instance)
 
 ---
 
-## 9) API Design (REST)
+## 5) Security, Privacy, Compliance
 
-### 9.1 API principles
+### 5.1 Auth model
 
--   JSON over HTTPS.
--   Versioned under `/v1`.
--   Cursor pagination where lists can grow.
--   All endpoints require auth except `/healthz` and marketing content.
-
-**API versioning strategy**
-
--   **Short overlap period**: When `/v2` is introduced, `/v1` and `/v2` coexist for 3-6 months.
--   Deprecation warnings included in responses (`X-API-Deprecated: true`).
--   Aggressive migration push via email and dashboard banners.
-
-**Error response format**
-
-All errors return both machine-readable code and human-readable message:
-
-```json
-{
-	"error": {
-		"code": "DOCUMENT_LIMIT_EXCEEDED",
-		"message": "You've reached your document limit. Upgrade to Pro for 25 documents.",
-		"details": {
-			"current": 3,
-			"limit": 3,
-			"tier": "free"
-		}
-	}
-}
+```
+Browser → Clerk JS → Session cookie
+Server Actions → Clerk server SDK → verify session → extract clerk_user_id
+Server Actions → FastAPI (private network) → service token + clerk_user_id
+FastAPI → row-level access check by clerk_user_id
 ```
 
--   `code`: Machine-readable, screaming snake case (e.g., `RATE_LIMIT_EXCEEDED`, `INVALID_URL`, `ROBOTS_BLOCKED`).
--   `message`: User-friendly, suitable for direct display.
--   `details`: Optional structured context for debugging.
-
-### 9.2 Authentication (Clerk)
-
-**Client → API**
-
--   Web app obtains a Clerk session token (JWT).
--   For API auth, the web app should request a **JWT Template** token (e.g. `template="inplain"`) so the token’s `aud` matches `CLERK_JWT_AUDIENCE`.
--   Send `Authorization: Bearer <token>` to API.
-
-**API verification**
-
--   Verify JWT signature via Clerk JWKS.
--   Validate:
-    -   `iss`, `aud` (configured)
-    -   `sub` (Clerk user id)
-    -   expiration
--   Extract entitlement claims (see [13.4](#134-entitlement-enforcement-flow)).
-
-**Backend configuration (env)**
-
--   `CLERK_ISSUER` (e.g. `https://clerk.<your-domain>`)
--   `CLERK_JWKS_URL` (e.g. `https://clerk.<your-domain>/.well-known/jwks.json`)
--   `CLERK_JWT_AUDIENCE` (your configured JWT template audience)
--   Optional: `CLERK_SECRET_KEY` for server→Clerk API calls (e.g. resolving email on first request)
--   Local dev only: `DEV_AUTH_BYPASS=1` + `X-Dev-Email` header (never enabled in prod)
-
-**Admin role**
-
--   `role` comes from Clerk public metadata (mirrored to JWT custom claims).
--   API must still check DB `users.role` to allow emergency admin revocation.
-
-### 9.3 Authorization model
-
--   Every resource is owned by `user_id`.
--   Access rule: `resource.user_id == current_user.id` OR `current_user.role == admin`.
--   Admin endpoints under `/v1/admin/*`.
-
-### 9.4 Rate limiting (tier-based)
-
--   Use Redis sliding window.
--   Keys:
-    -   `rl:user:{user_id}:{bucket}` and `rl:ip:{ip}:{bucket}`
--   Default buckets:
-    -   `api_read`: 120 req/min (free), 300 req/min (pro), 600 req/min (business)
-    -   `api_write`: 30 req/min, 60 req/min, 120 req/min
-    -   `check_now`: 5/min, 20/min, 60/min (plus monthly quotas)
--   Return `429` with `Retry-After`.
-
-### 9.5 UI/UX Design Decisions
-
-#### 9.5.1 Platform & framework
-
--   **Web**: Single Next.js app (App Router) serving both marketing pages and the authenticated app.
--   **Mobile**: Responsive web only (no PWA/native in v0.1.0).
-
-#### 9.5.2 Diff viewer (section-first)
-
--   **Default view**: Section-first collapsed view.
-    -   Group changes by detected section/heading.
-    -   Show section name + change indicator (additions/removals count).
-    -   Click to expand section and see inline diff.
--   **Section detection (hybrid)**:
-    -   Primary: Heuristic detection via H1-H6 tags, bold/strong first lines, numbered sections (1., 2., I., II.), ALL CAPS lines.
-    -   Secondary: LLM semantic chunking to identify section boundaries.
-    -   Cross-reference both methods for accuracy.
-    -   Fallback: Paragraph-level grouping if no clear sections detected.
--   **Toggle**: User can switch to traditional unified or split diff view.
-
-#### 9.5.3 Citation navigation
-
--   When user clicks a citation in the summary:
-    -   Smooth scroll to the referenced hunk.
-    -   Apply temporary highlight (fade after 2s).
-    -   If in section view, auto-expand the containing section.
-
-#### 9.5.4 Document history
-
--   **Recent-only in UI**: Show last 10 change events by default.
--   **Full history via export**: Complete history available via JSON/CSV export (tier-gated).
--   **Progressive disclosure**: "Show all history" link reveals full paginated list.
-
-#### 9.5.5 Onboarding UX (watch company flow)
-
--   From a company page, clicking “Watch changes”:
-    1. If signed out, complete Clerk auth and return to the company page.
-    2. Create (or reuse) the tracked Company (Entity) idempotently.
-    3. Add the curated policy documents (Privacy/ToS/Cookie) when available.
-    4. Kick off an initial snapshot job for each document (best-effort).
--   UX states:
-    -   “Setting up tracking…” immediately after click.
-    -   “First snapshot pending…” in the app until data arrives.
-    -   Clear error states for robots blocks, missing URLs, and plan gates (upgrade CTA).
--   **No custom URL entry**: tracking is via the curated directory only in v0.1.0.
-
-#### 9.5.6 Error states
-
--   **Failed summary**: Show diff with banner: "AI summary unavailable for this change. [Learn why](link to docs)". No retry button in v0.1.0.
--   **Blocked by robots.txt**: Show specific blocking rule: "Disallow: /privacy matched by User-Agent: *". Link to view full robots.txt.
--   **URL gone (404/410)**: Auto-pause document silently. Show "Document paused: URL no longer accessible" status in dashboard. No email notification for this.
--   **PDF extraction failed**: "Image-based PDF could not be extracted. Text-based PDFs are supported."
-
-#### 9.5.7 Tracking lifecycle
-
--   **Unwatch**: User can stop tracking a company; soft-delete cascades to all documents under the tracked company.
-    -   Confirmation modal: “Stop tracking [Company]? This will remove X policies and their history.”
-    -   Documents are soft-deleted; data retained per retention policy.
--   **Rename**: Not available in v0.1.0 (company names/URLs are curated).
-
-#### 9.5.8 Admin impersonation
-
--   Admins can enter read-only impersonation mode to see a user's dashboard as they see it.
--   **Audit trail**: Every impersonation session logged to `audit_logs` with start/end time, admin user, target user.
--   **Visual indicator**: Clear banner in impersonation mode: "Viewing as [user@email.com] (read-only)".
-
-#### 9.5.9 Marketing + public directory IA (reference parity)
-
--   Primary public routes:
-    -   `/` (marketing homepage)
-    -   `/companies` (public directory: search + category filter)
-    -   `/roadmap`, `/about`
--   CTA routes:
-    -   `/signup` and `/login` as friendly aliases for Clerk sign-up/sign-in routes.
--   Header nav:
-    -   Home, Companies, Roadmap, About
-    -   Signed-out: Sign in / Start free
-    -   Signed-in: Dashboard link + user menu
-
--   Homepage sections (v0.1.0):
-    -   Hero: “Privacy policies made simple” + primary CTA to start free
-    -   Problem framing: short stats cards (change without notice / length / time cost)
-    -   Feature highlights: change detection, diff + exports, citation-backed AI
-    -   How it works: 3-step overview
-    -   Popular companies: link into the directory and per-company pages
-    -   Always-on disclaimer: informational only; not legal advice
-
-#### 9.5.10 Company page IA (`/[companySlug]`)
-
--   Company overview page is public and supports progressive enhancement:
-    -   Signed-out users can browse and understand the product.
-    -   Signed-in users can “Watch changes” and unlock personalized tracking.
--   Sections (tabbed UI; stack in DOM for SSR):
-    -   Overview
-    -   Current Policy (latest extracted snapshot)
-    -   Changes (recent ChangeEvents with summaries + citations)
-    -   Versions (snapshot selector + diff)
-    -   Timeline (chronological list of changes)
-    -   AI Analysis (latest summary + highlights)
--   “No data yet” states are first-class (e.g. first snapshot not captured yet).
-
-#### 9.5.11 Watch flow
-
--   From a company page, clicking “Watch changes”:
-    1. If signed out, redirect to sign-up and then return.
-    2. If signed in, create a tracked Company (Entity) and add available standard documents.
-    3. Navigate user to the tracked company inside `/app`.
--   The app never blocks page render on background processing; it shows queued/running states.
-
-### 9.6 Endpoints (examples)
-
-#### Health
-
-`GET /healthz`
-
-```json
-{ "ok": true }
-```
-
-#### Me
-
-`GET /v1/me`
-
-Response includes the current plan and limits (used to render tier gating + usage UI):
-
-```json
-{
-	"id": "0f5d0c7e-...-f2b",
-	"email": "user@example.com",
-	"plan": "free",
-	"limits": { "tracked_documents": 3, "ai_summaries_per_month": 10 }
-}
-```
-
-#### Tracking (curated companies only)
-
-`POST /v1/companies/{companySlug}/watch`
-
-Creates (or reuses) a tracked company for the signed-in user and adds the curated policy URLs.
-Users do not supply custom URLs in v0.1.0.
-
-Response:
-
-```json
-{ "entityId": "0f5d0c7e-...-f2b" }
-```
-
-`GET /v1/entities?cursor=...&limit=20` (lists tracked companies)
-
-`DELETE /v1/entities/{entityId}` (stop tracking a company)
-
-Soft-deletes the tracked company and its documents for the current user and schedules data cleanup.
-
-Response:
-
-```json
-{ "ok": true }
-```
-
-#### Documents
-
-Documents are created automatically when a user watches a company.
-
-`GET /v1/entities/{entityId}/documents?cursor=...&limit=20`
-
-Response:
-
-```json
-{
-	"items": [
-		{
-			"id": "b2d1...9a",
-			"url": "https://acme.com/privacy",
-			"docType": "privacy",
-			"status": "active",
-			"robotsStatus": "allowed",
-			"nextDueAt": "2026-01-10T00:00:00Z",
-			"lastCheckedAt": "2026-01-09T19:00:00Z",
-			"lastChangeEventId": "ce1...",
-			"createdAt": "2026-01-09T19:00:00Z"
-		}
-	],
-	"nextCursor": null
-}
-```
-
-`GET /v1/documents/{documentId}`
-
-Response:
-
-```json
-{
-	"id": "b2d1...9a",
-	"url": "https://acme.com/privacy",
-	"docType": "privacy",
-	"status": "active",
-	"robotsStatus": "allowed",
-	"nextDueAt": "2026-01-10T00:00:00Z",
-	"lastCheckedAt": "2026-01-09T19:00:00Z",
-	"lastChangeEventId": "ce1...",
-	"createdAt": "2026-01-09T19:00:00Z"
-}
-```
-
-`POST /v1/documents/{documentId}/pause`
-
-```json
-{ "paused": true }
-```
-
-`POST /v1/documents/{documentId}/check-now`
-Response:
-
-```json
-{ "jobId": "7b0c...12", "status": "queued" }
-```
-
-#### Document history
-
-`GET /v1/documents/{documentId}/change-events?cursor=...&limit=20`
-
-Response:
-
-```json
-{
-	"items": [
-		{
-			"id": "ce1...",
-			"createdAt": "2026-01-09T19:05:00Z",
-			"title": "Privacy Policy updated",
-			"summaryStatus": "completed"
-		}
-	],
-	"nextCursor": null
-}
-```
-
-#### Snapshots
-
-`GET /v1/documents/{documentId}/snapshots?cursor=...&limit=20`
-
-Response (may be empty `items` if no snapshots captured yet):
-
-```json
-{
-	"items": [
-		{
-			"id": "snp_...",
-			"fetchedAt": "2026-01-09T19:00:00Z",
-			"fetchMethod": "http",
-			"httpStatus": 200,
-			"finalUrl": "https://acme.com/privacy",
-			"contentType": "text/html; charset=utf-8",
-			"language": "en",
-			"byteSizeRaw": 123456,
-			"byteSizeExtracted": 45678,
-			"extractVersion": 1
-		}
-	],
-	"nextCursor": null
-}
-```
-
-`GET /v1/documents/{documentId}/snapshots/latest`
-
-If the document has no snapshots yet, return `404` with `NO_SNAPSHOTS`:
-
-```json
-{
-	"detail": {
-		"error": { "code": "NO_SNAPSHOTS", "message": "No snapshots captured yet." }
-	}
-}
-```
-
-`GET /v1/snapshots/{snapshotId}`
-
-Response:
-
-```json
-{
-	"id": "snp_...",
-	"documentId": "b2d1...9a",
-	"fetchedAt": "2026-01-09T19:00:00Z",
-	"fetchMethod": "http",
-	"httpStatus": 200,
-	"finalUrl": "https://acme.com/privacy",
-	"contentType": "text/html; charset=utf-8",
-	"language": "en",
-	"byteSizeRaw": 123456,
-	"byteSizeExtracted": 45678,
-	"extractVersion": 1,
-	"rawStorageKey": null,
-	"rawSha256": "…",
-	"extractedSha256": "…",
-	"extractedText": "…"
-}
-```
-
-#### Diff + summary
-
-`GET /v1/change-events/{changeEventId}`
-Response:
-
-```json
-{
-	"id": "ce1...",
-	"documentId": "b2d1...9a",
-	"title": "Privacy Policy updated",
-	"createdAt": "2026-01-09T19:05:00Z",
-	"summary": {
-		"whatChanged": [
-			{
-				"text": "Added language about sharing data with service providers for analytics.",
-				"citations": [
-					{
-						"hunkId": "h3",
-						"quote": "We may share information with analytics providers...",
-						"side": "added"
-					}
-				]
-			}
-		],
-		"whyItMatters": [
-			{
-				"text": "Your data may be used for broader tracking/measurement; consider opting out if available.",
-				"citations": [
-					{
-						"hunkId": "h3",
-						"quote": "analytics providers",
-						"side": "added"
-					}
-				]
-			}
-		],
-		"disclaimer": "This summary is informational and not legal advice."
-	},
-	"diff": {
-		"format": "unified",
-		"unified": "@@ ...",
-		"hunks": [
-			{
-				"hunkId": "h3",
-				"context": "Sharing of Information",
-				"added": [
-					"We may share information with analytics providers..."
-				],
-				"removed": []
-			}
-		]
-	}
-}
-```
-
-#### Billing (v0.1.0)
-
-Billing UI uses **Clerk Billing** via web components (e.g. `<PricingTable />`).
-
-Legacy Stripe Checkout/Portal endpoints exist but are **disabled by default** behind `ENABLE_BILLING=1`:
-
-- `POST /v1/billing/checkout-session`
-- `POST /v1/billing/portal-session`
-
-#### Unsubscribe
-
-`GET /v1/unsubscribe?token=...`
-
-#### Admin
-
-`GET /v1/admin/jobs?status=failed&limit=50`
-`POST /v1/admin/jobs/{jobId}/retry`
-`GET /v1/admin/users?query=...`
-`GET /v1/admin/abuse`
-`GET /v1/admin/llm-usage`
-
-#### Export (v0.1.0)
-
-`GET /v1/change-events/{changeEventId}/export`
-`GET /v1/documents/{documentId}/export`
-
-### 9.7 Webhooks
-
-#### Clerk webhook (user created/updated)
-
-`POST /v1/webhooks/clerk`
-
--   Verify signature (Svix) using `CLERK_WEBHOOK_SECRET` (Clerk signing secret).
--   Upsert `users` row.
--   Initialize entitlements to `free` if not present.
-
-#### Stripe webhook (subscription changes) — deferred in v0.1.0
-
-`POST /v1/webhooks/stripe`
-
--   Verify signature (Stripe signing secret).
--   Idempotency via `webhook_events`.
--   Update entitlements in **Clerk public metadata** and mirror to `entitlements` table.
-
-**Webhook ordering**: When direct Stripe Checkout is enabled (future), ensure the Clerk session is confirmed before triggering Stripe Checkout to avoid `user.created` vs `checkout.session.completed` races.
+- Clerk is the identity provider (no password storage)
+- Server Actions verify Clerk session server-side
+- FastAPI trusts service token (`INTERNAL_SERVICE_TOKEN`); enforces row-level access by `clerk_user_id`
+- No JWT verification in Python — service token is a shared secret between Next.js and FastAPI on private network
+
+### 5.2 Tier enforcement
+
+Server Action middleware checks Clerk session's plan metadata using `has()` helper before calling FastAPI.
+
+Enforced for:
+- Document creation (document limit)
+- On-demand "Check now" (daily quota)
+- JS rendering (monthly quota)
+- AI summary generation (monthly quota)
+- Export (tier-gated)
+
+FastAPI does NOT duplicate tier checks — it trusts the BFF.
+
+### 5.3 Admin
+
+- Admin users identified via Clerk `publicMetadata.role = "admin"`
+- Admin-only FastAPI endpoints check role from service token payload
+- No admin UI in v0.2.0 — use Railway DB explorer, psql, admin API endpoints
+- No impersonation in v0.2.0
+
+### 5.4 Rate limiting
+
+Tier-based entitlements only in v0.2.0:
+- Clerk auth gates all access (no anonymous API)
+- Document limits, check quotas, summary quotas enforced per tier
+- No IP-based rate limiting (add if abuse observed)
+- No Redis rate limiter (add if needed post-launch)
+- Per-host politeness: 2 concurrent fetches per host, 2s delay between requests
+
+### 5.5 SSRF defenses
+
+Enforced before tracking AND before each fetch:
+1. Allow only `http://` and `https://`
+2. Disallow: usernames/passwords in URL, non-standard ports, IP literal URLs
+3. DNS resolution: block RFC1918, loopback, link-local, cloud metadata (`169.254.169.254`)
+4. Redirects: max 5, re-run SSRF validation per hop
+5. Timeouts: connect 5s, read 20s; max response 5 MB
+
+### 5.6 PII & data residency
+
+- No `users` table — Clerk manages PII
+- Snapshots contain only publicly available text (no user PII)
+- Unwatch → soft-delete; data retained per tier retention, then hard-deleted by cleanup job
+- Account deletion → purge all user-scoped data (documents, notifications)
+- US-only data residency (Railway US regions); documented in privacy policy
+
+### 5.7 Webhook verification
+
+- Clerk webhook: Svix signature verification using `CLERK_WEBHOOK_SECRET`
+- Replay protection: check timestamp freshness
+- No separate `webhook_events` table in v0.2.0 (simplification; add if idempotency issues arise)
+
+### 5.8 Renderer safety (Playwright)
+
+- New incognito context per job
+- Downloads disabled
+- Blocked permissions (geolocation, notifications)
+- Request interception: block `file://`, private IP ranges
+- Navigation timeout: 30s; total budget: 45s
+- No Clerk/Stripe secrets in worker env
+
+### 5.9 Content security
+
+- Diff viewer renders extracted text as plain text (no raw HTML injection)
+- XSS: all user-facing content escaped
+- Security headers: CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, HSTS
+- CORS: allow only web origin
+
+### 5.10 Threat model
+
+| Threat | Risk | Mitigation |
+|--------|------|------------|
+| SSRF via URL tracking | High | Strict URL validation, DNS blocklist, redirect re-validation |
+| Renderer exploited by malicious page | High | Isolated context, timeouts, no secrets, request interception |
+| Webhook spoofing (Clerk) | High | Svix signature verification |
+| Prompt injection from policy text | Medium | Only summarize provided hunks; strict JSON schema; citations required |
+| Data exfiltration via logs | Medium | Never log fetched content; structured logging |
+| Unauthorized access to other users' data | High | Row-level authz by clerk_user_id |
+| Secret leakage | High | Env vars only; no secrets in client; private network |
+| XSS in diff viewer | Medium | Plain text rendering; no raw HTML |
 
 ---
 
-## 10) Scraping + Normalization + Diff System
+## 6) Reliability & Failure Modes
 
-### 10.1 Fetch strategy (step-by-step)
+### 6.1 Failure modes table
 
-**Race condition handling (scheduler vs check-now)**
+| Failure | Detection | User impact | System behavior | Recovery | Blast radius |
+|---------|-----------|-------------|-----------------|----------|--------------|
+| Fetch timeout | Job fails after 20s | "Last check failed" in UI | Job retried (max 5 attempts) | Auto-retry with backoff; user can "Check now" | Single document |
+| Robots.txt blocks | Pre-fetch check | "Blocked by robots.txt" with specific rule | Document status → `blocked_robots` | Re-check robots daily; auto-unblock if allowed | Single document |
+| URL 404/410 | HTTP status check | "Document paused: URL no longer accessible" | Document status → `paused` | Manual re-enable by user | Single document |
+| Trafilatura extraction fails | Empty/minimal text | "Content extraction failed" | Job marked failed; retry with render fallback | Playwright render attempt | Single document |
+| PDF OCR fails | Tesseract returns < 500 chars | "Image-based PDF could not be extracted" | Job marked failed with specific error | None (manual review) | Single document |
+| OpenRouter API down | HTTP error / timeout | "AI summary unavailable" | Summary status → `failed`; diff still available | Circuit breaker; retry next cycle | All summaries |
+| Postgres connection lost | Connection pool error | API returns 503 | All services degrade | Railway auto-restart; connection pool retry | All services |
+| Worker crash | Process exit | Delayed checks | Railway auto-restart; locked jobs expire | Stale lock cleanup (jobs locked > 10 min) | All background work |
+| Clerk outage | Auth verification fails | Cannot sign in | Cached sessions may still work | Wait for Clerk recovery | All auth |
 
-Before enqueueing any fetch job, check `last_checked_at`:
-- If `last_checked_at` is within the last 5 minutes, skip enqueue (dedupe by recency).
-- This prevents scheduler and "check now" from racing on the same document.
+### 6.2 Job failure handling
 
-**Pipeline (scheduled or on-demand)**
+- Job marked `status=dead` after max retries (5 for fetch/render, 3 for summarize)
+- Document shows "Last check failed" with error category
+- User can retry via "Check now"
+- Auto-resume on next scheduled cycle (scheduler re-enqueues regardless of previous failure)
+- Stale job cleanup: jobs with `status='running'` AND `locked_at < now() - interval '10 minutes'` reset to `queued`
 
-1. **Preflight**
-    1. Validate URL (scheme, host, no credentials, no private IP).
-    2. **URL canonicalization** (aggressive):
-        - Strip `www.` prefix
-        - Remove trailing slashes
-        - Remove all query parameters (except known-meaningful like `locale`, `lang`)
-        - Normalize to lowercase host
-        - Store as `url_canonical` for deduplication
-    3. Check robots decision:
-        - if `robots_status != allowed`: block job and set `documents.status = blocked_robots`.
-        - **Robots refresh**: Re-validate robots.txt daily (cache decision for 24h per host).
-2. **HTTP fetch attempt**
-    1. Use `httpx` with timeouts and size limits.
-    2. Send conditional headers if present:
-        - `If-None-Match: <etag>`
-        - `If-Modified-Since: <last_modified>`
-    3. Follow redirects up to 5, re-run SSRF checks per redirect hop.
-    4. If `304 Not Modified`: store lightweight snapshot record (optional) OR record job success with no snapshot (v0.1.0: **no new snapshot**, just update `last_checked_at`).
-3. **Decide JS rendering**
-   Trigger render if any of:
-    - document `fetch_mode == force_render`
-    - content-type is HTML but extracted text is below minimum (e.g., < 500 chars)
-    - page appears to be a JS shell (heuristics: `<div id="app">`, heavy scripts, very low text)
-    - prior successful fetch_method was `render` and current http fetch differs drastically
-4. **Render fetch (if triggered and quota allows)**
-    1. Enqueue `render` job to renderer queue.
-    2. Renderer uses Playwright Chromium to load the page, wait for network idle (bounded), then serialize DOM HTML.
-5. **Store raw snapshot**
-    1. Compress HTML/PDF (zstd or gzip) and upload to S3/R2.
-    2. Compute `raw_sha256`.
-6. **Extract & normalize text**
-    1. **For HTML**: Parse HTML → remove scripts/styles.
-    2. **For PDF**:
-        - Use `pdfplumber` or `pdfminer` for text extraction.
-        - If extracted text < 500 chars, apply OCR fallback via `Tesseract`.
-        - If still minimal, mark as `error_unsupported_pdf` with message "Image-based PDF could not be extracted".
-    3. **For iframe-embedded content** (e.g., Termly, iubenda):
-        - First, parse HTML for iframes with policy-like URLs.
-        - Attempt to fetch iframe `src` directly.
-        - If content minimal (< 500 chars), fall back to full Playwright render of parent page.
-    4. Main-content extraction: `trafilatura` (preferred) or `readability-lxml` fallback.
-    5. Canonicalization rules (see [10.3](#103-canonicalization-rules-to-reduce-noise)).
-    6. Compute `extracted_sha256`.
-7. **Change detection**
-    1. Compare extracted hash to previous snapshot:
-        - if identical: no-op; update `last_checked_at`.
-    2. If different: compute `change_score` and apply thresholds.
-8. **Diff generation**
-    1. Create unified diff.
-    2. Create structured hunks for citations.
-9. **AI summary (if within quota)**
-10. **Persist ChangeEvent and notify**
+### 6.3 Retry policy
 
-### 10.2 Conditional GET and caching
-
--   Store `etag` and `last_modified` in `documents` from last 200 response.
--   Prefer HTTP fetch first (cheap). Rendering is a fallback (expensive).
--   Cache host-level DNS resolutions briefly (in-memory per worker) but re-check for SSRF on each job.
-
-### 10.3 Canonicalization rules to reduce noise
-
-Applied to extracted text and (where possible) DOM pre-extraction:
-
-1. **Remove cookie/modals/banners** (DOM heuristics)
-    - Drop nodes where id/class contains: `cookie`, `consent`, `banner`, `modal`, `popup`, `subscribe`, `newsletter`, `gdpr`.
-2. **Remove navigation/footer boilerplate**
-    - Drop common tags: `nav`, `footer`, `header` if extractor fails.
-3. **Normalize whitespace**
-    - collapse multiple spaces
-    - normalize line endings to `\n`
-4. **Timestamp normalization**
-    - remove lines matching patterns:
-        - `Last updated: ...`
-        - `Effective date: ...`
-        - dates in common formats when preceded by keywords
-5. **Dynamic counters**
-    - remove “© 2026” lines; remove “X users” counters.
-6. **Stable ordering**
-    - ensure consistent heading formatting, bullet normalization.
-7. **Language hints**
-    - keep original language; do not translate automatically in v0.1.0.
-
-All rules are versioned via `extract_version` so changes are traceable.
-
-**Extractor version migration**: When extractor is updated, new version only applies to future fetches. Existing snapshots keep their original extraction. No background re-extraction in v0.1.0.
-
-### 10.4 Snapshot hashing and change detection thresholds
-
-Compute:
-
--   `extracted_sha256`
--   `simhash` (optional v0.1.0; recommended for future)
--   `change_score` (0..1) using normalized Levenshtein ratio or token-based similarity.
-
-**Meaningful change criteria (v0.1.0):**
-
--   extracted hash differs AND
--   either:
-    -   added/removed characters >= 500, OR
-    -   change_score >= 0.02 (2% change), OR
-    -   added/removed contains keywords (configurable list: “share”, “sell”, “third-party”, “advertising”, “arbitration”, “jurisdiction”, “retention”, “opt out”)
-
-Record the computed metrics in `diffs`.
-
-### 10.5 Diff method and storage/display
-
--   Diff basis: **normalized extracted text**, split into lines by:
-    -   headings and paragraphs (double newline boundaries)
-    -   long paragraphs further split at sentence boundaries (simple regex)
--   Generate:
-    -   `unified_diff` using `difflib.unified_diff`
-    -   `diff_hunks` JSON with:
-        -   `hunkId`
-        -   context heading if detectable
-        -   arrays of `added` and `removed` lines
-        -   line ranges (for UI anchors)
-
-UI renders:
-
--   “Summary” first (with citations)
--   Diff viewer with anchors for each `hunkId`
--   Clicking a citation scrolls and highlights its hunk.
+| Queue | Max attempts | Backoff | Hard timeout |
+|-------|-------------|---------|-------------|
+| fetch | 5 | Exponential + jitter (30s, 60s, 120s, 240s, 480s) | 60s |
+| render | 5 | Exponential + jitter | 90s |
+| diff | 3 | Fixed 10s | 30s |
+| summarize | 3 | Exponential (30s, 60s, 120s) | 60s |
+| notify | 3 | Fixed 5s | 10s |
+| cleanup | 1 | None | 300s |
 
 ---
 
-## 11) AI Summarization via OpenRouter
+## 7) Observability & Ops
 
-### 11.1 Model strategy (configurable + fallback)
+### 7.1 Structured logging
 
--   Primary model (default): `anthropic/claude-3.5-sonnet` (via OpenRouter)
--   Fallback model: `openai/gpt-4o-mini`
--   Emergency fallback: `google/gemini-1.5-pro`
+- Python: `structlog` (JSON output)
+- Next.js: `pino` (JSON output)
+- Included fields: `request_id`, `clerk_user_id`, `document_id`, `job_id`, `status`, `latency_ms`
+- **Never log**: fetched page content, user tokens, service token
+- Log sampling: errors always logged; success sampled at 10%
 
-Implementation:
+### 7.2 Health endpoint
 
--   Model list in config; choose first available within per-user budget.
--   Record selected model in `change_events.summary_model`.
+`GET /healthz` — checks Postgres connectivity, returns `{"ok": true}` or 503.
 
-**Backend configuration (env)**
+Used by Railway health checks for auto-restart.
 
--   `OPENROUTER_API_KEY`
--   Optional: `OPENROUTER_BASE_URL` (default `https://openrouter.ai/api/v1`)
--   Optional: `OPENROUTER_PRIMARY_MODEL`, `OPENROUTER_FALLBACK_MODEL`
+### 7.3 Railway log drain
 
-### 11.2 Prompt strategy (grounded + citations)
+Railway's built-in log search for debugging. No external log aggregation in v0.2.0.
 
-**Hard requirements**
+### 7.4 Future observability (deferred)
 
--   Summaries must be derived only from provided diff hunks.
--   Every bullet must include citations referencing `hunkId` + exact quote.
--   Must include “not legal advice”.
+- Sentry (error tracking): add when first undiagnosed production error occurs
+- Metrics (Prometheus/OTLP): add when scaling beyond 1 worker
+- Alerting: add when operating with real users
 
-**Prompt outline (v1)**
-System:
+---
 
--   You are summarizing changes to a privacy policy / terms.
--   Use only provided hunks; do not speculate.
--   Produce JSON strictly matching schema.
+## 8) Rollout, Migration, Compatibility
 
-User payload:
+### 8.1 Rollout strategy
 
--   Document metadata (name, url, type)
--   Diff hunks structured:
-    -   `hunkId`
-    -   `context`
-    -   `added[]`
-    -   `removed[]`
+**Public launch immediately.** No invite-only beta.
 
-Output JSON schema:
+Rationale: curated-only tracking naturally limits blast radius. No user data to migrate (clean-slate rebuild).
 
-```json
-{
-	"what_changed": [
-		{
-			"text": "...",
-			"citations": [{ "hunkId": "h3", "quote": "...", "side": "added" }]
-		}
-	],
-	"why_it_matters": [
-		{
-			"text": "...",
-			"citations": [{ "hunkId": "h3", "quote": "...", "side": "added" }]
-		}
-	],
-	"disclaimer": "..."
-}
+### 8.2 Rollback
+
+Railway built-in rollback: redeploy previous image. DB migrations designed to be backward-compatible (additive-first).
+
+### 8.3 Data retention
+
+| Tier | Snapshot retention | Change events |
+|------|--------------------|---------------|
+| Free | 90 days | Kept indefinitely (small) |
+| Pro | 1 year | Kept indefinitely |
+| Business | 2 years | Kept indefinitely |
+
+Daily cleanup job: delete snapshots where `retention_delete_at <= now()` in batches of 500. Cascade-delete associated diffs.
+
+### 8.4 Backup strategy
+
+- Railway Postgres automatic backups (platform-managed)
+- Nightly `pg_dump` via GitHub Actions scheduled workflow → stored as artifact (30-day retention)
+- Restore tested: `pg_restore --clean --if-exists` → run migrations → verify `/healthz`
+
+### 8.5 Environments
+
+- `dev`: Local Docker Compose (Postgres, Redis); local API/workers; Clerk test instance
+- `staging`: Railway project environment; Clerk test instance; Stripe test mode
+- `prod`: Railway prod environment
+
+### 8.6 CI/CD
+
+- GitHub → Railway deploy on merge to `main`
+- Release phase: Alembic `upgrade head` before starting `api`
+- GitHub Actions checks: lint (ruff, eslint), typecheck (TypeScript), integration tests (pytest, vitest), `pip-audit`, `npm audit`
+
+### 8.7 Repo structure
+
 ```
-
-### 11.3 Language handling
-
--   **Summary language matches source language**: If the policy is in French, the summary is in French.
--   No automatic translation in v0.1.0.
--   Language detection stored in `snapshots.language` for future use.
-
-### 11.4 Citation validation (runtime)
-
-After receiving LLM response, validate each citation:
-1. For each `citation.quote`, verify it exists as a substring in the referenced `hunkId`.
-2. If any citation fails validation:
-    - Mark the specific bullet as `citation_invalid`.
-    - Include the summary but flag: "Some citations could not be verified."
-    - Log for model quality monitoring.
-3. Never display fabricated quotes to users.
-
-### 11.5 AI opinion and tone
-
--   **Clear opinion with caveats**: The AI may flag concerning patterns.
--   Acceptable: "This language typically indicates data sharing with third parties, which many users find concerning."
--   Acceptable: "This change appears to broaden the definition of 'business purposes'."
--   Not acceptable: "You must opt out immediately" or "This violates GDPR."
--   Always include disclaimer.
-
-### 11.6 Safety constraints (user-facing)
-
--   Always include: "This summary is informational and not legal advice."
--   Disallow:
-    -   telling the user what they "must" do legally
-    -   claiming compliance/noncompliance
--   If diff is ambiguous, say so ("The policy text changed, but intent is unclear…").
-
-### 11.7 Cost controls
-
-1. Only run summary on meaningful changes.
-2. Per-tier monthly summary quotas (see [13.2](#132-tiers-quotas-and-feature-gates)).
-3. Token limits:
-    - cap hunks passed to model: top N hunks by size/keyword score (default N=20)
-    - cap per-hunk lines: truncate with indicator
-4. Caching:
-    - key: `(diff_id, model, prompt_version)` → reuse output
-5. Metering:
-    - record tokens/cost in `provider_usage`
-6. Circuit breakers:
-    - if OpenRouter error rate > threshold, mark summaries as `failed` and continue diff+notifications with "summary unavailable".
-
-### 11.8 Evaluation & regression tests
-
--   Maintain a small golden dataset in repo:
-    -   input: structured hunks
-    -   expected: JSON shape + citations refer to existing hunks
--   Automated tests:
-    1. schema validation
-    2. citation validity (quote must be substring of specified hunk line)
-    3. “no legal advice” present
--   Manual QA rubric for beta:
-    -   correctness, non-hallucination, usefulness, readability.
-
----
-
-## 12) Notifications (Email) — deferred in v0.1.0
-
-In v0.1.0, **email delivery is disabled by default** to keep early costs low. Notification preferences + unsubscribe are implemented so email can be enabled later without a schema migration.
-
-### 12.1 Provider choice
-
-**Postmark** for transactional email (future).
-
-**Backend configuration (env)**
-
--   `POSTMARK_SERVER_TOKEN`
--   `POSTMARK_FROM_EMAIL` (e.g. `Inplain <noreply@inplain.ai>`)
-
-### 12.2 Email templates (future)
-
-1. "Change detected" (immediate)
-    - Subject: `[Inplain] {Entity}: {Document type} updated`
-    - Body:
-        - 2–5 bullets "What changed" with citations
-        - link to change event in app
-        - disclaimer
-2. "Daily digest" (Pro+ only)
-    - **Timing**: Fixed 9:00 AM UTC for all users.
-    - List of changes grouped by entity.
-    - Summary counts: "3 policies changed across 2 companies".
-    - Implementation: scheduler enqueues a `notify` job (no `user_id`/`document_id`), worker expands into per-user digest sends.
-
-Templates must include:
-
--   Unsubscribe link (per user)
--   Company address/footer as required by provider policy
-
-### 12.3 Unsubscribe & preferences
-
--   Maintain a per-user email unsubscribe token:
-    -   signed token (HMAC) or stored token in DB
--   Endpoint:
-    -   `GET /v1/unsubscribe?token=...`
--   Store notification preferences in `notification_preferences`:
-    -   global row: `document_id = null`
-    -   per-document override: `document_id = <doc>`
-    -   global unsubscribe (`email_enabled=false`) overrides any per-document setting
--   Authenticated API endpoints (v0.1.0):
-    -   `GET /v1/notification-preferences` (global)
-    -   `PUT /v1/notification-preferences` (global)
-    -   `GET /v1/documents/{documentId}/notification-preference` (override)
-    -   `PUT /v1/documents/{documentId}/notification-preference` (override)
-    -   `DELETE /v1/documents/{documentId}/notification-preference` (revert to default)
--   If unsubscribed:
-    -   set a flag (store in `notification_preferences` with `document_id = null`)
-
-### 12.4 Deliverability basics (future)
-
--   Configure domain SPF/DKIM with Postmark.
--   Use a dedicated sender domain: `mail.inplain.ai`.
--   **IP strategy**: Start with Postmark's shared IP pool (good inherited reputation).
--   Monitor bounce/spam complaints via Postmark webhooks (future); for v0.1.0 log delivery failures and suppress repeated bounces.
--   **Future**: If sending volume exceeds ~10k/month, switch to dedicated IP for reputation isolation.
-
----
-
-## 13) Monetization + Entitlements + Metering
-
-### 13.1 Monetization model (v0.1.0)
-
-Subscription SaaS with 3 tiers:
-
--   **Free**
--   **Pro** (individuals)
--   **Business** (teams-lite; still single-user in v0.1.0, higher limits)
-
-Billing implemented in v0.1.0 using **Clerk Billing** (Stripe connected via Clerk).
-
-### 13.2 Tiers, quotas, and feature gates
-
-| Feature / Quota       |                     Free |                      Pro |                 Business |
-| --------------------- | -----------------------: | -----------------------: | -----------------------: |
-| Tracked documents     |                        3 |                       25 |                      200 |
-| Schedule frequency    |                    daily |                 every 6h |                 every 1h |
-| On-demand "check now" |                   10/day |                  100/day |                  500/day |
-| JS-render fetches     |                     0/mo |                   200/mo |                 2,000/mo |
-| AI summaries          |               **10/mo**  |                   500/mo |                 5,000/mo |
-| Email notifications   |                 deferred |                 deferred |                 deferred |
-| History retention     |                  30 days |                 180 days |                 730 days |
-| Export (JSON)         | limited (last 10 events) |                     full |                     full |
-| Custom ignore rules   |                       no |              no (future) |   yes (future, text patterns) |
-
-Notes:
-
--   **Conservative free tier**: 10 AI summaries/mo (reduced from 30) to control LLM costs.
--   "Immediate (max 20/mo)" for Free prevents notification abuse and cost spikes.
--   Free still gets value: tracking + diff + some summaries.
--   **Export formats**: JSON for v0.1.0 (CSV deferred).
-
-### 13.3 Metering strategy (what we measure)
-
-Record in `provider_usage`:
-
--   `http_fetch` quantity
--   `render_fetch` quantity
--   `summary` tokens and quantity
--   `email_send` quantity
-
-Additionally enforce DB counters (fast to query per period):
-
--   monthly usage rollups (materialized in DB or computed with indexed queries on `provider_usage` for v0.1.0)
-
-### 13.4 Entitlement enforcement flow
-
-**Source of truth (v0.1.0):** `entitlements` table (DB) + optional mirror to Clerk `publicMetadata`.
-
-**Flow**
-
-1. Clerk `user.created|user.updated` webhook → API upserts `users` row.
-2. API initializes `entitlements` to Free if missing.
-3. Admin overrides (optional) update both:
-    - DB `entitlements`
-    - Clerk `publicMetadata` mirror (plan/limits)
-4. Client UI reads plan via `/v1/me`.
-5. API enforces entitlements on:
-    - document creation
-    - schedule tier changes
-    - enqueueing on-demand checks
-    - JS rendering triggers
-    - LLM summary calls
-    - exports
-    - notification sends (email deferred)
-
-**Implementation detail**
-
--   Clerk JWT template includes an `aud` for API verification; entitlements are enforced from DB.
-
-### 13.5 Stripe integration details (future; legacy endpoints)
-
-The repo contains legacy Stripe Checkout/Portal endpoints behind `ENABLE_BILLING=1`.
-For v0.1.0, billing UI is handled by **Clerk Billing**.
-
-**Downgrade policy**
-
--   On non-payment:
-    -   mark plan "past_due" internally (optional) for 7 days
-    -   then downgrade to Free in Clerk metadata
--   On downgrade, jobs beyond limits are paused (documents set to `paused` with reason).
--   **User-controlled document selection on downgrade**:
-    -   When downgrading from higher tier (e.g., Business 200 → Free 3), show UI: "Select 3 documents to keep active."
-    -   User chooses which documents to keep; others are automatically paused.
-    -   If user doesn't act within 7 days, auto-pause the oldest documents by `created_at`.
-
-**Quota display UX**
-
--   **Passive dashboard display**: Show usage meters on settings/billing page (e.g., "8/10 AI summaries used this month").
--   **In-app banner**: When approaching limits (e.g., 80%+), display non-blocking banner: "You've used 8/10 AI summaries this month."
--   **Limit block UX**: When at limit and attempting action, show clear upgrade CTA: "You've reached your document limit. Upgrade to Pro for 25 documents."
-
-### 13.6 Abuse prevention aligned with monetization
-
-1. Rate limits per tier (API + job enqueue).
-2. Watch throttling:
-    - Free: max 5 newly watched companies/day
-    - Paid: 50/day
-3. Host-level politeness:
-    - per-host concurrency limit (default 2)
-    - per-host minimum delay (default 2s; adjustable)
-4. Renderer quotas and backpressure:
-    - renderer queue limited concurrency; reject render if user over quota
-5. Email suppression:
-    - if repeated bounces, suppress sends
-
----
-
-## 14) Observability & Operations
-
-In v0.1.0, observability relies on Railway logs + health checks. Sentry + OTLP export are deferred until after initial launch.
-
-### 14.1 Logging
-
--   Structured JSON logs for API and workers:
-    -   `request_id`, `user_id`, `document_id`, `job_id`, `host`, `status`, `latency_ms`
--   Do not log full fetched content.
--   Log sampling:
-    -   info for successful jobs sampled (e.g., 10%)
-    -   errors always logged
-
-### 14.2 Metrics (OpenTelemetry)
-
-Collect:
-
--   API:
-    -   request count/latency by endpoint and status
-    -   rate-limit rejections
--   Workers:
-    -   job durations by type
-    -   queue depth (Celery/Redis)
-    -   fetch success rate by host
-    -   render success rate
-    -   change detection rate
--   LLM:
-    -   tokens/cost, failures, cache hit rate
--   Email:
-    -   sent/failed counts
-
-Export:
-
--   OTLP exporter to **Grafana Cloud** (metrics + traces) using env vars.
-
-### 14.3 Tracing
-
--   Propagate `traceparent` from API → job enqueue → worker execution.
--   Trace spans:
-    -   `fetch_http`, `fetch_render`, `extract`, `diff`, `summarize`, `notify_send`
-
-### 14.4 Error tracking (Sentry)
-
--   Sentry for:
-    -   frontend (React)
-    -   API (FastAPI)
-    -   workers (Celery)
--   Include release version `v0.1.0+gitsha`.
-
-### 14.5 Alerting (initial thresholds)
-
--   Queue backlog:
-    -   `fetch` queue depth > 10,000 for 10 min → warn
-    -   renderer queue depth > 2,000 for 10 min → warn
--   Fetch failures:
-    -   > 20% failures over 15 min globally → warn
-    -   host-specific failures > 50% for top host → warn
--   LLM costs:
-    -   daily cost > configured budget → warn
--   API errors:
-    -   5xx rate > 2% for 5 min → page
-
----
-
-## 15) CI/CD + Environments + Migrations
-
-### 15.1 Repo structure (monorepo)
-
-```text
 /
   apps/
-    web/                # Next.js (App Router) + Clerk
-    api/                # FastAPI
-    worker/             # Celery tasks + scraping pipeline
-  packages/
-    shared/             # shared schemas/constants (optional; keep minimal in v0.1.0)
-  infra/
-    railway/            # service docs, env var templates
-  scripts/
-    migrate/
-    backup/
-    restore/
+    web/          # Next.js (App Router) + Clerk + Server Actions
+    api/          # FastAPI (internal)
+    worker/       # Python: scheduler + job executor + pipeline
+  catalog.json    # Curated entity catalog (community-maintained)
   SPEC.md
+  README.md
 ```
 
-### 15.2 Environments
+---
 
--   `dev`: local docker compose (postgres, redis), local API/workers
--   `staging`: Railway project env, real Clerk test instance, Stripe test mode
--   `prod`: Railway prod env
+## 9) Billing & Entitlements
 
-### 15.3 Branch strategy
+### 9.1 Tiers
 
--   `main` always deployable.
--   Feature branches → PR → required checks.
+| Feature / Quota | Free | Pro | Business |
+|-----------------|------|-----|----------|
+| Tracked documents | 3 | 25 | 200 |
+| Schedule frequency | daily | every 6h | every 1h |
+| On-demand "Check now" | 10/day | 100/day | 500/day |
+| JS-render fetches | 0/mo | 200/mo | 2,000/mo |
+| AI summaries | 10/mo | 500/mo | 5,000/mo |
+| In-app notifications | Unlimited | Unlimited | Unlimited |
+| History retention | 90 days | 1 year | 2 years |
+| Export (JSON) | Last 10 events | Full | Full |
 
-### 15.4 GitHub Actions (required)
+### 9.2 Implementation
 
-Checks:
+- **Clerk Billing** (Stripe connected) manages subscriptions
+- Plans configured in Clerk dashboard
+- `<PricingTable />` component renders pricing page
+- `<Protect />` and `has()` gate features in Server Actions
+- No local `entitlements` table; Clerk is source of truth
+- Usage metering: count rows in `jobs` and `change_events` tables per period (indexed query)
 
-1. Lint (Python: ruff; JS: eslint)
-2. Typecheck (TS)
-3. Unit tests (pytest, vitest)
-4. Migrations check (Alembic autogenerate is clean or reviewed)
-5. Security:
-    - `pip-audit`
-    - `npm audit` (non-blocking initially, but produce report)
-6. Build images/artifacts
+### 9.3 Downgrade handling
 
-### 15.5 Migrations
+- Non-payment → Clerk Billing handles grace period → downgrade to Free
+- On downgrade: documents beyond Free limit auto-paused (oldest by `created_at`)
+- Future: user-controlled document selection ("pick 3 to keep active")
 
--   Alembic for Postgres schema.
--   Railway deploy should run:
-    -   `alembic upgrade head`
--   Backward compatibility:
-    -   additive changes first; destructive changes require two-phase deploy.
+### 9.4 Quota display
 
-### 15.6 Feature flags (v0.1.0)
-
--   Simple env-based flags:
-    -   `ENABLE_BILLING`
-    -   `ENABLE_RENDERING`
-    -   `ENABLE_DAILY_DIGEST`
--   Optional DB-based flags post v0.1.0.
+- Settings page: usage meters ("8/10 AI summaries used this month")
+- In-app banner at 80%+: "You've used 8/10 AI summaries this month"
+- At limit: block action with upgrade CTA: "Upgrade to Pro for 500 summaries/month"
 
 ---
 
-## 16) Security Deep Dive
+## 10) Testing & Acceptance Criteria
 
-### 16.1 Threat model
+### 10.1 Acceptance criteria
 
-| Threat                                   |   Risk | Mitigation                                                                                                                            |
-| ---------------------------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------- |
-| SSRF via URL tracking                    |   High | strict URL validation, DNS/IP blocklist, redirect re-validation, deny private ranges, timeouts, no credentials, port restrictions     |
-| Renderer exploited by malicious page     |   High | isolate renderer worker, least secrets, timeouts, resource caps, no local file access, disable downloads, new browser context per job |
-| Webhook spoofing (Clerk/Stripe)          |   High | verify signatures, idempotency keys, replay detection, store webhook events                                                           |
-| Prompt injection from policy text        | Medium | do not allow free-form browsing; only summarize provided hunks; strict JSON schema; citations required                                |
-| Data exfiltration via logs               | Medium | never log fetched content; redact tokens; structured logging                                                                          |
-| Abuse: mass tracking / DDoS              | Medium | per-tier quotas, rate limits, email verification required, host backoff                                                               |
-| Unauthorized access to other users’ data |   High | row-level authz checks everywhere; admin endpoints restricted; tests for authz                                                        |
-| Secret leakage                           |   High | env vars only; no secrets in client; rotate keys; separate service envs                                                               |
-| SQL injection                            | Medium | ORM parameterization; no string concatenation                                                                                         |
-| XSS in diff viewer                       | Medium | sanitize HTML; render extracted text as plain text; never inject raw HTML                                                             |
+**AC-1**: Given a signed-out user on `/companies/google`, when they click "Watch changes" and complete Clerk auth, then Google's privacy policy and ToS documents are tracked and an initial snapshot job is enqueued.
 
-### 16.2 SSRF defenses for URL fetching
+**AC-2**: Given a tracked document with a new snapshot that has meaningful changes, when the pipeline completes, then a change event exists with a diff, an AI summary with ≥1 citation per bullet, and an in-app notification.
 
-**Rules (enforced before tracking and before each fetch)**
+**AC-3**: Given a change event summary, when the user clicks a citation, then the diff viewer scrolls to the referenced hunk and highlights it.
 
-1. Allow only `http://` and `https://`.
-2. Disallow:
-    - usernames/passwords in URL
-    - non-standard ports (allow 80, 443 only)
-    - IP literal URLs (IPv4/IPv6) unless explicitly allowed (v0.1.0: **disallow**)
-3. DNS resolution:
-    - resolve hostname
-    - for each A/AAAA record, block if in:
-        - RFC1918 private ranges
-        - loopback
-        - link-local
-        - multicast
-        - carrier-grade NAT
-        - `169.254.169.254` (cloud metadata)
-4. Redirects:
-    - max 5
-    - re-run full SSRF validation on each redirect target
-5. Timeouts and size limits:
-    - connect timeout 5s, read timeout 20s
-    - max response size 5 MB (hard stop)
-6. Content-type allowlist:
-    - primarily `text/html`, `text/plain`
-    - reject binaries
+**AC-4**: Given a Free tier user with 3 tracked documents, when they try to watch a 4th company, then they see an upgrade CTA and the action is blocked.
 
-### 16.3 Crawler identity and User-Agent
+**AC-5**: Given a document URL that returns 404, when the fetch job runs, then the document status is set to `paused` and the user sees "URL no longer accessible."
 
-**User-Agent strategy**: Use generic browser-like User-Agent to avoid blocking.
+**AC-6**: Given a document blocked by robots.txt, then the UI shows the specific blocking rule and the document status is `blocked_robots`.
 
--   Default UA mimics Chrome: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36`
--   Rationale: Many sites aggressively block identified bots; generic UA provides better coverage.
--   Trade-off accepted: Less transparent, but aligned with product goal of reliable monitoring.
+**AC-7**: Given a fetch job that fails 5 times, then `jobs.status = 'dead'` and the document shows "Last check failed" with the ability to retry.
 
-**Robots.txt handling**:
--   Use `*` as the effective User-Agent for robots.txt parsing.
--   Respect `Disallow` rules for all paths.
--   Cache robots.txt decisions for 24 hours per host.
+### 10.2 Test plan
 
-### 16.4 Sandboxing/headless browser safety (Playwright)
+**Integration tests (primary focus)**:
+- FastAPI endpoint tests via `TestClient` — all CRUD operations, auth enforcement, error responses
+- Pipeline integration tests with fixtures: fetch → extract → diff → summarize (mocked OpenRouter)
+- Clerk webhook handling with signature verification
+- Job queue tests: enqueue → claim → complete/fail cycle
+- Scheduler loop: verify correct documents selected, deduplication works
 
-Renderer worker hardening:
+**Unit tests (pure logic only)**:
+- Change detection scoring algorithm
+- Cosmetic pattern strip
+- SSRF URL validation
+- Diff hunk structuring
+- Citation validation
 
--   **Use playwright-stealth** plugin to bypass common headless detection:
-    -   Mask WebGL vendor/renderer
-    -   Add missing plugins
-    -   Fix navigator properties
-    -   Randomize canvas fingerprint
--   Use Playwright with:
-    -   downloads disabled
-    -   new incognito context per job
-    -   blocked permissions (geolocation, notifications)
-    -   block requests to:
-        -   `file://`
-        -   private IP ranges (request interception with same IP checks)
--   Resource caps:
-    -   navigation timeout 30s
-    -   total render time budget 45s
--   No access to Stripe/Clerk secrets in renderer env.
--   Renderer only needs:
-    -   Redis, object storage write, minimal DB (optional; can return HTML via Redis result instead)
+**Skipped in v0.2.0**:
+- E2E browser tests (Playwright)
+- Performance/load tests
+- Accessibility automated tests (manual review instead)
 
-### 16.5 Webhook verification
-
--   Clerk:
-    -   verify with Clerk signing secret
-    -   store `external_id` and payload in `webhook_events`
--   Stripe:
-    -   verify with Stripe signing secret
-    -   idempotency: unique(`source`,`external_id`)
--   Reject payloads that fail verification with 401.
-
-### 16.6 Encryption
-
--   In transit: HTTPS/TLS.
--   At rest:
-    -   Railway Postgres encryption (platform)
-    -   S3/R2 server-side encryption
--   Secrets:
-    -   Railway env vars; rotate quarterly.
-
-### 16.7 Audit logging
-
-Log these actions to `audit_logs`:
-
--   watch/unwatch company
--   pause/unpause
--   plan changes (from webhooks)
--   admin ban/unban
--   admin job retry
--   export requests (tier gated)
+**Coverage target**: ~70% on critical paths (pipeline, auth, job queue).
 
 ---
 
-## 17) Performance & Scaling Plan
+## 11) Dependencies & Integrations
 
-### 17.1 Expected load handling (v0.1.0 assumptions)
+### 11.1 External services
 
--   200k checks/day ≈ 2.3 checks/sec average, with bursts.
--   Renderer 40k/day ≈ 0.46/sec average; concurrency required for bursts.
+| Service | Purpose | Failure behavior |
+|---------|---------|-----------------|
+| Clerk | Auth, identity, billing | Cannot sign in; cached sessions may work |
+| OpenRouter | AI summaries | Summaries marked `failed`; diffs still work |
+| Railway | Hosting, Postgres, Redis | Full outage |
 
-### 17.2 Scaling levers
+### 11.2 Python libraries (key)
 
-1. **Horizontal scale workers**
-    - Increase `worker` replicas for `fetch/diff/summarize/notify`
-    - Increase `renderer` replicas for JS-heavy
-2. **Queue separation**
-    - Celery routes:
-        - `fetch` high throughput
-        - `render` isolated and capped
-        - `summarize` capped by budget
-3. **Host politeness**
-    - per-host concurrency and delay to reduce bans/timeouts
-4. **Storage**
-    - move heavy artifacts to object storage (already planned)
-    - retention cleanup job
-5. **DB indexing**
-    - ensure `documents.next_due_at` index supports scheduler
-    - ensure `snapshots(document_id, fetched_at desc)` supports history
-6. **Backpressure**
-    - if queue depth high, skip “nice-to-have” tasks:
-        - summaries can be delayed
-        - daily digest can be delayed
+| Library | Purpose | License |
+|---------|---------|---------|
+| `fastapi` + `uvicorn` | API server | MIT |
+| `httpx` | HTTP fetching | BSD |
+| `trafilatura` | HTML text extraction | Apache 2.0 |
+| `pypdf` | PDF text extraction | BSD |
+| `pytesseract` | OCR fallback | Apache 2.0 |
+| `playwright` | JS rendering | Apache 2.0 |
+| `structlog` | Structured logging | MIT |
+| `alembic` + `sqlalchemy` | DB migrations + ORM | MIT |
+| `psycopg` | Postgres driver (async) | LGPL |
 
-### 17.3 Scheduler design (recommended)
+### 11.3 JavaScript libraries (key)
 
-Avoid relying solely on Celery Beat for correctness. Use a dedicated scheduler service:
-
-**Algorithm (every 30 seconds):**
-
-1. Query:
-    - `SELECT id FROM documents WHERE status='active' AND next_due_at <= now() LIMIT 500 FOR UPDATE SKIP LOCKED`
-2. For each doc:
-    - enqueue `fetch` job
-    - set `next_due_at = now() + interval(schedule_tier)`
-3. Commit.
-
-This is horizontally scalable (multiple scheduler instances) due to `SKIP LOCKED`.
+| Library | Purpose | License |
+|---------|---------|---------|
+| `next` | React framework | MIT |
+| `@clerk/nextjs` | Auth + billing components | MIT |
+| `diff-match-patch` | Diff engine for prose | Apache 2.0 |
+| `@hey-api/openapi-ts` | Type-safe API client gen | MIT |
+| `pino` | Structured logging | MIT |
 
 ---
 
-## 18) Runbooks
+## 12) Decision Log
 
-### 18.1 Scrape failures spike
+All decisions from the 9-round interview, organized by domain.
 
-**Symptoms**
+### Architecture & Stack
 
--   alert: fetch failure rate > 20%
--   many jobs failing with timeouts/403/429
+| Date | Decision | Alternatives Considered | Rationale |
+|------|----------|------------------------|-----------|
+| 2026-02-07 | Source-available FOSS | Full open-source, proprietary | Code inspectable for trust; platform monetized |
+| 2026-02-07 | Python (FastAPI) + Next.js | Go + Next.js, Python + SvelteKit | Aligns with Python scraping ecosystem; team familiarity |
+| 2026-02-07 | Clerk-only auth | Auth0, Supabase Auth, roll-own | Already integrated; Billing built-in; reduces surface |
+| 2026-02-07 | Railway deployment | Fly.io, Render, Vercel + Railway | Single platform; private networking; managed Postgres |
+| 2026-02-07 | Postgres job queue (SKIP LOCKED) | Celery + Redis, BullMQ, SQS | Eliminates Redis-as-queue dependency; jobs table IS the queue; simpler ops |
+| 2026-02-07 | Same worker process for render | Separate renderer service | Simpler deployment; concurrency-limited queue protects resources |
+| 2026-02-07 | Server Actions + hey-api client | Direct client → FastAPI, tRPC | Type-safe; FastAPI stays internal; single auth boundary |
+| 2026-02-07 | Progressive auth (single app) | Separate /app route group, subdomain split | GitHub-style; less boilerplate; shared layout/nav |
 
-**Steps**
+### Data & Storage
 
-1. Check dashboards: failures by host, status codes.
-2. Identify top failing hosts.
-3. Apply mitigations:
-    - increase per-host delay
-    - reduce concurrency temporarily
-    - honor `Retry-After` for 429
-4. Verify robots decisions aren’t newly disallowing (robots fetch may be failing).
-5. If a specific host blocks:
-    - mark documents `paused` with reason
-    - notify affected users in-app banner (future; v0.1.0: email only if enabled)
-6. Postmortem: add host-specific rules if needed.
+| Date | Decision | Alternatives Considered | Rationale |
+|------|----------|------------------------|-----------|
+| 2026-02-07 | 7-table minimal schema | 9 tables + audit, 11+ tables | Lean; no users table (Clerk manages); covers all flows |
+| 2026-02-07 | Postgres TOAST for snapshots | S3/R2 object storage | 2-5 GB/year realistic; no external storage dep; migrate at ~20 GB |
+| 2026-02-07 | Pre-compute + store diffs | Compute on-the-fly, hybrid | Instant reads; ~10-20% more storage, eliminates read latency |
+| 2026-02-07 | Repo JSON seed for catalog | Admin API, Git-triggered sync | Version-controlled, idempotent, standard OSS contribution flow |
+| 2026-02-07 | Tier-based retention (90d/1y/2y) | Keep forever, keep last N | Keeps DB lean; change events kept indefinitely (small) |
 
-### 18.2 LLM costs spike
+### Pipeline & Extraction
 
-**Symptoms**
+| Date | Decision | Alternatives Considered | Rationale |
+|------|----------|------------------------|-----------|
+| 2026-02-07 | Trafilatura-only extraction | readability-lxml fallback, custom rules | F1 0.958; replaces ~80% of canonicalization pipeline |
+| 2026-02-07 | pypdf + Tesseract OCR fallback | pdfplumber, pdfminer | BSD license; zero deps; OCR covers image-based PDFs |
+| 2026-02-07 | Tiered change detection with LLM gate | Simple threshold, diff-only | SHA256 → ratio → cosmetic strip → LLM classify; ~$3/year for classification |
+| 2026-02-07 | diff-match-patch engine | jsdiff, Python difflib | Google's library; semantic cleanup superior for prose; powers Google Docs |
+| 2026-02-07 | Curated-only tracking | Custom URLs, hybrid | Limits abuse surface; community contributes via PRs |
 
--   daily cost > budget
--   summary volume high
+### AI & UX
 
-**Steps**
+| Date | Decision | Alternatives Considered | Rationale |
+|------|----------|------------------------|-----------|
+| 2026-02-07 | OpenRouter (Sonnet 4.5 → GPT-5.2 → Gemini 3 Flash) | Direct API calls, single provider | Provider abstraction; fallback chain; model flexibility |
+| 2026-02-07 | In-app notifications only | Email (Postmark), email + in-app | No external email dep for v0.2.0; simpler; add email later |
+| 2026-02-07 | Postgres feed + polling (60s) | SSE, WebSocket, Novu | Simplest; no connection management; upgrade to SSE later |
 
-1. Check `provider_usage` breakdown by user and model.
-2. Verify change detection thresholds (too sensitive?).
-3. Apply immediate controls:
-    - reduce summary generation to paid tiers only (feature flag)
-    - switch to cheaper fallback model
-    - cap hunks passed to LLM
-4. Identify abuse:
-    - users triggering frequent checks → rate-limit `check-now`
-5. Follow-up:
-    - improve canonicalization rules and thresholds.
+### Security & Ops
 
-### 18.3 DB CPU high / slow queries
+| Date | Decision | Alternatives Considered | Rationale |
+|------|----------|------------------------|-----------|
+| 2026-02-07 | Service token auth (Next.js → FastAPI) | Pass-through Clerk JWT, API keys | Simple; no JWT verification in Python; private network trusted |
+| 2026-02-07 | Tier-based entitlements only (no Redis rate limiter) | Redis sliding window, Cloudflare WAF | Clerk auth gates access; curated tracking limits abuse surface |
+| 2026-02-07 | Clerk admin role + DB queries | Full admin dashboard, CLI-only | Minimal ops overhead; admin API endpoints for essentials |
+| 2026-02-07 | Structured logs + /healthz only | Sentry, full metrics stack | Add observability incrementally when first incident demands it |
+| 2026-02-07 | Public launch immediately | Invite-only beta, soft launch with caps | Curated-only tracking limits blast radius; no existing users to migrate |
+| 2026-02-07 | Integration-heavy testing | Unit + integration balanced, E2E first | Highest ROI for solo rebuild; ~70% critical path coverage |
+| 2026-02-07 | Server Action middleware for tier enforcement | FastAPI middleware, both layers | Single checkpoint; Clerk `has()` is fast; FastAPI trusts BFF |
 
-**Symptoms**
+### Billing
 
--   API latency increases; Postgres CPU high
-
-**Steps**
-
-1. Inspect slow query logs (if enabled) or use `pg_stat_statements`.
-2. Common culprits:
-    - missing index on `documents.next_due_at`
-    - large scans of `provider_usage`
-3. Mitigation:
-    - add/adjust indexes
-    - add monthly rollup table for usage
-    - reduce dashboard query frequency
-4. If retention cleanup causes spikes:
-    - batch deletes
-    - run cleanup off-peak
-    - consider partitioning snapshots later
-
-### 18.4 Queue backlog
-
-**Symptoms**
-
--   queue depth alert
--   scheduler enqueuing faster than workers can process
-
-**Steps**
-
-1. Check which queue is backed up (`fetch` vs `render` vs `summarize`).
-2. Scale the corresponding worker service replicas.
-3. Enable backpressure:
-    - reduce schedule frequencies for free tier temporarily (feature flag)
-    - pause renderer for free/pro if needed
-4. Investigate external dependencies (S3 latency, OpenRouter errors).
-
-### 18.5 Clerk auth incident / webhook failures
-
-**Symptoms**
-
--   API returning 401 for valid sessions
--   users missing entitlements after payment
-
-**Steps**
-
-1. Check Clerk status dashboard.
-2. Verify JWKS fetch caching:
-    - ensure API caches JWKS with TTL and retries.
-3. Webhook triage:
-    - inspect `webhook_events` with status `failed`
-    - retry processing (admin endpoint)
-4. If entitlements missing:
-    - use DB mirror `entitlements` as temporary fallback for enforcement
-    - re-sync: query Stripe subscriptions and reapply to Clerk (admin script)
+| Date | Decision | Alternatives Considered | Rationale |
+|------|----------|------------------------|-----------|
+| 2026-02-07 | 3 tiers via Clerk Billing | Stripe direct, LemonSqueezy | Clerk already integrated; Stripe connected; built-in components |
+| 2026-02-07 | Worker scheduler polling loop | Railway cron, pg_cron | Self-contained; no external dep; horizontally scalable |
 
 ---
 
-## 19) Rollout Plan
+## 13) Assumptions, Open Questions, Risks
 
-1. **Internal alpha (week 1)**
-    - Enable only Free tier entitlements, billing disabled.
-    - Focus: fetch/diff correctness, SSRF hardening, observability.
-2. **Closed beta (week 2–3)**
-    - Invite users, enable Pro/Business test mode billing (Stripe test).
-    - Validate notifications and quotas.
-3. **Public launch (v0.1.0)**
-    - Enable Stripe live mode
-    - Enable paid tiers
-    - Publish status page (future; at minimum a `/status` page with uptime provider link)
+### Assumptions
 
----
+1. Trafilatura 2.0 maintains its F1 0.958 on legal/policy text in production
+2. Postgres TOAST handles 2-5 GB/year of snapshot text without performance degradation
+3. Clerk Billing covers all billing flows needed (subscription, downgrade, plan changes)
+4. Railway private networking is reliable for internal service communication
+5. diff-match-patch's semantic cleanup is sufficient for legal prose diffs
+6. 60s polling interval for notifications is acceptable UX (no real-time requirement)
+7. Curated catalog of ~100-500 entities is sufficient for initial user demand
+8. OpenRouter provides reliable access to Sonnet 4.5 / GPT-5.2 / Gemini 3 Flash
 
-## 20) Launch Readiness Checklists
+### Open questions
 
-### 20.1 Product checklist
+1. **Catalog bootstrapping**: How many entities should be in the initial catalog.json? Which companies are highest priority?
+2. **Pricing**: Exact pricing for Pro and Business tiers (not yet determined)
+3. **Marketing site content**: Exact copy, testimonials, social proof for launch
+4. **Mobile polish**: Exact breakpoint behaviors for diff viewer on small screens
+5. **Scheduler interval tuning**: 60s polling may need adjustment based on worker load
 
--   [ ] Landing page with clear value prop + disclaimers
--   [ ] App onboarding: watch a company from the directory within 2 minutes
--   [ ] Diff viewer usable and readable
--   [ ] Summaries include citations and “not legal advice”
--   [ ] Email notifications deferred (disabled by default)
--   [ ] Tier gating visible in UI (limits displayed)
--   [ ] Export works per tier
+### Risks + mitigations
 
-### 20.2 Engineering / Ops checklist
-
--   [ ] Railway services provisioned: web, api, worker, renderer, scheduler, postgres, redis
--   [ ] DB migrations automated on deploy
--   [ ] Backups configured:
-    -   [ ] Railway Postgres backups enabled
-    -   [ ] nightly `pg_dump` uploaded as a GitHub Actions artifact (30d retention)
--   [ ] Object storage bucket with lifecycle policies (only if S3/R2 enabled)
--   [ ] Observability: Railway logs + health checks (Sentry/OTLP/alerts deferred)
--   [ ] Robots.txt fetch + caching working; disallowed URLs blocked with clear UI copy
--   [ ] Scheduler correctness validated (no duplicate enqueues; `SKIP LOCKED` works)
--   [ ] Celery retry policies validated; dead-letter semantics implemented (mark `jobs.status=dead`)
--   [ ] Renderer hardening validated (timeouts, request interception, no private IP access)
--   [ ] Rate limiting enabled (user + IP); 429 responses include `Retry-After`
--   [ ] Abuse controls enabled (watch flow throttles, per-tier quotas)
--   [ ] Admin dashboard working (jobs, failures, retries, user bans, plan overrides)
--   [ ] Data retention cleanup job running daily; tier-based retention enforced
--   [ ] Incident response contacts documented (internal)
-
-### 20.3 Security checklist (must-pass)
-
-**AppSec**
-
--   [ ] SSRF protections implemented for:
-    -   [ ] URL validation before tracking
-    -   [ ] re-validation on every fetch
-    -   [ ] redirect hop checks
-    -   [ ] renderer request interception checks
--   [ ] No fetched page content is logged (verify logs)
--   [ ] XSS protections:
-    -   [ ] diff viewer renders as plain text (no raw HTML injection)
-    -   [ ] sanitize any user-provided display fields (entity name) before render
--   [ ] CORS configured: allow only web origin(s)
--   [ ] Security headers on web:
-    -   [ ] `Content-Security-Policy` (at minimum disallow `object-src`; restrict `frame-ancestors`)
-    -   [ ] `X-Content-Type-Options: nosniff`
-    -   [ ] `Referrer-Policy: strict-origin-when-cross-origin`
-    -   [ ] `Permissions-Policy` (disable unnecessary APIs)
-    -   [ ] HSTS enabled on apex + app subdomain
--   [ ] Secrets:
-    -   [ ] no secrets shipped to client
-    -   [ ] all secrets stored in Railway env vars
-    -   [ ] Clerk webhook secret set and verified in staging/prod
--   [ ] Webhooks:
-    -   [ ] signature verification implemented (Clerk)
-    -   [ ] idempotency implemented via `webhook_events`
--   [ ] AuthZ tests:
-    -   [ ] user cannot access another user’s entities/documents/events
-    -   [ ] admin-only endpoints blocked for non-admin
--   [ ] Dependency scanning passing (pip-audit; npm audit report reviewed)
--   [ ] Backups stored privately (GitHub Actions artifacts; retention configured)
-
-### 20.4 Billing & entitlement checklist (v0.1.0)
-
--   [ ] Clerk Billing enabled (Stripe connected) + `<PricingTable />` renders
--   [ ] Plans configured in Clerk (Free/Pro/Business) and visible in PricingTable
--   [ ] Web gating uses `has()` / `<Protect />` where needed
--   [ ] API enforces entitlements for:
-    -   [ ] document limits
-    -   [ ] schedule tier limits
-    -   [ ] JS render quotas
-    -   [ ] AI summary quotas
-    -   [ ] notification quotas
--   [ ] Downgrade policy tested (payment failure → grace → downgrade) (deferred until plans exist)
--   [ ] Manual admin override documented (DB + Clerk metadata sync)
-
-### 20.5 Backup/restore checklist (production-safe)
-
--   [ ] Railway Postgres automatic backups enabled
--   [ ] Nightly logical backup job configured:
-    -   `pg_dump` (custom format) + upload to GitHub Actions artifact
-    -   retention: 30 days (or aligned with compliance needs)
-    -   implementation: GitHub Actions scheduled workflow (v0.1.0)
--   [ ] Restore run tested in staging:
-    -   [ ] restore into empty DB
-    -   [ ] run migrations
-    -   [ ] validate app boot + can render a known change event
--   [ ] Object storage lifecycle policies set (only if S3/R2 enabled):
-    -   raw HTML retention aligned to snapshot retention delete-at
-    -   delete orphaned objects job implemented
+| Risk | Impact | Likelihood | Mitigation |
+|------|--------|------------|------------|
+| Trafilatura fails on specific site structures | False negatives; missed changes | Medium | Monitor extraction quality; add site-specific post-processing if needed |
+| Postgres TOAST performance degrades at scale | Slow reads, high I/O | Low | Migrate to S3/R2 when DB > 20 GB; already architected for this |
+| Clerk Billing API changes / limitations | Billing flow breaks | Low | Clerk is stable; fallback to direct Stripe if needed |
+| OpenRouter rate limits or downtime | No AI summaries | Medium | Fallback chain (3 models); circuit breaker; diffs still work |
+| robots.txt blocks major target sites | Key entities un-trackable | Medium | Document clearly in UI; curated catalog vetted before inclusion |
+| Single worker bottleneck at scale | Delayed checks, queue backlog | Medium | Horizontal scale: add worker replicas; queue-based distribution |
+| Service token compromised | Unauthorized API access | Low | Private network only; rotate quarterly; Railway env vars |
 
 ---
 
-## 21) Open Questions / Future Work
+## 14) Legal/Safety UX Copy
 
-### 21.1 Decisions to revisit post v0.1.0
+Required on every summary view:
+> "This summary is generated by AI from the detected text changes and is provided for informational purposes only. It is not legal advice."
 
-1. **Robots posture overrides**
-    - Current: strict respect. Future: allow user to request monitoring even when disallowed only if legally safe (likely “no”; keep strict).
-2. **Organizations / multi-user**
-    - v0.1.0 is single-user per account. Add Clerk Organizations later:
-        - entity ownership by org
-        - roles: owner/admin/member
-        - shared billing.
-3. **Advanced ignore rules**
-    - User-configurable “ignore selectors/phrases” to further reduce noise.
-4. **Better semantic diff**
-    - Add section-aware diffs (headings) and sentence-level alignment; consider a semantic embedding-based change classifier.
-5. **Notification channels**
-    - Slack/MS Teams/webhooks.
-6. **Search**
-    - Full-text search across snapshots and events (Postgres FTS or OpenSearch).
-7. **Cost optimization**
-    - Model routing by complexity; summarize only high-impact diffs for free tier.
-8. **Domain verification for public dashboards**
-    - Allow public “watchlists” or public change feeds (careful with abuse).
-9. **Renderer isolation**
-    - Consider running renderer in a more isolated environment (separate provider) if threat model demands.
-10. **Content provenance UX**
+Required on "Watch changes" flow:
+> "We only monitor public policy URLs from our curated directory. We respect robots.txt and apply rate limits."
 
--   Inline quote cards and “jump to diff hunk” improvements; “show me the exact sentence”.
-
-### 21.2 Known constraints (accepted for v0.1.0)
-
-1. Extractor is heuristic; some pages will still be noisy.
-2. Some JS-heavy pages may block headless browsers; we’ll surface errors transparently.
-3. Summaries may occasionally be incomplete; citations enforce grounding but not perfect interpretation.
-4. Internationalized policies may be harder to summarize accurately without translation (not in v0.1.0).
-
-### 21.3 Concrete roadmap items (next releases)
-
-**v0.2**
-
--   Clerk Organizations + team billing
--   Slack notifications (paid)
--   Custom ignore rules (Pro+)
--   Per-host crawl policies and user-visible “politeness” settings
--   Better daily digest UX
-
-**v0.3**
-
--   Public change feeds (opt-in)
--   Advanced diff modes (semantic sections)
--   Search across history
--   Export formats (PDF, CSV)
+Required in footer / about:
+> "Inplain.ai is an independent tool for informational purposes. We are not affiliated with any of the companies we monitor."
 
 ---
 
-## Appendix A — Operational Details
+## Appendix A — Catalog JSON Schema
 
-### A.1 Retention cleanup job (step-by-step)
-
-Runs daily on `maintenance` queue:
-
-1. Select snapshots where `retention_delete_at <= now()` in batches of 500.
-2. For each snapshot:
-    1. Delete S3 object if `raw_storage_key` present.
-    2. Delete dependent diffs/change events if required by retention policy:
-        - v0.1.0: retain change events as long as diff and snapshots exist; delete cascade by FK or explicit deletes.
-3. Delete snapshot row.
-4. Vacuum strategy:
-    - rely on autovacuum; monitor bloat and tune if needed.
-
-### A.2 Backup job (step-by-step)
-
-1. Run `pg_dump` with:
-    - custom format (`-Fc`)
-    - include schema + data
-2. Upload to S3/R2 with key:
-    - `backups/postgres/YYYY-MM-DD/backup.dump`
-3. Write a small manifest file including:
-    - git SHA
-    - migration head revision
-4. Emit metric `backup_success=1` or `0`.
-
-### A.3 Restore procedure (step-by-step)
-
-1. Create new Postgres instance (staging first; prod only during incident).
-2. Download desired backup dump.
-3. Restore:
-    - `pg_restore --clean --if-exists`
-4. Run migrations to current head (if restoring older dump).
-5. Verify:
-    - API `/healthz`
-    - can fetch a known entity/doc/change event
-6. Re-enable scheduler/workers.
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["slug", "name", "website_url", "category", "policy_urls"],
+    "properties": {
+      "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+      "name": { "type": "string" },
+      "website_url": { "type": "string", "format": "uri" },
+      "category": {
+        "type": "string",
+        "enum": ["social_media", "search", "cloud", "finance", "ecommerce", "streaming", "gaming", "productivity", "health", "education", "other"]
+      },
+      "policy_urls": {
+        "type": "object",
+        "properties": {
+          "privacy": { "type": "string", "format": "uri" },
+          "tos": { "type": "string", "format": "uri" },
+          "cookie": { "type": "string", "format": "uri" }
+        },
+        "minProperties": 1
+      }
+    }
+  }
+}
+```
 
 ---
 
-## Appendix B — Celery Task Policies (v0.1.0)
+## Appendix B — Job Queue Schema (SKIP LOCKED)
 
--   Default retries:
-    -   fetch/render: max 5 attempts, exponential backoff, jitter
-    -   summarize: max 3 attempts, backoff; fail open (no summary)
-    -   notify: max 5 attempts
--   Dead-letter behavior:
-    -   on max attempts exceeded → `jobs.status = dead`, store `error`
--   Time limits:
-    -   fetch: 60s hard
-    -   render: 90s hard
-    -   summarize: 60s hard
+**Worker polling query** (run in a loop, one per queue):
 
----
+```sql
+WITH claimed AS (
+  SELECT id
+  FROM jobs
+  WHERE queue = $1
+    AND status = 'queued'
+    AND run_at <= now()
+  ORDER BY created_at
+  LIMIT 10
+  FOR UPDATE SKIP LOCKED
+)
+UPDATE jobs
+SET status = 'running', locked_at = now(), started_at = now(), attempt = attempt + 1
+FROM claimed
+WHERE jobs.id = claimed.id
+RETURNING jobs.*;
+```
 
-## Appendix C — Admin Tooling (minimum scope)
+**Stale lock cleanup** (run every 5 minutes):
 
-Admin UI pages (behind admin role):
+```sql
+UPDATE jobs
+SET status = 'queued', locked_at = NULL
+WHERE status = 'running'
+  AND locked_at < now() - interval '10 minutes';
+```
 
-1. **Jobs**
-    - filter by status/type
-    - view error, attempt count, related doc/user
-    - retry button
-2. **Users**
-    - search by email/clerk id
-    - ban/unban
-    - plan override (writes Clerk metadata + DB mirror)
-3. **Abuse dashboard**
-    - top users by checks/day
-    - top hosts by failures
-4. **LLM usage**
-    - daily cost estimate
-    - top users by tokens
+**Job completion**:
 
----
+```sql
+UPDATE jobs
+SET status = 'succeeded', finished_at = now()
+WHERE id = $1;
+```
 
-## Appendix D — Legal/Safety UX Copy (required)
+**Job failure**:
 
--   On every summary view:
-    -   “This summary is generated by AI from the detected text changes and is provided for informational purposes only. It is not legal advice.”
--   On “Watch changes”:
-    -   “We only monitor public policy URLs from our curated directory. We respect robots.txt and apply rate limits.”
-
----
-
-## Appendix E — Default Config Values (v0.1.0)
-
--   Fetch:
-    -   max redirects: 5
-    -   max response size: 5 MB
-    -   connect timeout: 5s
-    -   read timeout: 20s
--   Renderer:
-    -   navigation timeout: 30s
-    -   total budget: 45s
--   Politeness:
-    -   per-host concurrency: 2
-    -   per-host delay: 2s
--   Change detection:
-    -   minimum added/removed chars: 500
-    -   change_score threshold: 0.02
--   Summaries:
-    -   max hunks: 20
-    -   prompt_version: 1
+```sql
+UPDATE jobs
+SET status = CASE WHEN attempt >= max_attempts THEN 'dead' ELSE 'queued' END,
+    finished_at = now(),
+    locked_at = NULL,
+    error = $2,
+    run_at = CASE WHEN attempt >= max_attempts THEN run_at
+             ELSE now() + ($3 * power(2, attempt)) * interval '1 second' END
+WHERE id = $1;
+```
 
 ---
 
-## Appendix F — Interview Decisions Summary (v0.1.0-rev1)
+## Appendix C — Default Config Values
 
-This appendix documents all decisions made during the product interview process. Each decision is cross-referenced to the relevant spec section.
+**Fetch**:
+- Max redirects: 5
+- Max response size: 5 MB
+- Connect timeout: 5s
+- Read timeout: 20s
 
-### Content & Extraction
+**Renderer**:
+- Navigation timeout: 30s
+- Total budget: 45s
+- Max concurrent renders: 2
 
-| Decision | Choice | Section |
-|----------|--------|---------|
-| PDF support | Handle PDFs + OCR fallback | FR-3, 10.1 |
-| Iframe handling | Detect src first, fallback to full render | 10.1 |
-| URL canonicalization | Aggressive (strip www, slashes, query params) | 10.1 |
-| Extractor migration | Future fetches only (no backfill) | 10.3 |
+**Politeness**:
+- Per-host concurrency: 2
+- Per-host delay: 2s
+- Robots.txt cache: 24h
 
-### AI & Summaries
+**Change detection**:
+- Minimum added/removed chars: 500
+- change_score threshold: 0.02
+- Cosmetic patterns: timestamps, copyright years, counters
 
-| Decision | Choice | Section |
-|----------|--------|---------|
-| Summary language | Match source language | 11.3 |
-| Citation validation | Runtime validation (verify quotes exist) | 11.4 |
-| AI opinion style | Clear opinion with caveats | 11.5 |
-| Free tier AI limit | 10 summaries/month (conservative) | 13.2 |
+**Summaries**:
+- Max hunks passed to LLM: 20
+- Prompt version: 1
+- Primary model: `anthropic/claude-sonnet-4-5` (via OpenRouter)
+- Fallback models: `openai/gpt-5.2`, `google/gemini-3-flash`
 
-### UI/UX
+**Scheduler**:
+- Polling interval: 60s
+- Batch size: 200 documents per cycle
 
-| Decision | Choice | Section |
-|----------|--------|---------|
-| Diff viewer | Section-first (collapsed) | 9.5.2 |
-| Section detection | Hybrid (heuristic + semantic) | 9.5.2 |
-| Citation navigation | Scroll + highlight + auto-expand | 9.5.3 |
-| History display | Recent 10, export for full | 9.5.4 |
-| Watch company flow | Idempotent tracking + clear “no data yet” states | 9.5.5 |
-| Failed summary UX | Diff only with clear message | 9.5.6 |
-| Mobile | Responsive web only | 9.5.1 |
-| Marketing site | Next.js hybrid SSR | 9.5.1 |
+**Notifications**:
+- Polling interval: 60s (client-side)
+- Max feed items: 50 (paginated)
 
-### Quotas & Limits
-
-| Decision | Choice | Section |
-|----------|--------|---------|
-| Quota display | Dashboard + in-app banner | 13.5 |
-| Limit block | Block with upgrade CTA | 9.5.5 |
-| Downgrade handling | User chooses which docs to keep | 13.5 |
-
-### Technical
-
-| Decision | Choice | Section |
-|----------|--------|---------|
-| Race condition (scheduler vs check-now) | Dedupe by recency (5 min) | 10.1 |
-| Webhook ordering | UI ensures Clerk first | 9.7 |
-| API versioning | Short overlap (3-6 months) | 9.1 |
-| Error format | Code + message + details | 9.1 |
-| Robots.txt refresh | Daily cache | 10.1 |
-| User-Agent | Generic browser-like | 16.3 |
-| Renderer stealth | playwright-stealth enabled | 16.4 |
-| Email IP strategy | Shared (Postmark default) | 12.4 |
-| Daily digest timing | Fixed 9am UTC | 12.2 |
-| Data residency | US-only, documented | 5.4.1 |
-
-### Admin
-
-| Decision | Choice | Section |
-|----------|--------|---------|
-| Admin impersonation | Allow with audit trail | 9.5.8 |
-
-### Crawling Posture
-
-| Decision | Choice | Section |
-|----------|--------|---------|
-| Adversarial response | Committed to transparency/scrutiny | 21 |
-| URL gone (404) | Auto-pause silently | 9.5.6 |
-| Robots blocked | Show specific rule | 9.5.6 |
-
-### Future (text patterns for ignore rules)
-
-| Decision | Choice | Section |
-|----------|--------|---------|
-| Custom ignore rules | Text patterns (not CSS selectors) | 13.2 |
-| Export formats | JSON + CSV | 13.2 |
+**Retention cleanup**:
+- Batch size: 500 snapshots per run
+- Run frequency: daily

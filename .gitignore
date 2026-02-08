@@ -1,25 +1,25 @@
-# macOS
-.DS_Store
-
-# Python
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.venv/
-venv/
-.env
-.env.*
-.backups/
-
-# Node
+# Dependencies
 node_modules/
+.venv/
+__pycache__/
+
+# Build
 .next/
 dist/
-build/
-npm-debug.log*
+*.egg-info/
+
+# Environment
+.env
+.env.local
+.env.*.local
 
 # IDE
-.idea/
 .vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Cache
+.ruff_cache/
+.turbo/
