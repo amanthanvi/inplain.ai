@@ -22,7 +22,7 @@ def upgrade() -> None:
             SET policy_urls = jsonb_set(
               COALESCE(policy_urls, '{}'::jsonb),
               '{privacy}',
-              to_jsonb(:url::text),
+              to_jsonb(CAST(:url AS text)),
               true
             ),
             updated_at = now()
@@ -62,7 +62,7 @@ def downgrade() -> None:
             SET policy_urls = jsonb_set(
               COALESCE(policy_urls, '{}'::jsonb),
               '{privacy}',
-              to_jsonb(:url::text),
+              to_jsonb(CAST(:url AS text)),
               true
             ),
             updated_at = now()
@@ -88,4 +88,3 @@ def downgrade() -> None:
         ),
         {"url": _OLD_URL},
     )
-
