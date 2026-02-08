@@ -125,14 +125,14 @@ Acceptance:
 
 ### M8 — Web app (Next.js, progressive auth, diff viewer)
 
-- [ ] Routes per SPEC 2.4:
+- [x] Routes per SPEC 2.4:
   - Public: `/`, `/companies`, `/companies/[slug]`, `/pricing`, `/about`
   - Protected: `/dashboard`, `/settings`
-- [ ] Server Actions BFF calling internal FastAPI via service token.
-- [ ] Watch flow: signed-out → Clerk auth → returns to company page with tracking active (SPEC AC-1).
-- [ ] Company page: current policy text, change timeline, summary + citations.
-- [ ] Diff viewer: citation click scroll/expand/highlight (SPEC AC-3).
-- [ ] Notification bell: unread badge + feed; poll unread count every 60s.
+- [x] Server Actions BFF calling internal FastAPI via service token.
+- [x] Watch flow: signed-out → Clerk auth → returns to company page with tracking active (SPEC AC-1).
+- [x] Company page: current policy text, change timeline, summary + citations.
+- [x] Diff viewer: citation click scroll/expand/highlight (SPEC AC-3).
+- [x] Notification bell: unread badge + feed; poll unread count every 60s.
 
 Acceptance:
 - SPEC AC-1…AC-3 implemented end-to-end in the UI.
@@ -140,7 +140,7 @@ Acceptance:
 ### M9 — Billing + entitlements (Clerk Billing)
 
 - [ ] Server Actions enforce tier entitlements via Clerk `has()` (doc limits, quotas).
-- [ ] Settings page shows usage meters + upgrade CTAs.
+- [x] Settings page shows usage meters + upgrade CTAs.
 
 Acceptance:
 - SPEC AC-4 enforced (Free tier doc limit blocks 4th watch).
@@ -172,3 +172,5 @@ Acceptance:
 - 2026-02-08: Implemented Playwright render jobs + daily cleanup jobs (retention deletes snapshots; hard-deletes fully expired soft-deleted documents).
 - 2026-02-08: Added standard API error envelope + Clerk webhook signature verification (Svix) with `user.deleted` purge.
 - 2026-02-08: Added worker-side quota enforcement (render + summary) based on `schedule_tier`.
+- 2026-02-08: Shipped web IA + progressive auth (watch flow, dashboard, settings), notification bell, and citation-scroll diff viewer.
+- 2026-02-08: Enforced Free tier document limit on watch (AC-4).
