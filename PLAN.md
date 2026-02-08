@@ -87,14 +87,14 @@ Acceptance:
 
 ### M5 — Fetch/extract/snapshot pipeline (SPEC FR-3, 4.4, 5.5)
 
-- [ ] SSRF defenses + redirect re-validation (SPEC 5.5).
-- [ ] robots.txt checks cached in Redis (SPEC 4.4).
-- [ ] Conditional GET (ETag/Last-Modified).
+- [x] SSRF defenses + redirect re-validation (SPEC 5.5).
+- [ ] robots.txt checks cached in Redis (SPEC 4.4). (Implemented in-memory cache first.)
+- [x] Conditional GET (ETag/Last-Modified).
 - [ ] Extraction:
-  - HTML: `trafilatura` (post-processing for cosmetic noise).
-  - PDF: `pypdf` + OCR fallback when needed.
-- [ ] Snapshot storage in Postgres (TOAST; no object storage in v0.2.0).
-- [ ] Render fallback via Playwright when HTTP extraction yields minimal text.
+  - [x] HTML: `trafilatura` (post-processing for cosmetic noise).
+  - [x] PDF: `pypdf` + OCR fallback when needed (best-effort; requires `pdftoppm` + `tesseract`).
+- [x] Snapshot storage in Postgres (TOAST; no object storage in v0.2.0).
+- [ ] Render fallback via Playwright when HTTP extraction yields minimal text. (Fetch enqueues `render`; handler pending.)
 
 Acceptance:
 - For known test URLs, snapshots are created with stable extracted text + sha256.
@@ -167,3 +167,4 @@ Acceptance:
 - 2026-02-08: Implemented initial Postgres schema + Alembic migration; `catalog.json` seeds `entities` via upsert.
 - 2026-02-08: Implemented internal FastAPI endpoints + service-token auth skeleton (entities/documents/change events/notifications/admin).
 - 2026-02-08: Implemented Postgres job queue + scheduler loops (SKIP LOCKED claim, retries, stale-lock cleanup).
+- 2026-02-08: Implemented fetch→extract→snapshot pipeline (HTTP + trafilatura; PDF via pypdf; conditional GET; SSRF + robots).
