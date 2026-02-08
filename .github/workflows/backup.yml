@@ -7,22 +7,30 @@ on:
 
 jobs:
   backup:
-    if: ${{ secrets.PROD_DATABASE_URL != '' }}
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Skip if not configured
+        if: ${{ env.DATABASE_URL == '' }}
+        run: echo "PROD_DATABASE_URL not set; skipping."
+
       - name: Install Postgres client
+        if: ${{ env.DATABASE_URL != '' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
       - name: Run backup
         env:
-          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
           OUT_DIR: artifacts
+        if: ${{ env.DATABASE_URL != '' }}
         run: bash scripts/backup/postgres_backup.sh
 
       - name: Upload artifact
+        if: ${{ env.DATABASE_URL != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: inplain-postgres-backup-${{ github.run_id }}
