@@ -126,6 +126,66 @@ a {
   background: transparent;
 }
 
+.input,
+.select {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+}
+
+.input {
+  width: min(320px, 76vw);
+}
+
+.select {
+  cursor: pointer;
+}
+
+.input:focus,
+.select:focus {
+  border-color: rgba(255, 77, 46, 0.5);
+  box-shadow: 0 0 0 4px rgba(255, 77, 46, 0.14);
+}
+
+.companyCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 14px;
+  box-shadow: 0 10px 24px rgba(20, 18, 16, 0.08);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.companyCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(20, 18, 16, 0.12);
+  border-color: rgba(20, 18, 16, 0.18);
+}
+
+.companyName {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill {
+  font-size: 12px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(20, 18, 16, 0.04);
+  color: rgba(20, 18, 16, 0.78);
+  height: fit-content;
+  align-self: flex-start;
+}
+
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -149,4 +209,3 @@ a {
   align-items: center;
   justify-content: space-between;
 }
-
