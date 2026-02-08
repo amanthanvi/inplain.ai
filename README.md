@@ -32,6 +32,10 @@ make venv
 make migrate
 ```
 
+Env templates:
+- `apps/api/.env.example`
+- `apps/web/.env.example`
+
 Run services:
 ```bash
 make dev-api

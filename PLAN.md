@@ -34,14 +34,14 @@ Acceptance:
 
 ### M1 — Repo scaffold (golden commands + CI skeleton)
 
-- [ ] Recreate monorepo structure per SPEC 8.7:
+- [x] Recreate monorepo structure per SPEC 8.7:
   - `apps/web` (Next.js App Router + TypeScript)
   - `apps/api` (FastAPI internal service)
   - `apps/worker` (Python worker: scheduler + executors)
   - `catalog.json`, `docker-compose.yml`, `infra/railway`, `scripts/*`
-- [ ] Add `Makefile` golden commands: `dev-up`, `dev-web`, `dev-api`, `dev-worker`, `migrate`, `lint`, `test`, `typecheck`.
-- [ ] Add CI workflows: lint/typecheck/tests; scheduled Postgres backup artifact.
-- [ ] Add `CONTRIBUTING.md` + minimal env templates.
+- [x] Add `Makefile` golden commands: `dev-up`, `dev-web`, `dev-api`, `dev-worker`, `migrate`, `lint`, `test`, `typecheck`.
+- [x] Add CI workflows: lint/typecheck/tests; scheduled Postgres backup artifact.
+- [x] Add `CONTRIBUTING.md` + minimal env templates.
 
 Acceptance:
 - A new dev can run one documented setup path and boot `web` + `api` locally.
@@ -163,4 +163,4 @@ Acceptance:
 ## Progress log (append-only)
 
 - 2026-02-08: Approved. Committed clean-slate teardown baseline on `refresh`.
-
+- 2026-02-08: Scaffolded monorepo + CI + golden commands (web/api skeletons; env templates).
