@@ -182,3 +182,4 @@ Acceptance:
 - 2026-02-08: CI runs are currently blocked from starting due to GitHub billing/spending limits; local gate passes.
 - 2026-02-08: GitHub Actions is unblocked; CI is green on `refresh` (lint/test/typecheck).
 - 2026-02-08: Railway production deploy refreshed (web/api/worker/renderer). Postgres reset to clean-slate schema; legacy scheduler service stopped.
+- 2026-02-08: Polished web UI (landing + marketing pages + app pages) and deployed updated `web` service to Railway production.
