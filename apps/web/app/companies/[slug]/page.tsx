@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { checkNow, unwatchEntity } from "@/app/actions/documents";
 import {
   internalFetch,
   type ChangeEventOut,
@@ -168,63 +169,91 @@ export default async function CompanyPage({
             </div>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-            {tracked.map((doc) => {
-              const snap = snapshotsById.get(doc.id);
-              const pending = !doc.last_snapshot_id;
-              return (
-                <div key={doc.id} className="card" style={{ padding: 16 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                    <div>
-                      <div style={{ fontWeight: 650 }}>{formatDocType(doc.doc_type)}</div>
-                      <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
-                        {formatStatus(doc)}
-                        {doc.status === "blocked_robots" && doc.robots_rule ? ` • ${doc.robots_rule}` : ""}
+          <>
+            <form action={unwatchEntity} style={{ display: "flex", justifyContent: "flex-end" }}>
+              <input type="hidden" name="entitySlug" value={entity.slug} />
+              {tracked.map((d) => (
+                <input key={d.id} type="hidden" name="documentId" value={d.id} />
+              ))}
+              <button className="btn btnGhost" type="submit">
+                Stop tracking
+              </button>
+            </form>
+
+            <div style={{ height: 12 }} />
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
+              {tracked.map((doc) => {
+                const snap = snapshotsById.get(doc.id);
+                const pending = !doc.last_snapshot_id;
+                return (
+                  <div key={doc.id} className="card" style={{ padding: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <div>
+                        <div style={{ fontWeight: 650 }}>{formatDocType(doc.doc_type)}</div>
+                        <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+                          {formatStatus(doc)}
+                          {doc.status === "blocked_robots" && doc.robots_rule
+                            ? ` • ${doc.robots_rule}`
+                            : ""}
+                        </div>
                       </div>
+                      <span className="pill">{pending ? "First snapshot pending…" : "Tracked"}</span>
                     </div>
-                    <span className="pill">{pending ? "First snapshot pending…" : "Tracked"}</span>
-                  </div>
 
-                  <div style={{ height: 12 }} />
+                    <div style={{ height: 10 }} />
 
-                  {snap ? (
-                    <details>
-                      <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-                        Current policy text
-                      </summary>
-                      <div
-                        style={{
-                          marginTop: 10,
-                          border: "1px solid var(--border)",
-                          borderRadius: 12,
-                          padding: 12,
-                          background: "rgba(20,18,16,0.02)",
-                          whiteSpace: "pre-wrap",
-                          maxHeight: 320,
-                          overflow: "auto",
-                          fontSize: 14,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {snap.extracted_text}
+                    <form action={checkNow} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      <input type="hidden" name="documentId" value={doc.id} />
+                      <input type="hidden" name="entitySlug" value={entity.slug} />
+                      <button className="btn btnGhost" type="submit">
+                        Check now
+                      </button>
+                    </form>
+
+                    <div style={{ height: 12 }} />
+
+                    {snap ? (
+                      <details>
+                        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+                          Current policy text
+                        </summary>
+                        <div
+                          style={{
+                            marginTop: 10,
+                            border: "1px solid var(--border)",
+                            borderRadius: 12,
+                            padding: 12,
+                            background: "rgba(20,18,16,0.02)",
+                            whiteSpace: "pre-wrap",
+                            maxHeight: 320,
+                            overflow: "auto",
+                            fontSize: 14,
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {snap.extracted_text}
+                        </div>
+                      </details>
+                    ) : (
+                      <div className="muted" style={{ fontSize: 14 }}>
+                        {pending
+                          ? "Waiting for the first snapshot…"
+                          : "No current snapshot available."}
                       </div>
-                    </details>
-                  ) : (
-                    <div className="muted" style={{ fontSize: 14 }}>
-                      {pending ? "Waiting for the first snapshot…" : "No current snapshot available."}
-                    </div>
-                  )}
+                    )}
 
-                  <div className="muted" style={{ fontSize: 12, marginTop: 10 }}>
-                    URL:{" "}
-                    <a href={doc.url} target="_blank" rel="noreferrer">
-                      {doc.url}
-                    </a>
+                    <div className="muted" style={{ fontSize: 12, marginTop: 10 }}>
+                      URL:{" "}
+                      <a href={doc.url} target="_blank" rel="noreferrer">
+                        {doc.url}
+                      </a>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </section>
 
