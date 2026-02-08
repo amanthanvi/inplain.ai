@@ -102,23 +102,23 @@ Acceptance:
 ### M6 — Change detection + diffs + change events (SPEC FR-4/5/6)
 
 - [ ] Tiered change detection gates:
-  - hash gate
-  - ratio gate
-  - cosmetic strip
-  - cheap LLM classify for ambiguous changes
-  - meaningful change → proceed
-- [ ] Diff generation (`diff-match-patch`) → structured hunks (`hunkId`, added/removed/context).
-- [ ] Create `change_events` with summary status (`pending`/`completed`/`failed`/`skipped_quota`).
+  - [x] hash gate (skip identical extracted sha256)
+  - [x] ratio gate (baseline change_score)
+  - [x] cosmetic strip (baseline)
+  - [ ] cheap LLM classify for ambiguous changes
+  - [x] meaningful change → proceed
+- [x] Diff generation (`diff-match-patch`) → structured hunks (`hunkId`, added/removed/context).
+- [x] Create `change_events` with summary status (`pending`/`completed`/`failed`/`skipped_quota`).
 
 Acceptance:
 - A meaningful change produces a stored diff with stable `hunkId`s.
 
 ### M7 — Summaries + notifications (SPEC FR-6/7)
 
-- [ ] OpenRouter summarizer with fallback chain (SPEC Appendix C).
-- [ ] Strict JSON schema output + runtime citation validation.
+- [x] OpenRouter summarizer with fallback chain (SPEC Appendix C).
+- [x] Strict JSON schema output + runtime citation validation.
 - [ ] Quota enforcement (tier-based); summary skip when over quota (diff still available).
-- [ ] In-app notification record created per meaningful change event.
+- [x] In-app notification record created per meaningful change event.
 
 Acceptance:
 - Meaningful changes result in: diff + summary (or quota-skip) + notification.
@@ -168,3 +168,4 @@ Acceptance:
 - 2026-02-08: Implemented internal FastAPI endpoints + service-token auth skeleton (entities/documents/change events/notifications/admin).
 - 2026-02-08: Implemented Postgres job queue + scheduler loops (SKIP LOCKED claim, retries, stale-lock cleanup).
 - 2026-02-08: Implemented fetch→extract→snapshot pipeline (HTTP + trafilatura; PDF via pypdf; conditional GET; SSRF + robots).
+- 2026-02-08: Implemented diff generation + change events + summary/notify jobs (diff-match-patch hunks; OpenRouter summary w/ citation validation).
