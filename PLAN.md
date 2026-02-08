@@ -147,7 +147,7 @@ Acceptance:
 
 ### M10 — Testing + ops + release readiness
 
-- [ ] Tests per SPEC 10.2 (integration-heavy):
+- [x] Tests per SPEC 10.2 (integration-heavy):
   - API tests
   - worker pipeline tests (mock OpenRouter)
   - job queue claiming tests
@@ -178,3 +178,4 @@ Acceptance:
 - 2026-02-08: Added cheap LLM classifier gate for ambiguous diffs (skip change events for cosmetic-only changes).
 - 2026-02-08: Added Clerk `has()`-based entitlements (doc limit + check-now quota) and usage meters; added `/internal/usage`.
 - 2026-02-08: Added DB-backed acceptance tests for AC-5…AC-7 and wired Postgres service into CI.
+- 2026-02-08: Added pipeline/webhook/scheduler integration tests (DB-backed) and internal documents endpoint coverage.
