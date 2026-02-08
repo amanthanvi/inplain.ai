@@ -7,6 +7,7 @@ from sqlalchemy import engine_from_config, pool
 
 import inplain.db.models  # noqa: F401
 from inplain.db.base import Base
+from inplain.db.urls import normalize_database_url
 from inplain.settings import settings
 
 config = context.config
@@ -17,7 +18,7 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    url = settings.database_url
+    url = normalize_database_url(settings.database_url)
     context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
     with context.begin_transaction():
         context.run_migrations()
@@ -25,7 +26,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     section = config.get_section(config.config_ini_section) or {}
-    section["sqlalchemy.url"] = settings.database_url
+    section["sqlalchemy.url"] = normalize_database_url(settings.database_url)
     connectable = engine_from_config(
         section,
         prefix="sqlalchemy.",
