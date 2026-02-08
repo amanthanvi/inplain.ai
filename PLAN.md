@@ -60,7 +60,7 @@ Acceptance:
 
 ### M3 — API (FastAPI internal, SPEC 4.3)
 
-- [ ] Internal-only FastAPI endpoints (no public client access):
+- [x] Internal-only FastAPI endpoints (no public client access):
   - `/healthz`
   - `/internal/entities`, `/internal/entities/{slug}`
   - `/internal/documents/*` (watch/unwatch/list/detail/check-now)
@@ -68,7 +68,7 @@ Acceptance:
   - `/internal/notifications/*` (list/unread-count/mark-read)
   - `/internal/webhooks/clerk` (Svix verification)
   - `/internal/admin/jobs*` (admin only)
-- [ ] Auth model: service token between Next.js Server Actions and FastAPI; row-level access by `clerk_user_id` (SPEC 5.1).
+- [x] Auth model: service token between Next.js Server Actions and FastAPI; row-level access by `clerk_user_id` (SPEC 5.1).
 - [ ] Standard error format (SPEC 4.3).
 
 Acceptance:
@@ -165,3 +165,4 @@ Acceptance:
 - 2026-02-08: Approved. Committed clean-slate teardown baseline on `refresh`.
 - 2026-02-08: Scaffolded monorepo + CI + golden commands (web/api skeletons; env templates).
 - 2026-02-08: Implemented initial Postgres schema + Alembic migration; `catalog.json` seeds `entities` via upsert.
+- 2026-02-08: Implemented internal FastAPI endpoints + service-token auth skeleton (entities/documents/change events/notifications/admin).
