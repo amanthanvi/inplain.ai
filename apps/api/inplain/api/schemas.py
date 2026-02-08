@@ -131,3 +131,16 @@ class ChangeEventDetailOut(BaseModel):
     change_event: ChangeEventOut
     diff: DiffOut
 
+
+class SnapshotOut(BaseModel):
+    id: uuid.UUID
+    document_id: uuid.UUID
+    fetched_at: datetime
+    fetch_method: str
+    http_status: int
+    content_type: str | None
+    extracted_text: str
+    extracted_sha256: str
+    extract_version: int
+    byte_size_extracted: int
+    created_at: datetime
