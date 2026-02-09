@@ -192,6 +192,7 @@ Acceptance:
 - 2026-02-09: Added fetch-driven integration coverage for AC-2 path (`fetch -> snapshot -> diff -> summarize -> notify`) in `test_pipeline_integration.py`.
 - 2026-02-09: Hardened AC-4 with backend limit enforcement in `/internal/documents/watch` (`max_documents`) and added integration coverage for 4th-watch blocking.
 - 2026-02-09: Replaced deprecated Next.js `middleware.ts` convention with `proxy.ts` to remove build deprecation warning.
+- 2026-02-09: Implemented HMAC request signing for Next.js -> FastAPI (`X-Request-Timestamp` + `X-Request-Signature`) with signature verification tests and phased bearer-token fallback for legacy internal callers.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
@@ -199,7 +200,7 @@ See SPEC.md §16 for full launch plan. Summary of pre-launch work:
 
 - [ ] **L1**: Curate + validate 30-50 catalog companies (URLs, robots.txt, extraction)
 - [ ] **L2**: UI polish pass (all pages, desktop + mobile responsive)
-- [ ] **L3**: HMAC request signing (Next.js → FastAPI)
+- [x] **L3**: HMAC request signing (Next.js → FastAPI)
 - [ ] **L4**: Cloudflare proxy mode (orange cloud)
 - [ ] **L5**: Cloudflare Turnstile CAPTCHA (Clerk integration)
 - [ ] **L6**: Deploy renderer service on Railway

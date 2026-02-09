@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 export type ErrorEnvelope = {
   error: {
     code: string;
@@ -117,6 +119,14 @@ type InternalFetchOptions = {
   cache?: RequestCache;
 };
 
+function sha256Hex(raw: string): string {
+  return crypto.createHash("sha256").update(raw, "utf8").digest("hex");
+}
+
+function hmacHex(secret: string, payload: string): string {
+  return crypto.createHmac("sha256", secret).update(payload, "utf8").digest("hex");
+}
+
 export async function internalFetch<T>(
   path: string,
   { userId, method = "GET", body, cache = "no-store" }: InternalFetchOptions = {},
@@ -130,8 +140,15 @@ export async function internalFetch<T>(
     throw new Error("INTERNAL_SERVICE_TOKEN not set");
   }
 
+  const bodyText = body === undefined ? "" : JSON.stringify(body);
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const payloadToSign = `${timestamp}\n${method.toUpperCase()}\n${path}\n${sha256Hex(bodyText)}`;
+  const signature = hmacHex(token, payloadToSign);
+
   const headers: Record<string, string> = {
     authorization: `Bearer ${token}`,
+    "x-request-timestamp": timestamp,
+    "x-request-signature": signature,
   };
   if (userId) {
     headers["x-clerk-user-id"] = userId;
@@ -143,7 +160,7 @@ export async function internalFetch<T>(
   const res = await fetch(`${baseUrl}${path}`, {
     method,
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : bodyText,
     cache,
   });
 
