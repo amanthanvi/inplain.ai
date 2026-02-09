@@ -1003,9 +1003,9 @@ v0.1.0 internal review milestone: **AC-1** through **AC-7**. Launch-readiness it
 
 **AC-1**: Given a signed-out user on `/companies/google`, when they click "Watch changes" and complete Clerk auth, then Google's privacy policy and ToS documents are tracked and an initial snapshot job is enqueued.
 
-**AC-2**: Given a tracked document with a new snapshot that has meaningful changes, when the pipeline completes, then a change event exists with a diff, an AI summary with ≥1 citation per bullet (valid or repaired), and an in-app notification.
+**AC-2**: Given a tracked document with a new snapshot that has meaningful changes, when the pipeline completes, then a change event exists with a diff, an AI summary with ≥1 citation per bullet, and an in-app notification.
 
-**AC-3**: Given a change event summary, when the user clicks a valid citation, then the diff viewer scrolls to the referenced hunk and highlights it. For unverified citations, the link is disabled and an "unverified" badge is shown.
+**AC-3**: Given a change event summary, when the user clicks a citation, then the diff viewer scrolls to the referenced hunk and highlights it.
 
 **AC-4**: Given a Free tier user with 3 tracked documents, when they try to watch a 4th company, then they see an upgrade CTA and the action is blocked.
 
