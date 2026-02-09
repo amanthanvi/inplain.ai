@@ -189,6 +189,7 @@ Acceptance:
 - 2026-02-09: Reconciled docs metadata after SPEC expansion: README now references SPEC v0.2.0 as 16 sections + 4 appendices; milestone checklist statuses for M5/M6 aligned with implemented code.
 - 2026-02-09: Added internal v0.1.0 reviewer runbook with AC-1..AC-7 browser checklist, deterministic acceptance test commands, and evidence capture requirements.
 - 2026-02-09: Re-ran full gate locally (`make lint`, `make test`, `make typecheck`) and validated latest `refresh` CI run is green.
+- 2026-02-09: Added fetch-driven integration coverage for AC-2 path (`fetch -> snapshot -> diff -> summarize -> notify`) in `test_pipeline_integration.py`.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
