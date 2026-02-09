@@ -193,6 +193,7 @@ Acceptance:
 - 2026-02-09: Hardened AC-4 with backend limit enforcement in `/internal/documents/watch` (`max_documents`) and added integration coverage for 4th-watch blocking.
 - 2026-02-09: Replaced deprecated Next.js `middleware.ts` convention with `proxy.ts` to remove build deprecation warning.
 - 2026-02-09: Implemented HMAC request signing for Next.js -> FastAPI (`X-Request-Timestamp` + `X-Request-Signature`) with signature verification tests and phased bearer-token fallback for legacy internal callers.
+- 2026-02-09: Implemented citation fuzzy repair with three-tier outcomes (`valid`, `repaired`, `unverified`) and added UI unverified indicator with disabled citation links.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
@@ -208,7 +209,7 @@ See SPEC.md §16 for full launch plan. Summary of pre-launch work:
 - [ ] **L8**: Sentry integration (Python + Next.js)
 - [ ] **L9**: Blue-green deploy tested (staging environment)
 - [ ] **L10**: Smoke test script (post-deploy verification)
-- [ ] **L11**: Citation fuzzy repair + unverified indicator
+- [x] **L11**: Citation fuzzy repair + unverified indicator
 - [ ] **L12**: Diff viewer finalized (KISS research)
 - [ ] **L13**: Marketing copy finalized
 - [ ] **L14**: README + LICENSE updated for MIT

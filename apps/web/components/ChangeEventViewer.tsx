@@ -13,8 +13,18 @@ function scrollToHunk(hunkId: string) {
   window.setTimeout(() => el.classList.remove("hunkHighlight"), 2000);
 }
 
-function CitationPill({ citation }: { citation: Citation }) {
+function CitationPill({ citation, knownHunk }: { citation: Citation; knownHunk: boolean }) {
+  const isUnverified = citation.status === "unverified" || !knownHunk;
   const onClick = useCallback(() => scrollToHunk(citation.hunkId), [citation.hunkId]);
+
+  if (isUnverified) {
+    return (
+      <span className="citation citationUnverified" aria-label={`${citation.hunkId} unverified citation`}>
+        {citation.hunkId || "unknown"} · unverified
+      </span>
+    );
+  }
+
   return (
     <button className="citation" type="button" onClick={onClick}>
       {citation.hunkId}
@@ -22,13 +32,13 @@ function CitationPill({ citation }: { citation: Citation }) {
   );
 }
 
-function Bullet({ bullet }: { bullet: SummaryBullet }) {
+function Bullet({ bullet, hunkIds }: { bullet: SummaryBullet; hunkIds: Set<string> }) {
   return (
     <li className="summaryBullet">
       <div>{bullet.text}</div>
       <div className="citationRow">
         {bullet.citations.map((c, idx) => (
-          <CitationPill key={`${c.hunkId}-${idx}`} citation={c} />
+          <CitationPill key={`${c.hunkId}-${idx}`} citation={c} knownHunk={hunkIds.has(c.hunkId)} />
         ))}
       </div>
     </li>
@@ -44,6 +54,8 @@ export function ChangeEventViewer({
   whyMatters: SummaryBullet[] | null;
   hunks: DiffHunk[];
 }) {
+  const hunkIds = new Set(hunks.map((h) => h.hunkId));
+
   return (
     <div className="stack" style={{ gap: 14 }}>
       <section className="card cardPad">
@@ -61,7 +73,7 @@ export function ChangeEventViewer({
             </div>
             <ul className="summaryList">
               {whatChanged.map((b, idx) => (
-                <Bullet key={idx} bullet={b} />
+                <Bullet key={idx} bullet={b} hunkIds={hunkIds} />
               ))}
             </ul>
           </>
@@ -75,7 +87,7 @@ export function ChangeEventViewer({
             </div>
             <ul className="summaryList">
               {whyMatters.map((b, idx) => (
-                <Bullet key={idx} bullet={b} />
+                <Bullet key={idx} bullet={b} hunkIds={hunkIds} />
               ))}
             </ul>
           </>

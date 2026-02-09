@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from datetime import UTC, datetime
+from difflib import SequenceMatcher
 from typing import Any
 
 import httpx
@@ -19,6 +21,7 @@ from inplain.settings import settings
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 _PROMPT_VERSION = 1
 _MAX_HUNKS_FOR_LLM = 20
+_FUZZY_REPAIR_MIN_RATIO = 0.82
 _MODEL_CHAIN = [
     "anthropic/claude-sonnet-4-5",
     "openai/gpt-5.2",
@@ -81,11 +84,12 @@ def run_summarize_job(db: Session, *, job: Job) -> None:
     if not isinstance(what_changed, list) or not isinstance(why_matters, list):
         raise ValueError("invalid summary shape")
 
-    _validate_citations(diff_hunks=diff.diff_hunks, bullets=what_changed + why_matters)
+    validated_what_changed = _validate_citations(diff_hunks=diff.diff_hunks, bullets=what_changed)
+    validated_why_matters = _validate_citations(diff_hunks=diff.diff_hunks, bullets=why_matters)
 
     change_event.summary_status = SummaryStatus.completed
-    change_event.summary_what_changed = what_changed
-    change_event.summary_why_matters = why_matters
+    change_event.summary_what_changed = validated_what_changed
+    change_event.summary_why_matters = validated_why_matters
     change_event.summary_model = model_used
     change_event.summary_prompt_version = _PROMPT_VERSION
     change_event.summary_error = None
@@ -152,7 +156,53 @@ def _call_openrouter(*, model: str, prompt: str) -> dict[str, Any]:
     return json.loads(content)
 
 
-def _validate_citations(*, diff_hunks: list[dict[str, Any]], bullets: list[Any]) -> None:
+def _normalize_spaces(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip())
+
+
+def _repair_quote(*, quote: str, hunk_text: str) -> str | None:
+    if not quote:
+        return None
+
+    stripped_quote = quote.strip()
+    if stripped_quote and stripped_quote in hunk_text:
+        return stripped_quote
+
+    escaped = re.escape(stripped_quote)
+    whitespace_tolerant = re.sub(r"\\\s+", r"\\s+", escaped)
+    if whitespace_tolerant:
+        match = re.search(whitespace_tolerant, hunk_text, flags=re.IGNORECASE)
+        if match:
+            return match.group(0)
+
+    target = _normalize_spaces(stripped_quote).lower()
+    if not target:
+        return None
+
+    chunks = [chunk.strip() for chunk in hunk_text.splitlines() if chunk.strip()]
+    if not chunks and hunk_text.strip():
+        chunks = [hunk_text.strip()]
+    if not chunks:
+        return None
+
+    best_chunk: str | None = None
+    best_ratio = 0.0
+    for chunk in chunks:
+        ratio = SequenceMatcher(None, target, _normalize_spaces(chunk).lower()).ratio()
+        if ratio > best_ratio:
+            best_ratio = ratio
+            best_chunk = chunk
+
+    if best_chunk and best_ratio >= _FUZZY_REPAIR_MIN_RATIO:
+        return best_chunk
+    return None
+
+
+def _validate_citations(
+    *,
+    diff_hunks: list[dict[str, Any]],
+    bullets: list[Any],
+) -> list[dict[str, Any]]:
     by_id: dict[str, str] = {}
     for h in diff_hunks:
         hid = str(h.get("hunkId") or "")
@@ -160,21 +210,46 @@ def _validate_citations(*, diff_hunks: list[dict[str, Any]], bullets: list[Any])
         removed = "".join(h.get("removed") or [])
         by_id[hid] = added + "\n" + removed
 
+    validated_bullets: list[dict[str, Any]] = []
     for bullet in bullets:
         if not isinstance(bullet, dict):
             raise ValueError("invalid bullet")
         citations = bullet.get("citations")
         if not isinstance(citations, list) or not citations:
             raise ValueError("missing citations")
+
+        validated_citations: list[dict[str, str]] = []
         for c in citations:
             if not isinstance(c, dict):
                 raise ValueError("invalid citation")
             hid = str(c.get("hunkId") or "")
             quote = str(c.get("quote") or "")
-            if not hid or hid not in by_id:
-                raise ValueError("invalid hunkId")
-            if not quote or quote not in by_id[hid]:
-                raise ValueError("invalid quote")
+            status = "valid"
+
+            hunk_text = by_id.get(hid)
+            if hunk_text is None:
+                status = "unverified"
+            elif not quote or quote not in hunk_text:
+                repaired = _repair_quote(quote=quote, hunk_text=hunk_text)
+                if repaired:
+                    quote = repaired
+                    status = "repaired"
+                else:
+                    status = "unverified"
+
+            validated_citations.append(
+                {
+                    "hunkId": hid,
+                    "quote": quote,
+                    "status": status,
+                }
+            )
+
+        validated_bullet = dict(bullet)
+        validated_bullet["citations"] = validated_citations
+        validated_bullets.append(validated_bullet)
+
+    return validated_bullets
 
 
 def _over_summary_quota(*, db: Session, clerk_user_id: str, schedule_tier: ScheduleTier) -> bool:

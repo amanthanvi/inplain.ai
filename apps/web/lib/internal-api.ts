@@ -65,7 +65,11 @@ export type ChangeEventOut = {
   created_at: string;
 };
 
-export type Citation = { hunkId: string; quote: string };
+export type Citation = {
+  hunkId: string;
+  quote: string;
+  status?: "valid" | "repaired" | "unverified";
+};
 export type SummaryBullet = { text: string; citations: Citation[] };
 
 export type DiffHunk = {

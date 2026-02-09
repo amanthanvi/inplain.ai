@@ -294,6 +294,13 @@ a {
   background: rgba(255, 77, 46, 0.18);
 }
 
+.citationUnverified {
+  border-color: rgba(236, 173, 74, 0.45);
+  background: rgba(236, 173, 74, 0.2);
+  color: rgba(99, 65, 13, 0.92);
+  cursor: default;
+}
+
 .hunk {
   border: 1px solid var(--border);
   border-radius: 14px;
