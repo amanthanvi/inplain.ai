@@ -4,11 +4,11 @@ Track, diff, and understand privacy policy changes with grounded, citation-backe
 
 ## Status
 
-Clean-slate rebuild in progress. `SPEC.md` is the contract; `PLAN.md` is the execution log.
+v0.1.0 internal review package is the current target. `SPEC.md` is the contract; `PLAN.md` is the execution log.
 
 ## Spec
 
-Full product spec: [`SPEC.md`](SPEC.md) (v0.2.0, 14 sections + 3 appendices).
+Full product spec: [`SPEC.md`](SPEC.md) (v0.2.0, 16 sections + 4 appendices).
 
 ## Plan
 

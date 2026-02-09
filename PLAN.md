@@ -1,6 +1,6 @@
 # PLAN — Inplain.ai v0.1.0 (SPEC v0.2.0)
 
-Last updated: 2026-02-08
+Last updated: 2026-02-09
 
 North star: production-ready web app that monitors public privacy/ToS pages (curated catalog only), detects meaningful changes, shows a readable diff, and generates AI summaries **with citations** that link to exact diff hunks.
 
@@ -186,6 +186,7 @@ Acceptance:
 - 2026-02-08: Fixed dynamic route param resolution on Next.js (company pages were requesting `/internal/entities/undefined` in prod).
 - 2026-02-08: Fixed production fetch pipeline (httpx timeout config + browser UA); updated Apple catalog URL to an extractable static page (`/legal/privacy/en-ww/`) and added migration to rewrite unsnapshotted Apple docs.
 - 2026-02-08: Completed launch-readiness audit + 18-question deep interview. Updated SPEC.md v0.2.0 with launch plan (16 sections + 4 appendices). Key additions: full PH/HN launch strategy, MIT license, HMAC auth signing, Cloudflare proxy + Turnstile, PostHog analytics, Sentry, blue-green deploys, 30-50 company catalog target, $9/$29 pricing, three-tier citation handling, UI polish requirements.
+- 2026-02-09: Reconciled docs metadata after SPEC expansion: README now references SPEC v0.2.0 as 16 sections + 4 appendices; milestone checklist statuses for M5/M6 aligned with implemented code.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
@@ -211,7 +212,7 @@ See SPEC.md §16 for full launch plan. Summary of pre-launch work:
 
 Ordered, reviewable work to reach the internal v0.1.0 milestone (SPEC AC-1…AC-7).
 
-1. [ ] **Audit and reconcile docs (SPEC/PLAN/README)**
+1. [x] **Audit and reconcile docs (SPEC/PLAN/README)**
    - What: Sync `README.md` metadata with the updated `SPEC.md` structure, and ensure `PLAN.md` milestone checkboxes reflect actual code state.
    - Acceptance: `README.md` matches `SPEC.md` (v0.2.0 structure) and `PLAN.md` shows no “false incomplete” milestone items.
    - Complexity: S
