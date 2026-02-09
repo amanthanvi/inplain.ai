@@ -6,15 +6,15 @@ export default function HomePage() {
       <section className="hero">
         <div className="heroGrid">
           <div className="heroCopy">
-            <div className="kicker">Privacy policies change quietly.</div>
+            <div className="kicker">Policy changes shouldn’t hide in legal pages.</div>
             <h1 className="heroTitle">
               Track what changed.
               <br />
               Understand why it matters.
             </h1>
             <p className="heroLead">
-              Inplain monitors public Privacy Policies and Terms of Service, generates readable
-              diffs, and produces citation-backed summaries grounded in exact changed passages.
+              Inplain monitors public policy documents from a curated directory, builds readable
+              diffs, and generates citation-backed summaries grounded in exact changed text.
             </p>
 
             <div className="heroCtas">
@@ -27,7 +27,7 @@ export default function HomePage() {
             </div>
 
             <div className="heroBadges">
-              <span className="badge">Curated directory</span>
+              <span className="badge">32-company curated catalog</span>
               <span className="badge">Robots-respecting</span>
               <span className="badge">Citations you can click</span>
             </div>
@@ -110,7 +110,7 @@ export default function HomePage() {
             <div className="stepIndex">03</div>
             <div className="stepTitle">You review the diff</div>
             <div className="muted">
-              Stable hunks with additions/removals — built for long documents.
+              Section-first hunks with unified and side-by-side views.
             </div>
           </div>
           <div className="stepCard">

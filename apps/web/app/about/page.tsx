@@ -21,10 +21,10 @@ export default function AboutPage() {
         </div>
 
         <div className="card cardPad">
-          <div className="cardTitle">What we don’t do (yet)</div>
+          <div className="cardTitle">Scope for this release</div>
           <p className="muted" style={{ margin: "10px 0 0" }}>
-            No custom URLs, no email digests, and no exports beyond the UI. The goal for v0.1.0 is
-            a focused, auditable experience.
+            We focus on curated-company tracking, in-app notifications, and auditable summaries.
+            Custom URL monitoring and email digests are intentionally deferred.
           </p>
         </div>
       </section>

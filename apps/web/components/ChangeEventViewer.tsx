@@ -1,12 +1,19 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { Citation, DiffHunk, SummaryBullet } from "@/lib/internal-api";
+
+type DiffMode = "section" | "unified" | "split";
 
 function scrollToHunk(hunkId: string) {
   const el = document.getElementById(`hunk-${hunkId}`);
   if (!el) return;
+
+  const details = el.closest("details");
+  if (details instanceof HTMLDetailsElement && !details.open) {
+    details.open = true;
+  }
 
   el.scrollIntoView({ behavior: "smooth", block: "start" });
   el.classList.add("hunkHighlight");
@@ -45,6 +52,119 @@ function Bullet({ bullet, hunkIds }: { bullet: SummaryBullet; hunkIds: Set<strin
   );
 }
 
+function shortHeading(text: string): string {
+  const cleaned = text.trim().replace(/\s+/g, " ");
+  if (cleaned.length <= 72) return cleaned;
+  return `${cleaned.slice(0, 69)}...`;
+}
+
+function sectionTitleForHunk(hunk: DiffHunk, index: number): string {
+  const candidates = [
+    hunk.contextBefore,
+    hunk.contextAfter,
+    ...hunk.added,
+    ...hunk.removed,
+  ]
+    .flatMap((value) => value.split("\n"))
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  for (const line of candidates) {
+    if (/^(#{1,6}\s+|section\s+\d+|[0-9]+\.)/i.test(line)) {
+      return shortHeading(line.replace(/^#{1,6}\s+/, ""));
+    }
+    if (/^[A-Z][A-Z0-9\s:&/\-]{10,}$/.test(line)) {
+      return shortHeading(line);
+    }
+  }
+
+  return `General changes ${index + 1}`;
+}
+
+type HunkSection = {
+  title: string;
+  hunks: DiffHunk[];
+};
+
+function groupHunksBySection(hunks: DiffHunk[]): HunkSection[] {
+  const grouped = new Map<string, DiffHunk[]>();
+  hunks.forEach((hunk, idx) => {
+    const title = sectionTitleForHunk(hunk, idx);
+    const list = grouped.get(title) || [];
+    list.push(hunk);
+    grouped.set(title, list);
+  });
+  return Array.from(grouped.entries()).map(([title, list]) => ({ title, hunks: list }));
+}
+
+function UnifiedHunk({ hunk }: { hunk: DiffHunk }) {
+  return (
+    <article id={`hunk-${hunk.hunkId}`} className="hunk">
+      <div className="hunkHeader">
+        <span className="pill">{hunk.hunkId}</span>
+      </div>
+      <div className="hunkBody">
+        {hunk.contextBefore ? <div className="diffContext muted">{hunk.contextBefore}</div> : null}
+        {hunk.removed.length > 0 ? (
+          <div className="diffRemoved">
+            {hunk.removed.map((t, idx) => (
+              <span key={idx}>{t}</span>
+            ))}
+          </div>
+        ) : null}
+        {hunk.added.length > 0 ? (
+          <div className="diffAdded">
+            {hunk.added.map((t, idx) => (
+              <span key={idx}>{t}</span>
+            ))}
+          </div>
+        ) : null}
+        {hunk.contextAfter ? <div className="diffContext muted">{hunk.contextAfter}</div> : null}
+      </div>
+    </article>
+  );
+}
+
+function SplitHunk({ hunk }: { hunk: DiffHunk }) {
+  return (
+    <article id={`hunk-${hunk.hunkId}`} className="hunk">
+      <div className="hunkHeader">
+        <span className="pill">{hunk.hunkId}</span>
+      </div>
+      <div className="hunkBody">
+        {hunk.contextBefore ? <div className="diffContext muted">{hunk.contextBefore}</div> : null}
+        <div className="diffSplitGrid">
+          <div>
+            <div className="diffSplitLabel muted">Removed</div>
+            {hunk.removed.length > 0 ? (
+              <div className="diffRemoved">
+                {hunk.removed.map((t, idx) => (
+                  <span key={idx}>{t}</span>
+                ))}
+              </div>
+            ) : (
+              <div className="diffEmpty muted">No removals</div>
+            )}
+          </div>
+          <div>
+            <div className="diffSplitLabel muted">Added</div>
+            {hunk.added.length > 0 ? (
+              <div className="diffAdded">
+                {hunk.added.map((t, idx) => (
+                  <span key={idx}>{t}</span>
+                ))}
+              </div>
+            ) : (
+              <div className="diffEmpty muted">No additions</div>
+            )}
+          </div>
+        </div>
+        {hunk.contextAfter ? <div className="diffContext muted">{hunk.contextAfter}</div> : null}
+      </div>
+    </article>
+  );
+}
+
 export function ChangeEventViewer({
   whatChanged,
   whyMatters,
@@ -54,7 +174,9 @@ export function ChangeEventViewer({
   whyMatters: SummaryBullet[] | null;
   hunks: DiffHunk[];
 }) {
+  const [diffMode, setDiffMode] = useState<DiffMode>("section");
   const hunkIds = new Set(hunks.map((h) => h.hunkId));
+  const sections = useMemo(() => groupHunksBySection(hunks), [hunks]);
 
   return (
     <div className="stack" style={{ gap: 14 }}>
@@ -101,38 +223,62 @@ export function ChangeEventViewer({
       </section>
 
       <section className="card cardPad">
-        <h2 className="sectionTitle">Diff</h2>
-        <div style={{ height: 10 }} />
-
-        <div className="stack" style={{ gap: 10 }}>
-          {hunks.map((h) => (
-            <article key={h.hunkId} id={`hunk-${h.hunkId}`} className="hunk">
-              <div className="hunkHeader">
-                <span className="pill">{h.hunkId}</span>
-              </div>
-              <div className="hunkBody">
-                {h.contextBefore ? (
-                  <div className="diffContext muted">{h.contextBefore}</div>
-                ) : null}
-                {h.removed.length > 0 ? (
-                  <div className="diffRemoved">
-                    {h.removed.map((t, idx) => (
-                      <span key={idx}>{t}</span>
-                    ))}
-                  </div>
-                ) : null}
-                {h.added.length > 0 ? (
-                  <div className="diffAdded">
-                    {h.added.map((t, idx) => (
-                      <span key={idx}>{t}</span>
-                    ))}
-                  </div>
-                ) : null}
-                {h.contextAfter ? <div className="diffContext muted">{h.contextAfter}</div> : null}
-              </div>
-            </article>
-          ))}
+        <div className="pageTop" style={{ marginBottom: 10 }}>
+          <h2 className="sectionTitle">Diff</h2>
+          <div className="diffModeRow">
+            <button
+              type="button"
+              className={`btn btnGhost ${diffMode === "section" ? "diffModeBtnActive" : ""}`}
+              onClick={() => setDiffMode("section")}
+            >
+              Section view
+            </button>
+            <button
+              type="button"
+              className={`btn btnGhost ${diffMode === "unified" ? "diffModeBtnActive" : ""}`}
+              onClick={() => setDiffMode("unified")}
+            >
+              Unified
+            </button>
+            <button
+              type="button"
+              className={`btn btnGhost ${diffMode === "split" ? "diffModeBtnActive" : ""}`}
+              onClick={() => setDiffMode("split")}
+            >
+              Side-by-side
+            </button>
+          </div>
         </div>
+
+        {diffMode === "section" ? (
+          <div className="stack" style={{ gap: 10 }}>
+            {sections.map((section, idx) => (
+              <details key={section.title} className="sectionDetails" open={idx === 0}>
+                <summary className="sectionDetailsSummary">
+                  <span>{section.title}</span>
+                  <span className="pill">{section.hunks.length} hunk(s)</span>
+                </summary>
+                <div className="stack" style={{ gap: 10 }}>
+                  {section.hunks.map((hunk) => (
+                    <UnifiedHunk key={hunk.hunkId} hunk={hunk} />
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        ) : diffMode === "unified" ? (
+          <div className="stack" style={{ gap: 10 }}>
+            {hunks.map((hunk) => (
+              <UnifiedHunk key={hunk.hunkId} hunk={hunk} />
+            ))}
+          </div>
+        ) : (
+          <div className="stack" style={{ gap: 10 }}>
+            {hunks.map((hunk) => (
+              <SplitHunk key={hunk.hunkId} hunk={hunk} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

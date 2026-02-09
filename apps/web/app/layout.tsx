@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import { ClerkProvider } from "@clerk/nextjs";
 import { Fraunces, Space_Grotesk } from "next/font/google";
 
 import "./globals.css";
@@ -23,7 +22,7 @@ const bodyFont = Space_Grotesk({
   variable: "--font-body",
 });
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
   const clerkEnabled = Boolean(
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
   );
@@ -43,6 +42,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   if (!clerkEnabled) {
     return shell;
   }
+
+  const { ClerkProvider } = await import("@clerk/nextjs");
 
   return (
     <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
