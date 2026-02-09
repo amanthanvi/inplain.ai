@@ -1,4 +1,4 @@
-# PLAN — Inplain.ai v0.1.0 (SPEC v0.2.0)
+# PLAN — Inplain.ai v0.2.0 (SPEC v0.2.0)
 
 Last updated: 2026-02-09
 
@@ -195,26 +195,35 @@ Acceptance:
 - 2026-02-09: Implemented HMAC request signing for Next.js -> FastAPI (`X-Request-Timestamp` + `X-Request-Signature`) with signature verification tests and phased bearer-token fallback for legacy internal callers.
 - 2026-02-09: Implemented citation fuzzy repair with three-tier outcomes (`valid`, `repaired`, `unverified`) and added UI unverified indicator with disabled citation links.
 - 2026-02-09: Expanded `catalog.json` to 32 curated companies and added `scripts/catalog/validate_catalog.py`; validation report generated at `docs/catalog-validation.md` with 56/56 URLs passing (HTTP 200 + robots allow + extraction >=500 chars). Added migration `0004` to upsert the expanded catalog on deploy.
+- 2026-02-09: Finalized diff viewer launch UX (`section`/`unified`/`side-by-side` modes), added route-level loading skeletons, tightened mobile nav behavior, and refreshed launch copy on `/` + `/about`.
+- 2026-02-09: Added telemetry foundations: PostHog event capture (`sign_up`, `first_watch`, `change_event_viewed`) and optional Sentry wiring for API/worker/web.
+- 2026-02-09: Added launch tooling/docs: `scripts/smoke/smoke_test.py`, `scripts/demo/seed_demo_change_event.py`, `docs/v0.2.0-launch-runbook.md`, and MIT `LICENSE`; wired `make smoke-test` + `make demo-seed`.
+- 2026-02-09: Executed blue-green verification on Railway by deploying `api/web/worker/renderer` to `staging` and running smoke checks against staging domains (all PASS), then rolled the same build to `production` and re-ran smoke checks (all PASS).
+- 2026-02-09: Verified production demo event presence via `railway ssh` + demo seed script (`Demo change event already exists: 214f461f-78cb-4398-bbae-9bb39fd6ef98`).
+- 2026-02-09: Provisioned PostHog template services in Railway project as L7 groundwork; full service activation and app env wiring remain pending.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
 See SPEC.md §16 for full launch plan. Summary of pre-launch work:
 
 - [x] **L1**: Curate + validate 30-50 catalog companies (URLs, robots.txt, extraction)
-- [ ] **L2**: UI polish pass (all pages, desktop + mobile responsive)
+- [x] **L2**: UI polish pass (all pages, desktop + mobile responsive)
 - [x] **L3**: HMAC request signing (Next.js → FastAPI)
 - [ ] **L4**: Cloudflare proxy mode (orange cloud)
+- Blocked: requires Cloudflare zone credentials + DNS/proxy toggles outside repo automation.
 - [ ] **L5**: Cloudflare Turnstile CAPTCHA (Clerk integration)
-- [ ] **L6**: Deploy renderer service on Railway
+- Blocked: requires Clerk dashboard CAPTCHA provider setup (Turnstile) not configurable from this repo.
+- [x] **L6**: Deploy renderer service on Railway
 - [ ] **L7**: PostHog self-hosted on Railway
-- [ ] **L8**: Sentry integration (Python + Next.js)
-- [ ] **L9**: Blue-green deploy tested (staging environment)
-- [ ] **L10**: Smoke test script (post-deploy verification)
+- Partial: PostHog template services were provisioned, full stack activation + env wiring still pending.
+- [x] **L8**: Sentry integration (Python + Next.js)
+- [x] **L9**: Blue-green deploy tested (staging environment)
+- [x] **L10**: Smoke test script (post-deploy verification)
 - [x] **L11**: Citation fuzzy repair + unverified indicator
-- [ ] **L12**: Diff viewer finalized (KISS research)
-- [ ] **L13**: Marketing copy finalized
-- [ ] **L14**: README + LICENSE updated for MIT
-- [ ] **L15**: At least 1 real change event in system (demo data)
+- [x] **L12**: Diff viewer finalized (KISS research)
+- [x] **L13**: Marketing copy finalized
+- [x] **L14**: README + LICENSE updated for MIT
+- [x] **L15**: At least 1 real change event in system (demo data)
 
 ## v0.1.0 Execution Plan
 

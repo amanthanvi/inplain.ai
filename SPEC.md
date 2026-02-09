@@ -1274,21 +1274,25 @@ Required on sign-up (alongside Turnstile):
 
 | # | Milestone | Status | Depends on |
 |---|-----------|--------|------------|
-| L1 | Catalog: 30-50 companies validated | Pending | URL + robots + extraction validation |
-| L2 | UI polish pass (all pages, desktop + mobile) | Pending | Design decisions |
-| L3 | HMAC request signing | Pending | — |
-| L4 | Cloudflare proxy mode enabled | Pending | DNS configuration |
-| L5 | Cloudflare Turnstile CAPTCHA | Pending | Clerk configuration |
-| L6 | Renderer service deployed on Railway | Pending | — |
-| L7 | PostHog self-hosted on Railway | Pending | Resource sizing |
-| L8 | Sentry integration (Python + Next.js) | Pending | — |
-| L9 | Blue-green deploy tested | Pending | Staging environment |
-| L10 | Smoke test script | Pending | — |
-| L11 | Citation fuzzy repair + unverified indicator | Pending | — |
-| L12 | Diff viewer finalized (KISS research) | Pending | Research |
-| L13 | Marketing copy finalized | Pending | — |
-| L14 | README + LICENSE file updated for MIT | Pending | — |
-| L15 | At least 1 real change event in system (demo data) | Pending | Pipeline running |
+| L1 | Catalog: 30-50 companies validated | Done | URL + robots + extraction validation |
+| L2 | UI polish pass (all pages, desktop + mobile) | Done | Design decisions |
+| L3 | HMAC request signing | Done | — |
+| L4 | Cloudflare proxy mode enabled | Blocked (external) | DNS configuration |
+| L5 | Cloudflare Turnstile CAPTCHA | Blocked (external) | Clerk configuration |
+| L6 | Renderer service deployed on Railway | Done | — |
+| L7 | PostHog self-hosted on Railway | Partial (provisioned) | Resource sizing |
+| L8 | Sentry integration (Python + Next.js) | Done | — |
+| L9 | Blue-green deploy tested | Done | Staging environment |
+| L10 | Smoke test script | Done | — |
+| L11 | Citation fuzzy repair + unverified indicator | Done | — |
+| L12 | Diff viewer finalized (KISS research) | Done | Research |
+| L13 | Marketing copy finalized | Done | — |
+| L14 | README + LICENSE file updated for MIT | Done | — |
+| L15 | At least 1 real change event in system (demo data) | Done | Pipeline running |
+
+Notes:
+- L4 + L5 require Cloudflare/Clerk dashboard access and cannot be completed from repository-only automation.
+- L7 template services are provisioned in Railway; final PostHog service activation and env value wiring are still required.
 
 ### 16.2 Launch day checklist
 
