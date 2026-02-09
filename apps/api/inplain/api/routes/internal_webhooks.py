@@ -14,6 +14,7 @@ from inplain.db.models.documents import Document
 from inplain.db.models.jobs import Job
 from inplain.db.models.notifications import Notification
 from inplain.settings import settings
+from inplain.telemetry import capture_event
 
 router = APIRouter(tags=["internal.webhooks"])
 
@@ -75,5 +76,13 @@ async def clerk_webhook(request: Request, db: Session = Depends(get_db)) -> dict
             db.execute(delete(Job).where(Job.clerk_user_id == clerk_user_id))
             db.execute(delete(Document).where(Document.clerk_user_id == clerk_user_id))
             db.commit()
+    elif event_type == "user.created":
+        clerk_user_id = str(data.get("id") or "")
+        if clerk_user_id:
+            capture_event(
+                distinct_id=clerk_user_id,
+                event="sign_up",
+                properties={"source": "clerk_webhook"},
+            )
 
     return {"ok": True}

@@ -13,6 +13,7 @@ from inplain.db.models.documents import Document
 from inplain.db.models.entities import Entity
 from inplain.db.models.enums import DocumentDocType, JobQueue, JobStatus
 from inplain.db.models.jobs import Job
+from inplain.telemetry import capture_event
 
 router = APIRouter(tags=["internal.documents"])
 
@@ -77,6 +78,16 @@ def watch_entity(
     if not to_create:
         raise HTTPException(status_code=400, detail="entity has no policy urls")
 
+    tracked_before = int(
+        db.execute(
+            select(func.count(Document.id)).where(
+                Document.clerk_user_id == clerk_user_id,
+                Document.deleted_at.is_(None),
+            )
+        ).scalar_one()
+        or 0
+    )
+
     if req.max_documents is not None:
         existing_doc_types = set(
             db.execute(
@@ -91,16 +102,11 @@ def watch_entity(
         )
         would_create = sum(1 for doc_type, _ in to_create if doc_type not in existing_doc_types)
         if would_create > 0:
-            tracked_count = db.execute(
-                select(func.count(Document.id)).where(
-                    Document.clerk_user_id == clerk_user_id,
-                    Document.deleted_at.is_(None),
-                )
-            ).scalar_one()
-            if int(tracked_count or 0) + would_create > req.max_documents:
+            if tracked_before + would_create > req.max_documents:
                 raise HTTPException(status_code=409, detail="document limit exceeded")
 
     documents: list[Document] = []
+    created_any = False
     for doc_type, url in to_create:
         existing = db.execute(
             select(Document).where(
@@ -130,6 +136,7 @@ def watch_entity(
         doc = Document(**create_kwargs)
         db.add(doc)
         documents.append(doc)
+        created_any = True
 
     db.flush()
 
@@ -156,6 +163,13 @@ def watch_entity(
         )
 
     db.commit()
+
+    if created_any and tracked_before == 0:
+        capture_event(
+            distinct_id=clerk_user_id,
+            event="first_watch",
+            properties={"entity_slug": entity.slug},
+        )
 
     out_docs = [DocumentOut.model_validate(d, from_attributes=True) for d in documents]
     return WatchResponse(

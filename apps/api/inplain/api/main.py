@@ -13,8 +13,10 @@ from inplain.api.routes.internal_notifications import router as internal_notific
 from inplain.api.routes.internal_snapshots import router as internal_snapshots_router
 from inplain.api.routes.internal_usage import router as internal_usage_router
 from inplain.api.routes.internal_webhooks import router as internal_webhooks_router
+from inplain.telemetry import init_telemetry
 
 app = FastAPI(title="inplain-internal-api")
+init_telemetry(service="api")
 install_error_handlers(app)
 app.include_router(health_router)
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
@@ -9,6 +10,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from inplain.api.deps import get_db
 from inplain.api.main import app
+from inplain.api.routes import internal_documents as internal_documents_route
 from inplain.db.models.entities import Entity
 from inplain.db.models.enums import JobQueue, JobStatus
 from inplain.db.models.jobs import Job
@@ -144,3 +146,44 @@ def test_watch_honors_max_documents_limit(db: Session, test_engine: Engine) -> N
         assert payload["error"]["message"] == "document limit exceeded"
     finally:
         app.dependency_overrides.clear()
+
+
+def test_first_watch_emits_posthog_event(
+    db: Session, test_engine: Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    entity = Entity(
+        slug="acme",
+        name="Acme",
+        website_url="https://example.com",
+        category="test",
+        policy_urls={"privacy": "https://example.com/privacy"},
+    )
+    db.add(entity)
+    db.commit()
+
+    captured: list[dict[str, object]] = []
+
+    def _capture_event(**kwargs: object) -> None:
+        captured.append(dict(kwargs))
+
+    monkeypatch.setattr(internal_documents_route, "capture_event", _capture_event)
+
+    client = _make_client(test_engine)
+    try:
+        headers = {
+            "authorization": "Bearer dev-internal-token",
+            "x-clerk-user-id": "user_123",
+        }
+
+        watch = client.post(
+            "/internal/documents/watch",
+            json={"entity_slug": "acme", "schedule_tier": "daily"},
+            headers=headers,
+        )
+        assert watch.status_code == 200
+    finally:
+        app.dependency_overrides.clear()
+
+    assert len(captured) == 1
+    assert captured[0]["distinct_id"] == "user_123"
+    assert captured[0]["event"] == "first_watch"

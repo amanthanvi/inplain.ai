@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 
 from inplain.db.models.enums import JobQueue
 from inplain.db.session import SessionLocal
+from inplain.telemetry import init_telemetry
 from inplain.worker.executor import execute_job
 from inplain.worker.jobs import claim_jobs, cleanup_stale_locks, mark_failed, mark_succeeded
 from inplain.worker.scheduler import ensure_cleanup_job, schedule_due_documents
@@ -15,6 +16,7 @@ from inplain.worker.scheduler import ensure_cleanup_job, schedule_due_documents
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
+    init_telemetry(service="worker")
     enabled_queues = _parse_enabled_queues(os.environ.get("INPLAIN_WORKER_QUEUES"))
     enable_scheduler = _parse_bool_env("INPLAIN_WORKER_ENABLE_SCHEDULER", default=True)
     enable_stale_lock_cleanup = _parse_bool_env(

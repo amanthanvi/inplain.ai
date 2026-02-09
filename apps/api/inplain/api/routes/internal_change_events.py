@@ -11,6 +11,7 @@ from inplain.api.schemas import ChangeEventDetailOut, ChangeEventOut, DiffOut
 from inplain.db.models.change_events import ChangeEvent
 from inplain.db.models.diffs import Diff
 from inplain.db.models.documents import Document
+from inplain.telemetry import capture_event
 
 router = APIRouter(tags=["internal.change_events"])
 
@@ -51,6 +52,11 @@ def get_change_event(
         raise HTTPException(status_code=404, detail="not found")
 
     diff = db.execute(select(Diff).where(Diff.id == event.diff_id)).scalar_one()
+    capture_event(
+        distinct_id=clerk_user_id,
+        event="change_event_viewed",
+        properties={"change_event_id": str(event.id), "document_id": str(event.document_id)},
+    )
     return ChangeEventDetailOut(
         change_event=ChangeEventOut.model_validate(event, from_attributes=True),
         diff=DiffOut.model_validate(diff, from_attributes=True),

@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     clerk_webhook_secret: str | None = None
     openrouter_api_key: str | None = None
     redis_url: str | None = None
+    posthog_api_key: str | None = None
+    posthog_host: str | None = None
+    sentry_dsn: str | None = None
+    sentry_environment: str = "development"
+    sentry_traces_sample_rate: float = 0.0
 
 
 settings = Settings()

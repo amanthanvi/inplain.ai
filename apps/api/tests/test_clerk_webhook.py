@@ -14,6 +14,7 @@ from svix.webhooks import Webhook
 
 from inplain.api.deps import get_db
 from inplain.api.main import app
+from inplain.api.routes import internal_webhooks as internal_webhooks_route
 from inplain.db.models.documents import Document
 from inplain.db.models.entities import Entity
 from inplain.db.models.enums import DocumentDocType, JobQueue, JobStatus, NotificationType
@@ -115,3 +116,52 @@ def test_clerk_webhook_user_deleted_purges_user_data(
         assert remaining_docs == []
         assert remaining_jobs == []
         assert remaining_notifs == []
+
+
+def test_clerk_webhook_user_created_emits_signup_event(
+    db: Session, test_engine: Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    SessionLocal = sessionmaker(bind=test_engine, class_=Session, expire_on_commit=False)
+
+    secret = "whsec_" + base64.b64encode(b"test_secret_123").decode("utf-8")
+    monkeypatch.setattr(settings, "clerk_webhook_secret", secret)
+
+    captured: list[dict[str, object]] = []
+
+    def _capture_event(**kwargs: object) -> None:
+        captured.append(dict(kwargs))
+
+    monkeypatch.setattr(internal_webhooks_route, "capture_event", _capture_event)
+
+    def _override_get_db() -> Generator[Session]:
+        with SessionLocal() as session:
+            yield session
+
+    app.dependency_overrides[get_db] = _override_get_db
+    try:
+        now = datetime.now(UTC)
+        payload_obj = {"type": "user.created", "data": {"id": "user_abc"}}
+        payload_str = json.dumps(payload_obj)
+        svix_id = "msg_test_2"
+        svix_timestamp = str(int(now.timestamp()))
+        svix_signature = Webhook(secret).sign(svix_id, now, payload_str)
+
+        client = TestClient(app)
+        resp = client.post(
+            "/internal/webhooks/clerk",
+            data=payload_str.encode("utf-8"),
+            headers={
+                "content-type": "application/json",
+                "svix-id": svix_id,
+                "svix-timestamp": svix_timestamp,
+                "svix-signature": svix_signature,
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json() == {"ok": True}
+    finally:
+        app.dependency_overrides.clear()
+
+    assert len(captured) == 1
+    assert captured[0]["distinct_id"] == "user_abc"
+    assert captured[0]["event"] == "sign_up"

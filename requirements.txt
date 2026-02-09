@@ -18,3 +18,5 @@ pypdf==6.6.2
 pytesseract==0.3.13
 playwright==1.58.0
 diff-match-patch==20241021
+sentry-sdk==2.52.0
+posthog==7.8.3
