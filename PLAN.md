@@ -90,7 +90,7 @@ Acceptance:
 - [x] SSRF defenses + redirect re-validation (SPEC 5.5).
 - [x] robots.txt checks cached in Redis (SPEC 4.4). (Falls back to in-memory cache if Redis unset.)
 - [x] Conditional GET (ETag/Last-Modified).
-- [ ] Extraction:
+- [x] Extraction:
   - [x] HTML: `trafilatura` (post-processing for cosmetic noise).
   - [x] PDF: `pypdf` + OCR fallback when needed (best-effort; requires `pdftoppm` + `tesseract`).
 - [x] Snapshot storage in Postgres (TOAST; no object storage in v0.2.0).
@@ -101,7 +101,7 @@ Acceptance:
 
 ### M6 — Change detection + diffs + change events (SPEC FR-4/5/6)
 
-- [ ] Tiered change detection gates:
+- [x] Tiered change detection gates:
   - [x] hash gate (skip identical extracted sha256)
   - [x] ratio gate (baseline change_score)
   - [x] cosmetic strip (baseline)
@@ -185,3 +185,46 @@ Acceptance:
 - 2026-02-08: Polished web UI (landing + marketing pages + app pages) and deployed updated `web` service to Railway production.
 - 2026-02-08: Fixed dynamic route param resolution on Next.js (company pages were requesting `/internal/entities/undefined` in prod).
 - 2026-02-08: Fixed production fetch pipeline (httpx timeout config + browser UA); updated Apple catalog URL to an extractable static page (`/legal/privacy/en-ww/`) and added migration to rewrite unsnapshotted Apple docs.
+- 2026-02-08: Completed launch-readiness audit + 18-question deep interview. Updated SPEC.md v0.2.0 with launch plan (16 sections + 4 appendices). Key additions: full PH/HN launch strategy, MIT license, HMAC auth signing, Cloudflare proxy + Turnstile, PostHog analytics, Sentry, blue-green deploys, 30-50 company catalog target, $9/$29 pricing, three-tier citation handling, UI polish requirements.
+
+## Launch milestones (v0.2.0 → PH/HN)
+
+See SPEC.md §16 for full launch plan. Summary of pre-launch work:
+
+- [ ] **L1**: Curate + validate 30-50 catalog companies (URLs, robots.txt, extraction)
+- [ ] **L2**: UI polish pass (all pages, desktop + mobile responsive)
+- [ ] **L3**: HMAC request signing (Next.js → FastAPI)
+- [ ] **L4**: Cloudflare proxy mode (orange cloud)
+- [ ] **L5**: Cloudflare Turnstile CAPTCHA (Clerk integration)
+- [ ] **L6**: Deploy renderer service on Railway
+- [ ] **L7**: PostHog self-hosted on Railway
+- [ ] **L8**: Sentry integration (Python + Next.js)
+- [ ] **L9**: Blue-green deploy tested (staging environment)
+- [ ] **L10**: Smoke test script (post-deploy verification)
+- [ ] **L11**: Citation fuzzy repair + unverified indicator
+- [ ] **L12**: Diff viewer finalized (KISS research)
+- [ ] **L13**: Marketing copy finalized
+- [ ] **L14**: README + LICENSE updated for MIT
+- [ ] **L15**: At least 1 real change event in system (demo data)
+
+## v0.1.0 Execution Plan
+
+Ordered, reviewable work to reach the internal v0.1.0 milestone (SPEC AC-1…AC-7).
+
+1. [ ] **Audit and reconcile docs (SPEC/PLAN/README)**
+   - What: Sync `README.md` metadata with the updated `SPEC.md` structure, and ensure `PLAN.md` milestone checkboxes reflect actual code state.
+   - Acceptance: `README.md` matches `SPEC.md` (v0.2.0 structure) and `PLAN.md` shows no “false incomplete” milestone items.
+   - Complexity: S
+   - Dependencies: none
+
+2. [ ] **Add a v0.1.0 reviewer runbook (manual QA checklist)**
+   - What: Document the exact steps to verify AC-1…AC-7 in local dev (env vars, boot order, and what to click/expect), plus how to demonstrate the pipeline end-to-end (real fetch → snapshot, and fixture-based change event → summary → notification).
+   - Acceptance: A reviewer can follow a single checklist and reproduce: watch → snapshot created, citation click scroll/highlight, paused/robots/error UI states, and a full diff+summary+notification via the existing integration test fixture.
+   - Complexity: M
+   - Dependencies: 1
+
+3. [ ] **Run the full local gate and fix any failures**
+   - What: Run `make lint`, `make test`, `make typecheck` and address any failures found.
+   - Acceptance: All golden commands pass locally and CI remains green.
+   - Complexity: S
+   - Dependencies: 1
