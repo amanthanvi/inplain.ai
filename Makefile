@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck catalog-validate smoke-test
+.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck catalog-validate smoke-test demo-seed
 
 PYTHON ?= python3.13
 VENV_DIR ?= .venv
@@ -40,3 +40,9 @@ typecheck:
 
 catalog-validate:
 	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python scripts/catalog/validate_catalog.py --catalog catalog.json --report docs/catalog-validation.md
+
+smoke-test:
+	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python scripts/smoke/smoke_test.py
+
+demo-seed:
+	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python scripts/demo/seed_demo_change_event.py

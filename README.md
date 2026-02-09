@@ -4,7 +4,7 @@ Track, diff, and understand privacy policy changes with grounded, citation-backe
 
 ## Status
 
-v0.1.0 internal review package is the current target. `SPEC.md` is the contract; `PLAN.md` is the execution log.
+v0.2.0 launch milestone implementation on `refresh`. `SPEC.md` is the contract; `PLAN.md` is the execution log.
 
 ## Spec
 
@@ -14,9 +14,17 @@ Full product spec: [`SPEC.md`](SPEC.md) (v0.2.0, 16 sections + 4 appendices).
 
 Execution plan: [`PLAN.md`](PLAN.md).
 
+## License
+
+MIT: [`LICENSE`](LICENSE).
+
 ## Review runbook
 
 Internal v0.1.0 reviewer checklist: [`docs/v0.1.0-review-runbook.md`](docs/v0.1.0-review-runbook.md).
+
+## Launch runbook
+
+v0.2.0 launch checklist: [`docs/v0.2.0-launch-runbook.md`](docs/v0.2.0-launch-runbook.md).
 
 ## Quickstart (local dev)
 
@@ -54,4 +62,6 @@ make lint
 make test
 make typecheck
 make catalog-validate
+make smoke-test
+make demo-seed
 ```

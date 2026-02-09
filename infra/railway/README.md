@@ -74,3 +74,45 @@ Set repo secret:
 - `PROD_DATABASE_URL` — **libpq** style URL (no `+psycopg`), e.g. `postgresql://USER:PASS@HOST:5432/DB`
 
 The workflow runs `scripts/backup/postgres_backup.sh` and uploads an artifact.
+
+## Cloudflare launch settings (L4 + L5)
+
+Cloudflare:
+- Enable orange-cloud proxy on apex + `www` DNS records.
+- SSL mode: `Full (strict)`.
+- Cache static assets (`/_next/static/*`) with long TTL.
+
+Turnstile:
+- Enable Clerk CAPTCHA using Turnstile in Clerk Dashboard.
+- Set Turnstile site key + secret in Clerk.
+- Validate sign-up flow presents CAPTCHA before account creation.
+
+## Renderer service (L6)
+
+The dedicated `renderer` Railway service is configured via:
+- `INPLAIN_WORKER_QUEUES=render`
+- `INPLAIN_WORKER_ENABLE_SCHEDULER=0`
+- `INPLAIN_WORKER_ENABLE_STALE_LOCK_CLEANUP=0`
+- `RAILPACK_START_CMD=python -m playwright install chromium && PYTHONPATH=apps/api python -m inplain.worker.main`
+
+## PostHog + Sentry env (L7 + L8)
+
+`api` + `worker`:
+- `POSTHOG_API_KEY`
+- `POSTHOG_HOST` (self-hosted URL)
+- `SENTRY_DSN`
+- `SENTRY_ENVIRONMENT` (`production`, `staging`, etc.)
+
+`web`:
+- `NEXT_PUBLIC_POSTHOG_KEY`
+- `NEXT_PUBLIC_POSTHOG_HOST`
+- `NEXT_PUBLIC_SENTRY_DSN`
+
+## Blue-green deploy flow (L9)
+
+1. Deploy new version to `green` environment/services.
+2. Run smoke checks against green:
+   - `make smoke-test` with green `WEB_BASE_URL` + `API_BASE_URL`.
+3. Switch production routing to green.
+4. Monitor logs/errors for 15-30 minutes.
+5. If healthy, keep green as prod and demote blue; otherwise rollback.
