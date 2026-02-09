@@ -190,6 +190,7 @@ Acceptance:
 - 2026-02-09: Added internal v0.1.0 reviewer runbook with AC-1..AC-7 browser checklist, deterministic acceptance test commands, and evidence capture requirements.
 - 2026-02-09: Re-ran full gate locally (`make lint`, `make test`, `make typecheck`) and validated latest `refresh` CI run is green.
 - 2026-02-09: Added fetch-driven integration coverage for AC-2 path (`fetch -> snapshot -> diff -> summarize -> notify`) in `test_pipeline_integration.py`.
+- 2026-02-09: Hardened AC-4 with backend limit enforcement in `/internal/documents/watch` (`max_documents`) and added integration coverage for 4th-watch blocking.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 

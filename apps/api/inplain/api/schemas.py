@@ -56,6 +56,7 @@ class DocumentOut(BaseModel):
 class WatchRequest(BaseModel):
     entity_slug: str = Field(min_length=1)
     schedule_tier: ScheduleTier | None = None
+    max_documents: int | None = Field(default=None, ge=1)
 
 
 class WatchResponse(BaseModel):

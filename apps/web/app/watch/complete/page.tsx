@@ -49,12 +49,23 @@ export default async function WatchCompletePage({
     redirect(`/companies/${slug}?upgrade=1&reason=doc_limit`);
   }
 
-  await internalFetch("/internal/documents/watch", {
-    method: "POST",
-    userId,
-    body: { entity_slug: slug, schedule_tier: entitlements.scheduleTier },
-    cache: "no-store",
-  });
+  try {
+    await internalFetch("/internal/documents/watch", {
+      method: "POST",
+      userId,
+      body: {
+        entity_slug: slug,
+        schedule_tier: entitlements.scheduleTier,
+        max_documents: entitlements.trackedDocuments,
+      },
+      cache: "no-store",
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.toLowerCase().includes("document limit")) {
+      redirect(`/companies/${slug}?upgrade=1&reason=doc_limit`);
+    }
+    throw error;
+  }
 
   redirect(`/companies/${slug}`);
 }

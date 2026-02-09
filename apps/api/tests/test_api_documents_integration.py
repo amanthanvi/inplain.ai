@@ -81,3 +81,66 @@ def test_watch_and_check_now_endpoints(db: Session, test_engine: Engine) -> None
         assert usage_data["check_now_used_today"] == 1
     finally:
         app.dependency_overrides.clear()
+
+
+def test_watch_honors_max_documents_limit(db: Session, test_engine: Engine) -> None:
+    first = Entity(
+        slug="google",
+        name="Google",
+        website_url="https://google.com",
+        category="search",
+        policy_urls={
+            "privacy": "https://policies.google.com/privacy",
+            "tos": "https://policies.google.com/terms",
+        },
+    )
+    second = Entity(
+        slug="apple",
+        name="Apple",
+        website_url="https://apple.com",
+        category="productivity",
+        policy_urls={"privacy": "https://apple.com/privacy"},
+    )
+    third = Entity(
+        slug="openai",
+        name="OpenAI",
+        website_url="https://openai.com",
+        category="cloud",
+        policy_urls={"privacy": "https://openai.com/policies/privacy-policy"},
+    )
+    db.add_all([first, second, third])
+    db.commit()
+
+    client = _make_client(test_engine)
+    try:
+        headers = {
+            "authorization": "Bearer dev-internal-token",
+            "x-clerk-user-id": "user_123",
+        }
+
+        watch_google = client.post(
+            "/internal/documents/watch",
+            json={"entity_slug": "google", "schedule_tier": "daily", "max_documents": 3},
+            headers=headers,
+        )
+        assert watch_google.status_code == 200
+        assert len(watch_google.json()["documents"]) == 2
+
+        watch_apple = client.post(
+            "/internal/documents/watch",
+            json={"entity_slug": "apple", "schedule_tier": "daily", "max_documents": 3},
+            headers=headers,
+        )
+        assert watch_apple.status_code == 200
+        assert len(watch_apple.json()["documents"]) == 1
+
+        watch_openai = client.post(
+            "/internal/documents/watch",
+            json={"entity_slug": "openai", "schedule_tier": "daily", "max_documents": 3},
+            headers=headers,
+        )
+        assert watch_openai.status_code == 409
+        payload = watch_openai.json()
+        assert payload["error"]["message"] == "document limit exceeded"
+    finally:
+        app.dependency_overrides.clear()

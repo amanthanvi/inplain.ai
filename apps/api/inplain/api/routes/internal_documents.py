@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_clerk_user_id, get_db
@@ -76,6 +76,29 @@ def watch_entity(
 
     if not to_create:
         raise HTTPException(status_code=400, detail="entity has no policy urls")
+
+    if req.max_documents is not None:
+        existing_doc_types = set(
+            db.execute(
+                select(Document.doc_type).where(
+                    Document.clerk_user_id == clerk_user_id,
+                    Document.entity_id == entity.id,
+                    Document.deleted_at.is_(None),
+                )
+            )
+            .scalars()
+            .all()
+        )
+        would_create = sum(1 for doc_type, _ in to_create if doc_type not in existing_doc_types)
+        if would_create > 0:
+            tracked_count = db.execute(
+                select(func.count(Document.id)).where(
+                    Document.clerk_user_id == clerk_user_id,
+                    Document.deleted_at.is_(None),
+                )
+            ).scalar_one()
+            if int(tracked_count or 0) + would_create > req.max_documents:
+                raise HTTPException(status_code=409, detail="document limit exceeded")
 
     documents: list[Document] = []
     for doc_type, url in to_create:
