@@ -188,6 +188,7 @@ Acceptance:
 - 2026-02-08: Completed launch-readiness audit + 18-question deep interview. Updated SPEC.md v0.2.0 with launch plan (16 sections + 4 appendices). Key additions: full PH/HN launch strategy, MIT license, HMAC auth signing, Cloudflare proxy + Turnstile, PostHog analytics, Sentry, blue-green deploys, 30-50 company catalog target, $9/$29 pricing, three-tier citation handling, UI polish requirements.
 - 2026-02-09: Reconciled docs metadata after SPEC expansion: README now references SPEC v0.2.0 as 16 sections + 4 appendices; milestone checklist statuses for M5/M6 aligned with implemented code.
 - 2026-02-09: Added internal v0.1.0 reviewer runbook with AC-1..AC-7 browser checklist, deterministic acceptance test commands, and evidence capture requirements.
+- 2026-02-09: Re-ran full gate locally (`make lint`, `make test`, `make typecheck`) and validated latest `refresh` CI run is green.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
@@ -225,7 +226,7 @@ Ordered, reviewable work to reach the internal v0.1.0 milestone (SPEC AC-1…AC-
    - Complexity: M
    - Dependencies: 1
 
-3. [ ] **Run the full local gate and fix any failures**
+3. [x] **Run the full local gate and fix any failures**
    - What: Run `make lint`, `make test`, `make typecheck` and address any failures found.
    - Acceptance: All golden commands pass locally and CI remains green.
    - Complexity: S
