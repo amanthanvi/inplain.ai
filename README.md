@@ -53,4 +53,5 @@ Golden commands:
 make lint
 make test
 make typecheck
+make catalog-validate
 ```

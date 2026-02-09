@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck
+.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck catalog-validate smoke-test
 
 PYTHON ?= python3.13
 VENV_DIR ?= .venv
@@ -37,3 +37,6 @@ test:
 
 typecheck:
 	npm --prefix $(WEB_DIR) run build
+
+catalog-validate:
+	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python scripts/catalog/validate_catalog.py --catalog catalog.json --report docs/catalog-validation.md

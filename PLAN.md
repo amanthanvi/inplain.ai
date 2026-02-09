@@ -194,12 +194,13 @@ Acceptance:
 - 2026-02-09: Replaced deprecated Next.js `middleware.ts` convention with `proxy.ts` to remove build deprecation warning.
 - 2026-02-09: Implemented HMAC request signing for Next.js -> FastAPI (`X-Request-Timestamp` + `X-Request-Signature`) with signature verification tests and phased bearer-token fallback for legacy internal callers.
 - 2026-02-09: Implemented citation fuzzy repair with three-tier outcomes (`valid`, `repaired`, `unverified`) and added UI unverified indicator with disabled citation links.
+- 2026-02-09: Expanded `catalog.json` to 32 curated companies and added `scripts/catalog/validate_catalog.py`; validation report generated at `docs/catalog-validation.md` with 56/56 URLs passing (HTTP 200 + robots allow + extraction >=500 chars). Added migration `0004` to upsert the expanded catalog on deploy.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
 See SPEC.md §16 for full launch plan. Summary of pre-launch work:
 
-- [ ] **L1**: Curate + validate 30-50 catalog companies (URLs, robots.txt, extraction)
+- [x] **L1**: Curate + validate 30-50 catalog companies (URLs, robots.txt, extraction)
 - [ ] **L2**: UI polish pass (all pages, desktop + mobile responsive)
 - [x] **L3**: HMAC request signing (Next.js → FastAPI)
 - [ ] **L4**: Cloudflare proxy mode (orange cloud)
