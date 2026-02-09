@@ -187,6 +187,7 @@ Acceptance:
 - 2026-02-08: Fixed production fetch pipeline (httpx timeout config + browser UA); updated Apple catalog URL to an extractable static page (`/legal/privacy/en-ww/`) and added migration to rewrite unsnapshotted Apple docs.
 - 2026-02-08: Completed launch-readiness audit + 18-question deep interview. Updated SPEC.md v0.2.0 with launch plan (16 sections + 4 appendices). Key additions: full PH/HN launch strategy, MIT license, HMAC auth signing, Cloudflare proxy + Turnstile, PostHog analytics, Sentry, blue-green deploys, 30-50 company catalog target, $9/$29 pricing, three-tier citation handling, UI polish requirements.
 - 2026-02-09: Reconciled docs metadata after SPEC expansion: README now references SPEC v0.2.0 as 16 sections + 4 appendices; milestone checklist statuses for M5/M6 aligned with implemented code.
+- 2026-02-09: Added internal v0.1.0 reviewer runbook with AC-1..AC-7 browser checklist, deterministic acceptance test commands, and evidence capture requirements.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
@@ -218,7 +219,7 @@ Ordered, reviewable work to reach the internal v0.1.0 milestone (SPEC AC-1…AC-
    - Complexity: S
    - Dependencies: none
 
-2. [ ] **Add a v0.1.0 reviewer runbook (manual QA checklist)**
+2. [x] **Add a v0.1.0 reviewer runbook (manual QA checklist)**
    - What: Document the exact steps to verify AC-1…AC-7 in local dev (env vars, boot order, and what to click/expect), plus how to demonstrate the pipeline end-to-end (real fetch → snapshot, and fixture-based change event → summary → notification).
    - Acceptance: A reviewer can follow a single checklist and reproduce: watch → snapshot created, citation click scroll/highlight, paused/robots/error UI states, and a full diff+summary+notification via the existing integration test fixture.
    - Complexity: M

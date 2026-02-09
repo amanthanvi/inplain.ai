@@ -14,6 +14,10 @@ Full product spec: [`SPEC.md`](SPEC.md) (v0.2.0, 16 sections + 4 appendices).
 
 Execution plan: [`PLAN.md`](PLAN.md).
 
+## Review runbook
+
+Internal v0.1.0 reviewer checklist: [`docs/v0.1.0-review-runbook.md`](docs/v0.1.0-review-runbook.md).
+
 ## Quickstart (local dev)
 
 Prereqs:
