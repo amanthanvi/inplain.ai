@@ -201,6 +201,8 @@ Acceptance:
 - 2026-02-09: Executed blue-green verification on Railway by deploying `api/web/worker/renderer` to `staging` and running smoke checks against staging domains (all PASS), then rolled the same build to `production` and re-ran smoke checks (all PASS).
 - 2026-02-09: Verified production demo event presence via `railway ssh` + demo seed script (`Demo change event already exists: 214f461f-78cb-4398-bbae-9bb39fd6ef98`).
 - 2026-02-09: Provisioned PostHog template services in Railway project as L7 groundwork; full service activation and app env wiring remain pending.
+- 2026-02-11: Fixed production `500` on `/sw.js` + `/favicon.ico` (Clerk middleware mismatch) by adding explicit Edge route handlers; unblocked client bundle loading and removed stale service worker caching hazards.
+- 2026-02-11: Hardened summarize jobs against large diffs (prompt length cap + tolerant JSON parsing) and added a user-visible "Retry summary" action for failed change events; improved diff text wrapping to prevent overflow in added/removed blocks.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
