@@ -23,10 +23,10 @@
 14. [Legal/Safety UX Copy](#14-legalsafety-ux-copy)
 15. [UI & Brand](#15-ui--brand)
 16. [Launch Plan](#16-launch-plan)
-A. [Catalog JSON Schema](#appendix-a--catalog-json-schema)
-B. [Job Queue Schema](#appendix-b--job-queue-schema-skip-locked)
-C. [Default Config Values](#appendix-c--default-config-values)
-D. [Catalog Target List](#appendix-d--catalog-target-list)
+    A. [Catalog JSON Schema](#appendix-a--catalog-json-schema)
+    B. [Job Queue Schema](#appendix-b--job-queue-schema-skip-locked)
+    C. [Default Config Values](#appendix-c--default-config-values)
+    D. [Catalog Target List](#appendix-d--catalog-target-list)
 
 ---
 
@@ -39,9 +39,9 @@ D. [Catalog Target List](#appendix-d--catalog-target-list)
 - **Spec version**: v0.2.0
 - **License**: MIT (fully open source; monetize via hosted service)
 - **Links**:
-  - Repo: `github.com/amanthanvi/inplain.ai`
-  - Production: `inplain.ai`
-  - Support: GitHub Issues
+    - Repo: `github.com/amanthanvi/inplain.ai`
+    - Production: `inplain.ai`
+    - Support: GitHub Issues
 
 ---
 
@@ -82,6 +82,7 @@ Privacy policies change without notice, are unreadable, and no tool makes change
 **Full public launch** on Product Hunt and Hacker News. Curated-only tracking limits blast radius. No invite-only beta.
 
 This means:
+
 - UI must be polished and responsive (desktop + mobile)
 - Source code will be scrutinized (MIT license)
 - Traffic spikes expected; infrastructure must handle gracefully
@@ -143,6 +144,7 @@ This means:
 Single Next.js app with progressive auth. No separate `/app` route group.
 
 **Public routes**:
+
 - `/` — marketing homepage (polished hero + how-it-works + example change)
 - `/companies` — public directory (search + category filter)
 - `/companies/[slug]` — company page (public overview, latest policy, change timeline)
@@ -150,12 +152,14 @@ Single Next.js app with progressive auth. No separate `/app` route group.
 - `/about` — mission, design principles, disclaimers
 
 **Protected routes** (Clerk middleware):
+
 - `/dashboard` — user's watched companies
 - `/settings` — account, notification preferences, billing, usage meters
 
 **Auth flow**: `<SignedIn>`/`<SignedOut>` components gate inline content. Watching a company from the public directory triggers Clerk auth (with Turnstile CAPTCHA) if needed, then returns to the company page with tracking active.
 
 **Header nav**:
+
 - Signed out: Home, Companies, Pricing, About | Sign in / Start free
 - Signed in: Home, Companies, Dashboard, notification bell (unread badge) | User menu (Settings, Billing, Sign out)
 
@@ -164,11 +168,13 @@ Single Next.js app with progressive auth. No separate `/app` route group.
 **Primary view**: AI summary with citations at top. Most users stop here.
 
 **Citation handling** (three-tier):
+
 1. **Valid citation**: Quote found as exact substring in hunk text → normal display with clickable link
 2. **Partial match (repairable)**: Quote is close but not exact (e.g., whitespace differences, truncation) → best-effort fuzzy match repair → display normally if repaired
 3. **Failed citation**: Quote not found after repair attempt → display summary bullet with "unverified" indicator (subtle badge/icon) → citation link disabled
 
 **Expanded view**: Section-first collapsed diff.
+
 - Group changes by detected section/heading
 - Each section shows heading + change count badge (additions/removals)
 - Click to expand → inline word-level diff (diff-match-patch)
@@ -176,11 +182,13 @@ Single Next.js app with progressive auth. No separate `/app` route group.
 - No LLM-based section detection in v0.2.0
 
 **Citation navigation**:
+
 - Click citation → smooth scroll to referenced hunk → temporary highlight (fade after 2s) → auto-expand containing section if collapsed
 
 **Toggle modes**: Unified full diff (desktop + mobile), side-by-side (desktop only) as secondary options for power users.
 
 **Engine**: Research and select the simplest effective approach. Evaluate:
+
 - Custom React renderer (~200-300 LOC) for full control over citation linking
 - `react-diff-viewer-continued` as a base with citation overlay
 - Hybrid: diff library for rendering, custom layer for citations
@@ -189,10 +197,12 @@ Single Next.js app with progressive auth. No separate `/app` route group.
 ### 2.6 Company page (`/companies/[slug]`)
 
 Public page with progressive enhancement:
+
 - **Signed out**: Browse company overview, see latest policy text, view change timeline (limited)
 - **Signed in**: "Watch changes" button, full history, AI summaries, export
 
 Sections:
+
 - Overview (company info, tracked documents)
 - Current Policy (latest extracted snapshot)
 - Changes (recent change events with summaries + citations)
@@ -203,18 +213,21 @@ Sections:
 ## 3) Functional Requirements
 
 **FR-1 Authentication & sessions** (MUST)
+
 - Clerk for authentication (identity source of truth)
 - Email magic link (passwordless); optional OAuth (Google) later
 - Cloudflare Turnstile CAPTCHA on sign-up (Clerk integration)
 - No `users` table; Clerk is the user store
 
 **FR-2 Tracking — curated companies only** (MUST)
+
 - Users watch/unwatch companies from curated directory
 - Watching creates tracked entity + curated documents (Privacy/ToS/Cookie)
 - No custom URL entry in v0.2.0
 - Catalog: 30-50 curated companies at launch (see [Appendix D](#appendix-d--catalog-target-list))
 
 **FR-3 Fetching & snapshots** (MUST)
+
 - Scheduled + on-demand fetches via Postgres job queue
 - HTTP-first (httpx) with conditional GET (ETag/Last-Modified)
 - JS rendering via Playwright when HTTP fetch yields minimal text
@@ -224,14 +237,16 @@ Sections:
 - No S3/R2 in v0.2.0; migrate to object storage when DB exceeds ~20 GB
 
 **FR-4 Change detection** (MUST)
+
 - Tiered pipeline:
-  1. SHA256 hash gate (identical → skip)
-  2. SequenceMatcher ratio (below threshold → skip)
-  3. Cosmetic pattern strip (timestamps, copyright, counters)
-  4. LLM classify via cheap model (~$3/year) for ambiguous changes
-  5. Full AI summary for confirmed meaningful changes
+    1. SHA256 hash gate (identical → skip)
+    2. SequenceMatcher ratio (below threshold → skip)
+    3. Cosmetic pattern strip (timestamps, copyright, counters)
+    4. LLM classify via cheap model (~$3/year) for ambiguous changes
+    5. Full AI summary for confirmed meaningful changes
 
 **FR-5 Diff viewing** (MUST)
+
 - Pre-computed diffs stored as JSONB in `diffs` table
 - Section-first collapsed view with inline word-level diff
 - Citation anchors linking summary bullets to diff hunks
@@ -239,6 +254,7 @@ Sections:
 - Export: JSON (tier-gated); CSV deferred
 
 **FR-6 AI summaries with provenance** (MUST)
+
 - "What changed" bullet list with citations
 - "Why it matters" bullet list with citations
 - Every bullet must cite `hunkId` + exact quote from diff
@@ -248,34 +264,40 @@ Sections:
 - Summary language matches source language
 
 **FR-7 In-app notifications** (MUST)
+
 - Notification feed accessible from nav bar (unread badge)
 - Dropdown panel showing recent notifications
 - Poll every 60s for unread count
 - Notification created for each meaningful change event
 
 **FR-8 Notifications — email** (SHOULD, deferred to v0.3)
+
 - Email notifications deferred to v0.3
 - Schema supports future email (notification preferences, unsubscribe tokens)
 
 **FR-9 Admin ops** (MUST)
+
 - Clerk admin role (via `publicMetadata`)
 - Admin-only FastAPI endpoints: job status/retry, user lookup
 - No admin UI; use Railway DB explorer + psql for ad-hoc queries
 - No impersonation in v0.2.0
 
 **FR-10 Monetization & quotas** (MUST)
+
 - 3 tiers (Free/Pro/Business) via Clerk Billing (Stripe connected)
 - Pricing: Free / Pro $9/mo / Business $29/mo
 - Tier enforcement at Server Action middleware layer using Clerk `has()` helper
 - Quota display: usage meters on settings page + in-app banner at 80%+
 
 **FR-11 Safety and legal posture** (MUST)
+
 - Public URLs only (http/https)
 - Respect robots.txt; block monitoring if disallowed with clear UI explanation
 - Takedown/reporting process for site owners
 - "Not legal advice" on every summary and watch flow
 
 **FR-12 Product analytics** (MUST)
+
 - PostHog self-hosted on Railway
 - Track: sign-up, first watch, change event view, summary view, citation click
 - Privacy-first: no third-party data sharing
@@ -338,6 +360,7 @@ Sections:
 ```
 
 **Railway services** (6 services + 2 add-ons):
+
 1. `web` (public) — Next.js via `next start`
 2. `api` (internal, private network) — FastAPI + Uvicorn
 3. `worker` (internal) — Python process: scheduler loop + job executor (fetch, diff, summarize, notify, cleanup)
@@ -347,6 +370,7 @@ Sections:
 7. `redis` — Railway Redis (caching + robots.txt decisions; NOT for queue)
 
 Key simplifications from v0.1.0 (legacy `main`):
+
 - No Celery/Beat/Flower → Postgres `SELECT FOR UPDATE SKIP LOCKED` queue
 - No S3/R2 or Vercel KV/Blob → Postgres TOAST compression for snapshot text
 - No Vercel Edge Functions → FastAPI on Railway private network
@@ -362,16 +386,16 @@ No `users` table — Clerk manages identity. `clerk_user_id` is the foreign key 
 
 Curated catalog items (companies/services).
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid | PK |
-| `slug` | text | Unique, URL-friendly |
-| `name` | text | Display name |
-| `website_url` | text | Company website |
-| `category` | text | e.g., "social_media", "cloud", "finance" |
-| `policy_urls` | jsonb | `{"privacy": "https://...", "tos": "https://...", "cookie": "https://..."}` |
-| `created_at` | timestamptz | |
-| `updated_at` | timestamptz | |
+| Column        | Type        | Notes                                                                       |
+| ------------- | ----------- | --------------------------------------------------------------------------- |
+| `id`          | uuid        | PK                                                                          |
+| `slug`        | text        | Unique, URL-friendly                                                        |
+| `name`        | text        | Display name                                                                |
+| `website_url` | text        | Company website                                                             |
+| `category`    | text        | e.g., "social_media", "cloud", "finance"                                    |
+| `policy_urls` | jsonb       | `{"privacy": "https://...", "tos": "https://...", "cookie": "https://..."}` |
+| `created_at`  | timestamptz |                                                                             |
+| `updated_at`  | timestamptz |                                                                             |
 
 Indexes: unique(`slug`)
 
@@ -381,27 +405,28 @@ Seeded from `catalog.json` in repo via Alembic migration (upsert by slug). Commu
 
 A tracked URL for a specific user + entity combination.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid | PK |
-| `clerk_user_id` | text | NOT NULL |
-| `entity_id` | uuid | FK → entities |
-| `url` | text | |
-| `doc_type` | text | `privacy` / `tos` / `cookie` / `other` |
-| `status` | text | `active` / `paused` / `blocked_robots` / `error` |
-| `schedule_tier` | text | `daily` / `6h` / `1h` |
-| `next_check_at` | timestamptz | Used by scheduler |
-| `last_checked_at` | timestamptz | |
-| `last_snapshot_id` | uuid | Nullable |
-| `etag` | text | Nullable, for conditional GET |
-| `last_modified` | text | Nullable, for conditional GET |
-| `robots_checked_at` | timestamptz | Nullable |
-| `robots_status` | text | `unknown` / `allowed` / `disallowed` |
-| `robots_rule` | text | Nullable, specific blocking rule (e.g. `Disallow: /privacy`) |
-| `created_at` | timestamptz | |
-| `deleted_at` | timestamptz | Nullable, soft-delete |
+| Column              | Type        | Notes                                                        |
+| ------------------- | ----------- | ------------------------------------------------------------ |
+| `id`                | uuid        | PK                                                           |
+| `clerk_user_id`     | text        | NOT NULL                                                     |
+| `entity_id`         | uuid        | FK → entities                                                |
+| `url`               | text        |                                                              |
+| `doc_type`          | text        | `privacy` / `tos` / `cookie` / `other`                       |
+| `status`            | text        | `active` / `paused` / `blocked_robots` / `error`             |
+| `schedule_tier`     | text        | `daily` / `6h` / `1h`                                        |
+| `next_check_at`     | timestamptz | Used by scheduler                                            |
+| `last_checked_at`   | timestamptz |                                                              |
+| `last_snapshot_id`  | uuid        | Nullable                                                     |
+| `etag`              | text        | Nullable, for conditional GET                                |
+| `last_modified`     | text        | Nullable, for conditional GET                                |
+| `robots_checked_at` | timestamptz | Nullable                                                     |
+| `robots_status`     | text        | `unknown` / `allowed` / `disallowed`                         |
+| `robots_rule`       | text        | Nullable, specific blocking rule (e.g. `Disallow: /privacy`) |
+| `created_at`        | timestamptz |                                                              |
+| `deleted_at`        | timestamptz | Nullable, soft-delete                                        |
 
 Indexes:
+
 - `(clerk_user_id, entity_id, doc_type)` unique where `deleted_at IS NULL`
 - `(next_check_at)` where `status IN ('active','blocked_robots','error') AND deleted_at IS NULL` (scheduler)
 - `(clerk_user_id, status)`
@@ -410,22 +435,23 @@ Indexes:
 
 Fetched + extracted text for a document at a point in time.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid | PK |
-| `document_id` | uuid | FK → documents |
-| `fetched_at` | timestamptz | |
-| `fetch_method` | text | `http` / `render` |
-| `http_status` | int | |
-| `content_type` | text | Nullable |
-| `extracted_text` | text | Stored via TOAST + LZ4 |
-| `extracted_sha256` | text | |
-| `extract_version` | int | Bump when extractor changes |
-| `byte_size_extracted` | int | |
-| `retention_delete_at` | timestamptz | Tier-based |
-| `created_at` | timestamptz | |
+| Column                | Type        | Notes                       |
+| --------------------- | ----------- | --------------------------- |
+| `id`                  | uuid        | PK                          |
+| `document_id`         | uuid        | FK → documents              |
+| `fetched_at`          | timestamptz |                             |
+| `fetch_method`        | text        | `http` / `render`           |
+| `http_status`         | int         |                             |
+| `content_type`        | text        | Nullable                    |
+| `extracted_text`      | text        | Stored via TOAST + LZ4      |
+| `extracted_sha256`    | text        |                             |
+| `extract_version`     | int         | Bump when extractor changes |
+| `byte_size_extracted` | int         |                             |
+| `retention_delete_at` | timestamptz | Tier-based                  |
+| `created_at`          | timestamptz |                             |
 
 Indexes:
+
 - `(document_id, fetched_at DESC)`
 - `(retention_delete_at)` (cleanup job)
 
@@ -433,18 +459,19 @@ Indexes:
 
 Pre-computed diff between two consecutive snapshots.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid | PK |
-| `document_id` | uuid | FK → documents |
-| `from_snapshot_id` | uuid | FK → snapshots |
-| `to_snapshot_id` | uuid | FK → snapshots |
-| `diff_hunks` | jsonb | Structured: `[{hunkId, context, added[], removed[], positions}]` |
-| `change_score` | numeric | 0..1 |
-| `change_classification` | text | `cosmetic` / `meaningful` / `major` |
-| `created_at` | timestamptz | |
+| Column                  | Type        | Notes                                                            |
+| ----------------------- | ----------- | ---------------------------------------------------------------- |
+| `id`                    | uuid        | PK                                                               |
+| `document_id`           | uuid        | FK → documents                                                   |
+| `from_snapshot_id`      | uuid        | FK → snapshots                                                   |
+| `to_snapshot_id`        | uuid        | FK → snapshots                                                   |
+| `diff_hunks`            | jsonb       | Structured: `[{hunkId, context, added[], removed[], positions}]` |
+| `change_score`          | numeric     | 0..1                                                             |
+| `change_classification` | text        | `cosmetic` / `meaningful` / `major`                              |
+| `created_at`            | timestamptz |                                                                  |
 
 Indexes:
+
 - unique(`from_snapshot_id`, `to_snapshot_id`)
 - `(document_id, created_at DESC)`
 
@@ -452,45 +479,47 @@ Indexes:
 
 User-facing change record tying diff + AI summary.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid | PK |
-| `document_id` | uuid | FK → documents |
-| `diff_id` | uuid | FK → diffs |
-| `title` | text | Generated, e.g., "Privacy Policy updated" |
-| `summary_status` | text | `pending` / `completed` / `failed` / `skipped_quota` |
-| `summary_what_changed` | jsonb | Bullets with citations |
-| `summary_why_matters` | jsonb | Bullets with citations |
-| `summary_model` | text | Nullable |
-| `summary_prompt_version` | int | Nullable |
-| `summary_error` | text | Nullable |
-| `created_at` | timestamptz | |
+| Column                   | Type        | Notes                                                |
+| ------------------------ | ----------- | ---------------------------------------------------- |
+| `id`                     | uuid        | PK                                                   |
+| `document_id`            | uuid        | FK → documents                                       |
+| `diff_id`                | uuid        | FK → diffs                                           |
+| `title`                  | text        | Generated, e.g., "Privacy Policy updated"            |
+| `summary_status`         | text        | `pending` / `completed` / `failed` / `skipped_quota` |
+| `summary_what_changed`   | jsonb       | Bullets with citations                               |
+| `summary_why_matters`    | jsonb       | Bullets with citations                               |
+| `summary_model`          | text        | Nullable                                             |
+| `summary_prompt_version` | int         | Nullable                                             |
+| `summary_error`          | text        | Nullable                                             |
+| `created_at`             | timestamptz |                                                      |
 
 Indexes:
+
 - `(document_id, created_at DESC)`
 
 #### `jobs`
 
 Postgres-based job queue. Workers poll with `SELECT FOR UPDATE SKIP LOCKED`.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid | PK |
-| `queue` | text | `fetch` / `render` / `diff` / `summarize` / `notify` / `cleanup` |
-| `clerk_user_id` | text | Nullable |
-| `document_id` | uuid | Nullable FK → documents |
-| `status` | text | `queued` / `running` / `succeeded` / `failed` / `dead` |
-| `payload` | jsonb | Job-specific data |
-| `attempt` | int | Default 0 |
-| `max_attempts` | int | Default 5 |
-| `error` | text | Nullable |
-| `run_at` | timestamptz | For delayed execution |
-| `locked_at` | timestamptz | Nullable, set when claimed |
-| `started_at` | timestamptz | Nullable |
-| `finished_at` | timestamptz | Nullable |
-| `created_at` | timestamptz | |
+| Column          | Type        | Notes                                                            |
+| --------------- | ----------- | ---------------------------------------------------------------- |
+| `id`            | uuid        | PK                                                               |
+| `queue`         | text        | `fetch` / `render` / `diff` / `summarize` / `notify` / `cleanup` |
+| `clerk_user_id` | text        | Nullable                                                         |
+| `document_id`   | uuid        | Nullable FK → documents                                          |
+| `status`        | text        | `queued` / `running` / `succeeded` / `failed` / `dead`           |
+| `payload`       | jsonb       | Job-specific data                                                |
+| `attempt`       | int         | Default 0                                                        |
+| `max_attempts`  | int         | Default 5                                                        |
+| `error`         | text        | Nullable                                                         |
+| `run_at`        | timestamptz | For delayed execution                                            |
+| `locked_at`     | timestamptz | Nullable, set when claimed                                       |
+| `started_at`    | timestamptz | Nullable                                                         |
+| `finished_at`   | timestamptz | Nullable                                                         |
+| `created_at`    | timestamptz |                                                                  |
 
 Indexes:
+
 - `(queue, status, run_at)` where `status = 'queued'` (worker polling)
 - `(document_id, created_at DESC)`
 - `(status, created_at)`
@@ -501,18 +530,19 @@ See [Appendix B](#appendix-b--job-queue-schema-skip-locked) for the polling quer
 
 In-app notification feed.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid | PK |
-| `clerk_user_id` | text | NOT NULL |
-| `type` | text | `change_detected` / `check_failed` / `system` |
-| `title` | text | |
-| `body` | text | Short description |
-| `payload` | jsonb | Links, entity info, change event ID |
-| `read_at` | timestamptz | Nullable |
-| `created_at` | timestamptz | |
+| Column          | Type        | Notes                                         |
+| --------------- | ----------- | --------------------------------------------- |
+| `id`            | uuid        | PK                                            |
+| `clerk_user_id` | text        | NOT NULL                                      |
+| `type`          | text        | `change_detected` / `check_failed` / `system` |
+| `title`         | text        |                                               |
+| `body`          | text        | Short description                             |
+| `payload`       | jsonb       | Links, entity info, change event ID           |
+| `read_at`       | timestamptz | Nullable                                      |
+| `created_at`    | timestamptz |                                               |
 
 Indexes:
+
 - `(clerk_user_id, created_at DESC)`
 - `(clerk_user_id, read_at)` where `read_at IS NULL` (unread count)
 
@@ -552,13 +582,14 @@ POST   /internal/admin/jobs/{id}/retry       (admin only)
 ```
 
 **Error format**:
+
 ```json
 {
-  "error": {
-    "code": "DOCUMENT_LIMIT_EXCEEDED",
-    "message": "You've reached your document limit. Upgrade to Pro for 25 documents.",
-    "details": { "current": 3, "limit": 3, "tier": "free" }
-  }
+	"error": {
+		"code": "DOCUMENT_LIMIT_EXCEEDED",
+		"message": "You've reached your document limit. Upgrade to Pro for 25 documents.",
+		"details": { "current": 3, "limit": 3, "tier": "free" }
+	}
 }
 ```
 
@@ -643,16 +674,16 @@ Self-contained, horizontally scalable via `SKIP LOCKED`.
 
 ```json
 [
-  {
-    "slug": "google",
-    "name": "Google",
-    "website_url": "https://google.com",
-    "category": "search",
-    "policy_urls": {
-      "privacy": "https://policies.google.com/privacy",
-      "tos": "https://policies.google.com/terms"
-    }
-  }
+	{
+		"slug": "google",
+		"name": "Google",
+		"website_url": "https://google.com",
+		"category": "search",
+		"policy_urls": {
+			"privacy": "https://policies.google.com/privacy",
+			"tos": "https://policies.google.com/terms"
+		}
+	}
 ]
 ```
 
@@ -661,6 +692,7 @@ Self-contained, horizontally scalable via `SKIP LOCKED`.
 **Community contributions**: GitHub PRs to `catalog.json`. Maintainer reviews (valid URL, robots.txt compatible, not duplicate).
 
 **Validation requirements for catalog entries**:
+
 - URL must be publicly accessible (HTTP 200)
 - URL must not be blocked by robots.txt for `inplain.ai` user agent
 - URL must yield ≥500 chars of extracted text via trafilatura
@@ -690,11 +722,11 @@ FastAPI → verify HMAC signature → row-level access check by clerk_user_id
 - Clerk is the identity provider (no password storage)
 - Server Actions verify Clerk session server-side
 - **HMAC request signing** (upgrade from shared secret):
-  - Each request from Next.js to FastAPI is signed with `HMAC-SHA256(service_secret, timestamp + method + path + body_hash)`
-  - `X-Request-Signature` header carries the HMAC
-  - `X-Request-Timestamp` header carries the timestamp (reject if >5 min stale)
-  - Prevents replay attacks even if service secret is leaked
-  - FastAPI verifies HMAC before processing
+    - Each request from Next.js to FastAPI is signed with `HMAC-SHA256(service_secret, timestamp + method + path + body_hash)`
+    - `X-Request-Signature` header carries the HMAC
+    - `X-Request-Timestamp` header carries the timestamp (reject if >5 min stale)
+    - Prevents replay attacks even if service secret is leaked
+    - FastAPI verifies HMAC before processing
 - No JWT verification in Python — HMAC is simpler and equally secure over private network
 
 ### 5.2 Tier enforcement
@@ -702,6 +734,7 @@ FastAPI → verify HMAC signature → row-level access check by clerk_user_id
 Server Action middleware checks Clerk session's plan metadata using `has()` helper before calling FastAPI.
 
 Enforced for:
+
 - Document creation (document limit)
 - On-demand "Check now" (daily quota)
 - JS rendering (monthly quota)
@@ -720,14 +753,17 @@ FastAPI does NOT duplicate tier checks — it trusts the BFF after HMAC verifica
 ### 5.4 Rate limiting & abuse prevention
 
 **Authentication layer**:
+
 - Cloudflare Turnstile CAPTCHA on sign-up (via Clerk integration)
 - Clerk auth gates all API access (no anonymous API)
 
 **Tier-based entitlements**:
+
 - Document limits, check quotas, summary quotas enforced per tier
 - Per-host politeness: 2 concurrent fetches per host, 2s delay between requests
 
 **Infrastructure layer**:
+
 - Cloudflare proxy mode: DDoS protection, bot mitigation
 - No IP-based rate limiting in v0.2.0 (add if abuse observed post-launch)
 - No Redis rate limiter (add if needed)
@@ -735,6 +771,7 @@ FastAPI does NOT duplicate tier checks — it trusts the BFF after HMAC verifica
 ### 5.5 SSRF defenses
 
 Enforced before tracking AND before each fetch:
+
 1. Allow only `http://` and `https://`
 2. Disallow: usernames/passwords in URL, non-standard ports, IP literal URLs
 3. DNS resolution: block RFC1918, loopback, link-local, cloud metadata (`169.254.169.254`)
@@ -773,19 +810,19 @@ Enforced before tracking AND before each fetch:
 
 ### 5.10 Threat model
 
-| Threat | Risk | Mitigation |
-|--------|------|------------|
-| SSRF via URL tracking | High | Strict URL validation, DNS blocklist, redirect re-validation |
-| Renderer exploited by malicious page | High | Isolated context, timeouts, no secrets, request interception |
-| Webhook spoofing (Clerk) | High | Svix signature verification |
-| Prompt injection from policy text | Medium | Only summarize provided hunks; strict JSON schema; citations required |
-| Data exfiltration via logs | Medium | Never log fetched content; structured logging |
-| Unauthorized access to other users' data | High | Row-level authz by clerk_user_id + HMAC verification |
-| Secret leakage | High | Env vars only; no secrets in client; private network; HMAC signing |
-| XSS in diff viewer | Medium | Plain text rendering; no raw HTML |
-| Automated sign-up abuse | Medium | Cloudflare Turnstile CAPTCHA; curated catalog limits value of abuse |
-| DDoS during PH/HN launch | Medium | Cloudflare proxy mode; Railway auto-restart |
-| Service token replay attack | Medium | HMAC signing with timestamp; 5-min freshness window |
+| Threat                                   | Risk   | Mitigation                                                            |
+| ---------------------------------------- | ------ | --------------------------------------------------------------------- |
+| SSRF via URL tracking                    | High   | Strict URL validation, DNS blocklist, redirect re-validation          |
+| Renderer exploited by malicious page     | High   | Isolated context, timeouts, no secrets, request interception          |
+| Webhook spoofing (Clerk)                 | High   | Svix signature verification                                           |
+| Prompt injection from policy text        | Medium | Only summarize provided hunks; strict JSON schema; citations required |
+| Data exfiltration via logs               | Medium | Never log fetched content; structured logging                         |
+| Unauthorized access to other users' data | High   | Row-level authz by clerk_user_id + HMAC verification                  |
+| Secret leakage                           | High   | Env vars only; no secrets in client; private network; HMAC signing    |
+| XSS in diff viewer                       | Medium | Plain text rendering; no raw HTML                                     |
+| Automated sign-up abuse                  | Medium | Cloudflare Turnstile CAPTCHA; curated catalog limits value of abuse   |
+| DDoS during PH/HN launch                 | Medium | Cloudflare proxy mode; Railway auto-restart                           |
+| Service token replay attack              | Medium | HMAC signing with timestamp; 5-min freshness window                   |
 
 ---
 
@@ -793,18 +830,18 @@ Enforced before tracking AND before each fetch:
 
 ### 6.1 Failure modes table
 
-| Failure | Detection | User impact | System behavior | Recovery | Blast radius |
-|---------|-----------|-------------|-----------------|----------|--------------|
-| Fetch timeout | Job fails after 20s | "Last check failed" in UI | Job retried (max 5 attempts) | Auto-retry with backoff; user can "Check now" | Single document |
-| Robots.txt blocks | Pre-fetch check | "Blocked by robots.txt" with specific rule | Document status → `blocked_robots` | Re-check robots daily; auto-unblock if allowed | Single document |
-| URL 404/410 | HTTP status check | "Document paused: URL no longer accessible" | Document status → `paused` | Manual re-enable by user | Single document |
-| Trafilatura extraction fails | Empty/minimal text | "Content extraction failed" | Job marked failed; retry with render fallback | Playwright render attempt | Single document |
-| PDF OCR fails | Tesseract returns < 500 chars | "Image-based PDF could not be extracted" | Job marked failed with specific error | None (manual review) | Single document |
-| OpenRouter API down | HTTP error / timeout | "AI summary unavailable" | Summary status → `failed`; diff still available | Circuit breaker; retry next cycle | All summaries |
-| Postgres connection lost | Connection pool error | API returns 503 | All services degrade | Railway auto-restart; connection pool retry | All services |
-| Worker crash | Process exit | Delayed checks | Railway auto-restart; locked jobs expire | Stale lock cleanup (jobs locked > 10 min) | All background work |
-| Clerk outage | Auth verification fails | Cannot sign in | Cached sessions may still work | Wait for Clerk recovery | All auth |
-| Citation validation fails | Quote not found in hunk | Summary shows "unverified" indicator | Attempt fuzzy repair; fall back to unverified | Improve prompt engineering | Single summary |
+| Failure                      | Detection                     | User impact                                 | System behavior                                 | Recovery                                       | Blast radius        |
+| ---------------------------- | ----------------------------- | ------------------------------------------- | ----------------------------------------------- | ---------------------------------------------- | ------------------- |
+| Fetch timeout                | Job fails after 20s           | "Last check failed" in UI                   | Job retried (max 5 attempts)                    | Auto-retry with backoff; user can "Check now"  | Single document     |
+| Robots.txt blocks            | Pre-fetch check               | "Blocked by robots.txt" with specific rule  | Document status → `blocked_robots`              | Re-check robots daily; auto-unblock if allowed | Single document     |
+| URL 404/410                  | HTTP status check             | "Document paused: URL no longer accessible" | Document status → `paused`                      | Manual re-enable by user                       | Single document     |
+| Trafilatura extraction fails | Empty/minimal text            | "Content extraction failed"                 | Job marked failed; retry with render fallback   | Playwright render attempt                      | Single document     |
+| PDF OCR fails                | Tesseract returns < 500 chars | "Image-based PDF could not be extracted"    | Job marked failed with specific error           | None (manual review)                           | Single document     |
+| OpenRouter API down          | HTTP error / timeout          | "AI summary unavailable"                    | Summary status → `failed`; diff still available | Circuit breaker; retry next cycle              | All summaries       |
+| Postgres connection lost     | Connection pool error         | API returns 503                             | All services degrade                            | Railway auto-restart; connection pool retry    | All services        |
+| Worker crash                 | Process exit                  | Delayed checks                              | Railway auto-restart; locked jobs expire        | Stale lock cleanup (jobs locked > 10 min)      | All background work |
+| Clerk outage                 | Auth verification fails       | Cannot sign in                              | Cached sessions may still work                  | Wait for Clerk recovery                        | All auth            |
+| Citation validation fails    | Quote not found in hunk       | Summary shows "unverified" indicator        | Attempt fuzzy repair; fall back to unverified   | Improve prompt engineering                     | Single summary      |
 
 ### 6.2 Job failure handling
 
@@ -816,14 +853,14 @@ Enforced before tracking AND before each fetch:
 
 ### 6.3 Retry policy
 
-| Queue | Max attempts | Backoff | Hard timeout |
-|-------|-------------|---------|-------------|
-| fetch | 5 | Exponential + jitter (30s, 60s, 120s, 240s, 480s) | 60s |
-| render | 5 | Exponential + jitter | 90s |
-| diff | 3 | Fixed 10s | 30s |
-| summarize | 3 | Exponential (30s, 60s, 120s) | 60s |
-| notify | 3 | Fixed 5s | 10s |
-| cleanup | 1 | None | 300s |
+| Queue     | Max attempts | Backoff                                           | Hard timeout |
+| --------- | ------------ | ------------------------------------------------- | ------------ |
+| fetch     | 5            | Exponential + jitter (30s, 60s, 120s, 240s, 480s) | 60s          |
+| render    | 5            | Exponential + jitter                              | 90s          |
+| diff      | 3            | Fixed 10s                                         | 30s          |
+| summarize | 3            | Exponential (30s, 60s, 120s)                      | 60s          |
+| notify    | 3            | Fixed 5s                                          | 10s          |
+| cleanup   | 1            | None                                              | 300s         |
 
 ---
 
@@ -848,6 +885,7 @@ Used by Railway health checks for auto-restart.
 Self-hosted PostHog on Railway for privacy-first analytics.
 
 **Tracked events**:
+
 - `sign_up` — user creates account
 - `first_watch` — user watches first company
 - `change_event_viewed` — user opens a change event
@@ -858,6 +896,7 @@ Self-hosted PostHog on Railway for privacy-first analytics.
 - `upgrade_completed` — user upgrades tier
 
 **Privacy boundaries**:
+
 - No third-party data sharing
 - No tracking of page content
 - PostHog hosted on same Railway project (US data residency)
@@ -870,6 +909,7 @@ Railway's built-in log search for debugging. No external log aggregation in v0.2
 ### 7.5 Error tracking
 
 Add Sentry for both Python (FastAPI + worker) and Next.js before launch:
+
 - Capture unhandled exceptions
 - Performance monitoring (transaction traces)
 - Source maps for Next.js client errors
@@ -878,6 +918,7 @@ Add Sentry for both Python (FastAPI + worker) and Next.js before launch:
 ### 7.6 Smoke test (post-deploy)
 
 Automated smoke test script that runs after every deploy:
+
 1. `GET /healthz` → 200
 2. `GET /` → 200 (marketing page loads)
 3. `GET /companies` → 200 (directory loads with entities)
@@ -894,6 +935,7 @@ Automated smoke test script that runs after every deploy:
 **Public launch immediately.** No invite-only beta. Full PH/HN launch.
 
 Pre-launch checklist:
+
 - [ ] 30-50 catalog companies validated (URLs + robots.txt + extraction)
 - [ ] UI polished for desktop + mobile
 - [ ] PostHog tracking verified
@@ -907,6 +949,7 @@ Pre-launch checklist:
 ### 8.2 Blue-green deployment
 
 Railway environment-based blue-green deploys:
+
 - **Blue**: current production environment
 - **Green**: staging environment with new version
 - Deploy to green → run smoke tests → swap DNS/routing → monitor → roll back if needed
@@ -914,11 +957,11 @@ Railway environment-based blue-green deploys:
 
 ### 8.3 Data retention
 
-| Tier | Snapshot retention | Change events |
-|------|--------------------|---------------|
-| Free | 90 days | 90 days |
-| Pro | 1 year | 1 year |
-| Business | 2 years | 2 years |
+| Tier     | Snapshot retention | Change events |
+| -------- | ------------------ | ------------- |
+| Free     | 90 days            | 90 days       |
+| Pro      | 1 year             | 1 year        |
+| Business | 2 years            | 2 years       |
 
 Daily cleanup job: delete snapshots where `retention_delete_at <= now()` in batches of 500. Cascade-delete associated diffs + change events.
 
@@ -961,16 +1004,16 @@ Daily cleanup job: delete snapshots where `retention_delete_at <= now()` in batc
 
 ### 9.1 Tiers
 
-| Feature / Quota | Free | Pro ($9/mo) | Business ($29/mo) |
-|-----------------|------|-------------|-------------------|
-| Tracked documents | 3 | 25 | 200 |
-| Schedule frequency | daily | every 6h | every 1h |
-| On-demand "Check now" | 10/day | 100/day | 500/day |
-| JS-render fetches | 0/mo | 200/mo | 2,000/mo |
-| AI summaries | 10/mo | 500/mo | 5,000/mo |
-| In-app notifications | Unlimited | Unlimited | Unlimited |
-| History retention | 90 days | 1 year | 2 years |
-| Export (JSON) | Last 10 events | Full | Full |
+| Feature / Quota       | Free           | Pro ($9/mo) | Business ($29/mo) |
+| --------------------- | -------------- | ----------- | ----------------- |
+| Tracked documents     | 3              | 25          | 200               |
+| Schedule frequency    | daily          | every 6h    | every 1h          |
+| On-demand "Check now" | 10/day         | 100/day     | 500/day           |
+| JS-render fetches     | 0/mo           | 200/mo      | 2,000/mo          |
+| AI summaries          | 10/mo          | 500/mo      | 5,000/mo          |
+| In-app notifications  | Unlimited      | Unlimited   | Unlimited         |
+| History retention     | 90 days        | 1 year      | 2 years           |
+| Export (JSON)         | Last 10 events | Full        | Full              |
 
 ### 9.2 Implementation
 
@@ -1024,6 +1067,7 @@ v0.1.0 internal review milestone: **AC-1** through **AC-7**. Launch-readiness it
 ### 10.2 Test plan
 
 **Integration tests (primary focus)**:
+
 - FastAPI endpoint tests via `TestClient` — all CRUD operations, auth enforcement, error responses
 - HMAC signature verification tests
 - Pipeline integration tests with fixtures: fetch → extract → diff → summarize (mocked OpenRouter)
@@ -1033,6 +1077,7 @@ v0.1.0 internal review milestone: **AC-1** through **AC-7**. Launch-readiness it
 - Citation validation + fuzzy repair tests
 
 **Unit tests (pure logic only)**:
+
 - Change detection scoring algorithm
 - Cosmetic pattern strip
 - SSRF URL validation
@@ -1041,12 +1086,14 @@ v0.1.0 internal review milestone: **AC-1** through **AC-7**. Launch-readiness it
 - HMAC signature generation and verification
 
 **Smoke tests (post-deploy)**:
+
 - Health check endpoints
 - Marketing page loads
 - Catalog API responds
 - PostHog event ingestion
 
 **Skipped in v0.2.0**:
+
 - E2E browser tests (Playwright)
 - Performance/load tests
 - Accessibility automated tests (manual review instead)
@@ -1059,41 +1106,41 @@ v0.1.0 internal review milestone: **AC-1** through **AC-7**. Launch-readiness it
 
 ### 11.1 External services
 
-| Service | Purpose | Failure behavior |
-|---------|---------|-----------------|
-| Clerk | Auth, identity, billing | Cannot sign in; cached sessions may work |
-| OpenRouter | AI summaries + LLM classification | Summaries marked `failed`; diffs still work |
-| Railway | Hosting, Postgres, Redis | Full outage |
+| Service    | Purpose                                | Failure behavior                                                    |
+| ---------- | -------------------------------------- | ------------------------------------------------------------------- |
+| Clerk      | Auth, identity, billing                | Cannot sign in; cached sessions may work                            |
+| OpenRouter | AI summaries + LLM classification      | Summaries marked `failed`; diffs still work                         |
+| Railway    | Hosting, Postgres, Redis               | Full outage                                                         |
 | Cloudflare | DNS, proxy, DDoS protection, Turnstile | Site unreachable if DNS fails; Turnstile degradation allows sign-up |
-| PostHog | Product analytics | Analytics lost; product still works |
+| PostHog    | Product analytics                      | Analytics lost; product still works                                 |
 
 ### 11.2 Python libraries (key)
 
-| Library | Purpose | License |
-|---------|---------|---------|
-| `fastapi` + `uvicorn` | API server | MIT |
-| `httpx` | HTTP fetching | BSD |
-| `trafilatura` | HTML text extraction | Apache 2.0 |
-| `pypdf` | PDF text extraction | BSD |
-| `pytesseract` | OCR fallback | Apache 2.0 |
-| `playwright` | JS rendering | Apache 2.0 |
-| `structlog` | Structured logging | MIT |
-| `alembic` + `sqlalchemy` | DB migrations + ORM | MIT |
-| `psycopg` | Postgres driver (async) | LGPL |
-| `sentry-sdk` | Error tracking | MIT |
-| `posthog` | Product analytics (server) | MIT |
+| Library                  | Purpose                    | License    |
+| ------------------------ | -------------------------- | ---------- |
+| `fastapi` + `uvicorn`    | API server                 | MIT        |
+| `httpx`                  | HTTP fetching              | BSD        |
+| `trafilatura`            | HTML text extraction       | Apache 2.0 |
+| `pypdf`                  | PDF text extraction        | BSD        |
+| `pytesseract`            | OCR fallback               | Apache 2.0 |
+| `playwright`             | JS rendering               | Apache 2.0 |
+| `structlog`              | Structured logging         | MIT        |
+| `alembic` + `sqlalchemy` | DB migrations + ORM        | MIT        |
+| `psycopg`                | Postgres driver (async)    | LGPL       |
+| `sentry-sdk`             | Error tracking             | MIT        |
+| `posthog`                | Product analytics (server) | MIT        |
 
 ### 11.3 JavaScript libraries (key)
 
-| Library | Purpose | License |
-|---------|---------|---------|
-| `next` | React framework | MIT |
-| `@clerk/nextjs` | Auth + billing components | MIT |
-| `diff-match-patch` | Diff engine for prose | Apache 2.0 |
-| `@hey-api/openapi-ts` | Type-safe API client gen | MIT |
-| `pino` | Structured logging | MIT |
-| `posthog-js` | Product analytics (client) | MIT |
-| `@sentry/nextjs` | Error tracking | MIT |
+| Library               | Purpose                    | License    |
+| --------------------- | -------------------------- | ---------- |
+| `next`                | React framework            | MIT        |
+| `@clerk/nextjs`       | Auth + billing components  | MIT        |
+| `diff-match-patch`    | Diff engine for prose      | Apache 2.0 |
+| `@hey-api/openapi-ts` | Type-safe API client gen   | MIT        |
+| `pino`                | Structured logging         | MIT        |
+| `posthog-js`          | Product analytics (client) | MIT        |
+| `@sentry/nextjs`      | Error tracking             | MIT        |
 
 ---
 
@@ -1103,70 +1150,70 @@ All decisions from the 9-round interview + launch-readiness audit, organized by 
 
 ### Architecture & Stack
 
-| Date | Decision | Alternatives Considered | Rationale |
-|------|----------|------------------------|-----------|
-| 2026-02-07 | MIT open-source license | BSL, AGPL, custom source-available | HN-friendly; no licensing debates; monetize via hosted service |
-| 2026-02-07 | Python (FastAPI) + Next.js | Go + Next.js, Python + SvelteKit | Aligns with Python scraping ecosystem; team familiarity |
-| 2026-02-07 | Clerk-only auth | Auth0, Supabase Auth, roll-own | Already integrated; Billing built-in; reduces surface |
-| 2026-02-07 | Railway deployment | Fly.io, Render, Vercel + Railway | Single platform; private networking; managed Postgres |
-| 2026-02-07 | Postgres job queue (SKIP LOCKED) | Celery + Redis, BullMQ, SQS | Eliminates Redis-as-queue dependency; jobs table IS the queue; simpler ops |
-| 2026-02-08 | Separate renderer service (Railway) | Same worker process for render | Isolates Playwright/browser deps; enables independent scaling |
-| 2026-02-07 | Server Actions + hey-api client | Direct client → FastAPI, tRPC | Type-safe; FastAPI stays internal; single auth boundary |
-| 2026-02-07 | Progressive auth (single app) | Separate /app route group, subdomain split | GitHub-style; less boilerplate; shared layout/nav |
-| 2026-02-08 | PostHog self-hosted on Railway | Plausible, no analytics, DB queries only | Full funnel visibility; privacy-first; self-hosted |
-| 2026-02-08 | Cloudflare proxy mode | Railway direct, Cloudflare DNS-only | DDoS protection for PH/HN launch; edge caching; Turnstile |
+| Date       | Decision                            | Alternatives Considered                    | Rationale                                                                  |
+| ---------- | ----------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------- |
+| 2026-02-07 | MIT open-source license             | BSL, AGPL, custom source-available         | HN-friendly; no licensing debates; monetize via hosted service             |
+| 2026-02-07 | Python (FastAPI) + Next.js          | Go + Next.js, Python + SvelteKit           | Aligns with Python scraping ecosystem; team familiarity                    |
+| 2026-02-07 | Clerk-only auth                     | Auth0, Supabase Auth, roll-own             | Already integrated; Billing built-in; reduces surface                      |
+| 2026-02-07 | Railway deployment                  | Fly.io, Render, Vercel + Railway           | Single platform; private networking; managed Postgres                      |
+| 2026-02-07 | Postgres job queue (SKIP LOCKED)    | Celery + Redis, BullMQ, SQS                | Eliminates Redis-as-queue dependency; jobs table IS the queue; simpler ops |
+| 2026-02-08 | Separate renderer service (Railway) | Same worker process for render             | Isolates Playwright/browser deps; enables independent scaling              |
+| 2026-02-07 | Server Actions + hey-api client     | Direct client → FastAPI, tRPC              | Type-safe; FastAPI stays internal; single auth boundary                    |
+| 2026-02-07 | Progressive auth (single app)       | Separate /app route group, subdomain split | GitHub-style; less boilerplate; shared layout/nav                          |
+| 2026-02-08 | PostHog self-hosted on Railway      | Plausible, no analytics, DB queries only   | Full funnel visibility; privacy-first; self-hosted                         |
+| 2026-02-08 | Cloudflare proxy mode               | Railway direct, Cloudflare DNS-only        | DDoS protection for PH/HN launch; edge caching; Turnstile                  |
 
 ### Security
 
-| Date | Decision | Alternatives Considered | Rationale |
-|------|----------|------------------------|-----------|
-| 2026-02-08 | HMAC request signing (Next.js → FastAPI) | Shared secret only, JWT pass-through, mTLS | Prevents replay attacks; simple; no external deps; MIT source visible |
-| 2026-02-08 | Cloudflare Turnstile CAPTCHA on sign-up | Clerk built-in CAPTCHA, reCAPTCHA, no CAPTCHA | Prevents automated sign-ups; privacy-friendly; Clerk integration |
-| 2026-02-07 | Tier-based entitlements only (no Redis rate limiter) | Redis sliding window, Cloudflare WAF | Clerk auth + Turnstile + curated tracking limits abuse surface |
-| 2026-02-08 | Sentry error tracking | No tracking, Rollbar, Bugsnag | Industry standard; good Next.js + Python support |
+| Date       | Decision                                             | Alternatives Considered                       | Rationale                                                             |
+| ---------- | ---------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
+| 2026-02-08 | HMAC request signing (Next.js → FastAPI)             | Shared secret only, JWT pass-through, mTLS    | Prevents replay attacks; simple; no external deps; MIT source visible |
+| 2026-02-08 | Cloudflare Turnstile CAPTCHA on sign-up              | Clerk built-in CAPTCHA, reCAPTCHA, no CAPTCHA | Prevents automated sign-ups; privacy-friendly; Clerk integration      |
+| 2026-02-07 | Tier-based entitlements only (no Redis rate limiter) | Redis sliding window, Cloudflare WAF          | Clerk auth + Turnstile + curated tracking limits abuse surface        |
+| 2026-02-08 | Sentry error tracking                                | No tracking, Rollbar, Bugsnag                 | Industry standard; good Next.js + Python support                      |
 
 ### Data & Storage
 
-| Date | Decision | Alternatives Considered | Rationale |
-|------|----------|------------------------|-----------|
-| 2026-02-07 | 7-table minimal schema | 9 tables + audit, 11+ tables | Lean; no users table (Clerk manages); covers all flows |
-| 2026-02-07 | Postgres TOAST for snapshots | S3/R2 object storage | 2-5 GB/year realistic; no external storage dep; migrate at ~20 GB |
-| 2026-02-07 | Pre-compute + store diffs | Compute on-the-fly, hybrid | Instant reads; ~10-20% more storage, eliminates read latency |
-| 2026-02-07 | Repo JSON seed for catalog | Admin API, Git-triggered sync | Version-controlled, idempotent, standard OSS contribution flow |
-| 2026-02-08 | 30-50 curated companies at launch | Port 100+ from main, 3 companies, 10-15 | Fresh curation; validate URLs/robots; quality over quantity |
-| 2026-02-08 | Immediate account purge on deletion | 30-day grace, purge + email | Privacy-first; no grace period complexity; GDPR-friendly |
+| Date       | Decision                            | Alternatives Considered                 | Rationale                                                         |
+| ---------- | ----------------------------------- | --------------------------------------- | ----------------------------------------------------------------- |
+| 2026-02-07 | 7-table minimal schema              | 9 tables + audit, 11+ tables            | Lean; no users table (Clerk manages); covers all flows            |
+| 2026-02-07 | Postgres TOAST for snapshots        | S3/R2 object storage                    | 2-5 GB/year realistic; no external storage dep; migrate at ~20 GB |
+| 2026-02-07 | Pre-compute + store diffs           | Compute on-the-fly, hybrid              | Instant reads; ~10-20% more storage, eliminates read latency      |
+| 2026-02-07 | Repo JSON seed for catalog          | Admin API, Git-triggered sync           | Version-controlled, idempotent, standard OSS contribution flow    |
+| 2026-02-08 | 30-50 curated companies at launch   | Port 100+ from main, 3 companies, 10-15 | Fresh curation; validate URLs/robots; quality over quantity       |
+| 2026-02-08 | Immediate account purge on deletion | 30-day grace, purge + email             | Privacy-first; no grace period complexity; GDPR-friendly          |
 
 ### Pipeline & Extraction
 
-| Date | Decision | Alternatives Considered | Rationale |
-|------|----------|------------------------|-----------|
-| 2026-02-07 | Trafilatura-only extraction | readability-lxml fallback, custom rules | F1 0.958; replaces ~80% of canonicalization pipeline |
-| 2026-02-07 | pypdf + Tesseract OCR fallback | pdfplumber, pdfminer | BSD license; zero deps; OCR covers image-based PDFs |
-| 2026-02-07 | Tiered change detection with LLM gate | Simple threshold, diff-only | SHA256 → ratio → cosmetic strip → LLM classify; ~$3/year |
-| 2026-02-07 | diff-match-patch engine | jsdiff, Python difflib | Google's library; semantic cleanup superior for prose |
-| 2026-02-07 | Curated-only tracking | Custom URLs, hybrid | Limits abuse surface; community contributes via PRs |
-| 2026-02-08 | Three-tier citation handling | Show all, hide failed, block summary | Transparent UX; fuzzy repair for partial matches; unverified indicator |
+| Date       | Decision                              | Alternatives Considered                 | Rationale                                                              |
+| ---------- | ------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
+| 2026-02-07 | Trafilatura-only extraction           | readability-lxml fallback, custom rules | F1 0.958; replaces ~80% of canonicalization pipeline                   |
+| 2026-02-07 | pypdf + Tesseract OCR fallback        | pdfplumber, pdfminer                    | BSD license; zero deps; OCR covers image-based PDFs                    |
+| 2026-02-07 | Tiered change detection with LLM gate | Simple threshold, diff-only             | SHA256 → ratio → cosmetic strip → LLM classify; ~$3/year               |
+| 2026-02-07 | diff-match-patch engine               | jsdiff, Python difflib                  | Google's library; semantic cleanup superior for prose                  |
+| 2026-02-07 | Curated-only tracking                 | Custom URLs, hybrid                     | Limits abuse surface; community contributes via PRs                    |
+| 2026-02-08 | Three-tier citation handling          | Show all, hide failed, block summary    | Transparent UX; fuzzy repair for partial matches; unverified indicator |
 
 ### AI & UX
 
-| Date | Decision | Alternatives Considered | Rationale |
-|------|----------|------------------------|-----------|
-| 2026-02-07 | OpenRouter (Sonnet 4.5 → GPT-5.2 → Gemini 3 Flash) | Direct API calls, single provider | Provider abstraction; fallback chain; model flexibility |
-| 2026-02-07 | In-app notifications only | Email (Postmark/Resend), email + in-app | No external email dep for v0.2.0; add email in v0.3 |
-| 2026-02-07 | Postgres feed + polling (60s) | SSE, WebSocket, Novu | Simplest; no connection management; upgrade to SSE later |
-| 2026-02-08 | Diff viewer: research KISS approach | Custom only, react-diff-viewer only | Evaluate simplest effective option; citation linking is primary constraint |
-| 2026-02-08 | Friendly + technical brand voice | Serious, casual, pure technical | Friendly for marketing (PH), technical for product (HN) |
-| 2026-02-08 | Static homepage (no live feed) | Live feed, featured change + feed | Simpler; less operational risk at launch; users discover post-signup |
+| Date       | Decision                                           | Alternatives Considered                 | Rationale                                                                  |
+| ---------- | -------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------- |
+| 2026-02-07 | OpenRouter (Sonnet 4.5 → GPT-5.2 → Gemini 3 Flash) | Direct API calls, single provider       | Provider abstraction; fallback chain; model flexibility                    |
+| 2026-02-07 | In-app notifications only                          | Email (Postmark/Resend), email + in-app | No external email dep for v0.2.0; add email in v0.3                        |
+| 2026-02-07 | Postgres feed + polling (60s)                      | SSE, WebSocket, Novu                    | Simplest; no connection management; upgrade to SSE later                   |
+| 2026-02-08 | Diff viewer: research KISS approach                | Custom only, react-diff-viewer only     | Evaluate simplest effective option; citation linking is primary constraint |
+| 2026-02-08 | Friendly + technical brand voice                   | Serious, casual, pure technical         | Friendly for marketing (PH), technical for product (HN)                    |
+| 2026-02-08 | Static homepage (no live feed)                     | Live feed, featured change + feed       | Simpler; less operational risk at launch; users discover post-signup       |
 
 ### Ops & Launch
 
-| Date | Decision | Alternatives Considered | Rationale |
-|------|----------|------------------------|-----------|
-| 2026-02-08 | Full PH/HN launch | Soft deploy, targeted announce, private beta | Curated tracking limits blast radius; no users to migrate |
-| 2026-02-08 | Blue-green deploys on Railway | Railway rollback, fix-forward only, manual | Safety net for launch day; tested rollback path |
-| 2026-02-08 | GitHub Issues for support | Discord, email, in-app feedback | Lean; dev audience; aligns with MIT OSS project |
-| 2026-02-08 | Railway Hobby plan (upgrade if needed) | Pro, Team | Cost-efficient for launch; upgrade based on real usage |
-| 2026-02-08 | Pro $9/mo, Business $29/mo | $12/$49, $19/$79, Free-only | Accessible indie pricing; low barrier to conversion |
+| Date       | Decision                               | Alternatives Considered                      | Rationale                                                 |
+| ---------- | -------------------------------------- | -------------------------------------------- | --------------------------------------------------------- |
+| 2026-02-08 | Full PH/HN launch                      | Soft deploy, targeted announce, private beta | Curated tracking limits blast radius; no users to migrate |
+| 2026-02-08 | Blue-green deploys on Railway          | Railway rollback, fix-forward only, manual   | Safety net for launch day; tested rollback path           |
+| 2026-02-08 | GitHub Issues for support              | Discord, email, in-app feedback              | Lean; dev audience; aligns with MIT OSS project           |
+| 2026-02-08 | Railway Hobby plan (upgrade if needed) | Pro, Team                                    | Cost-efficient for launch; upgrade based on real usage    |
+| 2026-02-08 | Pro $9/mo, Business $29/mo             | $12/$49, $19/$79, Free-only                  | Accessible indie pricing; low barrier to conversion       |
 
 ---
 
@@ -1196,33 +1243,37 @@ All decisions from the 9-round interview + launch-readiness audit, organized by 
 
 ### Risks + mitigations
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Trafilatura fails on specific site structures | False negatives; missed changes | Medium | Monitor extraction quality; add site-specific post-processing if needed |
-| Postgres TOAST performance degrades at scale | Slow reads, high I/O | Low | Migrate to S3/R2 when DB > 20 GB; already architected for this |
-| Clerk Billing API changes / limitations | Billing flow breaks | Low | Clerk is stable; fallback to direct Stripe if needed |
-| OpenRouter rate limits or downtime | No AI summaries | Medium | Fallback chain (3 models); circuit breaker; diffs still work |
-| robots.txt blocks major target sites | Key entities un-trackable | Medium | Document clearly in UI; curated catalog vetted before inclusion |
-| Single worker bottleneck at scale | Delayed checks, queue backlog | Medium | Horizontal scale: add worker replicas; queue-based distribution |
-| PH/HN traffic spike overwhelms Railway Hobby | Slow responses, 503s | Medium | Cloudflare caching for static; queue backpressure; upgrade to Pro if needed |
-| PostHog resource consumption on Hobby plan | PostHog crashes or starves other services | Medium | Monitor resource usage; consider external PostHog Cloud if self-hosted is too heavy |
-| HMAC secret rotation gap | Brief auth failures during rotation | Low | Deploy with new+old secret acceptance window; rotate quarterly |
-| UI polish insufficient for PH/HN scrutiny | Poor first impressions, negative launch | High | Invest in UI polish as P0 before launch; get feedback from test users |
+| Risk                                          | Impact                                    | Likelihood | Mitigation                                                                          |
+| --------------------------------------------- | ----------------------------------------- | ---------- | ----------------------------------------------------------------------------------- |
+| Trafilatura fails on specific site structures | False negatives; missed changes           | Medium     | Monitor extraction quality; add site-specific post-processing if needed             |
+| Postgres TOAST performance degrades at scale  | Slow reads, high I/O                      | Low        | Migrate to S3/R2 when DB > 20 GB; already architected for this                      |
+| Clerk Billing API changes / limitations       | Billing flow breaks                       | Low        | Clerk is stable; fallback to direct Stripe if needed                                |
+| OpenRouter rate limits or downtime            | No AI summaries                           | Medium     | Fallback chain (3 models); circuit breaker; diffs still work                        |
+| robots.txt blocks major target sites          | Key entities un-trackable                 | Medium     | Document clearly in UI; curated catalog vetted before inclusion                     |
+| Single worker bottleneck at scale             | Delayed checks, queue backlog             | Medium     | Horizontal scale: add worker replicas; queue-based distribution                     |
+| PH/HN traffic spike overwhelms Railway Hobby  | Slow responses, 503s                      | Medium     | Cloudflare caching for static; queue backpressure; upgrade to Pro if needed         |
+| PostHog resource consumption on Hobby plan    | PostHog crashes or starves other services | Medium     | Monitor resource usage; consider external PostHog Cloud if self-hosted is too heavy |
+| HMAC secret rotation gap                      | Brief auth failures during rotation       | Low        | Deploy with new+old secret acceptance window; rotate quarterly                      |
+| UI polish insufficient for PH/HN scrutiny     | Poor first impressions, negative launch   | High       | Invest in UI polish as P0 before launch; get feedback from test users               |
 
 ---
 
 ## 14) Legal/Safety UX Copy
 
 Required on every summary view:
+
 > "This summary is generated by AI from the detected text changes and is provided for informational purposes only. It is not legal advice."
 
 Required on "Watch changes" flow:
+
 > "We only monitor public policy URLs from our curated directory. We respect robots.txt and apply rate limits."
 
 Required in footer / about:
+
 > "Inplain.ai is an independent tool for informational purposes. We are not affiliated with any of the companies we monitor."
 
 Required on sign-up (alongside Turnstile):
+
 > "By signing up, you agree to our Terms of Service and Privacy Policy."
 
 ---
@@ -1245,6 +1296,7 @@ Required on sign-up (alongside Turnstile):
 **Color**: Commit to a palette with CSS variables. Diff viewer: green for additions, red for removals, yellow for unverified citations.
 
 **Polish checklist (P0 for launch)**:
+
 - [ ] Landing page hero is compelling and sharp
 - [ ] Company directory is clean and searchable
 - [ ] Company page clearly communicates value
@@ -1272,25 +1324,26 @@ Required on sign-up (alongside Turnstile):
 
 ### 16.1 Pre-launch milestones
 
-| # | Milestone | Status | Depends on |
-|---|-----------|--------|------------|
-| L1 | Catalog: 30-50 companies validated | Done | URL + robots + extraction validation |
-| L2 | UI polish pass (all pages, desktop + mobile) | Done | Design decisions |
-| L3 | HMAC request signing | Done | — |
-| L4 | Cloudflare proxy mode enabled | Blocked (external) | DNS configuration |
-| L5 | Cloudflare Turnstile CAPTCHA | Blocked (external) | Clerk configuration |
-| L6 | Renderer service deployed on Railway | Done | — |
-| L7 | PostHog self-hosted on Railway | Partial (provisioned) | Resource sizing |
-| L8 | Sentry integration (Python + Next.js) | Done | — |
-| L9 | Blue-green deploy tested | Done | Staging environment |
-| L10 | Smoke test script | Done | — |
-| L11 | Citation fuzzy repair + unverified indicator | Done | — |
-| L12 | Diff viewer finalized (KISS research) | Done | Research |
-| L13 | Marketing copy finalized | Done | — |
-| L14 | README + LICENSE file updated for MIT | Done | — |
-| L15 | At least 1 real change event in system (demo data) | Done | Pipeline running |
+| #   | Milestone                                          | Status                | Depends on                           |
+| --- | -------------------------------------------------- | --------------------- | ------------------------------------ |
+| L1  | Catalog: 30-50 companies validated                 | Done                  | URL + robots + extraction validation |
+| L2  | UI polish pass (all pages, desktop + mobile)       | Done                  | Design decisions                     |
+| L3  | HMAC request signing                               | Done                  | —                                    |
+| L4  | Cloudflare proxy mode enabled                      | Blocked (external)    | DNS configuration                    |
+| L5  | Cloudflare Turnstile CAPTCHA                       | Blocked (external)    | Clerk configuration                  |
+| L6  | Renderer service deployed on Railway               | Done                  | —                                    |
+| L7  | PostHog self-hosted on Railway                     | Partial (provisioned) | Resource sizing                      |
+| L8  | Sentry integration (Python + Next.js)              | Done                  | —                                    |
+| L9  | Blue-green deploy tested                           | Done                  | Staging environment                  |
+| L10 | Smoke test script                                  | Done                  | —                                    |
+| L11 | Citation fuzzy repair + unverified indicator       | Done                  | —                                    |
+| L12 | Diff viewer finalized (KISS research)              | Done                  | Research                             |
+| L13 | Marketing copy finalized                           | Done                  | —                                    |
+| L14 | README + LICENSE file updated for MIT              | Done                  | —                                    |
+| L15 | At least 1 real change event in system (demo data) | Done                  | Pipeline running                     |
 
 Notes:
+
 - L4 + L5 require Cloudflare/Clerk dashboard access and cannot be completed from repository-only automation.
 - L7 template services are provisioned in Railway; final PostHog service activation and env value wiring are still required.
 
@@ -1337,30 +1390,44 @@ Notes:
 
 ```json
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "required": ["slug", "name", "website_url", "category", "policy_urls"],
-    "properties": {
-      "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-      "name": { "type": "string" },
-      "website_url": { "type": "string", "format": "uri" },
-      "category": {
-        "type": "string",
-        "enum": ["social_media", "search", "cloud", "finance", "ecommerce", "streaming", "gaming", "productivity", "health", "education", "ai", "communication", "other"]
-      },
-      "policy_urls": {
-        "type": "object",
-        "properties": {
-          "privacy": { "type": "string", "format": "uri" },
-          "tos": { "type": "string", "format": "uri" },
-          "cookie": { "type": "string", "format": "uri" }
-        },
-        "minProperties": 1
-      }
-    }
-  }
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"required": ["slug", "name", "website_url", "category", "policy_urls"],
+		"properties": {
+			"slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+			"name": { "type": "string" },
+			"website_url": { "type": "string", "format": "uri" },
+			"category": {
+				"type": "string",
+				"enum": [
+					"social_media",
+					"search",
+					"cloud",
+					"finance",
+					"ecommerce",
+					"streaming",
+					"gaming",
+					"productivity",
+					"health",
+					"education",
+					"ai",
+					"communication",
+					"other"
+				]
+			},
+			"policy_urls": {
+				"type": "object",
+				"properties": {
+					"privacy": { "type": "string", "format": "uri" },
+					"tos": { "type": "string", "format": "uri" },
+					"cookie": { "type": "string", "format": "uri" }
+				},
+				"minProperties": 1
+			}
+		}
+	}
 }
 ```
 
@@ -1423,45 +1490,54 @@ WHERE id = $1;
 ## Appendix C — Default Config Values
 
 **Fetch**:
+
 - Max redirects: 5
 - Max response size: 5 MB
 - Connect timeout: 5s
 - Read timeout: 20s
 
 **Renderer**:
+
 - Navigation timeout: 30s
 - Total budget: 45s
 - Max concurrent renders: 2
 
 **Politeness**:
+
 - Per-host concurrency: 2
 - Per-host delay: 2s
 - Robots.txt cache: 24h
 
 **Change detection**:
+
 - Minimum added/removed chars: 500
 - change_score threshold: 0.02
 - Cosmetic patterns: timestamps, copyright years, counters
 
 **Summaries**:
+
 - Max hunks passed to LLM: 20
 - Prompt version: 1
 - Primary model: `anthropic/claude-sonnet-4-5` (via OpenRouter)
-- Fallback models: `openai/gpt-5.2`, `google/gemini-3-flash`
+- Fallback models: `openai/gpt-5.2`, `google/gemini-3-flash-preview`
 
 **Scheduler**:
+
 - Polling interval: 60s
 - Batch size: 200 documents per cycle
 
 **Notifications**:
+
 - Polling interval: 60s (client-side)
 - Max feed items: 50 (paginated)
 
 **Retention cleanup**:
+
 - Batch size: 500 snapshots per run
 - Run frequency: daily
 
 **HMAC**:
+
 - Algorithm: SHA256
 - Timestamp freshness: 5 minutes
 - Headers: `X-Request-Signature`, `X-Request-Timestamp`
@@ -1471,25 +1547,26 @@ WHERE id = $1;
 ## Appendix D — Catalog Target List
 
 Target: 30-50 companies across categories. Each entry must pass validation:
+
 - URL returns HTTP 200
 - Not blocked by robots.txt for `inplain.ai` user agent
 - trafilatura extracts ≥500 chars
 
 **Priority categories and candidate companies**:
 
-| Category | Candidates |
-|----------|------------|
-| **Search / Tech** | Google, Microsoft, Apple, Amazon |
-| **Social Media** | Meta (Facebook/Instagram), X (Twitter), TikTok, Reddit, LinkedIn, Discord, Snapchat |
-| **AI / ML** | OpenAI, Anthropic, Mistral, Stability AI, Midjourney |
-| **Cloud** | AWS, Google Cloud, Microsoft Azure, Cloudflare, DigitalOcean |
-| **Streaming** | Netflix, Spotify, YouTube, Disney+, Twitch |
-| **Finance** | PayPal, Stripe, Coinbase, Robinhood, Plaid |
-| **E-commerce** | Amazon, Shopify, eBay, Etsy |
-| **Communication** | Zoom, Slack, Signal, WhatsApp, Telegram |
-| **Productivity** | Notion, GitHub, Figma, Canva, Dropbox |
-| **Gaming** | Steam (Valve), Epic Games, Nintendo, PlayStation |
-| **Health** | Fitbit, MyFitnessPal, Headspace |
-| **Education** | Coursera, Duolingo, Khan Academy |
+| Category          | Candidates                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------- |
+| **Search / Tech** | Google, Microsoft, Apple, Amazon                                                    |
+| **Social Media**  | Meta (Facebook/Instagram), X (Twitter), TikTok, Reddit, LinkedIn, Discord, Snapchat |
+| **AI / ML**       | OpenAI, Anthropic, Mistral, Stability AI, Midjourney                                |
+| **Cloud**         | AWS, Google Cloud, Microsoft Azure, Cloudflare, DigitalOcean                        |
+| **Streaming**     | Netflix, Spotify, YouTube, Disney+, Twitch                                          |
+| **Finance**       | PayPal, Stripe, Coinbase, Robinhood, Plaid                                          |
+| **E-commerce**    | Amazon, Shopify, eBay, Etsy                                                         |
+| **Communication** | Zoom, Slack, Signal, WhatsApp, Telegram                                             |
+| **Productivity**  | Notion, GitHub, Figma, Canva, Dropbox                                               |
+| **Gaming**        | Steam (Valve), Epic Games, Nintendo, PlayStation                                    |
+| **Health**        | Fitbit, MyFitnessPal, Headspace                                                     |
+| **Education**     | Coursera, Duolingo, Khan Academy                                                    |
 
 Final list determined by URL validation + extraction testing before launch.

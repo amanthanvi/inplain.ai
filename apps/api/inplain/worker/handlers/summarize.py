@@ -28,7 +28,7 @@ _FUZZY_REPAIR_MIN_RATIO = 0.82
 _MODEL_CHAIN = [
     "anthropic/claude-sonnet-4-5",
     "openai/gpt-5.2",
-    "google/gemini-3-flash",
+    "google/gemini-3-flash-preview",
 ]
 
 
@@ -39,11 +39,17 @@ def run_summarize_job(db: Session, *, job: Job) -> None:
         raise ValueError("summarize job missing change_event_id")
 
     ce_uuid = uuid.UUID(str(change_event_id))
-    change_event = db.execute(select(ChangeEvent).where(ChangeEvent.id == ce_uuid)).scalar_one()
-    doc = db.execute(select(Document).where(Document.id == change_event.document_id)).scalar_one()
+    change_event = db.execute(
+        select(ChangeEvent).where(ChangeEvent.id == ce_uuid)
+    ).scalar_one()
+    doc = db.execute(
+        select(Document).where(Document.id == change_event.document_id)
+    ).scalar_one()
     diff = db.execute(select(Diff).where(Diff.id == change_event.diff_id)).scalar_one()
 
-    if _over_summary_quota(db=db, clerk_user_id=doc.clerk_user_id, schedule_tier=doc.schedule_tier):
+    if _over_summary_quota(
+        db=db, clerk_user_id=doc.clerk_user_id, schedule_tier=doc.schedule_tier
+    ):
         change_event.summary_status = SummaryStatus.skipped_quota
         change_event.summary_error = "summary quota exceeded"
         change_event.summary_prompt_version = _PROMPT_VERSION
@@ -86,8 +92,12 @@ def run_summarize_job(db: Session, *, job: Job) -> None:
     if not isinstance(what_changed, list) or not isinstance(why_matters, list):
         raise ValueError("invalid summary shape")
 
-    validated_what_changed = _validate_citations(diff_hunks=diff.diff_hunks, bullets=what_changed)
-    validated_why_matters = _validate_citations(diff_hunks=diff.diff_hunks, bullets=why_matters)
+    validated_what_changed = _validate_citations(
+        diff_hunks=diff.diff_hunks, bullets=what_changed
+    )
+    validated_why_matters = _validate_citations(
+        diff_hunks=diff.diff_hunks, bullets=why_matters
+    )
 
     change_event.summary_status = SummaryStatus.completed
     change_event.summary_what_changed = validated_what_changed
@@ -146,7 +156,9 @@ def _build_prompt(*, diff_hunks: list[dict[str, Any]]) -> str:
 
     if not selected and diff_hunks:
         # Extremely large hunk: fall back to a more aggressive trim so the job can still run.
-        selected = [_trim_hunk_for_prompt(diff_hunks[0], max_part_chars=400, max_parts=4)]
+        selected = [
+            _trim_hunk_for_prompt(diff_hunks[0], max_part_chars=400, max_parts=4)
+        ]
 
     return prefix + json.dumps(selected, ensure_ascii=False)
 
@@ -167,8 +179,12 @@ def _trim_hunk_for_prompt(
         "hunkId": hid,
         "contextBefore": context_before if isinstance(context_before, str) else "",
         "contextAfter": context_after if isinstance(context_after, str) else "",
-        "added": _trim_text_parts(added, max_part_chars=max_part_chars, max_parts=max_parts),
-        "removed": _trim_text_parts(removed, max_part_chars=max_part_chars, max_parts=max_parts),
+        "added": _trim_text_parts(
+            added, max_part_chars=max_part_chars, max_parts=max_parts
+        ),
+        "removed": _trim_text_parts(
+            removed, max_part_chars=max_part_chars, max_parts=max_parts
+        ),
     }
 
 
@@ -376,7 +392,9 @@ def _validate_citations(
     return validated_bullets
 
 
-def _over_summary_quota(*, db: Session, clerk_user_id: str, schedule_tier: ScheduleTier) -> bool:
+def _over_summary_quota(
+    *, db: Session, clerk_user_id: str, schedule_tier: ScheduleTier
+) -> bool:
     now = datetime.now(UTC)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
@@ -396,7 +414,9 @@ def _over_summary_quota(*, db: Session, clerk_user_id: str, schedule_tier: Sched
         .where(
             Document.clerk_user_id == clerk_user_id,
             ChangeEvent.created_at >= month_start,
-            ChangeEvent.summary_status.in_([SummaryStatus.completed, SummaryStatus.failed]),
+            ChangeEvent.summary_status.in_(
+                [SummaryStatus.completed, SummaryStatus.failed]
+            ),
         )
     ).scalar_one()
     return int(used or 0) >= limit

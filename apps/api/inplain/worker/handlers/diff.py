@@ -23,7 +23,7 @@ from inplain.settings import settings
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 _CLASSIFY_PROMPT_VERSION = 1
 _CLASSIFY_MODEL_CHAIN = [
-    "google/gemini-3-flash",
+    "google/gemini-3-flash-preview",
     "openai/gpt-5.2",
 ]
 _MAX_HUNKS_FOR_CLASSIFY = 12
