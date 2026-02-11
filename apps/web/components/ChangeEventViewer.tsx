@@ -169,14 +169,25 @@ export function ChangeEventViewer({
   whatChanged,
   whyMatters,
   hunks,
+  summaryStatus,
 }: {
   whatChanged: SummaryBullet[] | null;
   whyMatters: SummaryBullet[] | null;
   hunks: DiffHunk[];
+  summaryStatus?: string;
 }) {
   const [diffMode, setDiffMode] = useState<DiffMode>("section");
   const hunkIds = new Set(hunks.map((h) => h.hunkId));
   const sections = useMemo(() => groupHunksBySection(hunks), [hunks]);
+  const isEmptySummary =
+    (!whatChanged || whatChanged.length === 0) && (!whyMatters || whyMatters.length === 0);
+
+  const emptySummaryMessage =
+    summaryStatus === "failed"
+      ? "Summary unavailable due to an error."
+      : summaryStatus === "skipped_quota"
+        ? "Summary skipped due to quota limits."
+        : "Summary not available yet.";
 
   return (
     <div className="stack" style={{ gap: 14 }}>
@@ -215,9 +226,9 @@ export function ChangeEventViewer({
           </>
         ) : null}
 
-        {!whatChanged && !whyMatters ? (
+        {isEmptySummary ? (
           <div className="muted" style={{ marginTop: 10 }}>
-            Summary not available yet.
+            {emptySummaryMessage}
           </div>
         ) : null}
       </section>

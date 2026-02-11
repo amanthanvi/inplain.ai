@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { retryChangeEventSummary } from "@/app/actions/change_events";
 import { ChangeEventViewer } from "@/components/ChangeEventViewer";
 import { internalFetch, type ChangeEventDetailOut } from "@/lib/internal-api";
 
@@ -50,6 +51,12 @@ export default async function ChangeEventPage({ params }: { params: { id: string
           <div className="muted" style={{ marginTop: 10 }}>
             {ce.summary_error || "Unknown error"}
           </div>
+          <form action={retryChangeEventSummary} style={{ marginTop: 12 }}>
+            <input type="hidden" name="changeEventId" value={ce.id} />
+            <button className="btn btnPrimary" type="submit">
+              Retry summary
+            </button>
+          </form>
         </div>
       ) : null}
 
@@ -57,6 +64,7 @@ export default async function ChangeEventPage({ params }: { params: { id: string
         whatChanged={ce.summary_what_changed}
         whyMatters={ce.summary_why_matters}
         hunks={detail.diff.diff_hunks}
+        summaryStatus={ce.summary_status}
       />
     </main>
   );
