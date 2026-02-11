@@ -21,6 +21,9 @@ from inplain.settings import settings
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 _PROMPT_VERSION = 1
 _MAX_HUNKS_FOR_LLM = 20
+_MAX_PROMPT_CHARS = 45_000
+_MAX_HUNK_PART_CHARS = 1_200
+_MAX_PARTS_PER_HUNK = 8
 _FUZZY_REPAIR_MIN_RATIO = 0.82
 _MODEL_CHAIN = [
     "anthropic/claude-sonnet-4-5",
@@ -56,8 +59,7 @@ def run_summarize_job(db: Session, *, job: Job) -> None:
         _enqueue_notify(db=db, doc=doc, change_event_id=change_event.id)
         return
 
-    llm_hunks = diff.diff_hunks[:_MAX_HUNKS_FOR_LLM]
-    prompt = _build_prompt(diff_hunks=llm_hunks)
+    prompt = _build_prompt(diff_hunks=diff.diff_hunks)
 
     summary: dict[str, Any] | None = None
     model_used: str | None = None
@@ -113,7 +115,7 @@ def _enqueue_notify(db: Session, *, doc: Document, change_event_id: uuid.UUID) -
 
 
 def _build_prompt(*, diff_hunks: list[dict[str, Any]]) -> str:
-    return (
+    prefix = (
         "You are summarizing privacy/ToS diffs.\n"
         "Return ONLY valid JSON with this shape:\n"
         "{\n"
@@ -127,10 +129,76 @@ def _build_prompt(*, diff_hunks: list[dict[str, Any]]) -> str:
         "Rules:\n"
         "- Every bullet MUST have >=1 citation.\n"
         "- quote MUST be an exact substring from the referenced hunk's added/removed text.\n"
+        "- Only cite quotes that appear in the provided DIFF_HUNKS.\n"
         "- No legal advice; informational only.\n"
         "\n"
-        f"DIFF_HUNKS:\n{json.dumps(diff_hunks, ensure_ascii=False)}"
+        "DIFF_HUNKS:\n"
     )
+
+    selected: list[dict[str, Any]] = []
+    for raw in diff_hunks[:_MAX_HUNKS_FOR_LLM]:
+        trimmed = _trim_hunk_for_prompt(raw)
+        candidate = [*selected, trimmed]
+        prompt = prefix + json.dumps(candidate, ensure_ascii=False)
+        if len(prompt) > _MAX_PROMPT_CHARS:
+            break
+        selected = candidate
+
+    if not selected and diff_hunks:
+        # Extremely large hunk: fall back to a more aggressive trim so the job can still run.
+        selected = [_trim_hunk_for_prompt(diff_hunks[0], max_part_chars=400, max_parts=4)]
+
+    return prefix + json.dumps(selected, ensure_ascii=False)
+
+
+def _trim_hunk_for_prompt(
+    hunk: dict[str, Any],
+    *,
+    max_part_chars: int = _MAX_HUNK_PART_CHARS,
+    max_parts: int = _MAX_PARTS_PER_HUNK,
+) -> dict[str, Any]:
+    hid = str(hunk.get("hunkId") or "")
+    context_before = hunk.get("contextBefore")
+    context_after = hunk.get("contextAfter")
+    added = hunk.get("added")
+    removed = hunk.get("removed")
+
+    return {
+        "hunkId": hid,
+        "contextBefore": context_before if isinstance(context_before, str) else "",
+        "contextAfter": context_after if isinstance(context_after, str) else "",
+        "added": _trim_text_parts(added, max_part_chars=max_part_chars, max_parts=max_parts),
+        "removed": _trim_text_parts(removed, max_part_chars=max_part_chars, max_parts=max_parts),
+    }
+
+
+def _trim_text_parts(
+    parts: object,
+    *,
+    max_part_chars: int,
+    max_parts: int,
+) -> list[str]:
+    if not isinstance(parts, list) or max_parts <= 0:
+        return []
+
+    out: list[str] = []
+    for part in parts:
+        if not isinstance(part, str) or not part:
+            continue
+
+        if len(part) <= max_part_chars:
+            out.append(part)
+        else:
+            head = part[:max_part_chars]
+            tail = part[-max_part_chars:]
+            out.append(head)
+            if len(out) < max_parts and tail and tail != head:
+                out.append(tail)
+
+        if len(out) >= max_parts:
+            break
+
+    return out
 
 
 def _call_openrouter(*, model: str, prompt: str) -> dict[str, Any]:
@@ -141,19 +209,75 @@ def _call_openrouter(*, model: str, prompt: str) -> dict[str, Any]:
     body = {
         "model": model,
         "messages": [
+            {
+                "role": "system",
+                "content": "You are a careful assistant that outputs ONLY valid JSON.",
+            },
             {"role": "user", "content": prompt},
         ],
-        "temperature": 0.2,
+        "temperature": 0.0,
     }
     with httpx.Client(timeout=60) as client:
         resp = client.post(_OPENROUTER_URL, headers=headers, json=body)
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            detail = _openrouter_error_detail(exc.response)
+            raise RuntimeError(
+                f"OpenRouter {exc.response.status_code}: {detail or exc.response.reason_phrase}"
+            ) from exc
         data = resp.json()
 
     content = data["choices"][0]["message"]["content"]
     if not isinstance(content, str):
         raise ValueError("unexpected OpenRouter response")
-    return json.loads(content)
+    return _parse_json_object(content)
+
+
+def _openrouter_error_detail(resp: httpx.Response) -> str:
+    try:
+        payload = resp.json()
+    except Exception:  # noqa: BLE001
+        text = (resp.text or "").strip().replace("\n", " ")
+        return text[:300]
+
+    if not isinstance(payload, dict):
+        return ""
+
+    error = payload.get("error")
+    if isinstance(error, dict):
+        msg = error.get("message")
+        if isinstance(msg, str):
+            return msg.strip()[:300]
+    if isinstance(error, str):
+        return error.strip()[:300]
+
+    msg = payload.get("message")
+    if isinstance(msg, str):
+        return msg.strip()[:300]
+
+    return ""
+
+
+def _parse_json_object(text: str) -> dict[str, Any]:
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        cleaned = text.strip()
+        if cleaned.startswith("```"):
+            cleaned = re.sub(r"^```[a-zA-Z0-9_-]*\n?", "", cleaned)
+            cleaned = re.sub(r"\n?```$", "", cleaned).strip()
+
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            data = json.loads(cleaned[start : end + 1])
+        else:
+            raise ValueError("OpenRouter returned non-JSON output") from exc
+
+    if not isinstance(data, dict):
+        raise ValueError("OpenRouter returned non-object JSON")
+    return data
 
 
 def _normalize_spaces(value: str) -> str:
