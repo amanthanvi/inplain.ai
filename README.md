@@ -64,4 +64,7 @@ make typecheck
 make catalog-validate
 make smoke-test
 make demo-seed
+make openrouter-model-scout
 ```
+Model policy report: `docs/openrouter-model-scout.md`
+

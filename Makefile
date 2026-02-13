@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck catalog-validate smoke-test demo-seed
+.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck catalog-validate smoke-test demo-seed openrouter-model-scout
 
 PYTHON ?= python3.13
 VENV_DIR ?= .venv
@@ -46,3 +46,6 @@ smoke-test:
 
 demo-seed:
 	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python scripts/demo/seed_demo_change_event.py
+
+openrouter-model-scout:
+	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python scripts/openrouter/model_scout.py --out docs/openrouter-model-scout.md
