@@ -273,6 +273,28 @@ a {
   line-height: 1.4;
 }
 
+.summaryBulletText {
+  display: inline;
+}
+
+.citationInlineRow {
+  margin-left: 8px;
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  vertical-align: baseline;
+}
+
+.citationSup {
+  font-size: 1em;
+}
+
+.citationInline {
+  padding: 2px 7px;
+  font-size: 11px;
+  line-height: 1;
+}
+
 .citationRow {
   margin-top: 8px;
   display: flex;

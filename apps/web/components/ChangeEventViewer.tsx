@@ -20,33 +20,62 @@ function scrollToHunk(hunkId: string) {
   window.setTimeout(() => el.classList.remove("hunkHighlight"), 2000);
 }
 
-function CitationPill({ citation, knownHunk }: { citation: Citation; knownHunk: boolean }) {
+function citationLabel(hunkId: string): string {
+  const cleaned = (hunkId || "").trim();
+  const match = /^h(\d+)$/i.exec(cleaned);
+  if (match) return match[1];
+  return cleaned || "?";
+}
+
+function citationTooltip(quote: string): string | undefined {
+  const cleaned = quote.trim().replace(/\s+/g, " ");
+  if (!cleaned) return undefined;
+  return cleaned.length > 120 ? `${cleaned.slice(0, 117)}...` : cleaned;
+}
+
+function CitationMark({ citation, knownHunk }: { citation: Citation; knownHunk: boolean }) {
   const isUnverified = citation.status === "unverified" || !knownHunk;
   const onClick = useCallback(() => scrollToHunk(citation.hunkId), [citation.hunkId]);
+  const label = citationLabel(citation.hunkId);
+  const tooltip = citationTooltip(citation.quote || "");
 
   if (isUnverified) {
     return (
-      <span className="citation citationUnverified" aria-label={`${citation.hunkId} unverified citation`}>
-        {citation.hunkId || "unknown"} · unverified
-      </span>
+      <sup className="citationSup">
+        <span
+          className="citation citationInline citationUnverified"
+          aria-label={`${citation.hunkId} unverified citation`}
+          title={tooltip}
+        >
+          {label}
+        </span>
+      </sup>
     );
   }
 
   return (
-    <button className="citation" type="button" onClick={onClick}>
-      {citation.hunkId}
-    </button>
+    <sup className="citationSup">
+      <button className="citation citationInline" type="button" onClick={onClick} title={tooltip}>
+        {label}
+      </button>
+    </sup>
   );
 }
 
 function Bullet({ bullet, hunkIds }: { bullet: SummaryBullet; hunkIds: Set<string> }) {
   return (
     <li className="summaryBullet">
-      <div>{bullet.text}</div>
-      <div className="citationRow">
-        {bullet.citations.map((c, idx) => (
-          <CitationPill key={`${c.hunkId}-${idx}`} citation={c} knownHunk={hunkIds.has(c.hunkId)} />
-        ))}
+      <div className="summaryBulletText">
+        {bullet.text}
+        <span className="citationInlineRow">
+          {bullet.citations.map((c, idx) => (
+            <CitationMark
+              key={`${c.hunkId}-${idx}`}
+              citation={c}
+              knownHunk={hunkIds.has(c.hunkId)}
+            />
+          ))}
+        </span>
       </div>
     </li>
   );
@@ -59,12 +88,7 @@ function shortHeading(text: string): string {
 }
 
 function sectionTitleForHunk(hunk: DiffHunk, index: number): string {
-  const candidates = [
-    hunk.contextBefore,
-    hunk.contextAfter,
-    ...hunk.added,
-    ...hunk.removed,
-  ]
+  const candidates = [hunk.contextBefore, hunk.contextAfter, ...hunk.added, ...hunk.removed]
     .flatMap((value) => value.split("\n"))
     .map((line) => line.trim())
     .filter(Boolean);
