@@ -93,6 +93,48 @@ def _check_entities(
     return CheckResult(name="api entities", ok=True, details=f"{count} entities")
 
 
+def _check_posthog_capture(*, client: httpx.Client, posthog_host: str, api_key: str) -> CheckResult:
+    name = "posthog capture"
+
+    host = (posthog_host or "").strip()
+    key = (api_key or "").strip()
+
+    if bool(host) != bool(key):
+        return CheckResult(
+            name=name,
+            ok=False,
+            details="set POSTHOG_HOST and POSTHOG_API_KEY (or omit both)",
+        )
+
+    if not host and not key:
+        return CheckResult(name=name, ok=True, details="skipped")
+
+    url = host.rstrip("/") + "/capture/"
+    payload = {
+        "api_key": key,
+        "event": "smoke_test",
+        "properties": {
+            "distinct_id": "smoke-test",
+            "source": "inplain-smoke",
+        },
+    }
+
+    try:
+        response = client.post(url, json=payload)
+    except Exception as exc:  # noqa: BLE001
+        return CheckResult(name=name, ok=False, details=f"request failed: {exc}")
+
+    if response.status_code != 200:
+        text = (response.text or "").strip().replace("\n", " ")
+        return CheckResult(
+            name=name,
+            ok=False,
+            details=f"expected 200, got {response.status_code}: {text[:200]}",
+        )
+
+    return CheckResult(name=name, ok=True, details="200 OK")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run post-deploy smoke checks.")
     parser.add_argument("--web-base-url", default=os.environ.get("WEB_BASE_URL", "http://localhost:3000"))
@@ -101,6 +143,8 @@ def main() -> int:
         "--internal-service-token",
         default=os.environ.get("INTERNAL_SERVICE_TOKEN", ""),
     )
+    parser.add_argument("--posthog-host", default=os.environ.get("POSTHOG_HOST", ""))
+    parser.add_argument("--posthog-api-key", default=os.environ.get("POSTHOG_API_KEY", ""))
     parser.add_argument("--min-entities", type=int, default=30)
     args = parser.parse_args()
 
@@ -121,6 +165,15 @@ def main() -> int:
                 min_entities=args.min_entities,
             ),
         ]
+
+        if args.posthog_host or args.posthog_api_key:
+            results.append(
+                _check_posthog_capture(
+                    client=client,
+                    posthog_host=args.posthog_host,
+                    api_key=args.posthog_api_key,
+                )
+            )
 
     has_failures = False
     for result in results:
