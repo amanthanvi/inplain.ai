@@ -130,18 +130,10 @@ function UnifiedHunk({ hunk }: { hunk: DiffHunk }) {
       <div className="hunkBody">
         {hunk.contextBefore ? <div className="diffContext muted">{hunk.contextBefore}</div> : null}
         {hunk.removed.length > 0 ? (
-          <div className="diffRemoved">
-            {hunk.removed.map((t, idx) => (
-              <span key={idx}>{t}</span>
-            ))}
-          </div>
+          <div className="diffRemoved">{hunk.removed.join("")}</div>
         ) : null}
         {hunk.added.length > 0 ? (
-          <div className="diffAdded">
-            {hunk.added.map((t, idx) => (
-              <span key={idx}>{t}</span>
-            ))}
-          </div>
+          <div className="diffAdded">{hunk.added.join("")}</div>
         ) : null}
         {hunk.contextAfter ? <div className="diffContext muted">{hunk.contextAfter}</div> : null}
       </div>
@@ -161,11 +153,7 @@ function SplitHunk({ hunk }: { hunk: DiffHunk }) {
           <div>
             <div className="diffSplitLabel muted">Removed</div>
             {hunk.removed.length > 0 ? (
-              <div className="diffRemoved">
-                {hunk.removed.map((t, idx) => (
-                  <span key={idx}>{t}</span>
-                ))}
-              </div>
+              <div className="diffRemoved">{hunk.removed.join("")}</div>
             ) : (
               <div className="diffEmpty muted">No removals</div>
             )}
@@ -173,11 +161,7 @@ function SplitHunk({ hunk }: { hunk: DiffHunk }) {
           <div>
             <div className="diffSplitLabel muted">Added</div>
             {hunk.added.length > 0 ? (
-              <div className="diffAdded">
-                {hunk.added.map((t, idx) => (
-                  <span key={idx}>{t}</span>
-                ))}
-              </div>
+              <div className="diffAdded">{hunk.added.join("")}</div>
             ) : (
               <div className="diffEmpty muted">No additions</div>
             )}
