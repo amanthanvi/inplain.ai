@@ -90,39 +90,40 @@ def _summary_policy_for_tier(tier: ScheduleTier) -> _SummaryPolicy:
             return _SummaryPolicy(
                 model_chain=[
                     "deepseek/deepseek-v3.2",
-                    "google/gemini-3-flash-preview",
+                    "google/gemini-2.5-flash-lite",
                 ],
-                max_tokens=650,
-                max_bullets=8,
+                max_tokens=500,
+                max_bullets=6,
             )
         case ScheduleTier.six_h:
             return _SummaryPolicy(
                 model_chain=[
                     "deepseek/deepseek-v3.2",
-                    "google/gemini-3-flash-preview",
-                    "openai/gpt-5.2",
+                    "openai/gpt-4o-mini",
+                    "openai/gpt-4.1-mini",
                 ],
-                max_tokens=850,
-                max_bullets=10,
+                max_tokens=750,
+                max_bullets=8,
             )
         case ScheduleTier.one_h:
             return _SummaryPolicy(
                 model_chain=[
                     "deepseek/deepseek-v3.2",
+                    "openai/gpt-4.1-mini",
                     "openai/gpt-5.2",
                     "anthropic/claude-sonnet-4.5",
                 ],
-                max_tokens=1100,
-                max_bullets=12,
+                max_tokens=950,
+                max_bullets=10,
             )
         case _:
             return _SummaryPolicy(
                 model_chain=[
                     "deepseek/deepseek-v3.2",
-                    "google/gemini-3-flash-preview",
+                    "google/gemini-2.5-flash-lite",
                 ],
-                max_tokens=650,
-                max_bullets=8,
+                max_tokens=500,
+                max_bullets=6,
             )
 
 

@@ -149,7 +149,10 @@ def build_report(*, out_path: Path) -> None:
     # Inplain policy models (must match SPEC Appendix C and worker handler constants).
     policy_model_ids = [
         "deepseek/deepseek-v3.2",
-        "google/gemini-3-flash-preview",
+        "google/gemini-2.5-flash-lite",
+        "openai/gpt-4.1-nano",
+        "openai/gpt-4o-mini",
+        "openai/gpt-4.1-mini",
         "openai/gpt-5.2",
         "anthropic/claude-sonnet-4.5",
     ]
@@ -161,9 +164,9 @@ def build_report(*, out_path: Path) -> None:
     assumed_prompt_tokens = 12_000
 
     tier_caps = {
-        "daily (Free)": {"max_completion_tokens": 650, "max_bullets": 8},
-        "6h (Pro)": {"max_completion_tokens": 850, "max_bullets": 10},
-        "1h (Business)": {"max_completion_tokens": 1100, "max_bullets": 12},
+        "daily (Free)": {"max_completion_tokens": 500, "max_bullets": 6},
+        "6h (Pro)": {"max_completion_tokens": 750, "max_bullets": 8},
+        "1h (Business)": {"max_completion_tokens": 950, "max_bullets": 10},
     }
 
     lines: list[str] = []
@@ -180,11 +183,11 @@ def build_report(*, out_path: Path) -> None:
     lines.append("")
     lines.append("These should match `SPEC.md` Appendix C and worker defaults:")
     lines.append("")
-    lines.append("- Change classification (ambiguous diffs): `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview` (max_tokens=220)")
+    lines.append("- Change classification (ambiguous diffs): `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite` → `openai/gpt-4.1-nano` (max_tokens=220)")
     lines.append("- Summary (tier-aware by schedule):")
-    lines.append("  - `daily`: `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview`")
-    lines.append("  - `6h`: `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview` → `openai/gpt-5.2`")
-    lines.append("  - `1h`: `deepseek/deepseek-v3.2` → `openai/gpt-5.2` → `anthropic/claude-sonnet-4.5`")
+    lines.append("  - `daily`: `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite`")
+    lines.append("  - `6h`: `deepseek/deepseek-v3.2` → `openai/gpt-4o-mini` → `openai/gpt-4.1-mini`")
+    lines.append("  - `1h`: `deepseek/deepseek-v3.2` → `openai/gpt-4.1-mini` → `openai/gpt-5.2` → `anthropic/claude-sonnet-4.5`")
     lines.append("")
 
     lines.append("## Pricing (USD per 1M tokens)")
@@ -229,17 +232,18 @@ def build_report(*, out_path: Path) -> None:
         for mid in policy_model_ids:
             if tier.startswith("daily") and mid not in {
                 "deepseek/deepseek-v3.2",
-                "google/gemini-3-flash-preview",
+                "google/gemini-2.5-flash-lite",
             }:
                 continue
             if tier.startswith("6h") and mid not in {
                 "deepseek/deepseek-v3.2",
-                "google/gemini-3-flash-preview",
-                "openai/gpt-5.2",
+                "openai/gpt-4o-mini",
+                "openai/gpt-4.1-mini",
             }:
                 continue
             if tier.startswith("1h") and mid not in {
                 "deepseek/deepseek-v3.2",
+                "openai/gpt-4.1-mini",
                 "openai/gpt-5.2",
                 "anthropic/claude-sonnet-4.5",
             }:

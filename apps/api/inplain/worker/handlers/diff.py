@@ -24,7 +24,8 @@ _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 _CLASSIFY_PROMPT_VERSION = 1
 _CLASSIFY_MODEL_CHAIN = [
     "deepseek/deepseek-v3.2",
-    "google/gemini-3-flash-preview",
+    "google/gemini-2.5-flash-lite",
+    "openai/gpt-4.1-nano",
 ]
 _MAX_HUNKS_FOR_CLASSIFY = 12
 
