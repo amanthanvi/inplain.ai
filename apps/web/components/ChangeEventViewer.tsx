@@ -6,6 +6,8 @@ import type { Citation, DiffHunk, SummaryBullet } from "@/lib/internal-api";
 
 type DiffMode = "section" | "unified" | "split";
 
+type RevealHunk = (hunkId: string) => void;
+
 function scrollToHunk(hunkId: string) {
   const el = document.getElementById(`hunk-${hunkId}`);
   if (!el) return;
@@ -33,11 +35,23 @@ function citationTooltip(quote: string): string | undefined {
   return cleaned.length > 120 ? `${cleaned.slice(0, 117)}...` : cleaned;
 }
 
-function CitationMark({ citation, knownHunk }: { citation: Citation; knownHunk: boolean }) {
+function CitationMark({
+  citation,
+  knownHunk,
+  onRevealHunk,
+}: {
+  citation: Citation;
+  knownHunk: boolean;
+  onRevealHunk?: RevealHunk;
+}) {
   const isUnverified = citation.status === "unverified" || !knownHunk;
-  const onClick = useCallback(() => scrollToHunk(citation.hunkId), [citation.hunkId]);
   const label = citationLabel(citation.hunkId);
   const tooltip = citationTooltip(citation.quote || "");
+
+  const onClick = useCallback(() => {
+    onRevealHunk?.(citation.hunkId);
+    scrollToHunk(citation.hunkId);
+  }, [citation.hunkId, onRevealHunk]);
 
   if (isUnverified) {
     return (
@@ -62,7 +76,15 @@ function CitationMark({ citation, knownHunk }: { citation: Citation; knownHunk: 
   );
 }
 
-function Bullet({ bullet, hunkIds }: { bullet: SummaryBullet; hunkIds: Set<string> }) {
+function Bullet({
+  bullet,
+  hunkIds,
+  onRevealHunk,
+}: {
+  bullet: SummaryBullet;
+  hunkIds: Set<string>;
+  onRevealHunk?: RevealHunk;
+}) {
   return (
     <li className="summaryBullet">
       <div className="summaryBulletText">
@@ -73,6 +95,7 @@ function Bullet({ bullet, hunkIds }: { bullet: SummaryBullet; hunkIds: Set<strin
               key={`${c.hunkId}-${idx}`}
               citation={c}
               knownHunk={hunkIds.has(c.hunkId)}
+              onRevealHunk={onRevealHunk}
             />
           ))}
         </span>
@@ -132,9 +155,7 @@ function UnifiedHunk({ hunk }: { hunk: DiffHunk }) {
         {hunk.removed.length > 0 ? (
           <div className="diffRemoved">{hunk.removed.join("")}</div>
         ) : null}
-        {hunk.added.length > 0 ? (
-          <div className="diffAdded">{hunk.added.join("")}</div>
-        ) : null}
+        {hunk.added.length > 0 ? <div className="diffAdded">{hunk.added.join("")}</div> : null}
         {hunk.contextAfter ? <div className="diffContext muted">{hunk.contextAfter}</div> : null}
       </div>
     </article>
@@ -173,6 +194,26 @@ function SplitHunk({ hunk }: { hunk: DiffHunk }) {
   );
 }
 
+function ExpandCollapseAllIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 8l4-4 4 4" />
+      <path d="M6 12l4 4 4-4" />
+    </svg>
+  );
+}
+
 export function ChangeEventViewer({
   whatChanged,
   whyMatters,
@@ -186,7 +227,54 @@ export function ChangeEventViewer({
 }) {
   const [diffMode, setDiffMode] = useState<DiffMode>("section");
   const hunkIds = new Set(hunks.map((h) => h.hunkId));
+
   const sections = useMemo(() => groupHunksBySection(hunks), [hunks]);
+
+  const [openSectionTitles, setOpenSectionTitles] = useState<Set<string>>(() => {
+    const initial = groupHunksBySection(hunks);
+    return new Set(initial.length > 0 ? [initial[0].title] : []);
+  });
+
+
+  const sectionTitleByHunkId = useMemo(() => {
+    const map = new Map<string, string>();
+    sections.forEach((section) => {
+      section.hunks.forEach((hunk) => map.set(hunk.hunkId, section.title));
+    });
+    return map;
+  }, [sections]);
+
+  const revealHunk = useCallback<RevealHunk>(
+    (hunkId) => {
+      if (diffMode !== "section") return;
+
+      const title = sectionTitleByHunkId.get(hunkId);
+      if (!title) return;
+
+      setOpenSectionTitles((prev) => {
+        if (prev.has(title)) return prev;
+        const next = new Set(prev);
+        next.add(title);
+        return next;
+      });
+    },
+    [diffMode, sectionTitleByHunkId],
+  );
+
+  const allSectionsOpen =
+    diffMode === "section" && sections.length > 0 && sections.every((s) => openSectionTitles.has(s.title));
+
+  const toggleAllSections = useCallback(() => {
+    if (diffMode !== "section") return;
+
+    if (allSectionsOpen) {
+      setOpenSectionTitles(new Set());
+      return;
+    }
+
+    setOpenSectionTitles(new Set(sections.map((s) => s.title)));
+  }, [allSectionsOpen, diffMode, sections]);
+
   const isEmptySummary =
     (!whatChanged || whatChanged.length === 0) && (!whyMatters || whyMatters.length === 0);
 
@@ -214,7 +302,7 @@ export function ChangeEventViewer({
             </div>
             <ul className="summaryList">
               {whatChanged.map((b, idx) => (
-                <Bullet key={idx} bullet={b} hunkIds={hunkIds} />
+                <Bullet key={idx} bullet={b} hunkIds={hunkIds} onRevealHunk={revealHunk} />
               ))}
             </ul>
           </>
@@ -228,7 +316,7 @@ export function ChangeEventViewer({
             </div>
             <ul className="summaryList">
               {whyMatters.map((b, idx) => (
-                <Bullet key={idx} bullet={b} hunkIds={hunkIds} />
+                <Bullet key={idx} bullet={b} hunkIds={hunkIds} onRevealHunk={revealHunk} />
               ))}
             </ul>
           </>
@@ -244,35 +332,63 @@ export function ChangeEventViewer({
       <section className="card cardPad">
         <div className="pageTop" style={{ marginBottom: 10 }}>
           <h2 className="sectionTitle">Diff</h2>
-          <div className="diffModeRow">
-            <button
-              type="button"
-              className={`btn btnGhost ${diffMode === "section" ? "diffModeBtnActive" : ""}`}
-              onClick={() => setDiffMode("section")}
-            >
-              Section view
-            </button>
-            <button
-              type="button"
-              className={`btn btnGhost ${diffMode === "unified" ? "diffModeBtnActive" : ""}`}
-              onClick={() => setDiffMode("unified")}
-            >
-              Unified
-            </button>
-            <button
-              type="button"
-              className={`btn btnGhost ${diffMode === "split" ? "diffModeBtnActive" : ""}`}
-              onClick={() => setDiffMode("split")}
-            >
-              Side-by-side
-            </button>
+          <div className="diffControls">
+            {diffMode === "section" ? (
+              <button
+                type="button"
+                className="btn btnGhost btnIcon"
+                onClick={toggleAllSections}
+                aria-label={allSectionsOpen ? "Collapse all sections" : "Expand all sections"}
+                title={allSectionsOpen ? "Collapse all" : "Expand all"}
+                disabled={sections.length === 0}
+              >
+                <ExpandCollapseAllIcon />
+              </button>
+            ) : null}
+
+            <div className="diffModeRow">
+              <button
+                type="button"
+                className={`btn btnGhost ${diffMode === "section" ? "diffModeBtnActive" : ""}`}
+                onClick={() => setDiffMode("section")}
+              >
+                Section view
+              </button>
+              <button
+                type="button"
+                className={`btn btnGhost ${diffMode === "unified" ? "diffModeBtnActive" : ""}`}
+                onClick={() => setDiffMode("unified")}
+              >
+                Unified
+              </button>
+              <button
+                type="button"
+                className={`btn btnGhost ${diffMode === "split" ? "diffModeBtnActive" : ""}`}
+                onClick={() => setDiffMode("split")}
+              >
+                Side-by-side
+              </button>
+            </div>
           </div>
         </div>
 
         {diffMode === "section" ? (
           <div className="stack" style={{ gap: 10 }}>
-            {sections.map((section, idx) => (
-              <details key={section.title} className="sectionDetails" open={idx === 0}>
+            {sections.map((section) => (
+              <details
+                key={section.title}
+                className="sectionDetails"
+                open={openSectionTitles.has(section.title)}
+                onToggle={(event) => {
+                  const isOpen = event.currentTarget.open;
+                  setOpenSectionTitles((prev) => {
+                    const next = new Set(prev);
+                    if (isOpen) next.add(section.title);
+                    else next.delete(section.title);
+                    return next;
+                  });
+                }}
+              >
                 <summary className="sectionDetailsSummary">
                   <span>{section.title}</span>
                   <span className="pill">{section.hunks.length} hunk(s)</span>

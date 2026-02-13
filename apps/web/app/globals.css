@@ -329,6 +329,26 @@ a {
   flex-wrap: wrap;
 }
 
+.diffControls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btnIcon {
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnIcon:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+
 .diffModeBtnActive {
   border-color: rgba(255, 77, 46, 0.55);
   background: rgba(255, 77, 46, 0.14);
