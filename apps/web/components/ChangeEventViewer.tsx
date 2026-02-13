@@ -61,7 +61,7 @@ function CitationMark({
           aria-label={`${citation.hunkId} unverified citation`}
           title={tooltip}
         >
-          {label}
+          {`[${label}]`}
         </span>
       </sup>
     );
@@ -70,7 +70,7 @@ function CitationMark({
   return (
     <sup className="citationSup">
       <button className="citation citationInline" type="button" onClick={onClick} title={tooltip}>
-        {label}
+        {`[${label}]`}
       </button>
     </sup>
   );
@@ -85,12 +85,20 @@ function Bullet({
   hunkIds: Set<string>;
   onRevealHunk?: RevealHunk;
 }) {
+  const citations: Citation[] = [];
+  const seenHunkIds = new Set<string>();
+  for (const c of bullet.citations) {
+    if (seenHunkIds.has(c.hunkId)) continue;
+    seenHunkIds.add(c.hunkId);
+    citations.push(c);
+  }
+
   return (
     <li className="summaryBullet">
       <div className="summaryBulletText">
         {bullet.text}
         <span className="citationInlineRow">
-          {bullet.citations.map((c, idx) => (
+          {citations.map((c, idx) => (
             <CitationMark
               key={`${c.hunkId}-${idx}`}
               citation={c}

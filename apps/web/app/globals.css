@@ -278,21 +278,31 @@ a {
 }
 
 .citationInlineRow {
-  margin-left: 8px;
-  display: inline-flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  vertical-align: baseline;
+  margin-left: 6px;
 }
 
 .citationSup {
-  font-size: 1em;
+  font-size: 0.78em;
+  vertical-align: super;
+  line-height: 1;
 }
 
-.citationInline {
-  padding: 2px 7px;
-  font-size: 11px;
+.citationSup + .citationSup {
+  margin-left: 2px;
+}
+
+.citation.citationInline {
+  border: none;
+  background: transparent;
+  padding: 0 2px;
+  font-size: inherit;
   line-height: 1;
+  color: rgba(255, 77, 46, 0.92);
+}
+
+.citation.citationInline:hover {
+  background: rgba(255, 77, 46, 0.1);
+  border-radius: 8px;
 }
 
 .citationRow {
@@ -321,6 +331,10 @@ a {
   background: rgba(236, 173, 74, 0.2);
   color: rgba(99, 65, 13, 0.92);
   cursor: default;
+}
+
+.citationUnverified.citationInline {
+  color: rgba(20, 18, 16, 0.55);
 }
 
 .diffModeRow {
@@ -412,6 +426,10 @@ a {
   border-radius: 12px;
   background: rgba(255, 86, 86, 0.12);
   border: 1px solid rgba(255, 86, 86, 0.22);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-decoration: none;
 }
 
 .diffAdded {
@@ -420,6 +438,10 @@ a {
   border-radius: 12px;
   background: rgba(58, 201, 122, 0.12);
   border: 1px solid rgba(58, 201, 122, 0.22);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-decoration: none;
 }
 
 .diffSplitGrid {
