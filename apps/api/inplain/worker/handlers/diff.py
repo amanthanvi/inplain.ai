@@ -28,6 +28,23 @@ _CLASSIFY_MODEL_CHAIN = [
 ]
 _MAX_HUNKS_FOR_CLASSIFY = 12
 
+_CLASSIFY_RESPONSE_FORMAT: dict[str, Any] = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": f"inplain_classify_v{_CLASSIFY_PROMPT_VERSION}",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "meaningful": {"type": "boolean"},
+                "reason": {"type": "string"},
+            },
+            "required": ["meaningful", "reason"],
+        },
+    },
+}
+
 _AMBIGUOUS_CHANGE_SCORE_MIN = 0.02
 _AMBIGUOUS_CHANGE_SCORE_MAX = 0.08
 _AMBIGUOUS_CHANGED_CHARS_MAX = 2500
@@ -192,18 +209,28 @@ def _call_openrouter(*, model: str, prompt: str, max_tokens: int | None = None) 
     headers = {
         "authorization": f"Bearer {settings.openrouter_api_key}",
         "content-type": "application/json",
+        "HTTP-Referer": settings.openrouter_http_referer,
+        "X-Title": settings.openrouter_x_title,
     }
-    body = {
+    body: dict[str, Any] = {
         "model": model,
         "messages": [
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.0,
+        "response_format": _CLASSIFY_RESPONSE_FORMAT,
     }
     if max_tokens is not None:
         body["max_tokens"] = int(max_tokens)
+
     with httpx.Client(timeout=30) as client:
         resp = client.post(_OPENROUTER_URL, headers=headers, json=body)
+
+        if resp.status_code == 400 and body.get("response_format") is not None:
+            fallback = dict(body)
+            fallback.pop("response_format", None)
+            resp = client.post(_OPENROUTER_URL, headers=headers, json=fallback)
+
         resp.raise_for_status()
         data = resp.json()
 

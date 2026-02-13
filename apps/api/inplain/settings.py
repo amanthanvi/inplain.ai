@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     # Optional (wired later)
     clerk_webhook_secret: str | None = None
     openrouter_api_key: str | None = None
+    openrouter_http_referer: str = "https://inplain.ai"
+    openrouter_x_title: str = "Inplain.ai"
     redis_url: str | None = None
     posthog_api_key: str | None = None
     posthog_host: str | None = None

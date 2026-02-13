@@ -27,6 +27,55 @@ _MAX_HUNK_PART_CHARS = 1_200
 _MAX_PARTS_PER_HUNK = 8
 _FUZZY_REPAIR_MIN_RATIO = 0.82
 
+_SUMMARY_CITATION_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "hunkId": {"type": "string"},
+        "quote": {"type": "string"},
+    },
+    "required": ["hunkId", "quote"],
+}
+
+_SUMMARY_BULLET_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "text": {"type": "string"},
+        "citations": {
+            "type": "array",
+            "items": _SUMMARY_CITATION_SCHEMA,
+            "minItems": 1,
+        },
+    },
+    "required": ["text", "citations"],
+}
+
+_SUMMARY_JSON_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "what_changed": {
+            "type": "array",
+            "items": _SUMMARY_BULLET_SCHEMA,
+        },
+        "why_matters": {
+            "type": "array",
+            "items": _SUMMARY_BULLET_SCHEMA,
+        },
+    },
+    "required": ["what_changed", "why_matters"],
+}
+
+_SUMMARY_RESPONSE_FORMAT: dict[str, Any] = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": f"inplain_summary_v{_PROMPT_VERSION}",
+        "strict": True,
+        "schema": _SUMMARY_JSON_SCHEMA,
+    },
+}
+
 
 @dataclass(frozen=True)
 class _SummaryPolicy:
@@ -272,8 +321,10 @@ def _call_openrouter(*, model: str, prompt: str, max_tokens: int | None = None) 
     headers = {
         "authorization": f"Bearer {settings.openrouter_api_key}",
         "content-type": "application/json",
+        "HTTP-Referer": settings.openrouter_http_referer,
+        "X-Title": settings.openrouter_x_title,
     }
-    body = {
+    body: dict[str, Any] = {
         "model": model,
         "messages": [
             {
@@ -283,11 +334,20 @@ def _call_openrouter(*, model: str, prompt: str, max_tokens: int | None = None) 
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.0,
+        "response_format": _SUMMARY_RESPONSE_FORMAT,
     }
     if max_tokens is not None:
         body["max_tokens"] = int(max_tokens)
+
     with httpx.Client(timeout=60) as client:
         resp = client.post(_OPENROUTER_URL, headers=headers, json=body)
+
+        if resp.status_code == 400 and body.get("response_format") is not None:
+            # Some providers may reject response_format; retry once without it.
+            fallback = dict(body)
+            fallback.pop("response_format", None)
+            resp = client.post(_OPENROUTER_URL, headers=headers, json=fallback)
+
         try:
             resp.raise_for_status()
         except httpx.HTTPStatusError as exc:
@@ -295,6 +355,7 @@ def _call_openrouter(*, model: str, prompt: str, max_tokens: int | None = None) 
             raise RuntimeError(
                 f"OpenRouter {exc.response.status_code}: {detail or exc.response.reason_phrase}"
             ) from exc
+
         data = resp.json()
 
     content = data["choices"][0]["message"]["content"]
