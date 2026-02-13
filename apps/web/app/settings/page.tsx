@@ -114,6 +114,18 @@ export default async function SettingsPage() {
             Render fallback is used when HTTP extraction yields minimal text.
           </div>
         </div>
+        <div className="card cardPad">
+          <div className="kicker">Export</div>
+          <div className="muted" style={{ marginTop: 6 }}>
+            Download a JSON export of your watched documents and change events.
+            {entitlements.tier === "free" ? " Free includes the last 10 change events." : ""}
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <a className="btn btnGhost" href="/export">
+              Download JSON
+            </a>
+          </div>
+        </div>
       </div>
     </main>
   );

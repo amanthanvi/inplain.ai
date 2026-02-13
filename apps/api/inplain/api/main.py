@@ -9,6 +9,7 @@ from inplain.api.routes.internal_admin import router as internal_admin_router
 from inplain.api.routes.internal_change_events import router as internal_change_events_router
 from inplain.api.routes.internal_documents import router as internal_documents_router
 from inplain.api.routes.internal_entities import router as internal_entities_router
+from inplain.api.routes.internal_export import router as internal_export_router
 from inplain.api.routes.internal_notifications import router as internal_notifications_router
 from inplain.api.routes.internal_snapshots import router as internal_snapshots_router
 from inplain.api.routes.internal_usage import router as internal_usage_router
@@ -22,6 +23,7 @@ app.include_router(health_router)
 
 internal_deps = [Depends(require_internal_service_token)]
 app.include_router(internal_entities_router, prefix="/internal", dependencies=internal_deps)
+app.include_router(internal_export_router, prefix="/internal", dependencies=internal_deps)
 app.include_router(internal_documents_router, prefix="/internal", dependencies=internal_deps)
 app.include_router(internal_change_events_router, prefix="/internal", dependencies=internal_deps)
 app.include_router(internal_notifications_router, prefix="/internal", dependencies=internal_deps)

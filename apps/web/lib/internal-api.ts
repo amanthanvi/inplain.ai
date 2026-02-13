@@ -117,6 +117,15 @@ export type UsageOut = {
   summaries_used_month: number;
 };
 
+export type ExportOut = {
+  generated_at: string;
+  truncated: boolean;
+  limit_change_events: number | null;
+  entities: EntityOut[];
+  documents: DocumentOut[];
+  change_events: ChangeEventDetailOut[];
+};
+
 type InternalFetchOptions = {
   userId?: string;
   method?: "GET" | "POST" | "DELETE";

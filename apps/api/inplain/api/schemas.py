@@ -167,3 +167,12 @@ class UsageOut(BaseModel):
     check_now_used_today: int
     render_used_month: int
     summaries_used_month: int
+
+class ExportOut(BaseModel):
+    generated_at: datetime
+    truncated: bool
+    limit_change_events: int | None
+    entities: list[EntityOut]
+    documents: list[DocumentOut]
+    change_events: list[ChangeEventDetailOut]
+
