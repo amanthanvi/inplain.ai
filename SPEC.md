@@ -929,6 +929,7 @@ Automated smoke test script that runs after every deploy:
 4. `GET /internal/entities` → 200 (API responds with catalog)
 5. Verify Postgres connectivity
 6. Verify Redis connectivity (if configured)
+7. Verify PostHog event ingestion (if configured; `POST /capture/` returns 200)
 
 ---
 

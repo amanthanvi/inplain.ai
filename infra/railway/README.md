@@ -97,6 +97,9 @@ The dedicated `renderer` Railway service is configured via:
 
 ## PostHog + Sentry env (L7 + L8)
 
+Tip: `make smoke-test` will send a `smoke_test` event to PostHog if `POSTHOG_HOST` + `POSTHOG_API_KEY` are set.
+See `scripts/smoke/smoke_test.py`.
+
 `api` + `worker`:
 - `POSTHOG_API_KEY`
 - `POSTHOG_HOST` (self-hosted URL)

@@ -223,7 +223,7 @@ See SPEC.md §16 for full launch plan. Summary of pre-launch work:
 - Blocked: requires Clerk dashboard CAPTCHA provider setup (Turnstile) not configurable from this repo.
 - [x] **L6**: Deploy renderer service on Railway
 - [ ] **L7**: PostHog self-hosted on Railway
-- Partial: PostHog template services were provisioned, full stack activation + env wiring still pending.
+- Partial: smoke test can validate the PostHog capture endpoint; remaining work is Railway stack activation + env wiring + confirming events in the PostHog UI.
 - [x] **L8**: Sentry integration (Python + Next.js)
 - [x] **L9**: Blue-green deploy tested (staging environment)
 - [x] **L10**: Smoke test script (post-deploy verification)
@@ -258,3 +258,4 @@ Ordered, reviewable work to reach the internal v0.1.0 milestone (SPEC AC-1…AC-
 - 2026-02-13: Implemented tier-gated JSON export: FastAPI `/internal/export` (optional `limit_change_events`) + Next.js `/export` download route + Settings UI link; Free exports last 10 change events.
 - 2026-02-13: Improved change-event readability (collapsed long summaries with “Show all/less”; hardened diff block overflow to prevent runaway layout).
 - 2026-02-13: Updated tiered OpenRouter model policy to reduce cost and improve reliability (Gemini 2.5 Flash Lite + OpenAI mini models; reduced max bullets/tokens).
+- 2026-02-13: Extended `make smoke-test` to optionally validate PostHog ingestion by sending a `smoke_test` event when `POSTHOG_HOST` + `POSTHOG_API_KEY` are set; updated Railway/runbook docs.
