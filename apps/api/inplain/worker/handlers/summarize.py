@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from difflib import SequenceMatcher
 from typing import Any
@@ -19,17 +20,61 @@ from inplain.db.models.jobs import Job
 from inplain.settings import settings
 
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-_PROMPT_VERSION = 1
+_PROMPT_VERSION = 2
 _MAX_HUNKS_FOR_LLM = 20
 _MAX_PROMPT_CHARS = 45_000
 _MAX_HUNK_PART_CHARS = 1_200
 _MAX_PARTS_PER_HUNK = 8
 _FUZZY_REPAIR_MIN_RATIO = 0.82
-_MODEL_CHAIN = [
-    "anthropic/claude-sonnet-4-5",
-    "openai/gpt-5.2",
-    "google/gemini-3-flash-preview",
-]
+
+
+@dataclass(frozen=True)
+class _SummaryPolicy:
+    model_chain: list[str]
+    max_tokens: int
+    max_bullets: int
+
+
+def _summary_policy_for_tier(tier: ScheduleTier) -> _SummaryPolicy:
+    match tier:
+        case ScheduleTier.daily:
+            return _SummaryPolicy(
+                model_chain=[
+                    "deepseek/deepseek-v3.2",
+                    "google/gemini-3-flash-preview",
+                ],
+                max_tokens=650,
+                max_bullets=8,
+            )
+        case ScheduleTier.six_h:
+            return _SummaryPolicy(
+                model_chain=[
+                    "deepseek/deepseek-v3.2",
+                    "google/gemini-3-flash-preview",
+                    "openai/gpt-5.2",
+                ],
+                max_tokens=850,
+                max_bullets=10,
+            )
+        case ScheduleTier.one_h:
+            return _SummaryPolicy(
+                model_chain=[
+                    "deepseek/deepseek-v3.2",
+                    "openai/gpt-5.2",
+                    "anthropic/claude-sonnet-4.5",
+                ],
+                max_tokens=1100,
+                max_bullets=12,
+            )
+        case _:
+            return _SummaryPolicy(
+                model_chain=[
+                    "deepseek/deepseek-v3.2",
+                    "google/gemini-3-flash-preview",
+                ],
+                max_tokens=650,
+                max_bullets=8,
+            )
 
 
 def run_summarize_job(db: Session, *, job: Job) -> None:
@@ -65,15 +110,16 @@ def run_summarize_job(db: Session, *, job: Job) -> None:
         _enqueue_notify(db=db, doc=doc, change_event_id=change_event.id)
         return
 
-    prompt = _build_prompt(diff_hunks=diff.diff_hunks)
+    policy = _summary_policy_for_tier(doc.schedule_tier)
+    prompt = _build_prompt(diff_hunks=diff.diff_hunks, max_bullets=policy.max_bullets)
 
     summary: dict[str, Any] | None = None
     model_used: str | None = None
     last_error: str | None = None
-    for model in _MODEL_CHAIN:
+    for model in policy.model_chain:
+        model_used = model
         try:
-            summary = _call_openrouter(model=model, prompt=prompt)
-            model_used = model
+            summary = _call_openrouter(model=model, prompt=prompt, max_tokens=policy.max_tokens)
             break
         except Exception as exc:  # noqa: BLE001
             last_error = str(exc)
@@ -124,7 +170,8 @@ def _enqueue_notify(db: Session, *, doc: Document, change_event_id: uuid.UUID) -
     )
 
 
-def _build_prompt(*, diff_hunks: list[dict[str, Any]]) -> str:
+def _build_prompt(*, diff_hunks: list[dict[str, Any]], max_bullets: int = 10) -> str:
+    max_bullets = max(1, min(20, int(max_bullets)))
     prefix = (
         "You are summarizing privacy/ToS diffs.\n"
         "Return ONLY valid JSON with this shape:\n"
@@ -141,6 +188,10 @@ def _build_prompt(*, diff_hunks: list[dict[str, Any]]) -> str:
         "- quote MUST be an exact substring from the referenced hunk's added/removed text.\n"
         "- Only cite quotes that appear in the provided DIFF_HUNKS.\n"
         "- No legal advice; informational only.\n"
+        f"- Write at most {max_bullets} bullets in what_changed and at most {max_bullets} "
+        "bullets in why_matters.\n"
+        "- Prefer the most user-impactful changes; avoid repetition.\n"
+        "- Keep each bullet concise (<= 180 characters).\n"
         "\n"
         "DIFF_HUNKS:\n"
     )
@@ -217,7 +268,7 @@ def _trim_text_parts(
     return out
 
 
-def _call_openrouter(*, model: str, prompt: str) -> dict[str, Any]:
+def _call_openrouter(*, model: str, prompt: str, max_tokens: int | None = None) -> dict[str, Any]:
     headers = {
         "authorization": f"Bearer {settings.openrouter_api_key}",
         "content-type": "application/json",
@@ -233,6 +284,8 @@ def _call_openrouter(*, model: str, prompt: str) -> dict[str, Any]:
         ],
         "temperature": 0.0,
     }
+    if max_tokens is not None:
+        body["max_tokens"] = int(max_tokens)
     with httpx.Client(timeout=60) as client:
         resp = client.post(_OPENROUTER_URL, headers=headers, json=body)
         try:
