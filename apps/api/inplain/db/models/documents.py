@@ -55,6 +55,7 @@ class Document(Base):
         server_default=RobotsStatus.unknown.value,
     )
     robots_rule: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pause_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

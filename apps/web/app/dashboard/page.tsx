@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { applyEntitlementsToDocuments, getEntitlementsForHas } from "@/lib/entitlements";
+
 import { internalFetch, type DocumentOut, type EntityOut } from "@/lib/internal-api";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +22,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) {
     return (
       <main>
@@ -30,7 +32,10 @@ export default async function DashboardPage() {
     );
   }
 
-  const [entities, docs] = await Promise.all([
+  const entitlements = getEntitlementsForHas(has);
+  await applyEntitlementsToDocuments(userId, entitlements);
+
+    const [entities, docs] = await Promise.all([
     internalFetch<EntityOut[]>("/internal/entities", { cache: "no-store" }),
     internalFetch<DocumentOut[]>("/internal/documents", { userId, cache: "no-store" }),
   ]);

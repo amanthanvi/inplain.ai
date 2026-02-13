@@ -422,6 +422,7 @@ A tracked URL for a specific user + entity combination.
 | `robots_checked_at` | timestamptz | Nullable                                                     |
 | `robots_status`     | text        | `unknown` / `allowed` / `disallowed`                         |
 | `robots_rule`       | text        | Nullable, specific blocking rule (e.g. `Disallow: /privacy`) |
+| `pause_reason`      | text        | Nullable: `url_inaccessible` (404/410), `doc_limit` (tier auto-pause) |
 | `created_at`        | timestamptz |                                                              |
 | `deleted_at`        | timestamptz | Nullable, soft-delete                                        |
 

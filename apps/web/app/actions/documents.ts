@@ -4,8 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { getEntitlementsForHas } from "@/lib/entitlements";
-import { internalFetch, type UsageOut } from "@/lib/internal-api";
+import { applyEntitlementsToDocuments, getEntitlementsForHas } from "@/lib/entitlements";
+import { internalFetch, type DocumentOut, type UsageOut } from "@/lib/internal-api";
 
 function getString(formData: FormData, key: string): string {
   const v = formData.get(key);
@@ -23,6 +23,16 @@ export async function checkNow(formData: FormData): Promise<void> {
   if (!userId) return;
 
   const entitlements = getEntitlementsForHas(has);
+
+  await applyEntitlementsToDocuments(userId, entitlements);
+
+  const doc = await internalFetch<DocumentOut>(`/internal/documents/${documentId}`, {
+    userId,
+    cache: "no-store",
+  });
+  if (doc.status === "paused" && doc.pause_reason === "doc_limit") {
+    redirect(`/companies/${slug}?upgrade=1&reason=doc_limit`);
+  }
   try {
     const usage = await internalFetch<UsageOut>("/internal/usage", { userId, cache: "no-store" });
     if (usage.check_now_used_today >= entitlements.checkNowPerDay) {

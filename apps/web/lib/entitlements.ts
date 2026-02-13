@@ -2,6 +2,8 @@ import "server-only";
 
 import type { CheckAuthorizationFromSessionClaims } from "@clerk/types";
 
+import { internalFetch } from "@/lib/internal-api";
+
 export type Tier = "free" | "pro" | "business";
 
 export type Entitlements = {
@@ -58,5 +60,24 @@ export function getEntitlementsForHas(has: CheckAuthorizationFromSessionClaims):
         renderPerMonth: 0,
         summariesPerMonth: 10,
       };
+  }
+}
+
+export async function applyEntitlementsToDocuments(
+  userId: string,
+  entitlements: Entitlements,
+): Promise<void> {
+  try {
+    await internalFetch("/internal/documents/apply-entitlements", {
+      method: "POST",
+      userId,
+      body: {
+        schedule_tier: entitlements.scheduleTier,
+        max_active_documents: entitlements.trackedDocuments,
+      },
+      cache: "no-store",
+    });
+  } catch {
+    // Best-effort: do not block page loads if the internal API is temporarily unavailable.
   }
 }

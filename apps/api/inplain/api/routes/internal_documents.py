@@ -8,10 +8,18 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from inplain.api.deps import get_clerk_user_id, get_db
-from inplain.api.schemas import DocumentOut, EnqueueResponse, EntityOut, WatchRequest, WatchResponse
+from inplain.api.schemas import (
+    ApplyEntitlementsRequest,
+    ApplyEntitlementsResponse,
+    DocumentOut,
+    EnqueueResponse,
+    EntityOut,
+    WatchRequest,
+    WatchResponse,
+)
 from inplain.db.models.documents import Document
 from inplain.db.models.entities import Entity
-from inplain.db.models.enums import DocumentDocType, JobQueue, JobStatus
+from inplain.db.models.enums import DocumentDocType, DocumentStatus, JobQueue, JobStatus
 from inplain.db.models.jobs import Job
 from inplain.telemetry import capture_event
 
@@ -175,6 +183,63 @@ def watch_entity(
     return WatchResponse(
         entity=EntityOut.model_validate(entity, from_attributes=True),
         documents=out_docs,
+    )
+
+
+@router.post("/documents/apply-entitlements", response_model=ApplyEntitlementsResponse)
+def apply_entitlements(
+    req: ApplyEntitlementsRequest,
+    clerk_user_id: str = Depends(get_clerk_user_id),
+    db: Session = Depends(get_db),
+) -> ApplyEntitlementsResponse:
+    docs = list(
+        db.execute(
+            select(Document)
+            .where(Document.clerk_user_id == clerk_user_id, Document.deleted_at.is_(None))
+            .order_by(Document.created_at.desc())
+        )
+        .scalars()
+        .all()
+    )
+
+    keep_ids = {d.id for d in docs[: req.max_active_documents]}
+
+    paused = 0
+    activated = 0
+    schedule_updated = 0
+    updated = False
+
+    for d in docs:
+        if d.schedule_tier != req.schedule_tier:
+            d.schedule_tier = req.schedule_tier
+            schedule_updated += 1
+            updated = True
+
+        if d.id in keep_ids:
+            if d.status == DocumentStatus.paused and d.pause_reason == "doc_limit":
+                d.status = DocumentStatus.active
+                d.pause_reason = None
+                activated += 1
+                updated = True
+        else:
+            if d.status != DocumentStatus.paused or d.pause_reason != "doc_limit":
+                d.status = DocumentStatus.paused
+                d.pause_reason = "doc_limit"
+                paused += 1
+                updated = True
+
+        db.add(d)
+
+    if updated:
+        db.commit()
+    else:
+        db.rollback()
+
+    return ApplyEntitlementsResponse(
+        updated=updated,
+        paused=paused,
+        activated=activated,
+        schedule_updated=schedule_updated,
     )
 
 

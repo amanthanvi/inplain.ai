@@ -49,6 +49,7 @@ class DocumentOut(BaseModel):
     robots_checked_at: datetime | None
     robots_status: RobotsStatus
     robots_rule: str | None
+    pause_reason: str | None
     created_at: datetime
     deleted_at: datetime | None
 
@@ -62,6 +63,18 @@ class WatchRequest(BaseModel):
 class WatchResponse(BaseModel):
     entity: EntityOut
     documents: list[DocumentOut]
+
+
+class ApplyEntitlementsRequest(BaseModel):
+    schedule_tier: ScheduleTier
+    max_active_documents: int = Field(ge=0)
+
+
+class ApplyEntitlementsResponse(BaseModel):
+    updated: bool
+    paused: int
+    activated: int
+    schedule_updated: int
 
 
 class EnqueueResponse(BaseModel):

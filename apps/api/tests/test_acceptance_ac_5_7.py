@@ -77,6 +77,7 @@ def test_ac_5_404_sets_document_paused(db: Session, monkeypatch: pytest.MonkeyPa
 
     refreshed = db.execute(select(Document).where(Document.id == doc.id)).scalar_one()
     assert refreshed.status == DocumentStatus.paused
+    assert refreshed.pause_reason == "url_inaccessible"
 
 
 def test_ac_6_robots_disallow_sets_blocked_and_rule(

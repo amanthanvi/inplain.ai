@@ -53,6 +53,7 @@ def run_fetch_job(db: Session, job: Job) -> None:
         doc.robots_rule = decision.rule if not decision.allowed else None
         if not decision.allowed:
             doc.status = DocumentStatus.blocked_robots
+            doc.pause_reason = None
             doc.last_checked_at = now
             doc.next_check_at = now + timedelta(days=1)
             db.add(doc)
@@ -68,16 +69,19 @@ def run_fetch_job(db: Session, job: Job) -> None:
 
         if fetch.http_status == 304:
             doc.status = DocumentStatus.active
+            doc.pause_reason = None
             db.add(doc)
             return
 
         if fetch.http_status in (404, 410):
             doc.status = DocumentStatus.paused
+            doc.pause_reason = "url_inaccessible"
             db.add(doc)
             return
 
         if fetch.http_status < 200 or fetch.http_status >= 300:
             doc.status = DocumentStatus.error
+            doc.pause_reason = None
             db.add(doc)
             return
 
@@ -85,6 +89,7 @@ def run_fetch_job(db: Session, job: Job) -> None:
         if len(extracted_text) < _MIN_EXTRACTED_CHARS:
             _enqueue_render(db=db, doc=doc, now=now)
             doc.status = DocumentStatus.active
+            doc.pause_reason = None
             db.add(doc)
             return
 
@@ -104,14 +109,17 @@ def run_fetch_job(db: Session, job: Job) -> None:
             if str(exc) == "extracted text too small":
                 _enqueue_render(db=db, doc=doc, now=now)
                 doc.status = DocumentStatus.active
+                doc.pause_reason = None
                 db.add(doc)
                 return
             raise
 
         doc.status = DocumentStatus.active
+        doc.pause_reason = None
         db.add(doc)
     except Exception:
         doc.status = DocumentStatus.error
+        doc.pause_reason = None
         doc.last_checked_at = now
         db.add(doc)
         db.commit()

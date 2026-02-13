@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 
-import { getEntitlementsForHas } from "@/lib/entitlements";
+import { applyEntitlementsToDocuments, getEntitlementsForHas } from "@/lib/entitlements";
 import { internalFetch, type UnreadCountOut, type UsageOut } from "@/lib/internal-api";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +30,8 @@ export default async function SettingsPage() {
   }
 
   const entitlements = getEntitlementsForHas(has);
+
+  await applyEntitlementsToDocuments(userId, entitlements);
 
   const [usage, unread] = await Promise.all([
     internalFetch<UsageOut>("/internal/usage", { userId, cache: "no-store" }),
@@ -79,7 +81,7 @@ export default async function SettingsPage() {
           <div className="kicker">Unread notifications</div>
           <div style={{ fontSize: 32, fontWeight: 700, marginTop: 6 }}>{unread.unread}</div>
           <div className="muted" style={{ marginTop: 6 }}>
-            Notifications are in-app only in v0.1.0.
+            Notifications are in-app only in v0.2.0.
           </div>
         </div>
 

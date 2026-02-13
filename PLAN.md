@@ -254,3 +254,4 @@ Ordered, reviewable work to reach the internal v0.1.0 milestone (SPEC AC-1…AC-
    - Acceptance: All golden commands pass locally and CI remains green.
    - Complexity: S
    - Dependencies: 1
+- 2026-02-13: Added `documents.pause_reason` to distinguish URL-inaccessible pauses vs tier doc-limit auto-pauses; implemented `/internal/documents/apply-entitlements` and wired web pages/actions to keep `schedule_tier` and paused-over-limit docs in sync with current Clerk plan.

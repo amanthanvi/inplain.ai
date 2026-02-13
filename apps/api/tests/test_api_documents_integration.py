@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,8 +12,15 @@ from sqlalchemy.orm import Session, sessionmaker
 from inplain.api.deps import get_db
 from inplain.api.main import app
 from inplain.api.routes import internal_documents as internal_documents_route
+from inplain.db.models.documents import Document
 from inplain.db.models.entities import Entity
-from inplain.db.models.enums import JobQueue, JobStatus
+from inplain.db.models.enums import (
+    DocumentDocType,
+    DocumentStatus,
+    JobQueue,
+    JobStatus,
+    ScheduleTier,
+)
 from inplain.db.models.jobs import Job
 
 
@@ -187,3 +195,93 @@ def test_first_watch_emits_posthog_event(
     assert len(captured) == 1
     assert captured[0]["distinct_id"] == "user_123"
     assert captured[0]["event"] == "first_watch"
+
+
+def test_apply_entitlements_pauses_over_limit_and_syncs_schedule(
+    db: Session, test_engine: Engine
+) -> None:
+    now = datetime.now(UTC)
+
+    entities: list[Entity] = []
+    for i in range(5):
+        entity = Entity(
+            slug=f"acme-{i}",
+            name=f"Acme {i}",
+            website_url="https://example.com",
+            category="test",
+            policy_urls={"privacy": f"https://example.com/privacy-{i}"},
+        )
+        db.add(entity)
+        entities.append(entity)
+
+    db.flush()
+
+    docs: list[Document] = []
+    for i, entity in enumerate(entities):
+        doc = Document(
+            clerk_user_id="user_123",
+            entity_id=entity.id,
+            url=f"https://example.com/privacy-{i}",
+            doc_type=DocumentDocType.privacy,
+            status=DocumentStatus.active,
+            schedule_tier=ScheduleTier.daily,
+            next_check_at=now,
+            created_at=now - timedelta(minutes=i),
+        )
+        docs.append(doc)
+        db.add(doc)
+
+    # Simulate an existing doc paused due to doc-limit; apply-entitlements should re-activate it
+    # if it falls within the top-N most recent docs.
+    docs[1].status = DocumentStatus.paused
+    docs[1].pause_reason = "doc_limit"
+
+    db.commit()
+
+    client = _make_client(test_engine)
+    try:
+        headers = {
+            "authorization": "Bearer dev-internal-token",
+            "x-clerk-user-id": "user_123",
+        }
+
+        resp = client.post(
+            "/internal/documents/apply-entitlements",
+            json={"schedule_tier": "6h", "max_active_documents": 3},
+            headers=headers,
+        )
+        assert resp.status_code == 200
+        payload = resp.json()
+        assert payload["updated"] is True
+        assert payload["paused"] == 2
+        assert payload["activated"] == 1
+        assert payload["schedule_updated"] == 5
+
+        with sessionmaker(bind=test_engine, class_=Session, expire_on_commit=False)() as s:
+            refreshed = list(
+                s.execute(
+                    select(Document)
+                    .where(Document.clerk_user_id == "user_123", Document.deleted_at.is_(None))
+                    .order_by(Document.created_at.desc())
+                )
+                .scalars()
+                .all()
+            )
+
+            # Newest 3 documents stay active and get the upgraded schedule.
+            for d in refreshed[:3]:
+                assert d.schedule_tier == ScheduleTier.six_h
+                assert d.status == DocumentStatus.active
+                assert d.pause_reason is None
+
+            # Older documents are paused due to doc-limit.
+            for d in refreshed[3:]:
+                assert d.status == DocumentStatus.paused
+                assert d.pause_reason == "doc_limit"
+
+            # Doc[1] should have been re-activated (it is within the top 3 most recent).
+            d1 = next(d for d in refreshed if d.id == docs[1].id)
+            assert d1.status == DocumentStatus.active
+            assert d1.pause_reason is None
+    finally:
+        app.dependency_overrides.clear()

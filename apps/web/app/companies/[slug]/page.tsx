@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { auth } from "@clerk/nextjs/server";
 
+import { applyEntitlementsToDocuments, getEntitlementsForHas } from "@/lib/entitlements";
+
 import { checkNow, unwatchEntity } from "@/app/actions/documents";
 import {
   internalFetch,
@@ -36,7 +38,11 @@ function formatDocType(t: DocumentOut["doc_type"]) {
 
 function formatStatus(doc: DocumentOut) {
   if (doc.status === "blocked_robots") return "Blocked by robots.txt";
-  if (doc.status === "paused") return "URL no longer accessible";
+  if (doc.status === "paused") {
+    if (doc.pause_reason === "doc_limit") return "Paused (plan limit)";
+    if (doc.pause_reason === "url_inaccessible") return "URL no longer accessible";
+    return "Paused";
+  }
   if (doc.status === "error") return "Last check failed";
   return "Active";
 }
@@ -57,6 +63,10 @@ export default async function CompanyPage({
   if (clerkEnabled()) {
     const session = await auth();
     userId = session.userId;
+    if (userId) {
+      const entitlements = getEntitlementsForHas(session.has);
+      await applyEntitlementsToDocuments(userId, entitlements);
+    }
   }
 
   const documents = userId

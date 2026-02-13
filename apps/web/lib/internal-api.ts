@@ -33,6 +33,7 @@ export type DocumentOut = {
   robots_checked_at: string | null;
   robots_status: "unknown" | "allowed" | "disallowed";
   robots_rule: string | null;
+  pause_reason: string | null;
   created_at: string;
   deleted_at: string | null;
 };
