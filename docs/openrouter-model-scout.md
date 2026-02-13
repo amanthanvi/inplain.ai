@@ -1,6 +1,6 @@
 # OpenRouter Model Scout
 
-Generated: 2026-02-13T00:56:58.433883+00:00 (UTC)
+Generated: 2026-02-13T03:17:53.671829+00:00 (UTC)
 
 Sources:
 - https://openrouter.ai/api/v1/models
@@ -10,11 +10,11 @@ Sources:
 
 These should match `SPEC.md` Appendix C and worker defaults:
 
-- Change classification (ambiguous diffs): `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview` (max_tokens=220)
+- Change classification (ambiguous diffs): `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite` → `openai/gpt-4.1-nano` (max_tokens=220)
 - Summary (tier-aware by schedule):
-  - `daily`: `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview`
-  - `6h`: `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview` → `openai/gpt-5.2`
-  - `1h`: `deepseek/deepseek-v3.2` → `openai/gpt-5.2` → `anthropic/claude-sonnet-4.5`
+  - `daily`: `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite`
+  - `6h`: `deepseek/deepseek-v3.2` → `openai/gpt-4o-mini` → `openai/gpt-4.1-mini`
+  - `1h`: `deepseek/deepseek-v3.2` → `openai/gpt-4.1-mini` → `openai/gpt-5.2` → `anthropic/claude-sonnet-4.5`
 
 ## Pricing (USD per 1M tokens)
 
@@ -23,7 +23,10 @@ OpenRouter `pricing` fields are USD per token; this table converts to USD per 1M
 | Model | Prompt / 1M | Completion / 1M | Context | Structured outputs |
 | --- | ---: | ---: | ---: | --- |
 | `deepseek/deepseek-v3.2` | $0.250 | $0.380 | 163840 | yes |
-| `google/gemini-3-flash-preview` | $0.500 | $3.00 | 1048576 | yes |
+| `google/gemini-2.5-flash-lite` | $0.100 | $0.400 | 1048576 | yes |
+| `openai/gpt-4.1-nano` | $0.100 | $0.400 | 1047576 | yes |
+| `openai/gpt-4o-mini` | $0.150 | $0.600 | 128000 | yes |
+| `openai/gpt-4.1-mini` | $0.400 | $1.60 | 1047576 | yes |
 | `openai/gpt-5.2` | $1.75 | $14.00 | 400000 | yes |
 | `anthropic/claude-sonnet-4.5` | $3.00 | $15.00 | 1000000 | yes |
 
@@ -33,14 +36,15 @@ Assumptions: prompt~=12k tokens (bounded by worker prompt caps), completion capp
 
 | Tier | Model | Max completion tokens | Est. max cost |
 | --- | --- | ---: | ---: |
-| daily (Free) | `deepseek/deepseek-v3.2` | 650 | $0.0032 |
-| daily (Free) | `google/gemini-3-flash-preview` | 650 | $0.0080 |
-| 6h (Pro) | `deepseek/deepseek-v3.2` | 850 | $0.0033 |
-| 6h (Pro) | `google/gemini-3-flash-preview` | 850 | $0.0086 |
-| 6h (Pro) | `openai/gpt-5.2` | 850 | $0.0329 |
-| 1h (Business) | `deepseek/deepseek-v3.2` | 1100 | $0.0034 |
-| 1h (Business) | `openai/gpt-5.2` | 1100 | $0.0364 |
-| 1h (Business) | `anthropic/claude-sonnet-4.5` | 1100 | $0.0525 |
+| daily (Free) | `deepseek/deepseek-v3.2` | 500 | $0.0032 |
+| daily (Free) | `google/gemini-2.5-flash-lite` | 500 | $0.0014 |
+| 6h (Pro) | `deepseek/deepseek-v3.2` | 750 | $0.0033 |
+| 6h (Pro) | `openai/gpt-4o-mini` | 750 | $0.0022 |
+| 6h (Pro) | `openai/gpt-4.1-mini` | 750 | $0.0060 |
+| 1h (Business) | `deepseek/deepseek-v3.2` | 950 | $0.0034 |
+| 1h (Business) | `openai/gpt-4.1-mini` | 950 | $0.0063 |
+| 1h (Business) | `openai/gpt-5.2` | 950 | $0.0343 |
+| 1h (Business) | `anthropic/claude-sonnet-4.5` | 950 | $0.0503 |
 
 ## Trending (OpenRouter rankings, best-effort parse)
 

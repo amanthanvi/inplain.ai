@@ -1517,7 +1517,7 @@ WHERE id = $1;
 - Minimum added/removed chars: 500
 - change_score threshold: 0.02
 - Cosmetic patterns: timestamps, copyright years, counters
-- Ambiguous LLM gate model chain: `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview` (max_tokens=220)
+- Ambiguous LLM gate model chain: `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite` → `openai/gpt-4.1-nano` (max_tokens=220)
 
 **Summaries**:
 
@@ -1526,9 +1526,9 @@ WHERE id = $1;
 - OpenRouter attribution headers: `HTTP-Referer`, `X-Title`
 - Structured outputs: JSON schema when supported (retry without on 400)
 - Tier-aware model policy (by `schedule_tier`):
-  - `daily`: `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview` (max_tokens=650, max_bullets=8)
-  - `6h`: `deepseek/deepseek-v3.2` → `google/gemini-3-flash-preview` → `openai/gpt-5.2` (max_tokens=850, max_bullets=10)
-  - `1h`: `deepseek/deepseek-v3.2` → `openai/gpt-5.2` → `anthropic/claude-sonnet-4.5` (max_tokens=1100, max_bullets=12)
+  - `daily`: `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite` (max_tokens=500, max_bullets=6)
+  - `6h`: `deepseek/deepseek-v3.2` → `openai/gpt-4o-mini` → `openai/gpt-4.1-mini` (max_tokens=750, max_bullets=8)
+  - `1h`: `deepseek/deepseek-v3.2` → `openai/gpt-4.1-mini` → `openai/gpt-5.2` → `anthropic/claude-sonnet-4.5` (max_tokens=950, max_bullets=10)
 
 **Scheduler**:
 

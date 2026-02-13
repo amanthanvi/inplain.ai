@@ -256,3 +256,5 @@ Ordered, reviewable work to reach the internal v0.1.0 milestone (SPEC AC-1…AC-
    - Dependencies: 1
 - 2026-02-13: Added `documents.pause_reason` to distinguish URL-inaccessible pauses vs tier doc-limit auto-pauses; implemented `/internal/documents/apply-entitlements` and wired web pages/actions to keep `schedule_tier` and paused-over-limit docs in sync with current Clerk plan.
 - 2026-02-13: Implemented tier-gated JSON export: FastAPI `/internal/export` (optional `limit_change_events`) + Next.js `/export` download route + Settings UI link; Free exports last 10 change events.
+- 2026-02-13: Improved change-event readability (collapsed long summaries with “Show all/less”; hardened diff block overflow to prevent runaway layout).
+- 2026-02-13: Updated tiered OpenRouter model policy to reduce cost and improve reliability (Gemini 2.5 Flash Lite + OpenAI mini models; reduced max bullets/tokens).
