@@ -23,8 +23,8 @@ from inplain.settings import settings
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 _CLASSIFY_PROMPT_VERSION = 1
 _CLASSIFY_MODEL_CHAIN = [
+    "deepseek/deepseek-v3.2",
     "google/gemini-3-flash-preview",
-    "openai/gpt-5.2",
 ]
 _MAX_HUNKS_FOR_CLASSIFY = 12
 
@@ -151,7 +151,7 @@ def _llm_classify_meaningful(
     last_error: str | None = None
     for model in _CLASSIFY_MODEL_CHAIN:
         try:
-            data = _call_openrouter(model=model, prompt=prompt)
+            data = _call_openrouter(model=model, prompt=prompt, max_tokens=220)
             meaningful = data.get("meaningful")
             reason = data.get("reason")
             if not isinstance(meaningful, bool) or not isinstance(reason, str):
@@ -188,7 +188,7 @@ def _build_classify_prompt(*, diff_hunks: list[dict[str, Any]], doc_type: str) -
     )
 
 
-def _call_openrouter(*, model: str, prompt: str) -> dict[str, Any]:
+def _call_openrouter(*, model: str, prompt: str, max_tokens: int | None = None) -> dict[str, Any]:
     headers = {
         "authorization": f"Bearer {settings.openrouter_api_key}",
         "content-type": "application/json",
@@ -200,6 +200,8 @@ def _call_openrouter(*, model: str, prompt: str) -> dict[str, Any]:
         ],
         "temperature": 0.0,
     }
+    if max_tokens is not None:
+        body["max_tokens"] = int(max_tokens)
     with httpx.Client(timeout=30) as client:
         resp = client.post(_OPENROUTER_URL, headers=headers, json=body)
         resp.raise_for_status()
