@@ -207,6 +207,7 @@ Acceptance:
 - 2026-02-13: Improved change event viewer: summary citations rendered as compact superscript links (deduped per hunk) and added expand/collapse-all control for section diff view; hardened diff wrapping CSS.
 - 2026-02-13: Implemented tier-aware OpenRouter summary model policy keyed by `schedule_tier` (cheap-first for Free), switched diff meaningfulness classifier to cheap-first, and added OpenRouter structured outputs (JSON schema) + attribution headers (`HTTP-Referer`, `X-Title`) with tests.
 - 2026-02-13: Added OpenRouter model scout tooling and a generated pricing/trending report at `docs/openrouter-model-scout.md` (regen via `make openrouter-model-scout`).
+- 2026-02-13: Added a dev-only OpenRouter SDK agent scaffold at `tools/openrouter-agent` (interactive + one-shot recommendation mode) for ongoing tier/model research.
 
 
 ## Launch milestones (v0.2.0 → PH/HN)
