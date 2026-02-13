@@ -1,6 +1,6 @@
 # PLAN — Inplain.ai v0.2.0 (SPEC v0.2.0)
 
-Last updated: 2026-02-09
+Last updated: 2026-02-13
 
 North star: production-ready web app that monitors public privacy/ToS pages (curated catalog only), detects meaningful changes, shows a readable diff, and generates AI summaries **with citations** that link to exact diff hunks.
 
@@ -203,6 +203,9 @@ Acceptance:
 - 2026-02-09: Provisioned PostHog template services in Railway project as L7 groundwork; full service activation and app env wiring remain pending.
 - 2026-02-11: Fixed production `500` on `/sw.js` + `/favicon.ico` (Clerk middleware mismatch) by adding explicit Edge route handlers; unblocked client bundle loading and removed stale service worker caching hazards.
 - 2026-02-11: Hardened summarize jobs against large diffs (prompt length cap + tolerant JSON parsing) and added a user-visible "Retry summary" action for failed change events; improved diff text wrapping to prevent overflow in added/removed blocks.
+
+- 2026-02-13: Improved change event viewer: summary citations rendered as compact superscript links (deduped per hunk) and added expand/collapse-all control for section diff view; hardened diff wrapping CSS.
+- 2026-02-13: Implemented tier-aware OpenRouter summary model policy keyed by `schedule_tier` (cheap-first for Free), switched diff meaningfulness classifier to cheap-first, and added OpenRouter structured outputs (JSON schema) + attribution headers (`HTTP-Referer`, `X-Title`) with tests.
 
 ## Launch milestones (v0.2.0 → PH/HN)
 
