@@ -269,6 +269,10 @@ a {
   gap: 10px;
 }
 
+.summaryToggle {
+  margin-top: 6px;
+}
+
 .summaryBullet {
   line-height: 1.4;
 }
@@ -429,6 +433,8 @@ a {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
+  max-width: 100%;
+  overflow-x: auto;
   text-decoration: none;
 }
 
@@ -441,6 +447,8 @@ a {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
+  max-width: 100%;
+  overflow-x: auto;
   text-decoration: none;
 }
 

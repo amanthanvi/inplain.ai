@@ -233,6 +233,7 @@ export function ChangeEventViewer({
   hunks: DiffHunk[];
   summaryStatus?: string;
 }) {
+  const summaryInitialBullets = 6;
   const [diffMode, setDiffMode] = useState<DiffMode>("section");
   const hunkIds = new Set(hunks.map((h) => h.hunkId));
 
@@ -242,6 +243,24 @@ export function ChangeEventViewer({
     const initial = groupHunksBySection(hunks);
     return new Set(initial.length > 0 ? [initial[0].title] : []);
   });
+
+  const [showAllWhatChanged, setShowAllWhatChanged] = useState(false);
+  const [showAllWhyMatters, setShowAllWhyMatters] = useState(false);
+
+  const visibleWhatChanged = useMemo(() => {
+    if (!whatChanged) return null;
+    if (showAllWhatChanged) return whatChanged;
+    return whatChanged.slice(0, summaryInitialBullets);
+  }, [showAllWhatChanged, summaryInitialBullets, whatChanged]);
+
+  const visibleWhyMatters = useMemo(() => {
+    if (!whyMatters) return null;
+    if (showAllWhyMatters) return whyMatters;
+    return whyMatters.slice(0, summaryInitialBullets);
+  }, [showAllWhyMatters, summaryInitialBullets, whyMatters]);
+
+  const whatChangedHasMore = Boolean(whatChanged && whatChanged.length > summaryInitialBullets);
+  const whyMattersHasMore = Boolean(whyMatters && whyMatters.length > summaryInitialBullets);
 
 
   const sectionTitleByHunkId = useMemo(() => {
@@ -309,10 +328,19 @@ export function ChangeEventViewer({
               What changed
             </div>
             <ul className="summaryList">
-              {whatChanged.map((b, idx) => (
+              {(visibleWhatChanged || []).map((b, idx) => (
                 <Bullet key={idx} bullet={b} hunkIds={hunkIds} onRevealHunk={revealHunk} />
               ))}
             </ul>
+            {whatChangedHasMore ? (
+              <button
+                type="button"
+                className="btn btnGhost summaryToggle"
+                onClick={() => setShowAllWhatChanged((prev) => !prev)}
+              >
+                {showAllWhatChanged ? "Show less" : `Show all (${whatChanged?.length ?? 0})`}
+              </button>
+            ) : null}
           </>
         ) : null}
 
@@ -323,10 +351,19 @@ export function ChangeEventViewer({
               Why it matters
             </div>
             <ul className="summaryList">
-              {whyMatters.map((b, idx) => (
+              {(visibleWhyMatters || []).map((b, idx) => (
                 <Bullet key={idx} bullet={b} hunkIds={hunkIds} onRevealHunk={revealHunk} />
               ))}
             </ul>
+            {whyMattersHasMore ? (
+              <button
+                type="button"
+                className="btn btnGhost summaryToggle"
+                onClick={() => setShowAllWhyMatters((prev) => !prev)}
+              >
+                {showAllWhyMatters ? "Show less" : `Show all (${whyMatters?.length ?? 0})`}
+              </button>
+            ) : null}
           </>
         ) : null}
 
