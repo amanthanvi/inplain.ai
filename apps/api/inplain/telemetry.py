@@ -26,10 +26,13 @@ def init_telemetry(*, service: str) -> None:
             _SENTRY_INITIALIZED = True
 
         if settings.posthog_api_key and settings.posthog_host and _POSTHOG is None:
-            _POSTHOG = Posthog(
-                project_api_key=settings.posthog_api_key,
-                host=settings.posthog_host,
-            )
+            try:
+                _POSTHOG = Posthog(
+                    project_api_key=settings.posthog_api_key,
+                    host=settings.posthog_host,
+                )
+            except Exception:  # noqa: BLE001
+                _POSTHOG = None
 
 
 def capture_event(
@@ -42,4 +45,7 @@ def capture_event(
         return
     if _POSTHOG is None:
         return
-    _POSTHOG.capture(distinct_id=distinct_id, event=event, properties=properties or {})
+    try:
+        _POSTHOG.capture(distinct_id=distinct_id, event=event, properties=properties or {})
+    except Exception:  # noqa: BLE001
+        return

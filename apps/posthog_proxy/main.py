@@ -63,7 +63,7 @@ async def proxy(path: str, request: Request) -> Response:
     # Preserve the original host for PostHog to generate correct absolute URLs.
     # Also tell the upstream what protocol the client used.
     headers["x-forwarded-host"] = request.headers.get("host", "")
-    headers["x-forwarded-proto"] = request.url.scheme
+    headers["x-forwarded-proto"] = request.headers.get("x-forwarded-proto") or request.url.scheme
 
     # Send to the upstream with its own Host header to avoid relying on ALLOWED_HOSTS.
     headers["host"] = httpx.URL(upstream).host or headers.get("host", "")
