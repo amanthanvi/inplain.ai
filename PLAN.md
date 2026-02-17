@@ -1,6 +1,6 @@
 # PLAN — Inplain.ai v0.2.0 (SPEC v0.2.0)
 
-Last updated: 2026-02-13
+Last updated: 2026-02-17
 
 North star: production-ready web app that monitors public privacy/ToS pages (curated catalog only), detects meaningful changes, shows a readable diff, and generates AI summaries **with citations** that link to exact diff hunks.
 
@@ -208,6 +208,8 @@ Acceptance:
 - 2026-02-13: Implemented tier-aware OpenRouter summary model policy keyed by `schedule_tier` (cheap-first for Free), switched diff meaningfulness classifier to cheap-first, and added OpenRouter structured outputs (JSON schema) + attribution headers (`HTTP-Referer`, `X-Title`) with tests.
 - 2026-02-13: Added OpenRouter model scout tooling and a generated pricing/trending report at `docs/openrouter-model-scout.md` (regen via `make openrouter-model-scout`).
 - 2026-02-13: Added a dev-only OpenRouter SDK agent scaffold at `tools/openrouter-agent` (interactive + one-shot recommendation mode) for ongoing tier/model research.
+- 2026-02-17: Reconciled launch checklist with external state (completed 2026-02-13): Cloudflare orange-cloud proxy enabled for apex + `www` with SSL mode `Full (strict)`; Clerk Client Trust enabled and Turnstile CAPTCHA configured. Marked L4/L5 complete.
+- 2026-02-17: PostHog L7 hardening: documented `posthog-proxy` Railway wiring and start cmd; made PostHog capture non-fatal if PostHog is misconfigured/down; added proxy header fix and tests.
 
 
 ## Launch milestones (v0.2.0 → PH/HN)
@@ -217,13 +219,11 @@ See SPEC.md §16 for full launch plan. Summary of pre-launch work:
 - [x] **L1**: Curate + validate 30-50 catalog companies (URLs, robots.txt, extraction)
 - [x] **L2**: UI polish pass (all pages, desktop + mobile responsive)
 - [x] **L3**: HMAC request signing (Next.js → FastAPI)
-- [ ] **L4**: Cloudflare proxy mode (orange cloud)
-- Blocked: requires Cloudflare zone credentials + DNS/proxy toggles outside repo automation.
-- [ ] **L5**: Cloudflare Turnstile CAPTCHA (Clerk integration)
-- Blocked: requires Clerk dashboard CAPTCHA provider setup (Turnstile) not configurable from this repo.
+- [x] **L4**: Cloudflare proxy mode (orange cloud)
+- [x] **L5**: Cloudflare Turnstile CAPTCHA (Clerk integration)
 - [x] **L6**: Deploy renderer service on Railway
 - [ ] **L7**: PostHog self-hosted on Railway
-- Partial: smoke test can validate the PostHog capture endpoint; remaining work is Railway stack activation + env wiring + confirming events in the PostHog UI.
+- Partial: smoke test can validate the PostHog capture endpoint; `posthog-proxy` exists to expose PostHog Web on Railway `$PORT`; remaining work is Railway stack activation + env wiring + confirming events in the PostHog UI.
 - [x] **L8**: Sentry integration (Python + Next.js)
 - [x] **L9**: Blue-green deploy tested (staging environment)
 - [x] **L10**: Smoke test script (post-deploy verification)

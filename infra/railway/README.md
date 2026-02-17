@@ -8,6 +8,7 @@ Deployment notes for `SPEC.md` v0.2.0 (target: v0.1.0 review package).
 - `api` (private) — FastAPI internal service (DB reads/writes)
 - `worker` (private) — Python worker (scheduler + non-render job executor)
 - `renderer` (private) — Python worker (render-only; Playwright installed on start)
+- `posthog-proxy` (public) — FastAPI reverse proxy to PostHog Web (maps Railway `$PORT` → PostHog `:8000`)
 - `postgres` — primary DB + job queue (`jobs` table)
 - `redis` — cache only (robots.txt decisions; politeness tracking)
 
@@ -29,6 +30,9 @@ Shared:
 `web`:
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY`
 - `INTERNAL_API_BASE_URL` — the **private** base URL for `api` (Railway private networking)
+
+`posthog-proxy`:
+- `POSTHOG_UPSTREAM` — the **private** base URL for PostHog Web (including port `:8000`)
 
 ## Clerk webhooks
 
@@ -62,6 +66,9 @@ Configured via `RAILPACK_START_CMD` per service:
 - `INPLAIN_WORKER_QUEUES=render`
 - `INPLAIN_WORKER_ENABLE_SCHEDULER=0`
 - `INPLAIN_WORKER_ENABLE_STALE_LOCK_CLEANUP=0`
+
+`posthog-proxy`:
+- `PYTHONPATH=apps uvicorn posthog_proxy.main:app --host 0.0.0.0 --port $PORT --proxy-headers`
 
 Note: the first `renderer` boot downloads Playwright Chromium/ffmpeg (~300MB).
 
@@ -97,8 +104,13 @@ The dedicated `renderer` Railway service is configured via:
 
 ## PostHog + Sentry env (L7 + L8)
 
+PostHog (L7) is deployed from Railway's self-hosted template, but PostHog's Web container listens on a fixed port (`:8000`) and typically does not bind Railway's `$PORT`. `posthog-proxy` exists to expose PostHog on a stable HTTPS URL.
+
 Tip: `make smoke-test` will send a `smoke_test` event to PostHog if `POSTHOG_HOST` + `POSTHOG_API_KEY` are set.
 See `scripts/smoke/smoke_test.py`.
+
+`posthog-proxy`:
+- `POSTHOG_UPSTREAM` (private PostHog Web URL, including port `:8000`)
 
 `api` + `worker`:
 - `POSTHOG_API_KEY`
