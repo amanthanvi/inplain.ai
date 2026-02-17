@@ -35,7 +35,7 @@
 - **Title**: Inplain.ai — Privacy Policy Change Tracker
 - **Owner (DRI)**: Aman Thanvi (@amanthanvi)
 - **Status**: Implementing (launch-readiness phase)
-- **Last updated**: 2026-02-08
+- **Last updated**: 2026-02-17
 - **Spec version**: v0.2.0
 - **License**: MIT (fully open source; monetize via hosted service)
 - **Links**:
@@ -1334,10 +1334,10 @@ Required on sign-up (alongside Turnstile):
 | L1  | Catalog: 30-50 companies validated                 | Done                  | URL + robots + extraction validation |
 | L2  | UI polish pass (all pages, desktop + mobile)       | Done                  | Design decisions                     |
 | L3  | HMAC request signing                               | Done                  | —                                    |
-| L4  | Cloudflare proxy mode enabled                      | Blocked (external)    | DNS configuration                    |
-| L5  | Cloudflare Turnstile CAPTCHA                       | Blocked (external)    | Clerk configuration                  |
+| L4  | Cloudflare proxy mode enabled                      | Done                  | DNS configuration                    |
+| L5  | Cloudflare Turnstile CAPTCHA                       | Done                  | Clerk configuration                  |
 | L6  | Renderer service deployed on Railway               | Done                  | —                                    |
-| L7  | PostHog self-hosted on Railway                     | Partial (provisioned) | Resource sizing                      |
+| L7  | PostHog self-hosted on Railway                     | Done                  | Resource sizing                      |
 | L8  | Sentry integration (Python + Next.js)              | Done                  | —                                    |
 | L9  | Blue-green deploy tested                           | Done                  | Staging environment                  |
 | L10 | Smoke test script                                  | Done                  | —                                    |
@@ -1349,8 +1349,8 @@ Required on sign-up (alongside Turnstile):
 
 Notes:
 
-- L4 + L5 require Cloudflare/Clerk dashboard access and cannot be completed from repository-only automation.
-- L7 template services are provisioned in Railway; final PostHog service activation and env value wiring are still required.
+- L4 + L5 require Cloudflare/Clerk dashboard access (external).
+- L7 uses Railway template services for PostHog; ingestion is routed via `posthog-proxy` to the template `Capture` service (`:3000`) to avoid CSRF 403 on `/capture/` when sent to `Web` (`:8000`).
 
 ### 16.2 Launch day checklist
 

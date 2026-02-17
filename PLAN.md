@@ -4,7 +4,7 @@ Last updated: 2026-02-17
 
 North star: production-ready web app that monitors public privacy/ToS pages (curated catalog only), detects meaningful changes, shows a readable diff, and generates AI summaries **with citations** that link to exact diff hunks.
 
-Source of truth: `SPEC.md` (currently v0.2.0, 2026-02-07). This plan implements the SPEC; if implementation forces a decision/change, update `SPEC.md` and record it in the progress log here.
+Source of truth: `SPEC.md` (currently v0.2.0, 2026-02-17). This plan implements the SPEC; if implementation forces a decision/change, update `SPEC.md` and record it in the progress log here.
 
 ## Working agreements (locked)
 
@@ -210,6 +210,7 @@ Acceptance:
 - 2026-02-13: Added a dev-only OpenRouter SDK agent scaffold at `tools/openrouter-agent` (interactive + one-shot recommendation mode) for ongoing tier/model research.
 - 2026-02-17: Reconciled launch checklist with external state (completed 2026-02-13): Cloudflare orange-cloud proxy enabled for apex + `www` with SSL mode `Full (strict)`; Clerk Client Trust enabled and Turnstile CAPTCHA configured. Marked L4/L5 complete.
 - 2026-02-17: PostHog L7 hardening: documented `posthog-proxy` Railway wiring and start cmd; made PostHog capture non-fatal if PostHog is misconfigured/down; added proxy header fix and tests.
+- 2026-02-17: Fixed PostHog ingest on Railway: PostHog template `Web` (`:8000`) returns CSRF 403 for `/capture/`; `posthog-proxy` now routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to the template `Capture` service (`:3000`). Verified production smoke test PostHog capture returns 200.
 
 
 ## Launch milestones (v0.2.0 → PH/HN)
@@ -222,8 +223,8 @@ See SPEC.md §16 for full launch plan. Summary of pre-launch work:
 - [x] **L4**: Cloudflare proxy mode (orange cloud)
 - [x] **L5**: Cloudflare Turnstile CAPTCHA (Clerk integration)
 - [x] **L6**: Deploy renderer service on Railway
-- [ ] **L7**: PostHog self-hosted on Railway
-- Partial: smoke test can validate the PostHog capture endpoint; `posthog-proxy` exists to expose PostHog Web on Railway `$PORT`; remaining work is Railway stack activation + env wiring + confirming events in the PostHog UI.
+- [x] **L7**: PostHog self-hosted on Railway
+- Verified: production `make smoke-test` passes PostHog capture via `posthog-proxy` (ingestion routed to `Capture :3000`).
 - [x] **L8**: Sentry integration (Python + Next.js)
 - [x] **L9**: Blue-green deploy tested (staging environment)
 - [x] **L10**: Smoke test script (post-deploy verification)
