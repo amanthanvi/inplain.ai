@@ -210,7 +210,7 @@ Acceptance:
 - 2026-02-13: Added a dev-only OpenRouter SDK agent scaffold at `tools/openrouter-agent` (interactive + one-shot recommendation mode) for ongoing tier/model research.
 - 2026-02-17: Reconciled launch checklist with external state (completed 2026-02-13): Cloudflare orange-cloud proxy enabled for apex + `www` with SSL mode `Full (strict)`; Clerk Client Trust enabled and Turnstile CAPTCHA configured. Marked L4/L5 complete.
 - 2026-02-17: PostHog L7 hardening: documented `posthog-proxy` Railway wiring and start cmd; made PostHog capture non-fatal if PostHog is misconfigured/down; added proxy header fix and tests.
-- 2026-02-17: Fixed PostHog ingest on Railway: PostHog template `Web` (`:8000`) returns CSRF 403 for `/capture/`; `posthog-proxy` now routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to the template `Capture` service (`:3000`). Verified production smoke test PostHog capture returns 200.
+- 2026-02-17: Fixed PostHog ingest on Railway: PostHog template `Web` (`:8000`) returns CSRF 403 for `/capture/`; `posthog-proxy` now routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to the template `Capture` service (`:3000`) via `POSTHOG_CAPTURE_UPSTREAM=http://capture:3000`. Verified production smoke test PostHog capture returns 200.
 
 
 ## Launch milestones (v0.2.0 → PH/HN)
