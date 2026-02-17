@@ -8,7 +8,7 @@ Deployment notes for `SPEC.md` v0.2.0 (target: v0.1.0 review package).
 - `api` (private) — FastAPI internal service (DB reads/writes)
 - `worker` (private) — Python worker (scheduler + non-render job executor)
 - `renderer` (private) — Python worker (render-only; Playwright installed on start)
-- `posthog-proxy` (public) — FastAPI reverse proxy to PostHog Web (maps Railway `$PORT` → PostHog `:8000`)
+- `posthog-proxy` (public) — FastAPI reverse proxy to PostHog (routes UI → `Web :8000`; ingestion → `Capture :3000`)
 - `postgres` — primary DB + job queue (`jobs` table)
 - `redis` — cache only (robots.txt decisions; politeness tracking)
 
