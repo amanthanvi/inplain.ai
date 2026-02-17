@@ -42,6 +42,20 @@ def _client() -> httpx.AsyncClient:
 
 app = FastAPI(title="inplain-posthog-proxy", version="0.1.0")
 
+_CAPTURE_FIRST_SEGMENTS = {"capture", "e", "i"}
+
+
+def _is_capture_path(path: str) -> bool:
+    normalized = (path or "").lstrip("/")
+    if not normalized:
+        return False
+    first = normalized.split("/", 1)[0]
+    return first in _CAPTURE_FIRST_SEGMENTS
+
+
+def _normalize_upstream(upstream: str) -> str:
+    return upstream.rstrip("/") + "/"
+
 
 @app.get("/healthz")
 async def healthz() -> dict[str, str]:
@@ -53,7 +67,10 @@ async def healthz() -> dict[str, str]:
     methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 )
 async def proxy(path: str, request: Request) -> Response:
-    upstream = request.app.state.upstream
+    if _is_capture_path(path):
+        upstream = request.app.state.capture_upstream
+    else:
+        upstream = request.app.state.web_upstream
     url = httpx.URL(upstream).join(path)
     if request.url.query:
         url = url.copy_with(query=request.url.query)
@@ -95,7 +112,11 @@ async def _startup() -> None:
     # Late-import env so unit tests can import this module without env config.
     import os
 
-    upstream = os.environ.get("POSTHOG_UPSTREAM")
-    if not upstream:
-        raise RuntimeError("POSTHOG_UPSTREAM is required")
-    app.state.upstream = upstream.rstrip("/") + "/"
+    web_upstream = os.environ.get("POSTHOG_WEB_UPSTREAM") or os.environ.get("POSTHOG_UPSTREAM")
+    if not web_upstream:
+        raise RuntimeError("POSTHOG_UPSTREAM (or POSTHOG_WEB_UPSTREAM) is required")
+
+    capture_upstream = os.environ.get("POSTHOG_CAPTURE_UPSTREAM") or web_upstream
+
+    app.state.web_upstream = _normalize_upstream(web_upstream)
+    app.state.capture_upstream = _normalize_upstream(capture_upstream)

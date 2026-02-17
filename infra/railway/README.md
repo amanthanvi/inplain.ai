@@ -32,7 +32,8 @@ Shared:
 - `INTERNAL_API_BASE_URL` — the **private** base URL for `api` (Railway private networking)
 
 `posthog-proxy`:
-- `POSTHOG_UPSTREAM` — the **private** base URL for PostHog Web (including port `:8000`)
+- `POSTHOG_UPSTREAM` (or `POSTHOG_WEB_UPSTREAM`) — the **private** base URL for PostHog Web (including port `:8000`)
+- `POSTHOG_CAPTURE_UPSTREAM` — the **private** base URL for PostHog Capture (including port `:3000`, typically `http://capture:3000`)
 
 ## Clerk webhooks
 
@@ -104,13 +105,18 @@ The dedicated `renderer` Railway service is configured via:
 
 ## PostHog + Sentry env (L7 + L8)
 
-PostHog (L7) is deployed from Railway's self-hosted template, but PostHog's Web container listens on a fixed port (`:8000`) and typically does not bind Railway's `$PORT`. `posthog-proxy` exists to expose PostHog on a stable HTTPS URL.
+PostHog (L7) is deployed from Railway's self-hosted template, but the template splits:
+- `Web` (UI) on a fixed port (`:8000`)
+- `Capture` (ingestion) on a fixed port (`:3000`)
+
+`posthog-proxy` binds Railway's `$PORT` and routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to `Capture` so server-side events work (otherwise `/capture/` returns CSRF 403 when sent to `Web`).
 
 Tip: `make smoke-test` will send a `smoke_test` event to PostHog if `POSTHOG_HOST` + `POSTHOG_API_KEY` are set.
 See `scripts/smoke/smoke_test.py`.
 
 `posthog-proxy`:
-- `POSTHOG_UPSTREAM` (private PostHog Web URL, including port `:8000`)
+- `POSTHOG_UPSTREAM` (or `POSTHOG_WEB_UPSTREAM`) — private PostHog Web URL (including port `:8000`)
+- `POSTHOG_CAPTURE_UPSTREAM` — private PostHog Capture URL (including port `:3000`, typically `http://capture:3000`)
 
 `api` + `worker`:
 - `POSTHOG_API_KEY`

@@ -1,6 +1,6 @@
 """PostHog reverse proxy service.
 
-This exists only to expose the PostHog "Web" service via Railway's required $PORT.
-The upstream PostHog template containers listen on fixed ports (8000/...), so the
-Railway edge cannot connect directly.
+This exposes PostHog via a single Railway service that binds `$PORT`, while routing:
+- UI + dashboard traffic → PostHog Web (fixed port `:8000`)
+- ingestion traffic (`/capture/*`, `/e/*`, `/i/*`) → PostHog Capture (fixed port `:3000`)
 """
