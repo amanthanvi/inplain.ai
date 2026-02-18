@@ -220,6 +220,7 @@ Acceptance:
 - 2026-02-18: Verification: `railway run --service api --environment production -- make smoke-test` passes including `posthog capture`; local gates (`make lint`, `make typecheck`, `make test`) pass. Noted operational hazard: direct `railway variables --set` triggered a blocked source deploy on `posthog-proxy` (Railway vulnerability policy), so follow-up updates used `--skip-deploys` to keep production stable.
 - 2026-02-18: Follow-up ops correction: attempting to clear a `posthog-proxy` warning with `railway down` removed the prior successful deployment from active metadata and caused temporary PostHog proxy 404s (`posthog capture` smoke failure).
 - 2026-02-18: Recovery completed: rolled back `posthog-proxy` to known-good deployment `f028b3e5-1b1b-470a-a061-09c1be4bb5f2` via GraphQL `deploymentRollback`, creating healthy deployment `540c60c4-772c-4191-8052-a3e41792235b` (`SUCCESS`). Re-verified production smoke (`posthog capture` PASS) and private-network endpoint sync (`ACTIVE`).
+- 2026-02-18: Determinism re-check: production staged patch remains empty (`patch={}`, `lastAppliedError` clear), private-network endpoint sync is fully `ACTIVE` (22/22), public domains are limited to `api`/`web`/`posthog-proxy`, and `railway run --service api --environment production -- make smoke-test` passes (including `posthog capture`).
 
 
 ## Launch milestones (v0.2.0 → PH/HN)
