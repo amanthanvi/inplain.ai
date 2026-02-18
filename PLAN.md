@@ -215,6 +215,9 @@ Acceptance:
 - 2026-02-18: Railway cleanup: removed `scheduler` from development (fully deleted) and removed the Railway-provided domain on PostHog `Web` (UI remains available via `posthog-proxy`). Re-audited private-network endpoints (all ACTIVE across prod/staging/dev).
 - 2026-02-18: Re-confirmed external launch gating (initially completed 2026-02-13): Cloudflare orange-cloud proxy enabled for apex + `www` with SSL mode `Full (strict)`; Clerk Client Trust enabled; Turnstile CAPTCHA configured. L4/L5 remain complete.
 - 2026-02-18: Hardened launch verification + stability: updated smoke test to work with Railway-provided URL env vars (hostnames without scheme), added longer HTTP timeouts, and documented `railway run --service api --environment production -- make smoke-test` to avoid copying secrets. Added an internal web→API fetch timeout to prevent hanging pages if the internal API is slow/unreachable.
+- 2026-02-18: Railway production stabilization: identified stale staged patch `6fbcb647-a7fd-4dc3-9777-9cb176d79768` (`Deploy PostHog`, created 2026-02-09) as the source of private-network apply churn; reset staged changes to `{}` via `environmentStageChanges(..., input:{}, merge:false)`. `lastAppliedError` cleared and private-network endpoints remained ACTIVE across prod/staging/dev.
+- 2026-02-18: Railway naming hardening: renamed PostHog template `Web` service to `posthog-web` to remove `Web` vs `web` ambiguity and updated `posthog-proxy` upstream target to `http://posthog-web:8000`.
+- 2026-02-18: Verification: `railway run --service api --environment production -- make smoke-test` passes including `posthog capture`; local gates (`make lint`, `make typecheck`, `make test`) pass. Noted operational hazard: direct `railway variables --set` triggered a blocked source deploy on `posthog-proxy` (Railway vulnerability policy), so follow-up updates used `--skip-deploys` to keep production stable.
 
 
 ## Launch milestones (v0.2.0 → PH/HN)

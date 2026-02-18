@@ -8,7 +8,7 @@ Deployment notes for `SPEC.md` v0.2.0 (target: v0.1.0 review package).
 - `api` (private) — FastAPI internal service (DB reads/writes)
 - `worker` (private) — Python worker (scheduler + non-render job executor)
 - `renderer` (private) — Python worker (render-only; Playwright installed on start)
-- `posthog-proxy` (public) — FastAPI reverse proxy to PostHog (routes UI → `Web :8000`; ingestion → `Capture :3000`)
+- `posthog-proxy` (public) — FastAPI reverse proxy to PostHog (routes UI → `posthog-web :8000`; ingestion → `Capture :3000`)
 - `postgres` — primary DB + job queue (`jobs` table)
 - `redis` — cache only (robots.txt decisions; politeness tracking)
 
@@ -37,7 +37,8 @@ Shared:
 
 Notes:
 - Keep PostHog `Web` + `Capture` internal-only (no Railway-provided domains). Only `posthog-proxy` should be public.
-- If the Railway project also has an Inplain `web` service, PostHog `Web`’s private DNS name may be suffixed (e.g. `web-<suffix>`) to avoid collisions; set `POSTHOG_UPSTREAM` to that private host (including `:8000`), e.g. `http://web-<suffix>.railway.internal:8000`.
+- Rename PostHog template `Web` to `posthog-web` to avoid `Web` (PostHog) vs `web` (Inplain) ambiguity.
+- Set `POSTHOG_UPSTREAM` to `http://posthog-web:8000` (or equivalent private host for the renamed service).
 
 ## Clerk webhooks
 
@@ -110,16 +111,16 @@ The dedicated `renderer` Railway service is configured via:
 ## PostHog + Sentry env (L7 + L8)
 
 PostHog (L7) is deployed from Railway's self-hosted template, but the template splits:
-- `Web` (UI) on a fixed port (`:8000`)
+- `posthog-web` (UI, renamed from template `Web`) on a fixed port (`:8000`)
 - `Capture` (ingestion) on a fixed port (`:3000`)
 
-`posthog-proxy` binds Railway's `$PORT` and routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to `Capture` so server-side events work (otherwise `/capture/` returns CSRF 403 when sent to `Web`).
+`posthog-proxy` binds Railway's `$PORT` and routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to `Capture` so server-side events work (otherwise `/capture/` returns CSRF 403 when sent to `posthog-web`).
 
 Tip: `make smoke-test` will send a `smoke_test` event to PostHog if `POSTHOG_HOST` + `POSTHOG_API_KEY` are set.
 See `scripts/smoke/smoke_test.py`.
 
 `posthog-proxy`:
-- `POSTHOG_UPSTREAM` (or `POSTHOG_WEB_UPSTREAM`) — private PostHog Web URL (including port `:8000`)
+- `POSTHOG_UPSTREAM` (or `POSTHOG_WEB_UPSTREAM`) — private PostHog Web URL (including port `:8000`; recommended `http://posthog-web:8000`)
 - `POSTHOG_CAPTURE_UPSTREAM` — private PostHog Capture URL (including port `:3000`, typically `http://capture:3000`)
 
 `api` + `worker`:
@@ -159,4 +160,19 @@ If the Railway dashboard shows staged changes but applying fails with a private-
 1. **Reduce churn first**: ensure only `api`, `web`, and `posthog-proxy` have public domains in `production`. (PostHog template services like `Web` and `Capture` should stay internal-only.)
 2. **Avoid name collisions**: rename PostHog template services to `posthog-*` to prevent `Web` (PostHog) vs `web` (Inplain) confusion and private DNS collisions.
    - Tip: `railway ssh --service web` may resolve to the wrong service when names collide; prefer using service IDs from `railway status --json`.
-3. **Repair safely**: if the environment is stuck, prefer creating a fresh `prod-green` environment and swapping custom domains over in-place surgery (keeps rollback simple).
+3. **Clear stale staged patch**: if all private-network endpoints are `ACTIVE` but a stale staged patch still exists with `lastAppliedError`, reset staged changes to `{}`.
+
+```bash
+PROD_ENV_ID=$(railway status --json | jq -r '.environments.edges[] | select(.node.name=="production") | .node.id')
+TOKEN=$(jq -r '.user.token' "$HOME/.railway/config.json")
+
+curl -sS -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  --data '{"query":"query($environmentId:String!){environmentStagedChanges(environmentId:$environmentId){id status message lastAppliedError patch}}","variables":{"environmentId":"'"$PROD_ENV_ID"'"}}' \
+  https://backboard.railway.com/graphql/v2
+
+curl -sS -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  --data '{"query":"mutation($environmentId:String!,$input:EnvironmentConfig!,$merge:Boolean!){environmentStageChanges(environmentId:$environmentId,input:$input,merge:$merge){id status lastAppliedError patch}}","variables":{"environmentId":"'"$PROD_ENV_ID"'","input":{},"merge":false}}' \
+  https://backboard.railway.com/graphql/v2
+```
+
+4. **Repair safely**: if the environment is still stuck after staged patch reset, prefer creating a fresh `prod-green` environment and swapping custom domains over in-place surgery (keeps rollback simple).
