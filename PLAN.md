@@ -218,6 +218,8 @@ Acceptance:
 - 2026-02-18: Railway production stabilization: identified stale staged patch `6fbcb647-a7fd-4dc3-9777-9cb176d79768` (`Deploy PostHog`, created 2026-02-09) as the source of private-network apply churn; reset staged changes to `{}` via `environmentStageChanges(..., input:{}, merge:false)`. `lastAppliedError` cleared and private-network endpoints remained ACTIVE across prod/staging/dev.
 - 2026-02-18: Railway naming hardening: renamed PostHog template `Web` service to `posthog-web` to remove `Web` vs `web` ambiguity and updated `posthog-proxy` upstream target to `http://posthog-web:8000`.
 - 2026-02-18: Verification: `railway run --service api --environment production -- make smoke-test` passes including `posthog capture`; local gates (`make lint`, `make typecheck`, `make test`) pass. Noted operational hazard: direct `railway variables --set` triggered a blocked source deploy on `posthog-proxy` (Railway vulnerability policy), so follow-up updates used `--skip-deploys` to keep production stable.
+- 2026-02-18: Follow-up ops correction: attempting to clear a `posthog-proxy` warning with `railway down` removed the prior successful deployment from active metadata and caused temporary PostHog proxy 404s (`posthog capture` smoke failure).
+- 2026-02-18: Recovery completed: rolled back `posthog-proxy` to known-good deployment `f028b3e5-1b1b-470a-a061-09c1be4bb5f2` via GraphQL `deploymentRollback`, creating healthy deployment `540c60c4-772c-4191-8052-a3e41792235b` (`SUCCESS`). Re-verified production smoke (`posthog capture` PASS) and private-network endpoint sync (`ACTIVE`).
 
 
 ## Launch milestones (v0.2.0 → PH/HN)

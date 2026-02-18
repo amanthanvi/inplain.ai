@@ -176,3 +176,13 @@ curl -sS -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
 ```
 
 4. **Repair safely**: if the environment is still stuck after staged patch reset, prefer creating a fresh `prod-green` environment and swapping custom domains over in-place surgery (keeps rollback simple).
+
+## Deployment warning cleanup (`posthog-proxy`)
+
+If `posthog-proxy` shows a warning because the latest deployment failed (for example, a blocked source build) but an older deploy was healthy:
+
+1. **Do not use `railway down`** to clear the warning. It removes the most recent successful deployment in this service timeline and can leave only the failed deploy active in metadata.
+2. Roll back directly to a known-good deployment ID with GraphQL `deploymentRollback`.
+3. Re-verify with:
+   - `railway service status --all --environment production`
+   - `railway run --service api --environment production -- make smoke-test`
