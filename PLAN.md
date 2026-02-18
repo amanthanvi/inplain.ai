@@ -212,6 +212,7 @@ Acceptance:
 - 2026-02-17: PostHog L7 hardening: documented `posthog-proxy` Railway wiring and start cmd; made PostHog capture non-fatal if PostHog is misconfigured/down; added proxy header fix and tests.
 - 2026-02-17: Fixed PostHog ingest on Railway: PostHog template `Web` (`:8000`) returns CSRF 403 for `/capture/`; `posthog-proxy` now routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to the template `Capture` service (`:3000`) via `POSTHOG_CAPTURE_UPSTREAM=http://capture:3000`. Verified production smoke test PostHog capture returns 200.
 - 2026-02-18: Railway cleanup: removed accidental public domain on PostHog `Capture`; removed unused/duplicate services (no active env instances); removed unused `Postgres-N-gg` service and pruned `scheduler` from production/staging. Audited private-network endpoints (all ACTIVE).
+- 2026-02-18: Railway cleanup: removed `scheduler` from development (fully deleted) and removed the Railway-provided domain on PostHog `Web` (UI remains available via `posthog-proxy`). Re-audited private-network endpoints (all ACTIVE across prod/staging/dev).
 
 
 ## Launch milestones (v0.2.0 → PH/HN)
