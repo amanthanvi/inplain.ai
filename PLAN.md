@@ -1,6 +1,6 @@
 # PLAN — Inplain.ai v0.2.0 (SPEC v0.2.0)
 
-Last updated: 2026-02-17
+Last updated: 2026-02-18
 
 North star: production-ready web app that monitors public privacy/ToS pages (curated catalog only), detects meaningful changes, shows a readable diff, and generates AI summaries **with citations** that link to exact diff hunks.
 
@@ -211,6 +211,7 @@ Acceptance:
 - 2026-02-17: Reconciled launch checklist with external state (completed 2026-02-13): Cloudflare orange-cloud proxy enabled for apex + `www` with SSL mode `Full (strict)`; Clerk Client Trust enabled and Turnstile CAPTCHA configured. Marked L4/L5 complete.
 - 2026-02-17: PostHog L7 hardening: documented `posthog-proxy` Railway wiring and start cmd; made PostHog capture non-fatal if PostHog is misconfigured/down; added proxy header fix and tests.
 - 2026-02-17: Fixed PostHog ingest on Railway: PostHog template `Web` (`:8000`) returns CSRF 403 for `/capture/`; `posthog-proxy` now routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to the template `Capture` service (`:3000`) via `POSTHOG_CAPTURE_UPSTREAM=http://capture:3000`. Verified production smoke test PostHog capture returns 200.
+- 2026-02-18: Railway cleanup: removed accidental public domain on PostHog `Capture`; removed unused/duplicate services (no active env instances); removed unused `Postgres-N-gg` service and pruned `scheduler` from production/staging. Audited private-network endpoints (all ACTIVE).
 
 
 ## Launch milestones (v0.2.0 → PH/HN)
