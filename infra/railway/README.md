@@ -35,6 +35,10 @@ Shared:
 - `POSTHOG_UPSTREAM` (or `POSTHOG_WEB_UPSTREAM`) — the **private** base URL for PostHog Web (including port `:8000`)
 - `POSTHOG_CAPTURE_UPSTREAM` — the **private** base URL for PostHog Capture (including port `:3000`, typically `http://capture:3000`)
 
+Notes:
+- Keep PostHog `Capture` internal-only (no Railway-provided domain). Only `posthog-proxy` should be public.
+- If the Railway project also has an Inplain `web` service, PostHog `Web`’s private DNS name may be suffixed (e.g. `web-<suffix>`) to avoid collisions. In that case, either set `POSTHOG_UPSTREAM` to the PostHog `Web` Railway-provided domain, or use the suffixed private DNS name.
+
 ## Clerk webhooks
 
 Create a Clerk webhook pointing to:
