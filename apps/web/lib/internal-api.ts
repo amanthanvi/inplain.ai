@@ -131,6 +131,7 @@ type InternalFetchOptions = {
   method?: "GET" | "POST" | "DELETE";
   body?: unknown;
   cache?: RequestCache;
+  timeoutMs?: number;
 };
 
 function sha256Hex(raw: string): string {
@@ -141,9 +142,33 @@ function hmacHex(secret: string, payload: string): string {
   return crypto.createHmac("sha256", secret).update(payload, "utf8").digest("hex");
 }
 
+const DEFAULT_INTERNAL_FETCH_TIMEOUT_MS = 10_000;
+
+function ensureHttpScheme(rawUrl: string): string {
+  const url = rawUrl.trim();
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `https://${url}`;
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new Error(`Internal API request timed out (${timeoutMs}ms)`);
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function internalFetch<T>(
   path: string,
-  { userId, method = "GET", body, cache = "no-store" }: InternalFetchOptions = {},
+  { userId, method = "GET", body, cache = "no-store", timeoutMs }: InternalFetchOptions = {},
 ): Promise<T> {
   const baseUrl = process.env.INTERNAL_API_BASE_URL;
   const token = process.env.INTERNAL_SERVICE_TOKEN;
@@ -171,12 +196,19 @@ export async function internalFetch<T>(
     headers["content-type"] = "application/json";
   }
 
-  const res = await fetch(`${baseUrl}${path}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : bodyText,
-    cache,
-  });
+  const baseUrlNormalized = ensureHttpScheme(baseUrl).replace(/\/$/, "");
+  const requestTimeoutMs =
+    typeof timeoutMs === "number" && Number.isFinite(timeoutMs) ? timeoutMs : DEFAULT_INTERNAL_FETCH_TIMEOUT_MS;
+  const res = await fetchWithTimeout(
+    `${baseUrlNormalized}${path}`,
+    {
+      method,
+      headers,
+      body: body === undefined ? undefined : bodyText,
+      cache,
+    },
+    requestTimeoutMs,
+  );
 
   const contentType = res.headers.get("content-type") || "";
   const isJson = contentType.toLowerCase().includes("application/json");

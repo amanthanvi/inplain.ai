@@ -20,6 +20,23 @@ class CheckResult:
     details: str
 
 
+def _env_first(*names: str, default: str) -> str:
+    for name in names:
+        value = (os.environ.get(name) or "").strip()
+        if value:
+            return value
+    return default
+
+
+def _ensure_http_scheme(url: str) -> str:
+    url = (url or "").strip()
+    if not url:
+        return ""
+    if url.startswith(("http://", "https://")):
+        return url
+    return f"https://{url}"
+
+
 def _sign_internal_request(
     *,
     token: str,
@@ -137,22 +154,43 @@ def _check_posthog_capture(*, client: httpx.Client, posthog_host: str, api_key: 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run post-deploy smoke checks.")
-    parser.add_argument("--web-base-url", default=os.environ.get("WEB_BASE_URL", "http://localhost:3000"))
-    parser.add_argument("--api-base-url", default=os.environ.get("API_BASE_URL", "http://localhost:8000"))
+    parser.add_argument(
+        "--web-base-url",
+        default=_env_first("WEB_BASE_URL", "RAILWAY_SERVICE_WEB_URL", default="http://localhost:3000"),
+    )
+    parser.add_argument(
+        "--api-base-url",
+        default=_env_first(
+            "API_BASE_URL",
+            "API_PUBLIC_BASE_URL",
+            "RAILWAY_SERVICE_API_URL",
+            default="http://localhost:8000",
+        ),
+    )
     parser.add_argument(
         "--internal-service-token",
-        default=os.environ.get("INTERNAL_SERVICE_TOKEN", ""),
+        default=_env_first("INTERNAL_SERVICE_TOKEN", default=""),
     )
-    parser.add_argument("--posthog-host", default=os.environ.get("POSTHOG_HOST", ""))
-    parser.add_argument("--posthog-api-key", default=os.environ.get("POSTHOG_API_KEY", ""))
+    parser.add_argument(
+        "--posthog-host",
+        default=_env_first("RAILWAY_SERVICE_POSTHOG_PROXY_URL", "POSTHOG_HOST", default=""),
+    )
+    parser.add_argument(
+        "--posthog-api-key",
+        default=_env_first("POSTHOG_API_KEY", "NEXT_PUBLIC_POSTHOG_KEY", default=""),
+    )
     parser.add_argument("--min-entities", type=int, default=30)
     args = parser.parse_args()
+
+    args.web_base_url = _ensure_http_scheme(args.web_base_url)
+    args.api_base_url = _ensure_http_scheme(args.api_base_url)
+    args.posthog_host = _ensure_http_scheme(args.posthog_host)
 
     if not args.internal_service_token:
         print("INTERNAL_SERVICE_TOKEN is required.")
         return 2
 
-    timeout = httpx.Timeout(15, connect=5)
+    timeout = httpx.Timeout(30, connect=10)
     with httpx.Client(timeout=timeout, follow_redirects=True) as client:
         results = [
             _check_http_200(client, f"{args.web_base_url}/", "web root"),

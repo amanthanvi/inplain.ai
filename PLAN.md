@@ -213,6 +213,8 @@ Acceptance:
 - 2026-02-17: Fixed PostHog ingest on Railway: PostHog template `Web` (`:8000`) returns CSRF 403 for `/capture/`; `posthog-proxy` now routes ingestion paths (`/capture/*`, `/e/*`, `/i/*`) to the template `Capture` service (`:3000`) via `POSTHOG_CAPTURE_UPSTREAM=http://capture:3000`. Verified production smoke test PostHog capture returns 200.
 - 2026-02-18: Railway cleanup: removed accidental public domain on PostHog `Capture`; removed unused/duplicate services (no active env instances); removed unused `Postgres-N-gg` service and pruned `scheduler` from production/staging. Audited private-network endpoints (all ACTIVE).
 - 2026-02-18: Railway cleanup: removed `scheduler` from development (fully deleted) and removed the Railway-provided domain on PostHog `Web` (UI remains available via `posthog-proxy`). Re-audited private-network endpoints (all ACTIVE across prod/staging/dev).
+- 2026-02-18: Re-confirmed external launch gating (initially completed 2026-02-13): Cloudflare orange-cloud proxy enabled for apex + `www` with SSL mode `Full (strict)`; Clerk Client Trust enabled; Turnstile CAPTCHA configured. L4/L5 remain complete.
+- 2026-02-18: Hardened launch verification + stability: updated smoke test to work with Railway-provided URL env vars (hostnames without scheme), added longer HTTP timeouts, and documented `railway run --service api --environment production -- make smoke-test` to avoid copying secrets. Added an internal web→API fetch timeout to prevent hanging pages if the internal API is slow/unreachable.
 
 
 ## Launch milestones (v0.2.0 → PH/HN)

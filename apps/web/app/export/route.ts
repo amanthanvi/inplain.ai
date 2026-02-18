@@ -29,7 +29,7 @@ export async function GET(): Promise<Response> {
   const limit = entitlements.tier === "free" ? 10 : null;
   const path = limit ? `/internal/export?limit_change_events=${limit}` : "/internal/export";
 
-  const payload = await internalFetch<ExportOut>(path, { userId, cache: "no-store" });
+  const payload = await internalFetch<ExportOut>(path, { userId, cache: "no-store", timeoutMs: 60_000 });
 
   return new Response(JSON.stringify(payload, null, 2), {
     status: 200,

@@ -141,3 +141,22 @@ See `scripts/smoke/smoke_test.py`.
 3. Switch production routing to green.
 4. Monitor logs/errors for 15-30 minutes.
 5. If healthy, keep green as prod and demote blue; otherwise rollback.
+
+## Smoke test (no secrets)
+
+To run the smoke test locally **without copying secrets**, pull variables from Railway:
+
+```bash
+railway run --service api --environment production -- make smoke-test
+```
+
+Note: Railway-provided `RAILWAY_SERVICE_*_URL` variables are hostnames (no `http://`/`https://`). If you use them directly in scripts, prefix `https://`.
+
+## Private network apply failures
+
+If the Railway dashboard shows staged changes but applying fails with a private-network error:
+
+1. **Reduce churn first**: ensure only `api`, `web`, and `posthog-proxy` have public domains in `production`. (PostHog template services like `Web` and `Capture` should stay internal-only.)
+2. **Avoid name collisions**: rename PostHog template services to `posthog-*` to prevent `Web` (PostHog) vs `web` (Inplain) confusion and private DNS collisions.
+   - Tip: `railway ssh --service web` may resolve to the wrong service when names collide; prefer using service IDs from `railway status --json`.
+3. **Repair safely**: if the environment is stuck, prefer creating a fresh `prod-green` environment and swapping custom domains over in-place surgery (keeps rollback simple).
