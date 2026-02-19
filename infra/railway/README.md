@@ -153,6 +153,19 @@ railway run --service api --environment production -- make smoke-test
 
 Note: Railway-provided `RAILWAY_SERVICE_*_URL` variables are hostnames (no `http://`/`https://`). If you use them directly in scripts, prefix `https://`.
 
+## Determinism check (no secrets)
+
+Use the scripted production check before or after any Railway recovery action:
+
+```bash
+make railway-prod-check
+```
+
+This verifies, without printing secret values:
+- production staged patch is empty (`patch={}`) and `lastAppliedError` is clear
+- all private-network endpoints are `syncStatus=ACTIVE`
+- only `api`, `web`, and `posthog-proxy` are public in production
+
 ## Private network apply failures
 
 If the Railway dashboard shows staged changes but applying fails with a private-network error:

@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck catalog-validate smoke-test demo-seed openrouter-model-scout
+.PHONY: dev-up dev-down venv migrate dev-api dev-web dev-worker lint test typecheck catalog-validate smoke-test demo-seed openrouter-model-scout railway-prod-check
 
 PYTHON ?= python3.13
 VENV_DIR ?= .venv
@@ -49,3 +49,6 @@ demo-seed:
 
 openrouter-model-scout:
 	PYTHONPATH=$(PYTHONPATH_API) $(VENV_DIR)/bin/python scripts/openrouter/model_scout.py --out docs/openrouter-model-scout.md
+
+railway-prod-check:
+	./scripts/ops/railway_prod_determinism_check.sh production
