@@ -89,7 +89,8 @@ def _summary_policy_for_tier(tier: ScheduleTier) -> _SummaryPolicy:
         case ScheduleTier.daily:
             return _SummaryPolicy(
                 model_chain=[
-                    "deepseek/deepseek-v3.2",
+                    "z-ai/glm-4.7-flash",
+                    "minimax/minimax-m2.1",
                     "google/gemini-2.5-flash-lite",
                 ],
                 max_tokens=500,
@@ -98,8 +99,9 @@ def _summary_policy_for_tier(tier: ScheduleTier) -> _SummaryPolicy:
         case ScheduleTier.six_h:
             return _SummaryPolicy(
                 model_chain=[
-                    "deepseek/deepseek-v3.2",
-                    "openai/gpt-4o-mini",
+                    "minimax/minimax-m2.5",
+                    "moonshotai/kimi-k2.5",
+                    "z-ai/glm-5",
                     "openai/gpt-4.1-mini",
                 ],
                 max_tokens=750,
@@ -108,10 +110,10 @@ def _summary_policy_for_tier(tier: ScheduleTier) -> _SummaryPolicy:
         case ScheduleTier.one_h:
             return _SummaryPolicy(
                 model_chain=[
-                    "deepseek/deepseek-v3.2",
-                    "openai/gpt-4.1-mini",
+                    "minimax/minimax-m2.5",
+                    "moonshotai/kimi-k2.5",
+                    "z-ai/glm-5",
                     "openai/gpt-5.2",
-                    "anthropic/claude-sonnet-4.5",
                 ],
                 max_tokens=950,
                 max_bullets=10,
@@ -119,7 +121,8 @@ def _summary_policy_for_tier(tier: ScheduleTier) -> _SummaryPolicy:
         case _:
             return _SummaryPolicy(
                 model_chain=[
-                    "deepseek/deepseek-v3.2",
+                    "z-ai/glm-4.7-flash",
+                    "minimax/minimax-m2.1",
                     "google/gemini-2.5-flash-lite",
                 ],
                 max_tokens=500,
@@ -515,13 +518,13 @@ def _over_summary_quota(
 
     match schedule_tier:
         case ScheduleTier.daily:
-            limit = 10
+            limit = 20
         case ScheduleTier.six_h:
-            limit = 500
+            limit = 1000
         case ScheduleTier.one_h:
-            limit = 5000
+            limit = 10000
         case _:
-            limit = 10
+            limit = 20
 
     used = db.execute(
         select(func.count(ChangeEvent.id))

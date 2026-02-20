@@ -39,11 +39,11 @@ export default function PricingPage() {
             </thead>
             <tbody>
               {[
-                ["Tracked documents", "3", "25", "200"],
+                ["Tracked documents", "5", "40", "300"],
                 ["Schedule frequency", "daily", "every 6h", "every 1h"],
-                ["On-demand “Check now”", "10/day", "100/day", "500/day"],
-                ["JS-render fetches", "0/mo", "200/mo", "2,000/mo"],
-                ["AI summaries", "10/mo", "500/mo", "5,000/mo"],
+                ["On-demand “Check now”", "15/day", "150/day", "750/day"],
+                ["JS-render fetches", "20/mo", "400/mo", "4,000/mo"],
+                ["AI summaries", "20/mo", "1,000/mo", "10,000/mo"],
                 ["History retention", "90 days", "1 year", "2 years"],
                 ["Export (JSON)", "Last 10 events", "Full", "Full"],
               ].map(([k, a, b, c]) => (

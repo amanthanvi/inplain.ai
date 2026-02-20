@@ -111,16 +111,13 @@ def _over_render_quota(*, db: Session, clerk_user_id: str, schedule_tier: Schedu
 
     match schedule_tier:
         case ScheduleTier.daily:
-            limit = 0
+            limit = 20
         case ScheduleTier.six_h:
-            limit = 200
+            limit = 400
         case ScheduleTier.one_h:
-            limit = 2000
+            limit = 4000
         case _:
-            limit = 0
-
-    if limit == 0:
-        return True
+            limit = 20
 
     used = db.execute(
         select(func.count(Job.id)).where(
@@ -138,7 +135,7 @@ def _over_render_quota(*, db: Session, clerk_user_id: str, schedule_tier: Schedu
             ),
         )
     ).scalar_one()
-    return int(used or 0) > limit
+    return int(used or 0) >= limit
 
 
 def _render_html(*, url: str, start: float) -> str:

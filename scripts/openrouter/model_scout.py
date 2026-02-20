@@ -148,13 +148,14 @@ def build_report(*, out_path: Path) -> None:
 
     # Inplain policy models (must match SPEC Appendix C and worker handler constants).
     policy_model_ids = [
-        "deepseek/deepseek-v3.2",
+        "z-ai/glm-4.7-flash",
+        "minimax/minimax-m2.1",
         "google/gemini-2.5-flash-lite",
-        "openai/gpt-4.1-nano",
-        "openai/gpt-4o-mini",
+        "minimax/minimax-m2.5",
+        "moonshotai/kimi-k2.5",
+        "z-ai/glm-5",
         "openai/gpt-4.1-mini",
         "openai/gpt-5.2",
-        "anthropic/claude-sonnet-4.5",
     ]
 
     rankings_html = _fetch_text(RANKINGS_URL)
@@ -183,11 +184,11 @@ def build_report(*, out_path: Path) -> None:
     lines.append("")
     lines.append("These should match `SPEC.md` Appendix C and worker defaults:")
     lines.append("")
-    lines.append("- Change classification (ambiguous diffs): `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite` → `openai/gpt-4.1-nano` (max_tokens=220)")
+    lines.append("- Change classification (ambiguous diffs): `z-ai/glm-4.7-flash` → `minimax/minimax-m2.1` → `google/gemini-2.5-flash-lite` (max_tokens=220)")
     lines.append("- Summary (tier-aware by schedule):")
-    lines.append("  - `daily`: `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite`")
-    lines.append("  - `6h`: `deepseek/deepseek-v3.2` → `openai/gpt-4o-mini` → `openai/gpt-4.1-mini`")
-    lines.append("  - `1h`: `deepseek/deepseek-v3.2` → `openai/gpt-4.1-mini` → `openai/gpt-5.2` → `anthropic/claude-sonnet-4.5`")
+    lines.append("  - `daily`: `z-ai/glm-4.7-flash` → `minimax/minimax-m2.1` → `google/gemini-2.5-flash-lite`")
+    lines.append("  - `6h`: `minimax/minimax-m2.5` → `moonshotai/kimi-k2.5` → `z-ai/glm-5` → `openai/gpt-4.1-mini`")
+    lines.append("  - `1h`: `minimax/minimax-m2.5` → `moonshotai/kimi-k2.5` → `z-ai/glm-5` → `openai/gpt-5.2`")
     lines.append("")
 
     lines.append("## Pricing (USD per 1M tokens)")
@@ -231,21 +232,23 @@ def build_report(*, out_path: Path) -> None:
     for tier, caps in tier_caps.items():
         for mid in policy_model_ids:
             if tier.startswith("daily") and mid not in {
-                "deepseek/deepseek-v3.2",
+                "z-ai/glm-4.7-flash",
+                "minimax/minimax-m2.1",
                 "google/gemini-2.5-flash-lite",
             }:
                 continue
             if tier.startswith("6h") and mid not in {
-                "deepseek/deepseek-v3.2",
-                "openai/gpt-4o-mini",
+                "minimax/minimax-m2.5",
+                "moonshotai/kimi-k2.5",
+                "z-ai/glm-5",
                 "openai/gpt-4.1-mini",
             }:
                 continue
             if tier.startswith("1h") and mid not in {
-                "deepseek/deepseek-v3.2",
-                "openai/gpt-4.1-mini",
+                "minimax/minimax-m2.5",
+                "moonshotai/kimi-k2.5",
+                "z-ai/glm-5",
                 "openai/gpt-5.2",
-                "anthropic/claude-sonnet-4.5",
             }:
                 continue
 

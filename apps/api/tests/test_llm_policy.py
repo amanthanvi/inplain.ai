@@ -9,7 +9,8 @@ def test_summary_policy_daily_is_cheap_first() -> None:
     policy = _summary_policy_for_tier(ScheduleTier.daily)
 
     assert policy.model_chain == [
-        "deepseek/deepseek-v3.2",
+        "z-ai/glm-4.7-flash",
+        "minimax/minimax-m2.1",
         "google/gemini-2.5-flash-lite",
     ]
     assert policy.max_tokens == 500
@@ -20,22 +21,23 @@ def test_summary_policy_six_h_includes_gpt_fallback() -> None:
     policy = _summary_policy_for_tier(ScheduleTier.six_h)
 
     assert policy.model_chain == [
-        "deepseek/deepseek-v3.2",
-        "openai/gpt-4o-mini",
+        "minimax/minimax-m2.5",
+        "moonshotai/kimi-k2.5",
+        "z-ai/glm-5",
         "openai/gpt-4.1-mini",
     ]
     assert policy.max_tokens == 750
     assert policy.max_bullets == 8
 
 
-def test_summary_policy_one_h_includes_sonnet_fallback() -> None:
+def test_summary_policy_one_h_includes_gpt5_fallback() -> None:
     policy = _summary_policy_for_tier(ScheduleTier.one_h)
 
     assert policy.model_chain == [
-        "deepseek/deepseek-v3.2",
-        "openai/gpt-4.1-mini",
+        "minimax/minimax-m2.5",
+        "moonshotai/kimi-k2.5",
+        "z-ai/glm-5",
         "openai/gpt-5.2",
-        "anthropic/claude-sonnet-4.5",
     ]
     assert policy.max_tokens == 950
     assert policy.max_bullets == 10
@@ -43,7 +45,7 @@ def test_summary_policy_one_h_includes_sonnet_fallback() -> None:
 
 def test_diff_classify_model_chain_is_cheap_first() -> None:
     assert _CLASSIFY_MODEL_CHAIN == [
-        "deepseek/deepseek-v3.2",
+        "z-ai/glm-4.7-flash",
+        "minimax/minimax-m2.1",
         "google/gemini-2.5-flash-lite",
-        "openai/gpt-4.1-nano",
     ]

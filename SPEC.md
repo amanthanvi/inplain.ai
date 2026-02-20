@@ -591,8 +591,8 @@ POST   /internal/admin/jobs/{id}/retry       (admin only)
 {
 	"error": {
 		"code": "DOCUMENT_LIMIT_EXCEEDED",
-		"message": "You've reached your document limit. Upgrade to Pro for 25 documents.",
-		"details": { "current": 3, "limit": 3, "tier": "free" }
+		"message": "You've reached your document limit. Upgrade to Pro for 40 documents.",
+		"details": { "current": 5, "limit": 5, "tier": "free" }
 	}
 }
 ```
@@ -1011,11 +1011,11 @@ Daily cleanup job: delete snapshots where `retention_delete_at <= now()` in batc
 
 | Feature / Quota       | Free           | Pro ($9/mo) | Business ($29/mo) |
 | --------------------- | -------------- | ----------- | ----------------- |
-| Tracked documents     | 3              | 25          | 200               |
+| Tracked documents     | 5              | 40          | 300               |
 | Schedule frequency    | daily          | every 6h    | every 1h          |
-| On-demand "Check now" | 10/day         | 100/day     | 500/day           |
-| JS-render fetches     | 0/mo           | 200/mo      | 2,000/mo          |
-| AI summaries          | 10/mo          | 500/mo      | 5,000/mo          |
+| On-demand "Check now" | 15/day         | 150/day     | 750/day           |
+| JS-render fetches     | 20/mo          | 400/mo      | 4,000/mo          |
+| AI summaries          | 20/mo          | 1,000/mo    | 10,000/mo         |
 | In-app notifications  | Unlimited      | Unlimited   | Unlimited         |
 | History retention     | 90 days        | 1 year      | 2 years           |
 | Export (JSON)         | Last 10 events | Full        | Full              |
@@ -1033,13 +1033,13 @@ Daily cleanup job: delete snapshots where `retention_delete_at <= now()` in batc
 
 - Non-payment → Clerk Billing handles grace period → downgrade to Free
 - On downgrade: documents beyond Free limit auto-paused (oldest by `created_at`)
-- Future: user-controlled document selection ("pick 3 to keep active")
+- Future: user-controlled document selection ("pick 5 to keep active")
 
 ### 9.4 Quota display
 
-- Settings page: usage meters ("8/10 AI summaries used this month")
-- In-app banner at 80%+: "You've used 8/10 AI summaries this month"
-- At limit: block action with upgrade CTA: "Upgrade to Pro for 500 summaries/month"
+- Settings page: usage meters ("16/20 AI summaries used this month")
+- In-app banner at 80%+: "You've used 16/20 AI summaries this month"
+- At limit: block action with upgrade CTA: "Upgrade to Pro for 1,000 summaries/month"
 
 ---
 
@@ -1055,7 +1055,7 @@ v0.1.0 internal review milestone: **AC-1** through **AC-7**. Launch-readiness it
 
 **AC-3**: Given a change event summary, when the user clicks a citation, then the diff viewer scrolls to the referenced hunk and highlights it.
 
-**AC-4**: Given a Free tier user with 3 tracked documents, when they try to watch a 4th company, then they see an upgrade CTA and the action is blocked.
+**AC-4**: Given a Free tier user with 5 tracked documents, when they try to watch a 6th company, then they see an upgrade CTA and the action is blocked.
 
 **AC-5**: Given a document URL that returns 404, when the fetch job runs, then the document status is set to `paused` and the user sees "URL no longer accessible."
 
@@ -1233,7 +1233,7 @@ All decisions from the 9-round interview + launch-readiness audit, organized by 
 5. diff-match-patch's semantic cleanup is sufficient for legal prose diffs
 6. 60s polling interval for notifications is acceptable UX (no real-time requirement)
 7. Curated catalog of 30-50 entities is sufficient for initial user demand
-8. OpenRouter provides reliable access to Sonnet 4.5 / GPT-5.2 / Gemini 3 Flash
+8. OpenRouter provides reliable access to MiniMax M2.5 / Kimi K2.5 / GLM 5 and stable fallbacks
 9. Railway Hobby plan supports 6 services + 2 add-ons (postgres + redis)
 10. PostHog self-hosted fits within Railway Hobby resource constraints
 11. Clerk supports Cloudflare Turnstile integration natively
@@ -1518,7 +1518,7 @@ WHERE id = $1;
 - Minimum added/removed chars: 500
 - change_score threshold: 0.02
 - Cosmetic patterns: timestamps, copyright years, counters
-- Ambiguous LLM gate model chain: `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite` → `openai/gpt-4.1-nano` (max_tokens=220)
+- Ambiguous LLM gate model chain: `z-ai/glm-4.7-flash` → `minimax/minimax-m2.1` → `google/gemini-2.5-flash-lite` (max_tokens=220)
 
 **Summaries**:
 
@@ -1527,9 +1527,9 @@ WHERE id = $1;
 - OpenRouter attribution headers: `HTTP-Referer`, `X-Title`
 - Structured outputs: JSON schema when supported (retry without on 400)
 - Tier-aware model policy (by `schedule_tier`):
-  - `daily`: `deepseek/deepseek-v3.2` → `google/gemini-2.5-flash-lite` (max_tokens=500, max_bullets=6)
-  - `6h`: `deepseek/deepseek-v3.2` → `openai/gpt-4o-mini` → `openai/gpt-4.1-mini` (max_tokens=750, max_bullets=8)
-  - `1h`: `deepseek/deepseek-v3.2` → `openai/gpt-4.1-mini` → `openai/gpt-5.2` → `anthropic/claude-sonnet-4.5` (max_tokens=950, max_bullets=10)
+  - `daily`: `z-ai/glm-4.7-flash` → `minimax/minimax-m2.1` → `google/gemini-2.5-flash-lite` (max_tokens=500, max_bullets=6)
+  - `6h`: `minimax/minimax-m2.5` → `moonshotai/kimi-k2.5` → `z-ai/glm-5` → `openai/gpt-4.1-mini` (max_tokens=750, max_bullets=8)
+  - `1h`: `minimax/minimax-m2.5` → `moonshotai/kimi-k2.5` → `z-ai/glm-5` → `openai/gpt-5.2` (max_tokens=950, max_bullets=10)
 
 **Scheduler**:
 

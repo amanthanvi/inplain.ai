@@ -35,30 +35,30 @@ export function getEntitlementsForHas(has: CheckAuthorizationFromSessionClaims):
     case "business":
       return {
         tier,
-        trackedDocuments: 200,
+        trackedDocuments: 300,
         scheduleTier: "1h",
-        checkNowPerDay: 500,
-        renderPerMonth: 2000,
-        summariesPerMonth: 5000,
+        checkNowPerDay: 750,
+        renderPerMonth: 4000,
+        summariesPerMonth: 10000,
       };
     case "pro":
       return {
         tier,
-        trackedDocuments: 25,
+        trackedDocuments: 40,
         scheduleTier: "6h",
-        checkNowPerDay: 100,
-        renderPerMonth: 200,
-        summariesPerMonth: 500,
+        checkNowPerDay: 150,
+        renderPerMonth: 400,
+        summariesPerMonth: 1000,
       };
     case "free":
     default:
       return {
         tier: "free",
-        trackedDocuments: 3,
+        trackedDocuments: 5,
         scheduleTier: "daily",
-        checkNowPerDay: 10,
-        renderPerMonth: 0,
-        summariesPerMonth: 10,
+        checkNowPerDay: 15,
+        renderPerMonth: 20,
+        summariesPerMonth: 20,
       };
   }
 }

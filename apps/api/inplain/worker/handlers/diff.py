@@ -23,9 +23,9 @@ from inplain.settings import settings
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 _CLASSIFY_PROMPT_VERSION = 1
 _CLASSIFY_MODEL_CHAIN = [
-    "deepseek/deepseek-v3.2",
+    "z-ai/glm-4.7-flash",
+    "minimax/minimax-m2.1",
     "google/gemini-2.5-flash-lite",
-    "openai/gpt-4.1-nano",
 ]
 _MAX_HUNKS_FOR_CLASSIFY = 12
 
