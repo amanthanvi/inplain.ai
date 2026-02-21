@@ -1,12 +1,17 @@
 import Link from "next/link";
 
 import { PricingTableClient } from "@/app/pricing/PricingTableClient";
+import { entitlementsForTier } from "@/lib/billing-plans";
 
 function clerkEnabled() {
   return Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY);
 }
 
 export default function PricingPage() {
+  const free = entitlementsForTier("free");
+  const pro = entitlementsForTier("pro");
+  const business = entitlementsForTier("business");
+
   return (
     <main>
       <header className="pageHeader">
@@ -39,11 +44,31 @@ export default function PricingPage() {
             </thead>
             <tbody>
               {[
-                ["Tracked documents", "5", "40", "300"],
+                [
+                  "Tracked documents",
+                  String(free.trackedDocuments),
+                  String(pro.trackedDocuments),
+                  String(business.trackedDocuments),
+                ],
                 ["Schedule frequency", "daily", "every 6h", "every 1h"],
-                ["On-demand “Check now”", "15/day", "150/day", "750/day"],
-                ["JS-render fetches", "20/mo", "400/mo", "4,000/mo"],
-                ["AI summaries", "20/mo", "1,000/mo", "10,000/mo"],
+                [
+                  "On-demand “Check now”",
+                  `${free.checkNowPerDay}/day`,
+                  `${pro.checkNowPerDay}/day`,
+                  `${business.checkNowPerDay}/day`,
+                ],
+                [
+                  "JS-render fetches",
+                  `${free.renderPerMonth}/mo`,
+                  `${pro.renderPerMonth}/mo`,
+                  `${business.renderPerMonth.toLocaleString()}/mo`,
+                ],
+                [
+                  "AI summaries",
+                  `${free.summariesPerMonth}/mo`,
+                  `${pro.summariesPerMonth.toLocaleString()}/mo`,
+                  `${business.summariesPerMonth.toLocaleString()}/mo`,
+                ],
                 ["History retention", "90 days", "1 year", "2 years"],
                 ["Export (JSON)", "Last 10 events", "Full", "Full"],
               ].map(([k, a, b, c]) => (

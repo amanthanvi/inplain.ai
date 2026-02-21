@@ -143,7 +143,7 @@ Acceptance:
 - [x] Settings page shows usage meters + upgrade CTAs.
 
 Acceptance:
-- SPEC AC-4 enforced (Free tier doc limit blocks 4th watch).
+- SPEC AC-4 enforced (Free tier doc limit blocks 6th watch).
 
 ### M10 — Testing + ops + release readiness
 
@@ -223,6 +223,7 @@ Acceptance:
 - 2026-02-18: Determinism re-check: production staged patch remains empty (`patch={}`, `lastAppliedError` clear), private-network endpoint sync is fully `ACTIVE` (22/22), public domains are limited to `api`/`web`/`posthog-proxy`, and `railway run --service api --environment production -- make smoke-test` passes (including `posthog capture`).
 - 2026-02-19: Added scripted Railway determinism gate (`make railway-prod-check`) to verify production staged patch emptiness, private-network endpoint sync (`ACTIVE`), and public-domain scope (`api`/`web`/`posthog-proxy`) without printing secrets. Re-ran production smoke (`railway run --service api --environment production -- make smoke-test`) and local gates (`make lint`, `make typecheck`, `make test`) — all PASS.
 - 2026-02-20: OpenRouter pricing/performance realignment completed using live OpenRouter rankings + model pricing data. Updated model policy to labs-first (`minimax`/`moonshotai`/`z-ai`) with one stable fallback per chain, and increased tier quotas for a more generous Free plan (`5 docs`, `20 summaries/mo`) while scaling Pro/Business quotas to match.
+- 2026-02-21: Clerk Billing hardening for launch readiness: standardized plan-key defaults (`free_user`, `inplain_pro`, `inplain_business`), pinned `@clerk/nextjs` to exact version `6.37.3`, added `POST /api/webhooks/clerk-billing` on web for Svix-verified subscription events with immediate entitlement sync (`/internal/documents/apply-entitlements`), and added `/settings/billing` as the in-app subscription management entrypoint.
 
 
 ## Launch milestones (v0.2.0 → PH/HN)

@@ -29,6 +29,8 @@ Shared:
 
 `web`:
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY`
+- `CLERK_PLAN_FREE` + `CLERK_PLAN_PRO` + `CLERK_PLAN_BUSINESS`
+- `CLERK_BILLING_WEBHOOK_SECRET`
 - `INTERNAL_API_BASE_URL` — the **private** base URL for `api` (Railway private networking)
 
 `posthog-proxy`:
@@ -42,11 +44,12 @@ Notes:
 
 ## Clerk webhooks
 
-Create a Clerk webhook pointing to:
+Create two Clerk webhooks:
 
-- `POST /internal/webhooks/clerk`
+- User lifecycle webhook to `api`: `POST /internal/webhooks/clerk` (`CLERK_WEBHOOK_SECRET` on `api`)
+- Billing webhook to `web`: `POST /api/webhooks/clerk-billing` (`CLERK_BILLING_WEBHOOK_SECRET` on `web`)
 
-Set `CLERK_WEBHOOK_SECRET` on `api`.
+Billing webhook should include subscription events (`subscription.*`, `subscriptionItem.*`) so plan changes trigger entitlement sync immediately.
 
 ## Railpack notes
 

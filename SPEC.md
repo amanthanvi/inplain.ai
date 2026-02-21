@@ -557,7 +557,9 @@ Indexes:
 - Client-side code never calls FastAPI directly
 - Auth: Server Actions verify Clerk session server-side. Calls to FastAPI use HMAC-signed requests (see §5.1) + pass `clerk_user_id` as parameter
 - FastAPI verifies HMAC signature; enforces row-level access by `clerk_user_id`
-- Webhooks: Clerk hits `/internal/webhooks/clerk` directly; endpoint is protected by Svix signature verification
+- Webhooks:
+  - Clerk user lifecycle events hit FastAPI `POST /internal/webhooks/clerk` (Svix signature verified).
+  - Clerk billing events hit Next.js `POST /api/webhooks/clerk-billing` (Svix signature verified), then trigger entitlement sync through internal API.
 
 **FastAPI endpoints** (internal, not public):
 
@@ -583,6 +585,12 @@ GET    /internal/export                      (JSON export; tier-gated)
 POST   /internal/webhooks/clerk              (Clerk webhook, signature verified)
 GET    /internal/admin/jobs                  (admin only)
 POST   /internal/admin/jobs/{id}/retry       (admin only)
+```
+
+**Next.js webhook endpoint** (public route handler):
+
+```
+POST   /api/webhooks/clerk-billing           (Clerk billing webhook; verifies Svix, syncs entitlements)
 ```
 
 **Error format**:
@@ -1027,6 +1035,8 @@ Daily cleanup job: delete snapshots where `retention_delete_at <= now()` in batc
 - `<PricingTable />` component renders pricing page
 - `<Protect />` and `has()` gate features in Server Actions
 - No local `entitlements` table; Clerk is source of truth
+- Default Clerk plan keys: `free_user`, `inplain_pro`, `inplain_business` (override via env)
+- Billing webhook `POST /api/webhooks/clerk-billing` enforces immediate entitlement sync on subscription changes
 - Usage metering: count rows in `jobs` and `change_events` tables per period (indexed query)
 
 ### 9.3 Downgrade handling

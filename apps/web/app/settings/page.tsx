@@ -60,9 +60,12 @@ export default async function SettingsPage() {
                 ? "every 6 hours"
                 : "every 1 hour"}
           </div>
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
             <a className="btn btnPrimary" href="/pricing">
-              Upgrade
+              {entitlements.tier === "free" ? "Upgrade" : "Change plan"}
+            </a>
+            <a className="btn" href="/settings/billing">
+              Manage subscription
             </a>
           </div>
         </div>
