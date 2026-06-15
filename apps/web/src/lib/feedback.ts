@@ -162,10 +162,11 @@ export class FeedbackService {
 	 */
 	static async submitFeedback(
 		submission: FeedbackSubmission,
-		userId?: string
+		userId?: string,
+		rateLimitIdentity?: string
 	): Promise<Feedback> {
 		// Rate limiting check
-		const rateLimitKey = `${this.RATE_LIMIT_KEY_PREFIX}${submission.context.url}:${userId || "anonymous"}`;
+		const rateLimitKey = `${this.RATE_LIMIT_KEY_PREFIX}${rateLimitIdentity || userId || "anonymous"}`;
 		const currentCount = ((await kv.get(rateLimitKey)) as number) || 0;
 		const submissions = currentCount + 1;
 		await kv.set(rateLimitKey, submissions);

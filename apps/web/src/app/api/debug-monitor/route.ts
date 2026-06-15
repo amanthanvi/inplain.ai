@@ -5,6 +5,10 @@ import { formatTimestamp, hashContent } from '@inplain.ai/shared'
 export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'This diagnostic endpoint is disabled' }, { status: 410 })
+  }
+
   const slug = request.nextUrl.searchParams.get('slug') || 'google'
   
   try {

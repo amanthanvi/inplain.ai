@@ -1,11 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { kv, isKVConfigured, getKVConfigError } from '@/app/api/lib/kv-production'
 import { getKVConfig } from '@/app/api/lib/get-kv-config'
 
 export const runtime = 'edge'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const startTime = Date.now()
+  const token = process.env.HEALTH_CHECK_TOKEN?.trim() || process.env.CRON_SECRET?.trim()
+
+  if (!token || request.headers.get('authorization') !== `Bearer ${token}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   
   try {
     // Get KV configuration status

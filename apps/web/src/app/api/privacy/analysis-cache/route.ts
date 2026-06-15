@@ -3,6 +3,19 @@ import { kv } from '@vercel/kv'
 
 export const runtime = 'edge'
 
+const MAX_CACHE_TTL_SECONDS = 24 * 60 * 60
+const COMPANY_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,79}$/
+
+function isWriteAuthorized(request: NextRequest): boolean {
+  const token = process.env.CRON_SECRET?.trim()
+  return !!token && request.headers.get('authorization') === `Bearer ${token}`
+}
+
+function normalizedTtl(value: unknown): number {
+  const ttl = typeof value === 'number' && Number.isFinite(value) ? Math.floor(value) : 86400
+  return Math.max(60, Math.min(MAX_CACHE_TTL_SECONDS, ttl))
+}
+
 // GET: Retrieve cached analysis
 export async function GET(request: NextRequest) {
   try {
@@ -56,12 +69,22 @@ export async function GET(request: NextRequest) {
 // POST: Store analysis in cache
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { company, analysisId, data, ttl = 86400 } = body // Default 24 hour TTL
+    if (!isWriteAuthorized(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    if (!company || !data) {
+    const contentLength = Number(request.headers.get('content-length') ?? 0)
+    if (contentLength > 64 * 1024) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+    }
+
+    const body = await request.json()
+    const { company, analysisId, data } = body
+    const ttl = normalizedTtl(body.ttl)
+
+    if (!company || typeof company !== 'string' || !COMPANY_SLUG_PATTERN.test(company) || !data) {
       return NextResponse.json(
-        { error: 'Company and data are required' },
+        { error: 'Valid company and data are required' },
         { status: 400 }
       )
     }
@@ -99,12 +122,16 @@ export async function POST(request: NextRequest) {
 // DELETE: Clear cache for a company
 export async function DELETE(request: NextRequest) {
   try {
+    if (!isWriteAuthorized(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const company = searchParams.get('company')
 
-    if (!company) {
+    if (!company || !COMPANY_SLUG_PATTERN.test(company)) {
       return NextResponse.json(
-        { error: 'Company slug required' },
+        { error: 'Valid company slug required' },
         { status: 400 }
       )
     }

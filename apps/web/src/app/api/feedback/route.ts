@@ -4,6 +4,11 @@ import { z } from 'zod';
 import { headers } from 'next/headers';
 import { currentUser } from '@clerk/nextjs/server';
 
+function clientIp(req: NextRequest): string {
+  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  return req.headers.get('cf-connecting-ip') || req.headers.get('x-real-ip') || forwarded || 'unknown';
+}
+
 // GET /api/feedback - List feedback with filters
 export async function GET(req: NextRequest) {
   try {
@@ -63,7 +68,11 @@ export async function POST(req: NextRequest) {
     const validatedData = FeedbackSubmissionSchema.parse(submission);
     
     // Submit feedback
-    const feedback = await FeedbackService.submitFeedback(validatedData, user?.id);
+    const feedback = await FeedbackService.submitFeedback(
+      validatedData,
+      user?.id,
+      user?.id ? `user:${user.id}` : `ip:${clientIp(req)}`
+    );
     
     return NextResponse.json(feedback, { status: 201 });
   } catch (error) {

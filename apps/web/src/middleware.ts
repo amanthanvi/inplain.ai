@@ -44,9 +44,13 @@ const isExportRoute = createRouteMatcher([
 ])
 
 const isPublicAPIRoute = createRouteMatcher([
-  '/api/health',
+  '/api/health(.*)',
   '/api/status',
-  '/api/metrics(.*)'
+  '/api/metrics(.*)',
+  '/api/privacy/analysis-cache(.*)',
+  '/api/feedback(.*)',
+  '/api/debug-monitor(.*)',
+  '/api/test-fetch(.*)'
 ])
 
 export default clerkMiddleware(async (auth, req) => {

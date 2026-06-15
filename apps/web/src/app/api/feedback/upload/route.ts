@@ -3,12 +3,19 @@ import { currentUser } from '@clerk/nextjs/server';
 import { put } from '@vercel/blob';
 import { nanoid } from 'nanoid';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 
 export async function POST(req: NextRequest) {
   try {
     const user = await currentUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
     
     // Get form data
     const formData = await req.formData();
@@ -32,14 +39,14 @@ export async function POST(req: NextRequest) {
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 5MB.' },
+        { error: 'File too large. Maximum size is 1MB.' },
         { status: 400 }
       );
     }
     
     // Generate unique filename
     const fileExtension = file.name.split('.').pop();
-    const fileName = `feedback/${user?.id || 'anonymous'}/${nanoid()}.${fileExtension}`;
+    const fileName = `feedback/${user.id}/${nanoid()}.${fileExtension}`;
     
     // Upload to Vercel Blob
     const blob = await put(fileName, file, {
