@@ -1,235 +1,141 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { RateLimiter, rateLimiters } from '../rate-limiter'
+import {
+  RateLimiter,
+  rateLimiters,
+  createRateLimitResponse,
+  getRateLimitHeaders,
+} from '../rate-limiter'
 import { kv } from '@vercel/kv'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 
 vi.mock('@vercel/kv', () => ({
   kv: {
-    get: vi.fn(),
-    set: vi.fn(),
-    expire: vi.fn()
-  }
+    incr: vi.fn(),
+    expire: vi.fn(),
+    del: vi.fn(),
+  },
 }))
+
+const now = new Date('2026-06-15T00:00:00Z')
+const windowMs = 60_000
+const windowBucket = Math.floor(now.getTime() / windowMs)
+
+function request(headers: Record<string, string> = {}) {
+  return new NextRequest('https://example.com/api/test', { headers })
+}
 
 describe('RateLimiter', () => {
   let rateLimiter: RateLimiter
+  let consoleError: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(now)
     vi.clearAllMocks()
+    consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     rateLimiter = new RateLimiter({
-      windowMs: 60000, // 1 minute
-      maxRequests: 10
+      windowMs,
+      maxRequests: 10,
+      keyPrefix: 'test',
     })
   })
 
-  describe('check', () => {
-    it('should allow request when under limit', async () => {
-      vi.mocked(kv.get).mockResolvedValue(5)
-      vi.mocked(kv.set).mockResolvedValue('OK')
-
-      const result = await rateLimiter.check('test-key')
-
-      expect(result.allowed).toBe(true)
-      expect(result.remaining).toBe(4)
-      expect(result.resetIn).toBeLessThanOrEqual(60000)
-      expect(kv.set).toHaveBeenCalledWith('rate-limit:test-key', 6)
-    })
-
-    it('should deny request when at limit', async () => {
-      vi.mocked(kv.get).mockResolvedValue(10)
-
-      const result = await rateLimiter.check('test-key')
-
-      expect(result.allowed).toBe(false)
-      expect(result.remaining).toBe(0)
-      expect(kv.set).not.toHaveBeenCalled()
-    })
-
-    it('should initialize counter for new keys', async () => {
-      vi.mocked(kv.get).mockResolvedValue(null)
-      vi.mocked(kv.set).mockResolvedValue('OK')
-
-      const result = await rateLimiter.check('new-key')
-
-      expect(result.allowed).toBe(true)
-      expect(result.remaining).toBe(9)
-      expect(kv.set).toHaveBeenCalledWith('rate-limit:new-key', 1)
-      expect(kv.expire).toHaveBeenCalledWith('rate-limit:new-key', 60)
-    })
-
-    it('should handle KV errors gracefully', async () => {
-      vi.mocked(kv.get).mockRejectedValue(new Error('KV error'))
-
-      const result = await rateLimiter.check('error-key')
-
-      expect(result.allowed).toBe(true) // Fail open
-      expect(result.remaining).toBe(9)
-    })
+  afterEach(() => {
+    consoleError.mockRestore()
+    vi.useRealTimers()
   })
 
-  describe('reset', () => {
-    it('should reset the counter for a key', async () => {
-      await rateLimiter.reset('test-key')
+  it('allows requests below the configured limit', async () => {
+    vi.mocked(kv.incr).mockResolvedValue(6)
 
-      expect(kv.set).toHaveBeenCalledWith('rate-limit:test-key', 0)
+    const result = await rateLimiter.checkLimit(request({ 'x-forwarded-for': '192.0.2.1' }))
+
+    expect(result).toMatchObject({
+      success: true,
+      limit: 10,
+      remaining: 4,
+      reset: new Date(now.getTime() + windowMs),
     })
+    expect(kv.incr).toHaveBeenCalledWith(`test:ip:192.0.2.1:${windowBucket}`)
+    expect(kv.expire).not.toHaveBeenCalled()
   })
 
-  describe('handleRequest', () => {
-    it('should allow request and set headers', async () => {
-      vi.mocked(kv.get).mockResolvedValue(3)
-      vi.mocked(kv.set).mockResolvedValue('OK')
+  it('sets key expiry for a new bucket', async () => {
+    vi.mocked(kv.incr).mockResolvedValue(1)
 
-      const req = new NextRequest('https://example.com/api/test', {
-        headers: { 'x-forwarded-for': '192.168.1.1' }
-      })
+    await rateLimiter.checkLimit(request({ 'x-real-ip': '192.0.2.2' }))
 
-      const response = await rateLimiter.handleRequest(req)
-
-      expect(response).toBeNull()
-    })
-
-    it('should return 429 when rate limited', async () => {
-      vi.mocked(kv.get).mockResolvedValue(10)
-
-      const req = new NextRequest('https://example.com/api/test', {
-        headers: { 'x-forwarded-for': '192.168.1.1' }
-      })
-
-      const response = await rateLimiter.handleRequest(req)
-
-      expect(response).toBeInstanceOf(NextResponse)
-      expect(response?.status).toBe(429)
-      
-      const body = await response?.json()
-      expect(body.error).toBe('Rate limit exceeded')
-    })
-
-    it('should extract IP from various headers', async () => {
-      vi.mocked(kv.get).mockResolvedValue(0)
-      vi.mocked(kv.set).mockResolvedValue('OK')
-
-      // Test x-forwarded-for
-      let req = new NextRequest('https://example.com/api/test', {
-        headers: { 'x-forwarded-for': '10.0.0.1, 192.168.1.1' }
-      })
-      await rateLimiter.handleRequest(req)
-      expect(kv.set).toHaveBeenCalledWith('rate-limit:api:/api/test:10.0.0.1', 1)
-
-      // Test x-real-ip
-      vi.clearAllMocks()
-      vi.mocked(kv.get).mockResolvedValue(0)
-      req = new NextRequest('https://example.com/api/test', {
-        headers: { 'x-real-ip': '10.0.0.2' }
-      })
-      await rateLimiter.handleRequest(req)
-      expect(kv.set).toHaveBeenCalledWith('rate-limit:api:/api/test:10.0.0.2', 1)
-
-      // Test cf-connecting-ip
-      vi.clearAllMocks()
-      vi.mocked(kv.get).mockResolvedValue(0)
-      req = new NextRequest('https://example.com/api/test', {
-        headers: { 'cf-connecting-ip': '10.0.0.3' }
-      })
-      await rateLimiter.handleRequest(req)
-      expect(kv.set).toHaveBeenCalledWith('rate-limit:api:/api/test:10.0.0.3', 1)
-    })
-
-    it('should use default IP when headers are missing', async () => {
-      vi.mocked(kv.get).mockResolvedValue(0)
-      vi.mocked(kv.set).mockResolvedValue('OK')
-
-      const req = new NextRequest('https://example.com/api/test')
-      await rateLimiter.handleRequest(req)
-
-      expect(kv.set).toHaveBeenCalledWith('rate-limit:api:/api/test:127.0.0.1', 1)
-    })
+    expect(kv.expire).toHaveBeenCalledWith(`test:ip:192.0.2.2:${windowBucket}`, 60)
   })
 
-  describe('middleware', () => {
-    it('should create middleware function', () => {
-      const middleware = rateLimiter.middleware()
-      expect(middleware).toBeInstanceOf(Function)
-    })
+  it('denies requests above the configured limit', async () => {
+    vi.mocked(kv.incr).mockResolvedValue(11)
 
-    it('should call handleRequest in middleware', async () => {
-      vi.mocked(kv.get).mockResolvedValue(0)
-      vi.mocked(kv.set).mockResolvedValue('OK')
+    const result = await rateLimiter.checkLimit(request({ 'cf-connecting-ip': '192.0.2.3' }))
 
-      const middleware = rateLimiter.middleware()
-      const req = new NextRequest('https://example.com/api/test')
-      const next = vi.fn().mockResolvedValue(NextResponse.next())
-
-      const response = await middleware(req, next)
-
-      expect(next).toHaveBeenCalled()
-      expect(response).toBeInstanceOf(NextResponse)
-    })
-
-    it('should return rate limit response without calling next', async () => {
-      vi.mocked(kv.get).mockResolvedValue(10)
-
-      const middleware = rateLimiter.middleware()
-      const req = new NextRequest('https://example.com/api/test')
-      const next = vi.fn()
-
-      const response = await middleware(req, next)
-
-      expect(next).not.toHaveBeenCalled()
-      expect(response?.status).toBe(429)
-    })
+    expect(result.success).toBe(false)
+    expect(result.remaining).toBe(0)
+    expect(result.retryAfter).toBe(60)
   })
 
-  describe('rateLimiters', () => {
-    it('should have different limits for different endpoints', () => {
-      expect(rateLimiters.ai).toBeDefined()
-      expect(rateLimiters.api).toBeDefined()
-      expect(rateLimiters.search).toBeDefined()
-      expect(rateLimiters.auth).toBeDefined()
-      expect(rateLimiters.export).toBeDefined()
+  it('uses authenticated user id when provided', async () => {
+    vi.mocked(kv.incr).mockResolvedValue(1)
 
-      // AI endpoint should have lower limit
-      expect(rateLimiters.ai['maxRequests']).toBeLessThan(rateLimiters.api['maxRequests'])
-    })
+    await rateLimiter.checkLimit(request({ 'x-forwarded-for': '192.0.2.4' }), 'user_123')
+
+    expect(kv.incr).toHaveBeenCalledWith(`test:user:user_123:${windowBucket}`)
   })
 
-  describe('Edge cases', () => {
-    it('should handle concurrent requests correctly', async () => {
-      vi.mocked(kv.get).mockResolvedValue(8)
-      vi.mocked(kv.set).mockResolvedValue('OK')
+  it('fails open if KV is unavailable', async () => {
+    vi.mocked(kv.incr).mockRejectedValue(new Error('KV down'))
 
-      // Simulate concurrent requests
-      const promises = Array(5).fill(null).map(() => 
-        rateLimiter.check('concurrent-key')
-      )
+    const result = await rateLimiter.checkLimit(request())
 
-      const results = await Promise.all(promises)
+    expect(result).toMatchObject({
+      success: true,
+      limit: 10,
+      remaining: 10,
+    })
+    expect(consoleError).toHaveBeenCalled()
+  })
 
-      // All should be allowed since we start at 8 and limit is 10
-      expect(results.every(r => r.allowed)).toBe(true)
-      expect(kv.set).toHaveBeenCalledTimes(5)
+  it('resets the current bucket for an identifier', async () => {
+    await rateLimiter.reset('ip:192.0.2.5')
+
+    expect(kv.del).toHaveBeenCalledWith(`test:ip:192.0.2.5:${windowBucket}`)
+  })
+
+  it('exports isolated buckets for predefined endpoint groups', () => {
+    const configs = {
+      ai: (rateLimiters.ai as unknown as { config: { maxRequests: number; keyPrefix: string } }).config,
+      api: (rateLimiters.api as unknown as { config: { maxRequests: number; keyPrefix: string } }).config,
+      search: (rateLimiters.search as unknown as { config: { maxRequests: number; keyPrefix: string } }).config,
+      auth: (rateLimiters.auth as unknown as { config: { maxRequests: number; keyPrefix: string } }).config,
+      export: (rateLimiters.export as unknown as { config: { maxRequests: number; keyPrefix: string } }).config,
+      webhook: (rateLimiters.webhook as unknown as { config: { maxRequests: number; keyPrefix: string } }).config,
+    }
+
+    expect(configs.ai.maxRequests).toBe(5)
+    expect(configs.ai.maxRequests).toBeLessThan(configs.api.maxRequests)
+    expect(new Set(Object.values(configs).map((config) => config.keyPrefix)).size).toBe(6)
+  })
+
+  it('builds rate limit headers and responses', async () => {
+    const reset = new Date(now.getTime() + windowMs)
+    const result = { success: false, limit: 5, remaining: 0, reset, retryAfter: 60 }
+
+    expect(getRateLimitHeaders(result)).toMatchObject({
+      'X-RateLimit-Limit': '5',
+      'X-RateLimit-Remaining': '0',
+      'X-RateLimit-Reset': reset.toISOString(),
+      'Retry-After': '60',
     })
 
-    it('should handle very long keys', async () => {
-      vi.mocked(kv.get).mockResolvedValue(0)
-      vi.mocked(kv.set).mockResolvedValue('OK')
-
-      const longKey = 'a'.repeat(1000)
-      const result = await rateLimiter.check(longKey)
-
-      expect(result.allowed).toBe(true)
-      expect(kv.set).toHaveBeenCalledWith(`rate-limit:${longKey}`, 1)
-    })
-
-    it('should handle special characters in keys', async () => {
-      vi.mocked(kv.get).mockResolvedValue(0)
-      vi.mocked(kv.set).mockResolvedValue('OK')
-
-      const specialKey = 'test:key/with@special#chars'
-      const result = await rateLimiter.check(specialKey)
-
-      expect(result.allowed).toBe(true)
-      expect(kv.set).toHaveBeenCalledWith(`rate-limit:${specialKey}`, 1)
+    const response = createRateLimitResponse(result)
+    expect(response.status).toBe(429)
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'Too many requests',
+      retryAfter: 60,
     })
   })
 })

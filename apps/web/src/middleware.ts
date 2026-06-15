@@ -26,7 +26,12 @@ const isAIRoute = createRouteMatcher([
   '/api/analyze(.*)',
   '/api/analyze-advanced(.*)',
   '/api/analyze-premium(.*)',
-  '/api/privacy/analyze-advanced(.*)'
+  '/api/privacy/analyze-advanced(.*)',
+  '/api/analysis(.*)',
+  '/api/policies/summarize(.*)',
+  '/api/summary(.*)',
+  '/api/ai-health(.*)',
+  '/api/debug/ai-test(.*)'
 ])
 
 const isSearchRoute = createRouteMatcher([

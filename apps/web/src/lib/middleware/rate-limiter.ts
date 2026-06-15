@@ -112,37 +112,43 @@ export const rateLimiters = {
   // Strict limit for expensive AI operations
   ai: new RateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 10
+    maxRequests: 5,
+    keyPrefix: 'ratelimit:ai'
   }),
 
   // Moderate limit for API endpoints
   api: new RateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 60
+    maxRequests: 60,
+    keyPrefix: 'ratelimit:api'
   }),
 
   // Relaxed limit for search
   search: new RateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 30
+    maxRequests: 30,
+    keyPrefix: 'ratelimit:search'
   }),
 
   // Very strict limit for authentication attempts
   auth: new RateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5
+    maxRequests: 5,
+    keyPrefix: 'ratelimit:auth'
   }),
 
   // Export operations
   export: new RateLimiter({
     windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 10
+    maxRequests: 10,
+    keyPrefix: 'ratelimit:export'
   }),
 
   // Webhook operations
   webhook: new RateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 100
+    maxRequests: 100,
+    keyPrefix: 'ratelimit:webhook'
   })
 }
 
