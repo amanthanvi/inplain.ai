@@ -1,16 +1,30 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"pipeline": {
-		"build": { 
-			"dependsOn": ["^build"], 
-			"outputs": ["dist/**", ".next/**", "!.next/cache/**"] 
+		"build": {
+			"dependsOn": ["^build"],
+			"outputs": ["dist/**", ".next/**", "!.next/cache/**"]
 		},
-		"dev": { 
+		"dev": {
+			"dependsOn": ["^build"],
 			"cache": false,
 			"persistent": true
 		},
 		"lint": {},
-		"typecheck": {},
-		"test": {}
-	}
+		"typecheck": { "dependsOn": ["^build"] },
+		"test": { "dependsOn": ["^build"] },
+		"test:coverage": { "dependsOn": ["^build"] },
+		"e2e": { "dependsOn": ["^build"] },
+		"clean": { "cache": false }
+	},
+	"globalEnv": [
+		"NODE_ENV",
+		"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+		"CLERK_SECRET_KEY",
+		"KV_REST_API_URL",
+		"KV_REST_API_TOKEN",
+		"BLOB_READ_WRITE_TOKEN",
+		"OPENROUTER_API_KEY",
+		"CRON_SECRET"
+	]
 }

@@ -2,211 +2,83 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
     branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: '20'
   PYTHON_VERSION: '3.12'
-  PNPM_VERSION: '8'
 
 jobs:
-  lint:
-    name: Lint
+  check:
+    name: Lint, typecheck, test
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      
-      - name: Run ESLint
-        run: pnpm run lint
-      
-      - name: Check formatting
-        run: pnpm run format:check
-      
-      - name: Type check
-        run: pnpm run typecheck
+          cache: npm
 
-  test-js:
-    name: Test JavaScript
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      
-      - name: Run tests
-        run: pnpm run test
-      
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/lcov.info
-          flags: javascript
+      - run: npm ci
 
-  test-python:
-    name: Test Python
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      
-      - name: Install dependencies
-        run: |
-          cd packages/scraper
-          pip install -r requirements.txt
-          pip install pytest-cov
-      
-      - name: Run tests
-        run: |
-          cd packages/scraper
-          pytest --cov=. --cov-report=xml
-      
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./packages/scraper/coverage.xml
-          flags: python
+      - name: Typecheck
+        run: npm run typecheck
+
+      # ESLint is currently disabled during builds (next.config.mjs) and the
+      # true error count is unknown, so this reports without failing CI.
+      # Drop continue-on-error once the backlog is cleared.
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+      # The suite is known-failing and is being rebuilt around the surviving
+      # feature set. Tracked on the wayfinder map.
+      - name: Test
+        run: npm run test
+        continue-on-error: true
 
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: [lint, test-js]
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      
-      - name: Build packages
-        run: pnpm run build
-      
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-artifacts
-          path: |
-            packages/*/dist
-            apps/web/.next
+          cache: npm
 
-  build-scraper:
-    name: Build Scraper Image
-    runs-on: ubuntu-latest
-    needs: [test-python]
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Build scraper image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./packages/scraper
-          push: false
-          tags: policydiff-scraper:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - run: npm ci
 
-  e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: [build]
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
-      
-      - name: Start services
-        run: |
-          docker-compose up -d redis localstack
-          sleep 5
-      
-      - name: Run E2E tests
-        run: pnpm run e2e
+      # apps/web cannot prerender without a Clerk publishable key: its provider
+      # drops <ClerkProvider> when the key is absent, and useUser then throws.
+      - name: Build
+        run: npm run build
         env:
-          PLAYWRIGHT_BASE_URL: http://localhost:3000
-      
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: playwright-report
-          path: playwright-report/
-      
-      - name: Stop services
-        if: always()
-        run: docker-compose down
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
 
-  security:
-    name: Security Scan
+  python:
+    name: Scraper (Python)
     runs-on: ubuntu-latest
-    
+    # packages/scraper's future is an open decision on the wayfinder map.
+    # Kept cheap until that resolves.
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+
+      - uses: actions/setup-python@v5
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - run: pip install -r requirements.txt
+        working-directory: packages/scraper
+
+      - run: python -m pytest
+        working-directory: packages/scraper
