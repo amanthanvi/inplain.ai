@@ -42,12 +42,16 @@ dist/
 /dist
 
 # Environment variables
+# .env.example is intentionally NOT ignored - it is the tracked template.
 .env
 .env.local
+.env.production
+.env.staging
 .env.development.local
 .env.test.local
 .env.production.local
-.env.example
+**/.env.local
+**/.env.staging
 
 # Vercel
 .vercel
@@ -166,8 +170,7 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
-# Docker
-.dockerignore
+# (.dockerignore and .prettierignore are config, not artifacts - keep them tracked)
 
 # Turbo
 .turbo
@@ -177,9 +180,6 @@ Thumbs.db
 
 # ESLint
 .eslintcache
-
-# Prettier
-.prettierignore
 
 # Local development
 .local
@@ -205,8 +205,8 @@ config.local.json
 # Build artifacts
 *.map
 
-# Package manager lock files (keeping pnpm-lock.yaml as it's used)
-package-lock.json
+# Package manager: npm. package-lock.json is tracked on purpose.
+pnpm-lock.yaml
 yarn.lock
 
 # Husky
