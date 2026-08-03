@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { WATCHED_COMPANIES } from '@inplain.ai/shared'
-import { auth } from '@clerk/nextjs/server'
 import { storage } from '@/lib/storage/adapter'
 import { logger } from '@/lib/logger'
 
@@ -27,18 +26,8 @@ interface PolicySearchResult {
   }
 }
 
-// TODO: Remove mock data once search service is implemented
-
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-    const userId = session?.userId
-    
-    // Optional: require authentication for search
-    // if (!userId) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    // }
-
     const body = await request.json()
     const { 
       query, 

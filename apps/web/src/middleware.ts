@@ -29,8 +29,7 @@ const isAIRoute = createRouteMatcher([
   '/api/analysis(.*)',
   '/api/policies/summarize(.*)',
   '/api/summary(.*)',
-  '/api/ai-health(.*)',
-  '/api/debug/ai-test(.*)'
+  '/api/ai-health(.*)'
 ])
 
 const isSearchRoute = createRouteMatcher([
@@ -47,9 +46,7 @@ const isPublicAPIRoute = createRouteMatcher([
   '/api/status',
   '/api/metrics(.*)',
   '/api/privacy/analysis-cache(.*)',
-  '/api/feedback(.*)',
-  '/api/debug-monitor(.*)',
-  '/api/test-fetch(.*)'
+  '/api/feedback(.*)'
 ])
 
 export default clerkMiddleware(async (auth, req) => {
