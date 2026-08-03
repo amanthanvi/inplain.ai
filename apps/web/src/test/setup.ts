@@ -41,19 +41,6 @@ vi.mock('@/lib/env', () => ({
   }
 }))
 
-// Mock auth context
-vi.mock('@/contexts/auth-context', () => ({
-  useAuth: () => ({
-    user: null,
-    loading: false,
-    signIn: vi.fn(),
-    signUp: vi.fn(),
-    signOut: vi.fn(),
-    updatePreferences: vi.fn()
-  }),
-  AuthProvider: ({ children }: { children: React.ReactNode }) => children
-}))
-
 // Global test utilities
 global.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
