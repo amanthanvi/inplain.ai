@@ -20,18 +20,12 @@
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
     "e2e:debug": "playwright test --debug",
-    "setup:test-data": "node scripts/setup-test-data.js",
     "seed": "node scripts/seed-data.js",
     "seed:companies": "node scripts/populate-companies.js",
     "seed:production": "node -r dotenv/config scripts/seed-data.js && node -r dotenv/config scripts/populate-companies.js",
-    "test:auth": "node scripts/test-auth.js",
-    "dev:auth:on": "node scripts/toggle-dev-auth.js on",
-    "dev:auth:off": "node scripts/toggle-dev-auth.js off",
-    "dev:auth:test": "node scripts/test-dev-auth.js",
     "setup": "node scripts/setup-env.js",
     "setup:env": "node scripts/setup-env.js",
     "test:api": "node scripts/test-api-routes.js",
-    "test:enhancements": "node scripts/test-enhancements.js",
     "cron:local": "node scripts/run-cron-local.js"
   },
   "dependencies": {

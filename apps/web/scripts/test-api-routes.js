@@ -122,7 +122,6 @@ async function testDevAuth() {
   }
   
   try {
-    const result = await fetchJSON('/api/debug/dev-auth');
     console.log('Status:', result.status);
     console.log('Dev auth enabled:', result.data.devAuth.enabled);
     if (result.data.currentUser) {

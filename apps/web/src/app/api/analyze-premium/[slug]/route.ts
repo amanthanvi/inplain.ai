@@ -6,7 +6,6 @@ import { ContentExtractor } from '../../../../lib/content-extractor'
 import { WorldClassPromptsLibrary, enhanceAnalysisWithWorldClassPrompts } from '../../../../lib/world-class-prompts'
 import { ExpertPromptsLibrary } from '../../../../lib/expert-prompts'
 import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 const storage = new StorageClient()
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
@@ -35,7 +34,7 @@ export async function POST(
     let userId: string | null = null
     let actualUserTier: 'free' | 'premium' | 'enterprise' = 'premium'
     
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+    if (process.env.NODE_ENV === 'production') {
       const auth = await getClerkAuth()
       userId = auth.userId
       if (!userId) {

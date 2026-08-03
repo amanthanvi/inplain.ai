@@ -6,7 +6,6 @@ import { ModelSelector, UserTier } from '../../../../lib/ai/model-selector'
 import { getErrorRecovery } from '../../../../lib/ai/error-recovery'
 import { ContentExtractor } from '../../../../lib/content-extractor'
 import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 const storage = new StorageClient()
 
@@ -28,7 +27,7 @@ export async function POST(
     }
     
     // Check authentication in production (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+    if (process.env.NODE_ENV === 'production') {
       const { userId } = await getClerkAuth()
       if (!userId) {
         return NextResponse.json(

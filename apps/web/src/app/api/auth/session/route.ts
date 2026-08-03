@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/api-auth-helpers'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 export const runtime = 'edge'
 
 export async function GET(request: NextRequest) {
 	try {
-		// Check if Clerk is properly configured (skip in dev auth mode)
-		if (!isDevAuthEnabled() && (!process.env.CLERK_SECRET_KEY || !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)) {
+		// Check if Clerk is properly configured
+		if (!process.env.CLERK_SECRET_KEY || !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
 			console.error('Clerk environment variables not configured')
 			return NextResponse.json({ 
 				user: null, 

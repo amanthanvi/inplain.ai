@@ -7,7 +7,6 @@ import { StorageClient } from '../../lib/storage';
 import { kv } from '@vercel/kv';
 import { headers } from 'next/headers';
 import { getClerkAuth } from '@/lib/auth-clerk';
-import { isDevAuthEnabled } from '@/lib/dev-auth';
 
 const storage = new StorageClient();
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -33,7 +32,7 @@ export async function POST(
     const body: AnalysisRequest = await request.json();
     
     // Check authentication in production (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+    if (process.env.NODE_ENV === 'production') {
       const { userId } = await getClerkAuth()
       if (!userId) {
         return NextResponse.json(

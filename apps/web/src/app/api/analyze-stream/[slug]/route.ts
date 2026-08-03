@@ -5,7 +5,6 @@ import { getUnifiedAIService, AnalysisTask } from '../../../../lib/ai/unified-ai
 import { ModelSelector, UserTier } from '../../../../lib/ai/model-selector'
 // Mock AI service removed - no more demo mode fallbacks
 import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 const storage = new StorageClient()
 
@@ -27,7 +26,7 @@ export async function POST(
     }
     
     // Check authentication in production (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+    if (process.env.NODE_ENV === 'production') {
       const { userId } = await getClerkAuth()
       if (!userId) {
         return NextResponse.json(

@@ -6,7 +6,6 @@ import { SummarySchema } from '@inplain.ai/shared'
 import { formatTimestamp } from '@inplain.ai/shared'
 import { getEnvVar } from '@/lib/env'
 import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
 
 // Initialize storage with error handling
 let storage: StorageClient | null = null
@@ -87,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Check authentication in production (skip in dev with auth bypass)
-    if (process.env.NODE_ENV === 'production' && !isDevAuthEnabled()) {
+    if (process.env.NODE_ENV === 'production') {
       const { userId } = await getClerkAuth()
       if (!userId) {
         return NextResponse.json(

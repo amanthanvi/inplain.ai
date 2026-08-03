@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { StorageClient } from '../../lib/storage'
 import { getClerkAuth } from '@/lib/auth-clerk'
 import { isDemoMode } from '@/lib/env'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
 import { WATCHED_COMPANIES } from '@inplain.ai/shared'
 
 // Initialize storage client
@@ -26,8 +25,8 @@ export async function GET(
     // Log request for debugging
     console.log('Snapshot API called', { slug })
     
-    // Check authentication (skip in demo mode or dev auth)
-    if (!isDemoMode() && !isDevAuthEnabled()) {
+    // Check authentication (skip in demo mode)
+    if (!isDemoMode()) {
       const auth = await getClerkAuth()
       if (!auth?.userId) {
         return NextResponse.json(

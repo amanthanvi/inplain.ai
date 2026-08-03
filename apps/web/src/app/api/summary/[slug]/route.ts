@@ -7,7 +7,6 @@ import { SummarySchema } from '@inplain.ai/shared'
 import { formatTimestamp } from '@inplain.ai/shared'
 import { getEnvVar } from '@/lib/env'
 import { getClerkAuth } from '@/lib/auth-clerk'
-import { isDevAuthEnabled } from '@/lib/dev-auth'
 import { withErrorHandler, APIError, checkRateLimit, withAPIMonitoring } from '@/lib/api-error-handler'
 
 // Initialize storage with error handling
@@ -95,37 +94,27 @@ export async function POST(
       throw validationError
     }
     
-    // Check authentication (skip if dev auth is enabled)
+    // Check authentication
     let userId: string | null = null
     let userTier: 'free' | 'premium' | 'enterprise' = 'free'
-    
-    if (!isDevAuthEnabled()) {
-      try {
-        const auth = await getClerkAuth()
-        userId = auth.userId
-        if (!userId) {
-          return NextResponse.json(
-            { error: 'Authentication required', message: 'Please sign in to generate AI summaries' },
-            { status: 401 }
-          )
-        }
-        // TODO: Get actual user tier from database
-        userTier = 'free'
-      } catch (authError) {
-        console.error('Auth check failed:', authError)
-        // In development, continue without auth if Clerk is not configured
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn('Auth check failed in development, continuing without auth')
-          userId = 'dev-user'
-        } else {
-          return NextResponse.json(
-            { error: 'Authentication failed', message: 'Unable to verify authentication' },
-            { status: 401 }
-          )
-        }
+
+    try {
+      const auth = await getClerkAuth()
+      userId = auth.userId
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'Authentication required', message: 'Please sign in to generate AI summaries' },
+          { status: 401 }
+        )
       }
-    } else {
-      userId = 'dev-user'
+      // TODO: Get actual user tier from database
+      userTier = 'free'
+    } catch (authError) {
+      console.error('Auth check failed:', authError)
+      return NextResponse.json(
+        { error: 'Authentication failed', message: 'Unable to verify authentication' },
+        { status: 401 }
+      )
     }
 
     if (!OPENROUTER_API_KEY) {

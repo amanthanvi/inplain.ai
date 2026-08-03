@@ -1,12 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { kv } from "@/app/api/lib/kv-wrapper";
-import {
-	isDevAuthEnabled,
-	DEV_USER,
-	DEV_SESSION_TOKEN,
-	logDevAuthStatus,
-} from "./dev-auth";
 import type { User, Session, AuthTokens } from "./types/auth";
 
 export type { User, Session, AuthTokens };
@@ -20,12 +14,6 @@ const getJwtSecret = () => {
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export async function checkAuth(request: Request): Promise<{ authenticated: boolean; user?: User }> {
-	// Check if dev auth is enabled
-	if (isDevAuthEnabled()) {
-		logDevAuthStatus();
-		return { authenticated: true, user: DEV_USER };
-	}
-
 	try {
 		const cookieStore = await cookies();
 		const sessionToken = cookieStore.get('session')?.value;
@@ -214,11 +202,6 @@ export class AuthService {
 	}
 
 	static async getUserById(userId: string): Promise<User | null> {
-		// Development bypass
-		if (isDevAuthEnabled() && userId === DEV_USER.id) {
-			return DEV_USER;
-		}
-
 		const user = (await kv.hgetall(`user:${userId}`)) as User | null;
 		return user;
 	}
@@ -277,15 +260,6 @@ export class AuthService {
 	}
 
 	static async verifySession(token: string): Promise<Session | null> {
-		// Development bypass
-		if (isDevAuthEnabled() && token === DEV_SESSION_TOKEN) {
-			logDevAuthStatus();
-			return {
-				userId: DEV_USER.id,
-				expiresAt: new Date(Date.now() + SESSION_DURATION),
-			};
-		}
-
 		try {
 			const { payload } = await jwtVerify(token, getJwtSecret());
 			return {
@@ -298,31 +272,6 @@ export class AuthService {
 	}
 
 	static async getCurrentUser(): Promise<User | null> {
-		// Development bypass
-		if (isDevAuthEnabled()) {
-			const cookieStore = await cookies();
-			const sessionCookie = cookieStore.get("session");
-
-			// Check for dev session token
-			if (sessionCookie?.value === DEV_SESSION_TOKEN) {
-				logDevAuthStatus();
-				return DEV_USER;
-			}
-
-			// Auto-login in dev mode if no session
-			if (!sessionCookie?.value) {
-				logDevAuthStatus();
-				cookieStore.set("session", DEV_SESSION_TOKEN, {
-					httpOnly: true,
-					secure: false,
-					sameSite: "lax",
-					maxAge: SESSION_DURATION / 1000,
-					path: "/",
-				});
-				return DEV_USER;
-			}
-		}
-
 		const cookieStore = await cookies();
 		const sessionCookie = cookieStore.get("session");
 

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { kv, isKVConfigured, getKVConfigError } from '../lib/kv-wrapper';
 import { getEnvStatus, getAppMode, getSafeEnvInfo } from '@/lib/env';
-import { isDevAuthEnabled } from '@/lib/dev-auth';
 
 export async function GET() {
   const envStatus = getEnvStatus();
@@ -14,7 +13,6 @@ export async function GET() {
     environment: {
       NODE_ENV: process.env.NODE_ENV,
       appMode,
-      devAuthEnabled: isDevAuthEnabled(),
       configured: envStatus.isConfigured,
       missingRequired: envStatus.missingRequired,
       missingOptional: envStatus.missingOptional,
@@ -69,8 +67,7 @@ export async function GET() {
     status: statusCode,
     headers: {
       'Cache-Control': 'no-store',
-      'X-App-Mode': appMode,
-      'X-Dev-Auth': isDevAuthEnabled() ? 'enabled' : 'disabled'
+      'X-App-Mode': appMode
     }
   });
 }

@@ -4,7 +4,6 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AppStatus } from "@/components/AppStatus";
 import { Providers } from "./providers";
-import { DevAuthWarning } from "@/components/dev-auth-warning";
 import { DemoModeBanner } from "@/components/demo-mode-banner";
 import { Navigation } from "@/components/Navigation";
 import { MobileNavigation } from "@/components/mobile/MobileNavigation";
@@ -135,7 +134,6 @@ export default function RootLayout({
 							</div>
 							<Toaster />
 							<AppStatus />
-							<DevAuthWarning />
 							<DemoModeBanner />
 							<AccessibilityAudit />
 							{/* <FeedbackWidget /> */}
