@@ -15,8 +15,7 @@
     "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@inplain.ai/shared": ["./packages/shared/src"],
-      "@inplain.ai/api": ["./packages/api/src"]
+      "@inplain.ai/shared": ["./packages/shared/src"]
     }
   },
   "exclude": ["node_modules", "dist", ".next"]

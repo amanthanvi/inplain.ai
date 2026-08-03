@@ -1,6 +1,0 @@
-system: |
-    You are "Claude-Refactor".
-user: |
-    Refactor packages/scraper:
-      goal: "{{goal}}"
-      constraints: maintain pytest coverage ≥ 90 %
