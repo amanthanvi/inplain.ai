@@ -120,24 +120,34 @@ def page(title: str, css: str, body: str) -> str:
 
 CSS_A = """
 :root{
-  --paper:#fbfbf9; --ink:#16171a; --muted:#5c5f66; --rule:#e3e3df;
+  --paper:#fbfbf9; --ink:#16171a; --soft:#3b3d42; --muted:#5c5f66; --rule:#e3e3df;
   --accent:#0b5cd5; --add:#e6f4ea; --add-ink:#0b6b2f; --rm:#fdeaea; --rm-ink:#9b1c1c;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --text:Charter,"Iowan Old Style","Source Serif 4",Georgia,serif;
 }
 @media (prefers-color-scheme:dark){:root{
-  --paper:#101114; --ink:#e9e9ea; --muted:#9a9da5; --rule:#26282e;
+  --paper:#101114; --ink:#e9e9ea; --soft:#c6c8cd; --muted:#9a9da5; --rule:#26282e;
   --accent:#6aa9ff; --add:#13301d; --add-ink:#7fd39b; --rm:#3a1618; --rm-ink:#f2a3a3;}}
 body{background:var(--paper);color:var(--ink);font-family:var(--text);
   font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
 .wrap{max-width:78ch;margin:0 auto;padding:56px 24px 96px}
-.crumb{font-family:var(--mono);font-size:12px;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--muted);margin-bottom:20px}
-h1{font-size:31px;line-height:1.2;margin:0 0 6px;font-weight:600;letter-spacing:-.01em}
-.sub{color:var(--muted);font-size:15px;margin:0 0 28px}
-.meta{display:flex;gap:22px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;
+
+/* header - the one place with a little more life */
+.kicker{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11.5px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.kicker .co{color:var(--ink);font-weight:700}
+.kicker .tick{width:16px;height:2px;background:var(--accent);border-radius:1px;flex:0 0 auto}
+h1{font-size:30px;line-height:1.22;margin:0 0 14px;font-weight:600;letter-spacing:-.014em;
+  max-width:26ch}
+.lede{color:var(--soft);font-size:17.5px;line-height:1.55;margin:0 0 26px;max-width:60ch}
+.meta{display:flex;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:12.5px;
   color:var(--muted);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
-  padding:12px 0;margin-bottom:34px}
+  padding:13px 0;margin-bottom:36px;align-items:baseline}
+.meta .n{font-weight:700}
+.meta .plus .n{color:var(--add-ink)}
+.meta .minus .n{color:var(--rm-ink)}
+.meta .span{margin-left:auto;color:var(--muted)}
+
 h2{font-size:13px;font-family:var(--mono);letter-spacing:.09em;text-transform:uppercase;
   color:var(--muted);font-weight:600;margin:38px 0 14px}
 ul.sum{margin:0;padding-left:20px}
@@ -161,27 +171,30 @@ ul.sum li{margin-bottom:14px}
 .tx{flex:1;min-width:0}
 .src{margin-top:34px;font-size:14px;color:var(--muted)}
 .src a{color:var(--accent)}
+@media (max-width:640px){h1{font-size:25px}.lede{font-size:16.5px}.meta .span{margin-left:0;width:100%}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{.hunk{break-inside:avoid}body{background:#fff;color:#000}}
 """
 
 BODY_A = f"""<div class="wrap">
-<div class="crumb">Change · {META["from_version"]} → {META["to_version"]}</div>
-<h1>{META["company"]} {META["doc"]}</h1>
-<p class="sub">18 changed passages. Google broadened a data category and added
-an explicit statement about data not tied to your account.</p>
+<div class="kicker"><span class="tick"></span><span class="co">{META["company"]}</span>
+  <span>· {META["doc"]}</span></div>
+<h1>Google widened what counts as your &ldquo;media&rdquo;</h1>
+<p class="lede">One collected category grew from voice and audio to images, files,
+audio and video &mdash; and a new sentence says outright that Google collects data
+not tied to your account.</p>
 <div class="meta">
-  <span>+{META["added_chars"]:,} added</span>
-  <span>−{META["removed_chars"]:,} removed</span>
-  <span>{META["hunks"]} passages</span>
-  <span>93.6% unchanged</span>
+  <span class="plus"><span class="n">+{META["added_chars"]:,}</span> added</span>
+  <span class="minus"><span class="n">&minus;{META["removed_chars"]:,}</span> removed</span>
+  <span><span class="n">{META["hunks"]}</span> passages</span>
+  <span class="span">{META["from_version"]} &rarr; {META["to_version"]}</span>
 </div>
 <h2>What changed</h2>
 <ul class="sum">{summary_html()}</ul>
 <h2>The changed passages</h2>
 {hunks_html(6)}
 <p class="src">Showing 6 of 18. Full policy at
-<a href="{META["source"]}">policies.google.com/privacy</a> — we link, we don't republish.</p>
+<a href="{META["source"]}">policies.google.com/privacy</a> &mdash; we link, we don't republish.</p>
 </div>"""
 
 

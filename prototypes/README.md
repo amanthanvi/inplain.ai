@@ -1,5 +1,8 @@
 # Design prototypes
 
+> **Chosen: A — reference instrument**, with the header lifted partway toward C.
+> B and C are kept for the record, not for use.
+
 Three directions for the change view — the surface that matters, because it is
 where design and product logic are the same decision.
 
@@ -21,7 +24,7 @@ it collects data not associated with your account.
 
 | | Character | Comparables |
 |---|---|---|
-| **A** `a-docket.html` | Reference instrument. Serif prose, monospace diff, near-monochrome, accent reserved *entirely* for citations. | A court docket, a well-set legal document |
+| **A** `a-docket.html` ✅ | Reference instrument. Serif prose, monospace diff, near-monochrome, accent reserved *entirely* for citations. Header carries a claim-making headline and colour-coded stats. | A court docket, a well-set legal document |
 | **B** `b-commit.html` | The change as a commit. Mono throughout, dense, high information density, dark-first. | `git log`, a GitHub commit view |
 | **C** `c-editorial.html` | The change as a story, evidence beneath. Larger type, more air, a headline that makes a claim. | A newsroom explainer |
 
@@ -33,6 +36,24 @@ python prototypes/build.py
 
 Reads `sample-hunks.json` and writes the three HTML files. Open them directly —
 no server, no build step, no dependencies.
+
+## The header, specifically
+
+A's body is deliberately quiet; the header is the one place with more life. It
+carries an accent tick, the company set in ink against a muted document type, a
+headline that makes a claim rather than naming the document, a one-sentence lede,
+and colour-coded totals — added in green, removed in red.
+
+That colour does **not** break A's rule that the accent belongs to citations
+alone. Diff green and red are a separate semantic channel from the citation
+accent, so using them for the totals reinforces the mapping rather than diluting
+it. All four colours were measured against both themes before use:
+
+| | on light | on dark |
+|---|---|---|
+| added | 6.42:1 | 10.51:1 |
+| removed | 7.87:1 | 9.48:1 |
+| citation accent | 5.78:1 | 7.85:1 |
 
 ## What they share
 
