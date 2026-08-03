@@ -1,0 +1,10 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": { "builder": "RAILPACK" },
+  "deploy": {
+    "startCommand": "PYTHONPATH=apps/api alembic -c apps/api/alembic.ini upgrade head && PYTHONPATH=apps/api uvicorn inplain.api.main:app --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/healthz",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  }
+}

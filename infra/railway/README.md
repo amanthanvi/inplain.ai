@@ -58,7 +58,25 @@ Billing webhook should include subscription events (`subscription.*`, `subscript
 
 ## Start commands
 
-Configured via `RAILPACK_START_CMD` per service:
+**These now live in version-controlled config, not just in this file.**
+Each service points at its own config-as-code file via Railway's
+"Config as code" path setting:
+
+| Service | Config path | Root directory |
+|---|---|---|
+| `web` | `infra/railway/web.json` | `apps/web` |
+| `api` | `infra/railway/api.json` | repo root |
+| `worker` | `infra/railway/worker.json` | repo root |
+| `renderer` | `infra/railway/renderer.json` | repo root |
+| `posthog-proxy` | `infra/railway/posthog-proxy.json` | repo root |
+
+Those files carry the start command, builder and restart policy, so a
+redeploy cannot silently drift from what is documented here. Environment
+variables and private-network wiring remain dashboard/API state - Railway
+has no way to express them in config-as-code - so the env lists above are
+still the source of truth for those.
+
+The equivalent `RAILPACK_START_CMD` values, for reference:
 
 `web`:
 - `npm run start -- -p $PORT`
