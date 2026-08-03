@@ -4,6 +4,7 @@ from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from conftest import SignedClient
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
@@ -51,15 +52,11 @@ def test_watch_and_check_now_endpoints(db: Session, test_engine: Engine) -> None
 
     client = _make_client(test_engine)
     try:
-        headers = {
-            "authorization": "Bearer dev-internal-token",
-            "x-clerk-user-id": "user_123",
-        }
+        signed = SignedClient(client, clerk_user_id="user_123")
 
-        watch = client.post(
+        watch = signed.post(
             "/internal/documents/watch",
-            json={"entity_slug": "acme", "schedule_tier": "daily"},
-            headers=headers,
+            json_body={"entity_slug": "acme", "schedule_tier": "daily"},
         )
         assert watch.status_code == 200
         data = watch.json()
@@ -79,13 +76,13 @@ def test_watch_and_check_now_endpoints(db: Session, test_engine: Engine) -> None
 
             doc_id = str(data["documents"][0]["id"])
 
-        check = client.post(f"/internal/documents/{doc_id}/check-now", headers=headers)
+        check = signed.post(f"/internal/documents/{doc_id}/check-now")
         assert check.status_code == 200
         check_data = check.json()
         assert "job_id" in check_data
 
         # Usage endpoint counts check-now jobs.
-        usage = client.get("/internal/usage", headers=headers)
+        usage = signed.get("/internal/usage")
         assert usage.status_code == 200
         usage_data = usage.json()
         assert usage_data["check_now_used_today"] == 1
@@ -123,31 +120,25 @@ def test_watch_honors_max_documents_limit(db: Session, test_engine: Engine) -> N
 
     client = _make_client(test_engine)
     try:
-        headers = {
-            "authorization": "Bearer dev-internal-token",
-            "x-clerk-user-id": "user_123",
-        }
+        signed = SignedClient(client, clerk_user_id="user_123")
 
-        watch_google = client.post(
+        watch_google = signed.post(
             "/internal/documents/watch",
-            json={"entity_slug": "google", "schedule_tier": "daily", "max_documents": 3},
-            headers=headers,
+            json_body={"entity_slug": "google", "schedule_tier": "daily", "max_documents": 3},
         )
         assert watch_google.status_code == 200
         assert len(watch_google.json()["documents"]) == 2
 
-        watch_apple = client.post(
+        watch_apple = signed.post(
             "/internal/documents/watch",
-            json={"entity_slug": "apple", "schedule_tier": "daily", "max_documents": 3},
-            headers=headers,
+            json_body={"entity_slug": "apple", "schedule_tier": "daily", "max_documents": 3},
         )
         assert watch_apple.status_code == 200
         assert len(watch_apple.json()["documents"]) == 1
 
-        watch_openai = client.post(
+        watch_openai = signed.post(
             "/internal/documents/watch",
-            json={"entity_slug": "openai", "schedule_tier": "daily", "max_documents": 3},
-            headers=headers,
+            json_body={"entity_slug": "openai", "schedule_tier": "daily", "max_documents": 3},
         )
         assert watch_openai.status_code == 409
         payload = watch_openai.json()
@@ -178,15 +169,11 @@ def test_first_watch_emits_posthog_event(
 
     client = _make_client(test_engine)
     try:
-        headers = {
-            "authorization": "Bearer dev-internal-token",
-            "x-clerk-user-id": "user_123",
-        }
+        signed = SignedClient(client, clerk_user_id="user_123")
 
-        watch = client.post(
+        watch = signed.post(
             "/internal/documents/watch",
-            json={"entity_slug": "acme", "schedule_tier": "daily"},
-            headers=headers,
+            json_body={"entity_slug": "acme", "schedule_tier": "daily"},
         )
         assert watch.status_code == 200
     finally:
@@ -240,15 +227,11 @@ def test_apply_entitlements_pauses_over_limit_and_syncs_schedule(
 
     client = _make_client(test_engine)
     try:
-        headers = {
-            "authorization": "Bearer dev-internal-token",
-            "x-clerk-user-id": "user_123",
-        }
+        signed = SignedClient(client, clerk_user_id="user_123")
 
-        resp = client.post(
+        resp = signed.post(
             "/internal/documents/apply-entitlements",
-            json={"schedule_tier": "6h", "max_active_documents": 3},
-            headers=headers,
+            json_body={"schedule_tier": "6h", "max_active_documents": 3},
         )
         assert resp.status_code == 200
         payload = resp.json()

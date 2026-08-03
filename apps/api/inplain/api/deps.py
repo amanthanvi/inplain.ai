@@ -59,36 +59,33 @@ def _verify_hmac_headers(
 
 async def require_internal_service_token(
     request: Request,
-    authorization: str | None = Header(default=None),
-    x_internal_service_token: str | None = Header(default=None),
     x_request_signature: str | None = Header(default=None),
     x_request_timestamp: str | None = Header(default=None),
 ) -> None:
+    """Authenticate an internal (web -> api) call.
+
+    HMAC signature only. A bearer-token fallback used to be accepted here, which
+    meant anyone holding the shared secret could replay a captured request
+    indefinitely - the exact thing the signature's timestamp binding exists to
+    prevent. Every caller (the Next BFF, the smoke test, the tests) signs, so
+    the fallback was dead code that only weakened the guarantee.
+    """
     path = request.url.path
     if request.url.query:
         path = f"{path}?{request.url.query}"
 
-    body = await request.body()
-    if x_request_signature and x_request_timestamp:
-        if _verify_hmac_headers(
-            method=request.method,
-            path=path,
-            body=body,
-            signature=x_request_signature,
-            timestamp=x_request_timestamp,
-        ):
-            return
+    if not (x_request_signature and x_request_timestamp):
         raise HTTPException(status_code=401, detail="unauthorized")
 
-    token: str | None = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.removeprefix("Bearer ").strip()
-    if token is None and x_internal_service_token:
-        token = x_internal_service_token.strip()
-    if token and token == settings.internal_service_token:
-        return
-
-    raise HTTPException(status_code=401, detail="unauthorized")
+    body = await request.body()
+    if not _verify_hmac_headers(
+        method=request.method,
+        path=path,
+        body=body,
+        signature=x_request_signature,
+        timestamp=x_request_timestamp,
+    ):
+        raise HTTPException(status_code=401, detail="unauthorized")
 
 
 def get_clerk_user_id(x_clerk_user_id: str | None = Header(default=None)) -> str:

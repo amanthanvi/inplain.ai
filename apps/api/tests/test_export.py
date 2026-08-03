@@ -4,6 +4,7 @@ import hashlib
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 
+from conftest import signed_headers
 from fastapi.testclient import TestClient
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -127,12 +128,13 @@ def test_export_respects_limit(db: Session, test_engine: Engine) -> None:
 
     client = _make_client(test_engine)
     try:
+        path = "/internal/export?limit_change_events=10"
         headers = {
-            "authorization": "Bearer dev-internal-token",
+            **signed_headers(method="GET", path=path),
             "x-clerk-user-id": "user_123",
         }
 
-        resp = client.get("/internal/export?limit_change_events=10", headers=headers)
+        resp = client.get(path, headers=headers)
         assert resp.status_code == 200
         payload = resp.json()
         assert payload["limit_change_events"] == 10

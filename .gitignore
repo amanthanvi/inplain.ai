@@ -9,9 +9,13 @@ dist/
 *.egg-info/
 
 # Environment
+# .env.example files are tracked on purpose; nothing else is.
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 
 # IDE
 .vscode/
@@ -23,3 +27,4 @@ dist/
 # Cache
 .ruff_cache/
 .turbo/
+*.tsbuildinfo

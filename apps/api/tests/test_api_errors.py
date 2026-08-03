@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 
+from conftest import signed_headers
 from fastapi.testclient import TestClient
 
 from inplain.api.deps import get_db
@@ -36,7 +37,7 @@ def test_missing_clerk_user_id_is_standard_error() -> None:
         client = TestClient(app)
         res = client.get(
             "/internal/documents",
-            headers={"authorization": "Bearer dev-internal-token"},
+            headers=signed_headers(method="GET", path="/internal/documents"),
         )
         assert res.status_code == 400
         data = res.json()

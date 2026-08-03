@@ -49,7 +49,6 @@ def _sign_internal_request(
     payload = f"{timestamp}\n{method.upper()}\n{path}\n{body_hash}"
     signature = hmac.new(token.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
     return {
-        "authorization": f"Bearer {token}",
         "x-request-timestamp": timestamp,
         "x-request-signature": signature,
     }

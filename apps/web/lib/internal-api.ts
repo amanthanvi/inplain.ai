@@ -185,7 +185,6 @@ export async function internalFetch<T>(
   const signature = hmacHex(token, payloadToSign);
 
   const headers: Record<string, string> = {
-    authorization: `Bearer ${token}`,
     "x-request-timestamp": timestamp,
     "x-request-signature": signature,
   };
