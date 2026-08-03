@@ -1,0 +1,55 @@
+# Design prototypes
+
+Three directions for the change view — the surface that matters, because it is
+where design and product logic are the same decision.
+
+**All three render the same real diff.** Nothing here is mocked: it is Google's
+privacy policy, first-party archived version `2026-04-02` against the version
+live on `2026-08-03`, extracted with trafilatura exactly as the pipeline will.
+18 hunks, 0.936 similarity, +7,660 / −6,444 characters.
+
+That matters. A design that looks good on three tidy invented hunks tells you
+nothing; this change includes a 900-character replaced paragraph and a
+seven-word one, which is what the real distribution looks like.
+
+The change itself is genuinely substantive — Google broadened a collected
+category from "Voice and audio information" to "Media (like images, files, audio
+and video) from your interactions", and added a sentence stating outright that
+it collects data not associated with your account.
+
+## The directions
+
+| | Character | Comparables |
+|---|---|---|
+| **A** `a-docket.html` | Reference instrument. Serif prose, monospace diff, near-monochrome, accent reserved *entirely* for citations. | A court docket, a well-set legal document |
+| **B** `b-commit.html` | The change as a commit. Mono throughout, dense, high information density, dark-first. | `git log`, a GitHub commit view |
+| **C** `c-editorial.html` | The change as a story, evidence beneath. Larger type, more air, a headline that makes a claim. | A newsroom explainer |
+
+## Regenerate
+
+```bash
+python prototypes/build.py
+```
+
+Reads `sample-hunks.json` and writes the three HTML files. Open them directly —
+no server, no build step, no dependencies.
+
+## What they share
+
+Deliberately identical across all three, because these are the SPEC §9 floor and
+not stylistic choices:
+
+- `+`/`−` gutter marks **and** visually-hidden "Added:"/"Removed:" labels, so the
+  diff never depends on colour alone
+- `:focus-visible` outlines on citations
+- `prefers-color-scheme` light and dark, designed rather than swapped
+- `prefers-reduced-motion`
+- No word-breaking mid-token in the diff body
+- Citations jump to the hunk they name, and the target is highlighted
+
+## Known gaps
+
+These are prototypes of a *view*, not the site. Not covered yet: the change
+index, per-company pages, the homepage feed, mobile at narrow widths, and
+word-level intra-line highlighting (SPEC §11 — it needs a backend contract
+first).

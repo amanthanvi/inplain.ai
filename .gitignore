@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+
+# Build
+dist/
+_site/
+*.egg-info/
+
+# Environment
+# .env.example files are tracked on purpose; nothing else is.
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Cache
+.ruff_cache/
+.pytest_cache/
