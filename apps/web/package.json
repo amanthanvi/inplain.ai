@@ -22,11 +22,9 @@
     "e2e:debug": "playwright test --debug",
     "seed": "node scripts/seed-data.js",
     "seed:companies": "node scripts/populate-companies.js",
-    "seed:production": "node -r dotenv/config scripts/seed-data.js && node -r dotenv/config scripts/populate-companies.js",
     "setup": "node scripts/setup-env.js",
     "setup:env": "node scripts/setup-env.js",
-    "test:api": "node scripts/test-api-routes.js",
-    "cron:local": "node scripts/run-cron-local.js"
+    "test:api": "node scripts/test-api-routes.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.6",
