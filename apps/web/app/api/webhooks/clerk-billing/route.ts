@@ -4,6 +4,7 @@ import { type NextRequest } from "next/server";
 
 import { entitlementsForTier, tierFromBillingSubscription, type Tier } from "@/lib/billing-plans";
 import { applyEntitlementsToDocuments } from "@/lib/entitlements";
+import { trackEvent } from "@/lib/internal-api";
 
 export const runtime = "nodejs";
 
@@ -106,6 +107,12 @@ export async function POST(request: NextRequest): Promise<Response> {
   const tier = await resolveTierForUser(clerkUserId);
   const entitlements = entitlementsForTier(tier);
   await applyEntitlementsToDocuments(clerkUserId, entitlements, { bestEffort: false });
+
+  // Only a move onto a paid tier is an upgrade. Entitlement syncs also run on
+  // page loads and on downgrades, so firing on every apply would over-count.
+  if (tier !== "free") {
+    await trackEvent(clerkUserId, "upgrade_completed", { tier, event_type: event.type });
+  }
 
   return Response.json({ ok: true, ignored: false, tier });
 }

@@ -12,6 +12,7 @@ from inplain.api.routes.internal_entities import router as internal_entities_rou
 from inplain.api.routes.internal_export import router as internal_export_router
 from inplain.api.routes.internal_notifications import router as internal_notifications_router
 from inplain.api.routes.internal_snapshots import router as internal_snapshots_router
+from inplain.api.routes.internal_telemetry import router as internal_telemetry_router
 from inplain.api.routes.internal_usage import router as internal_usage_router
 from inplain.api.routes.internal_webhooks import router as internal_webhooks_router
 from inplain.telemetry import init_telemetry
@@ -29,5 +30,6 @@ app.include_router(internal_change_events_router, prefix="/internal", dependenci
 app.include_router(internal_notifications_router, prefix="/internal", dependencies=internal_deps)
 app.include_router(internal_snapshots_router, prefix="/internal", dependencies=internal_deps)
 app.include_router(internal_usage_router, prefix="/internal", dependencies=internal_deps)
+app.include_router(internal_telemetry_router, prefix="/internal", dependencies=internal_deps)
 app.include_router(internal_webhooks_router, prefix="/internal")
 app.include_router(internal_admin_router, prefix="/internal", dependencies=internal_deps)

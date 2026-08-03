@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import type { Citation, DiffHunk, SummaryBullet } from "@/lib/internal-api";
+import { recordCitationClick } from "@/app/actions/change_events";
 
 type DiffMode = "section" | "unified" | "split";
 
@@ -39,10 +40,12 @@ function CitationMark({
   citation,
   knownHunk,
   onRevealHunk,
+  onCitationClick,
 }: {
   citation: Citation;
   knownHunk: boolean;
   onRevealHunk?: RevealHunk;
+  onCitationClick?: (hunkId: string) => void;
 }) {
   const isUnverified = citation.status === "unverified" || !knownHunk;
   const label = citationLabel(citation.hunkId);
@@ -51,7 +54,8 @@ function CitationMark({
   const onClick = useCallback(() => {
     onRevealHunk?.(citation.hunkId);
     scrollToHunk(citation.hunkId);
-  }, [citation.hunkId, onRevealHunk]);
+    onCitationClick?.(citation.hunkId);
+  }, [citation.hunkId, onRevealHunk, onCitationClick]);
 
   if (isUnverified) {
     return (
@@ -80,10 +84,12 @@ function Bullet({
   bullet,
   hunkIds,
   onRevealHunk,
+  onCitationClick,
 }: {
   bullet: SummaryBullet;
   hunkIds: Set<string>;
   onRevealHunk?: RevealHunk;
+  onCitationClick?: (hunkId: string) => void;
 }) {
   const citations: Citation[] = [];
   const seenHunkIds = new Set<string>();
@@ -104,6 +110,7 @@ function Bullet({
               citation={c}
               knownHunk={hunkIds.has(c.hunkId)}
               onRevealHunk={onRevealHunk}
+              onCitationClick={onCitationClick}
             />
           ))}
         </span>
@@ -223,11 +230,13 @@ function ExpandCollapseAllIcon() {
 }
 
 export function ChangeEventViewer({
+  changeEventId,
   whatChanged,
   whyMatters,
   hunks,
   summaryStatus,
 }: {
+  changeEventId: string;
   whatChanged: SummaryBullet[] | null;
   whyMatters: SummaryBullet[] | null;
   hunks: DiffHunk[];
@@ -288,6 +297,14 @@ export function ChangeEventViewer({
     [diffMode, sectionTitleByHunkId],
   );
 
+  // Fire-and-forget: the scroll/highlight must not wait on analytics.
+  const handleCitationClick = useCallback(
+    (hunkId: string) => {
+      void recordCitationClick(changeEventId, hunkId);
+    },
+    [changeEventId],
+  );
+
   const allSectionsOpen =
     diffMode === "section" && sections.length > 0 && sections.every((s) => openSectionTitles.has(s.title));
 
@@ -329,7 +346,13 @@ export function ChangeEventViewer({
             </div>
             <ul className="summaryList">
               {(visibleWhatChanged || []).map((b, idx) => (
-                <Bullet key={idx} bullet={b} hunkIds={hunkIds} onRevealHunk={revealHunk} />
+                <Bullet
+                  key={idx}
+                  bullet={b}
+                  hunkIds={hunkIds}
+                  onRevealHunk={revealHunk}
+                  onCitationClick={handleCitationClick}
+                />
               ))}
             </ul>
             {whatChangedHasMore ? (
@@ -352,7 +375,13 @@ export function ChangeEventViewer({
             </div>
             <ul className="summaryList">
               {(visibleWhyMatters || []).map((b, idx) => (
-                <Bullet key={idx} bullet={b} hunkIds={hunkIds} onRevealHunk={revealHunk} />
+                <Bullet
+                  key={idx}
+                  bullet={b}
+                  hunkIds={hunkIds}
+                  onRevealHunk={revealHunk}
+                  onCitationClick={handleCitationClick}
+                />
               ))}
             </ul>
             {whyMattersHasMore ? (

@@ -176,3 +176,8 @@ class ExportOut(BaseModel):
     documents: list[DocumentOut]
     change_events: list[ChangeEventDetailOut]
 
+
+
+class TelemetryEventRequest(BaseModel):
+    event: str
+    properties: dict[str, Any] | None = None

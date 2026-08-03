@@ -111,6 +111,16 @@ def watch_entity(
         would_create = sum(1 for doc_type, _ in to_create if doc_type not in existing_doc_types)
         if would_create > 0:
             if tracked_before + would_create > req.max_documents:
+                capture_event(
+                    distinct_id=clerk_user_id,
+                    event="upgrade_cta_shown",
+                    properties={
+                        "reason": "doc_limit",
+                        "entity_slug": entity.slug,
+                        "tracked": tracked_before,
+                        "limit": req.max_documents,
+                    },
+                )
                 raise HTTPException(status_code=409, detail="document limit exceeded")
 
     documents: list[Document] = []
@@ -302,4 +312,10 @@ def check_now(
     )
     db.add(job)
     db.commit()
+
+    capture_event(
+        distinct_id=clerk_user_id,
+        event="check_now_triggered",
+        properties={"document_id": str(doc.id), "doc_type": doc.doc_type.value},
+    )
     return EnqueueResponse(job_id=job.id, queued=True)

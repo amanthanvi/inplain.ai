@@ -60,6 +60,20 @@ def get_change_event(
         event="change_event_viewed",
         properties={"change_event_id": str(event.id), "document_id": str(event.document_id)},
     )
+    # A change event can exist before its summary job finishes, so this is a
+    # distinct event rather than an implication of change_event_viewed.
+    summary_bullets = (event.summary_what_changed or []) + (event.summary_why_matters or [])
+    if summary_bullets:
+        capture_event(
+            distinct_id=clerk_user_id,
+            event="summary_viewed",
+            properties={
+                "change_event_id": str(event.id),
+                "summary_status": event.summary_status.value,
+                "bullet_count": len(summary_bullets),
+                "citation_count": sum(len(b.get("citations") or []) for b in summary_bullets),
+            },
+        )
     return ChangeEventDetailOut(
         change_event=ChangeEventOut.model_validate(event, from_attributes=True),
         diff=DiffOut.model_validate(diff, from_attributes=True),

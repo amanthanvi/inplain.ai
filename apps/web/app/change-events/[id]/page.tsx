@@ -61,6 +61,7 @@ export default async function ChangeEventPage({ params }: { params: { id: string
       ) : null}
 
       <ChangeEventViewer
+        changeEventId={ce.id}
         whatChanged={ce.summary_what_changed}
         whyMatters={ce.summary_why_matters}
         hunks={detail.diff.diff_hunks}

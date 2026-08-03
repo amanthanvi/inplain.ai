@@ -221,3 +221,28 @@ export async function internalFetch<T>(
 
   return payload as T;
 }
+
+export type RelayableEvent = "citation_clicked" | "upgrade_completed";
+
+/**
+ * Relay an event the web tier is the sole observer of.
+ *
+ * Analytics must never break a user flow, so failures are swallowed. The API
+ * enforces an allowlist on `event`.
+ */
+export async function trackEvent(
+  userId: string,
+  event: RelayableEvent,
+  properties?: Record<string, string | number | boolean | null>,
+): Promise<void> {
+  try {
+    await internalFetch<{ accepted: boolean }>("/internal/telemetry", {
+      userId,
+      method: "POST",
+      body: { event, properties: properties ?? {} },
+      timeoutMs: 3000,
+    });
+  } catch {
+    // Intentionally ignored.
+  }
+}
