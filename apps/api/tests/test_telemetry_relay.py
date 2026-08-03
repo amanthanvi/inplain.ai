@@ -25,8 +25,12 @@ def _post(client: TestClient, body: dict[str, Any], user: str = "user_123"):
 
     raw = json.dumps(body)
     headers = {
-        **signed_headers(method="POST", path="/internal/telemetry", body=raw.encode("utf-8")),
-        "x-clerk-user-id": user,
+        **signed_headers(
+            method="POST",
+            path="/internal/telemetry",
+            body=raw.encode("utf-8"),
+            clerk_user_id=user,
+        ),
         "content-type": "application/json",
     }
     return client.post("/internal/telemetry", content=raw, headers=headers)

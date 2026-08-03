@@ -129,10 +129,7 @@ def test_export_respects_limit(db: Session, test_engine: Engine) -> None:
     client = _make_client(test_engine)
     try:
         path = "/internal/export?limit_change_events=10"
-        headers = {
-            **signed_headers(method="GET", path=path),
-            "x-clerk-user-id": "user_123",
-        }
+        headers = signed_headers(method="GET", path=path, clerk_user_id="user_123")
 
         resp = client.get(path, headers=headers)
         assert resp.status_code == 200

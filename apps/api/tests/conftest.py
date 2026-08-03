@@ -60,6 +60,8 @@ def signed_headers(
     path: str,
     body: bytes = b"",
     token: str = "dev-internal-token",
+    clerk_user_id: str = "",
+    clerk_role: str = "",
 ) -> dict[str, str]:
     """Build HMAC headers for an internal API call.
 
@@ -68,11 +70,19 @@ def signed_headers(
     when present, matching `require_internal_service_token`.
     """
     ts = str(int(time.time()))
-    payload = f"{ts}\n{method.upper()}\n{path}\n{hashlib.sha256(body).hexdigest()}"
+    payload = (
+        f"{ts}\n{method.upper()}\n{path}\n{hashlib.sha256(body).hexdigest()}"
+        f"\n{clerk_user_id}\n{clerk_role}"
+    )
     signature = hmac.new(
         token.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256
     ).hexdigest()
-    return {"x-request-timestamp": ts, "x-request-signature": signature}
+    headers = {"x-request-timestamp": ts, "x-request-signature": signature}
+    if clerk_user_id:
+        headers["x-clerk-user-id"] = clerk_user_id
+    if clerk_role:
+        headers["x-clerk-role"] = clerk_role
+    return headers
 
 
 class SignedClient:
@@ -92,10 +102,10 @@ class SignedClient:
         extra_headers: dict[str, str] | None = None,
     ):
         body = b"" if json_body is None else json.dumps(json_body).encode("utf-8")
-        headers = signed_headers(method=method, path=path, body=body)
         user = clerk_user_id if clerk_user_id is not None else self._clerk_user_id
-        if user is not None:
-            headers["x-clerk-user-id"] = user
+        headers = signed_headers(
+            method=method, path=path, body=body, clerk_user_id=user or ""
+        )
         if json_body is not None:
             headers["content-type"] = "application/json"
         if extra_headers:

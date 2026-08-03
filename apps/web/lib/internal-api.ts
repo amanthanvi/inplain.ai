@@ -128,6 +128,7 @@ export type ExportOut = {
 
 type InternalFetchOptions = {
   userId?: string;
+  clerkRole?: string;
   method?: "GET" | "POST" | "DELETE";
   body?: unknown;
   cache?: RequestCache;
@@ -168,7 +169,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
 
 export async function internalFetch<T>(
   path: string,
-  { userId, method = "GET", body, cache = "no-store", timeoutMs }: InternalFetchOptions = {},
+  { userId, clerkRole, method = "GET", body, cache = "no-store", timeoutMs }: InternalFetchOptions = {},
 ): Promise<T> {
   const baseUrl = process.env.INTERNAL_API_BASE_URL;
   const token = process.env.INTERNAL_SERVICE_TOKEN;
@@ -181,7 +182,11 @@ export async function internalFetch<T>(
 
   const bodyText = body === undefined ? "" : JSON.stringify(body);
   const timestamp = String(Math.floor(Date.now() / 1000));
-  const payloadToSign = `${timestamp}\n${method.toUpperCase()}\n${path}\n${sha256Hex(bodyText)}`;
+  // The principal is inside the signature. Sending it alongside but not under
+  // the signature let a captured request be replayed with a substituted user.
+  const principal = userId ?? "";
+  const role = clerkRole ?? "";
+  const payloadToSign = `${timestamp}\n${method.toUpperCase()}\n${path}\n${sha256Hex(bodyText)}\n${principal}\n${role}`;
   const signature = hmacHex(token, payloadToSign);
 
   const headers: Record<string, string> = {
@@ -190,6 +195,9 @@ export async function internalFetch<T>(
   };
   if (userId) {
     headers["x-clerk-user-id"] = userId;
+  }
+  if (clerkRole) {
+    headers["x-clerk-role"] = clerkRole;
   }
   if (body !== undefined) {
     headers["content-type"] = "application/json";

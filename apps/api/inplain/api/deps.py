@@ -14,8 +14,24 @@ from inplain.settings import settings
 _HMAC_MAX_SKEW_SECONDS = 300
 
 
-def _canonical_hmac_payload(*, timestamp: str, method: str, path: str, body_hash: str) -> str:
-    return f"{timestamp}\n{method.upper()}\n{path}\n{body_hash}"
+def _canonical_hmac_payload(
+    *,
+    timestamp: str,
+    method: str,
+    path: str,
+    body_hash: str,
+    clerk_user_id: str,
+    clerk_role: str,
+) -> str:
+    """Canonical string covered by the request signature.
+
+    The principal headers are part of the signature. They were previously sent
+    alongside it but not covered by it, which meant a captured request could be
+    replayed inside the 300s skew window with a substituted x-clerk-user-id and
+    still verify - a cross-tenant write. x-clerk-role was in the same position
+    and gates the admin routes.
+    """
+    return f"{timestamp}\n{method.upper()}\n{path}\n{body_hash}\n{clerk_user_id}\n{clerk_role}"
 
 
 def _body_sha256(body: bytes) -> str:
@@ -33,6 +49,8 @@ def _verify_hmac_headers(
     body: bytes,
     signature: str,
     timestamp: str,
+    clerk_user_id: str,
+    clerk_role: str,
 ) -> bool:
     try:
         ts = int(timestamp)
@@ -52,6 +70,8 @@ def _verify_hmac_headers(
         method=method,
         path=path,
         body_hash=_body_sha256(body),
+        clerk_user_id=clerk_user_id,
+        clerk_role=clerk_role,
     )
     expected = _hmac_hexdigest(secret=settings.internal_service_token, payload=payload)
     return hmac.compare_digest(supplied, expected)
@@ -61,6 +81,8 @@ async def require_internal_service_token(
     request: Request,
     x_request_signature: str | None = Header(default=None),
     x_request_timestamp: str | None = Header(default=None),
+    x_clerk_user_id: str | None = Header(default=None),
+    x_clerk_role: str | None = Header(default=None),
 ) -> None:
     """Authenticate an internal (web -> api) call.
 
@@ -84,6 +106,8 @@ async def require_internal_service_token(
         body=body,
         signature=x_request_signature,
         timestamp=x_request_timestamp,
+        clerk_user_id=x_clerk_user_id or "",
+        clerk_role=x_clerk_role or "",
     ):
         raise HTTPException(status_code=401, detail="unauthorized")
 
