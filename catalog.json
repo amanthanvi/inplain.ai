@@ -1,30 +1,11 @@
 [
   {
-    "slug": "google",
-    "name": "Google",
-    "website_url": "https://google.com",
-    "category": "search",
+    "slug": "airbnb",
+    "name": "Airbnb",
+    "website_url": "https://www.airbnb.com",
+    "category": "other",
     "policy_urls": {
-      "privacy": "https://policies.google.com/privacy",
-      "tos": "https://policies.google.com/terms"
-    }
-  },
-  {
-    "slug": "apple",
-    "name": "Apple",
-    "website_url": "https://apple.com",
-    "category": "productivity",
-    "policy_urls": {
-      "privacy": "https://www.apple.com/legal/privacy/en-ww/"
-    }
-  },
-  {
-    "slug": "microsoft",
-    "name": "Microsoft",
-    "website_url": "https://www.microsoft.com",
-    "category": "productivity",
-    "policy_urls": {
-      "privacy": "https://privacy.microsoft.com/en-us/privacystatement"
+      "tos": "https://www.airbnb.com/help/article/2908"
     }
   },
   {
@@ -38,203 +19,6 @@
     }
   },
   {
-    "slug": "reddit",
-    "name": "Reddit",
-    "website_url": "https://www.reddit.com",
-    "category": "social_media",
-    "policy_urls": {
-      "privacy": "https://www.redditinc.com/policies/privacy-policy",
-      "tos": "https://www.redditinc.com/policies/user-agreement"
-    }
-  },
-  {
-    "slug": "discord",
-    "name": "Discord",
-    "website_url": "https://discord.com",
-    "category": "communication",
-    "policy_urls": {
-      "privacy": "https://discord.com/privacy",
-      "tos": "https://discord.com/terms"
-    }
-  },
-  {
-    "slug": "netflix",
-    "name": "Netflix",
-    "website_url": "https://www.netflix.com",
-    "category": "streaming",
-    "policy_urls": {
-      "privacy": "https://help.netflix.com/legal/privacy",
-      "tos": "https://help.netflix.com/legal/termsofuse"
-    }
-  },
-  {
-    "slug": "spotify",
-    "name": "Spotify",
-    "website_url": "https://www.spotify.com",
-    "category": "streaming",
-    "policy_urls": {
-      "privacy": "https://www.spotify.com/us/legal/privacy-policy/",
-      "tos": "https://www.spotify.com/us/legal/end-user-agreement/"
-    }
-  },
-  {
-    "slug": "twitch",
-    "name": "Twitch",
-    "website_url": "https://www.twitch.tv",
-    "category": "streaming",
-    "policy_urls": {
-      "privacy": "https://www.twitch.tv/p/en/legal/privacy-notice/",
-      "tos": "https://www.twitch.tv/p/en/legal/terms-of-service/"
-    }
-  },
-  {
-    "slug": "paypal",
-    "name": "PayPal",
-    "website_url": "https://www.paypal.com",
-    "category": "finance",
-    "policy_urls": {
-      "privacy": "https://www.paypal.com/us/legalhub/privacy-full",
-      "tos": "https://www.paypal.com/us/legalhub/paypal/useragreement-full"
-    }
-  },
-  {
-    "slug": "stripe",
-    "name": "Stripe",
-    "website_url": "https://stripe.com",
-    "category": "finance",
-    "policy_urls": {
-      "privacy": "https://stripe.com/privacy",
-      "tos": "https://stripe.com/legal/ssa"
-    }
-  },
-  {
-    "slug": "coinbase",
-    "name": "Coinbase",
-    "website_url": "https://www.coinbase.com",
-    "category": "finance",
-    "policy_urls": {
-      "privacy": "https://www.coinbase.com/legal/privacy"
-    }
-  },
-  {
-    "slug": "shopify",
-    "name": "Shopify",
-    "website_url": "https://www.shopify.com",
-    "category": "ecommerce",
-    "policy_urls": {
-      "privacy": "https://www.shopify.com/legal/privacy",
-      "tos": "https://www.shopify.com/legal/terms"
-    }
-  },
-  {
-    "slug": "ebay",
-    "name": "eBay",
-    "website_url": "https://www.ebay.com",
-    "category": "ecommerce",
-    "policy_urls": {
-      "privacy": "https://www.ebay.com/help/policies/member-behavior-policies/user-privacy-notice-privacy-policy?id=4260",
-      "tos": "https://www.ebay.com/help/policies/member-behavior-policies/user-agreement?id=4259"
-    }
-  },
-  {
-    "slug": "etsy",
-    "name": "Etsy",
-    "website_url": "https://www.etsy.com",
-    "category": "ecommerce",
-    "policy_urls": {
-      "privacy": "https://www.etsy.com/legal/privacy",
-      "tos": "https://www.etsy.com/legal/terms-of-use"
-    }
-  },
-  {
-    "slug": "zoom",
-    "name": "Zoom",
-    "website_url": "https://www.zoom.com",
-    "category": "communication",
-    "policy_urls": {
-      "privacy": "https://explore.zoom.us/en/privacy/",
-      "tos": "https://explore.zoom.us/en/terms/"
-    }
-  },
-  {
-    "slug": "slack",
-    "name": "Slack",
-    "website_url": "https://slack.com",
-    "category": "communication",
-    "policy_urls": {
-      "privacy": "https://slack.com/privacy-policy",
-      "tos": "https://slack.com/terms-of-service"
-    }
-  },
-  {
-    "slug": "github",
-    "name": "GitHub",
-    "website_url": "https://github.com",
-    "category": "productivity",
-    "policy_urls": {
-      "privacy": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
-      "tos": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service"
-    }
-  },
-  {
-    "slug": "figma",
-    "name": "Figma",
-    "website_url": "https://www.figma.com",
-    "category": "productivity",
-    "policy_urls": {
-      "privacy": "https://www.figma.com/legal/privacy/"
-    }
-  },
-  {
-    "slug": "canva",
-    "name": "Canva",
-    "website_url": "https://www.canva.com",
-    "category": "productivity",
-    "policy_urls": {
-      "privacy": "https://www.canva.com/policies/privacy-policy/"
-    }
-  },
-  {
-    "slug": "dropbox",
-    "name": "Dropbox",
-    "website_url": "https://www.dropbox.com",
-    "category": "productivity",
-    "policy_urls": {
-      "privacy": "https://www.dropbox.com/privacy",
-      "tos": "https://www.dropbox.com/terms"
-    }
-  },
-  {
-    "slug": "cloudflare",
-    "name": "Cloudflare",
-    "website_url": "https://www.cloudflare.com",
-    "category": "cloud",
-    "policy_urls": {
-      "privacy": "https://www.cloudflare.com/privacypolicy/",
-      "tos": "https://www.cloudflare.com/website-terms/"
-    }
-  },
-  {
-    "slug": "digitalocean",
-    "name": "DigitalOcean",
-    "website_url": "https://www.digitalocean.com",
-    "category": "cloud",
-    "policy_urls": {
-      "privacy": "https://www.digitalocean.com/legal/privacy-policy",
-      "tos": "https://www.digitalocean.com/legal/terms-of-service-agreement"
-    }
-  },
-  {
-    "slug": "aws",
-    "name": "Amazon Web Services",
-    "website_url": "https://aws.amazon.com",
-    "category": "cloud",
-    "policy_urls": {
-      "privacy": "https://aws.amazon.com/privacy/",
-      "tos": "https://aws.amazon.com/agreement/"
-    }
-  },
-  {
     "slug": "anthropic",
     "name": "Anthropic",
     "website_url": "https://www.anthropic.com",
@@ -245,13 +29,12 @@
     }
   },
   {
-    "slug": "coursera",
-    "name": "Coursera",
-    "website_url": "https://www.coursera.org",
-    "category": "education",
+    "slug": "apple",
+    "name": "Apple",
+    "website_url": "https://apple.com",
+    "category": "productivity",
     "policy_urls": {
-      "privacy": "https://www.coursera.org/about/privacy",
-      "tos": "https://www.coursera.org/about/terms"
+      "privacy": "https://www.apple.com/legal/privacy/en-ww/"
     }
   },
   {
@@ -265,22 +48,72 @@
     }
   },
   {
-    "slug": "gitlab",
-    "name": "GitLab",
-    "website_url": "https://about.gitlab.com",
-    "category": "productivity",
+    "slug": "aws",
+    "name": "Amazon Web Services",
+    "website_url": "https://aws.amazon.com",
+    "category": "cloud",
     "policy_urls": {
-      "privacy": "https://about.gitlab.com/privacy/"
+      "privacy": "https://aws.amazon.com/privacy/",
+      "tos": "https://aws.amazon.com/agreement/"
     }
   },
   {
-    "slug": "mozilla",
-    "name": "Mozilla",
-    "website_url": "https://www.mozilla.org",
-    "category": "other",
+    "slug": "canva",
+    "name": "Canva",
+    "website_url": "https://www.canva.com",
+    "category": "productivity",
     "policy_urls": {
-      "privacy": "https://www.mozilla.org/en-US/privacy/",
-      "tos": "https://www.mozilla.org/en-US/about/legal/terms/services/"
+      "privacy": "https://www.canva.com/policies/privacy-policy/"
+    }
+  },
+  {
+    "slug": "cloudflare",
+    "name": "Cloudflare",
+    "website_url": "https://www.cloudflare.com",
+    "category": "cloud",
+    "policy_urls": {
+      "privacy": "https://www.cloudflare.com/privacypolicy/",
+      "tos": "https://www.cloudflare.com/website-terms/"
+    }
+  },
+  {
+    "slug": "coursera",
+    "name": "Coursera",
+    "website_url": "https://www.coursera.org",
+    "category": "education",
+    "policy_urls": {
+      "privacy": "https://www.coursera.org/about/privacy",
+      "tos": "https://www.coursera.org/about/terms"
+    }
+  },
+  {
+    "slug": "digitalocean",
+    "name": "DigitalOcean",
+    "website_url": "https://www.digitalocean.com",
+    "category": "cloud",
+    "policy_urls": {
+      "privacy": "https://www.digitalocean.com/legal/privacy-policy",
+      "tos": "https://www.digitalocean.com/legal/terms-of-service-agreement"
+    }
+  },
+  {
+    "slug": "discord",
+    "name": "Discord",
+    "website_url": "https://discord.com",
+    "category": "communication",
+    "policy_urls": {
+      "privacy": "https://discord.com/privacy",
+      "tos": "https://discord.com/terms"
+    }
+  },
+  {
+    "slug": "dropbox",
+    "name": "Dropbox",
+    "website_url": "https://www.dropbox.com",
+    "category": "productivity",
+    "policy_urls": {
+      "privacy": "https://www.dropbox.com/privacy",
+      "tos": "https://www.dropbox.com/terms"
     }
   },
   {
@@ -294,6 +127,112 @@
     }
   },
   {
+    "slug": "ebay",
+    "name": "eBay",
+    "website_url": "https://www.ebay.com",
+    "category": "ecommerce",
+    "policy_urls": {
+      "privacy": "https://www.ebay.com/help/policies/member-behavior-policies/user-privacy-notice-privacy-policy?id=4260",
+      "tos": "https://www.ebay.com/help/policies/member-behavior-policies/user-agreement?id=4259"
+    }
+  },
+  {
+    "slug": "figma",
+    "name": "Figma",
+    "website_url": "https://www.figma.com",
+    "category": "productivity",
+    "policy_urls": {
+      "privacy": "https://www.figma.com/legal/privacy/"
+    }
+  },
+  {
+    "slug": "github",
+    "name": "GitHub",
+    "website_url": "https://github.com",
+    "category": "productivity",
+    "policy_urls": {
+      "privacy": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+      "tos": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service"
+    }
+  },
+  {
+    "slug": "gitlab",
+    "name": "GitLab",
+    "website_url": "https://about.gitlab.com",
+    "category": "productivity",
+    "policy_urls": {
+      "privacy": "https://about.gitlab.com/privacy/"
+    }
+  },
+  {
+    "slug": "google",
+    "name": "Google",
+    "website_url": "https://google.com",
+    "category": "search",
+    "policy_urls": {
+      "privacy": "https://policies.google.com/privacy",
+      "tos": "https://policies.google.com/terms"
+    }
+  },
+  {
+    "slug": "microsoft",
+    "name": "Microsoft",
+    "website_url": "https://www.microsoft.com",
+    "category": "productivity",
+    "policy_urls": {
+      "privacy": "https://privacy.microsoft.com/en-us/privacystatement"
+    }
+  },
+  {
+    "slug": "mozilla",
+    "name": "Mozilla",
+    "website_url": "https://www.mozilla.org",
+    "category": "other",
+    "policy_urls": {
+      "privacy": "https://www.mozilla.org/en-US/privacy/",
+      "tos": "https://www.mozilla.org/en-US/about/legal/terms/services/"
+    }
+  },
+  {
+    "slug": "netflix",
+    "name": "Netflix",
+    "website_url": "https://www.netflix.com",
+    "category": "streaming",
+    "policy_urls": {
+      "privacy": "https://help.netflix.com/legal/privacy",
+      "tos": "https://help.netflix.com/legal/termsofuse"
+    }
+  },
+  {
+    "slug": "paypal",
+    "name": "PayPal",
+    "website_url": "https://www.paypal.com",
+    "category": "finance",
+    "policy_urls": {
+      "privacy": "https://www.paypal.com/us/legalhub/privacy-full",
+      "tos": "https://www.paypal.com/us/legalhub/paypal/useragreement-full"
+    }
+  },
+  {
+    "slug": "proton",
+    "name": "Proton",
+    "website_url": "https://proton.me",
+    "category": "productivity",
+    "policy_urls": {
+      "privacy": "https://proton.me/legal/privacy",
+      "tos": "https://proton.me/legal/terms"
+    }
+  },
+  {
+    "slug": "reddit",
+    "name": "Reddit",
+    "website_url": "https://www.reddit.com",
+    "category": "social_media",
+    "policy_urls": {
+      "tos": "https://www.redditinc.com/policies/user-agreement"
+    }
+  },
+  {
     "slug": "salesforce",
     "name": "Salesforce",
     "website_url": "https://www.salesforce.com",
@@ -303,12 +242,73 @@
     }
   },
   {
-    "slug": "airbnb",
-    "name": "Airbnb",
-    "website_url": "https://www.airbnb.com",
+    "slug": "shopify",
+    "name": "Shopify",
+    "website_url": "https://www.shopify.com",
+    "category": "ecommerce",
+    "policy_urls": {
+      "privacy": "https://www.shopify.com/legal/privacy",
+      "tos": "https://www.shopify.com/legal/terms"
+    }
+  },
+  {
+    "slug": "slack",
+    "name": "Slack",
+    "website_url": "https://slack.com",
+    "category": "communication",
+    "policy_urls": {
+      "privacy": "https://slack.com/privacy-policy",
+      "tos": "https://slack.com/terms-of-service"
+    }
+  },
+  {
+    "slug": "spotify",
+    "name": "Spotify",
+    "website_url": "https://www.spotify.com",
+    "category": "streaming",
+    "policy_urls": {
+      "privacy": "https://www.spotify.com/us/legal/privacy-policy/",
+      "tos": "https://www.spotify.com/us/legal/end-user-agreement/"
+    }
+  },
+  {
+    "slug": "stripe",
+    "name": "Stripe",
+    "website_url": "https://stripe.com",
+    "category": "finance",
+    "policy_urls": {
+      "privacy": "https://stripe.com/privacy",
+      "tos": "https://stripe.com/legal/ssa"
+    }
+  },
+  {
+    "slug": "twitch",
+    "name": "Twitch",
+    "website_url": "https://www.twitch.tv",
+    "category": "streaming",
+    "policy_urls": {
+      "privacy": "https://www.twitch.tv/p/en/legal/privacy-notice/",
+      "tos": "https://www.twitch.tv/p/en/legal/terms-of-service/"
+    }
+  },
+  {
+    "slug": "wikimedia",
+    "name": "Wikimedia Foundation",
+    "website_url": "https://www.wikimedia.org",
     "category": "other",
     "policy_urls": {
-      "tos": "https://www.airbnb.com/help/article/2908"
+      "privacy": "https://foundation.wikimedia.org/wiki/Policy:Privacy_policy",
+      "tos": "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use"
+    }
+  },
+  {
+    "slug": "zoom",
+    "name": "Zoom",
+    "website_url": "https://www.zoom.com",
+    "category": "communication",
+    "policy_urls": {
+      "privacy": "https://explore.zoom.us/en/privacy/",
+      "tos": "https://explore.zoom.us/en/terms/"
     }
   }
 ]
