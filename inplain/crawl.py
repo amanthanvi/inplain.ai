@@ -9,15 +9,22 @@ Conduct, all of it from a verified defect in v0.2.0 (SPEC §8):
 * one honest identity, sent to origins and used as the robots product token;
 * robots.txt parsed by protego, per origin, re-checked on **every redirect
   hop** — redirects are followed by hand for exactly this reason (AC-6);
-* conditional GET, where a 304 keeps the validators we already stored;
+* conditional GET, where a 304 keeps the validators we already stored, and
+  where validators are only ever stored for a body the archive actually
+  holds — see ``CrawlState``;
 * the body is streamed and abandoned the moment it passes the size cap;
 * every hop resolves DNS itself, refuses any non-global address, and pins the
   connection to the address it checked;
-* a per-host politeness delay.
+* a per-host politeness delay, with a ceiling above which the host is dropped
+  for this run rather than allowed to stall the crawl.
 
 A document that cannot be fetched lawfully or reliably is reported and
-skipped. A partial crawl is a normal outcome; a tracked-and-broken document
-is not (SPEC §6).
+skipped — including one whose extractor crashes on it. A partial crawl is a
+normal outcome; a tracked-and-broken document is not (SPEC §6).
+
+``--no-commit`` writes documents and touches nothing else: it makes no
+commits and persists no conditional-GET state, so a dry run can never teach
+the next real run to stop asking about a document it never archived.
 
 Run it: ``python -m inplain.crawl [--only SLUG] [--no-commit]``
 """
@@ -58,6 +65,11 @@ from .robots import ROBOTS_MAX_BYTES, RobotsCache
 log = logging.getLogger("inplain.crawl")
 
 DEFAULT_DELAY = 3.0
+# A robots.txt may ask us to wait; it may not stall the crawl. A host asking
+# for more than this is not rationing us, it is misconfigured (or excluding us
+# by other means), so we drop the host for this run instead of blocking the
+# whole catalog behind one Crawl-delay (AC-1: the crawl completes).
+MAX_CRAWL_DELAY = 60.0
 MAX_REDIRECTS = 5
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 STATE_FILENAME = ".crawlstate.json"
@@ -146,6 +158,8 @@ def load_catalog(path: Path) -> list[Document]:
             policy_urls = company["policy_urls"]
         except (TypeError, KeyError) as exc:
             raise ValueError(f"{path}: entry {index} is missing {exc}") from exc
+        if not isinstance(policy_urls, dict):
+            raise ValueError(f"{path}: {slug} policy_urls is not an object")
         if not policy_urls:
             raise ValueError(f"{path}: {slug} has no policy_urls")
         for doc_type, url in policy_urls.items():
@@ -211,6 +225,15 @@ class CrawlState:
     Committed, because it is what makes the next crawl cheap and polite for
     the origin, and because anyone auditing the archive should be able to see
     which snapshots were confirmed unchanged by the server itself.
+
+    **A validator is a claim about the archive, not about this process.**
+    Storing one for a body that never reached a commit is how a real change
+    disappears: the next run sends ``If-None-Match``, the origin answers 304,
+    and the document stays wrong until the origin edits the page again —
+    months, at SPEC §8 cadence. So entries are written only once the matching
+    commit exists (``Crawler.crawl_document``), the file is not persisted at
+    all by a ``--no-commit`` run (``Crawler.run``), and a 304 is trusted only
+    while git still holds the snapshot it validates.
     """
 
     def __init__(self, path: Path) -> None:
@@ -247,7 +270,11 @@ class CrawlState:
         content_sha256: str,
         when: str,
     ) -> None:
-        """A full 200. The response's validators replace what we stored."""
+        """A full 200, already archived. Its validators replace what we stored.
+
+        Call this only after the snapshot it describes is committed (or is
+        already identical to the committed one). See the class docstring.
+        """
         entry = self._entries.setdefault(url, UrlState())
         entry.etag = headers.get("ETag")
         entry.last_modified = headers.get("Last-Modified")
@@ -274,6 +301,15 @@ class CrawlState:
             entry.last_modified = last_modified
         entry.last_checked_at = when
         self.dirty = True
+
+    def forget(self, url: str) -> None:
+        """Drop this URL's validators: the next request for it is a full GET.
+
+        Used when a 304 turns out to validate a snapshot the archive does not
+        hold — the stored validators are then worse than none.
+        """
+        if self._entries.pop(url, None) is not None:
+            self.dirty = True
 
     def save(self) -> None:
         payload = {
@@ -435,6 +471,11 @@ class Crawler:
                 if not decision.allowed:
                     raise BlockedError(f"{current}: {decision.reason}")
                 delay = self.robots.crawl_delay(current)
+                if delay is not None and delay > MAX_CRAWL_DELAY:
+                    raise BlockedError(
+                        f"{current}: robots Crawl-delay {delay:g}s exceeds the "
+                        f"{MAX_CRAWL_DELAY:g}s ceiling"
+                    )
             self.politeness.wait(target.host, delay)
             response = self.transport.get(target, headers, self.timeout, cap)
             if response.status in REDIRECT_STATUSES:
@@ -461,11 +502,59 @@ class Crawler:
     def document_path(self, document: Document) -> Path:
         return self.documents_dir / document.company / f"{document.doc}.txt"
 
+    def snapshot_is_archived(self, document: Document) -> bool:
+        """True when git holds exactly the body the stored validators describe.
+
+        This is what makes a stored validator meaningful: a 304 says "the body
+        you last saw is still current", which is only useful if that body is in
+        the archive. If it is missing, uncommitted, or no longer the one we
+        hashed when we stored the validators, they describe content nobody can
+        read, and trusting them would suppress the change forever (see
+        ``CrawlState``).
+        """
+        path = self.document_path(document)
+        try:
+            if not path.exists():
+                return False
+            expected = self.state.get(document.url).content_sha256
+            if expected and sha256(path.read_text(encoding="utf-8")) != expected:
+                # A revert, or an edit committed by hand: the archive moved
+                # under the validators.
+                return False
+        except OSError as exc:
+            log.warning("could not read the snapshot for %s: %s", document, exc)
+            return False
+        relpath = self._relpath(path) or document.relpath
+        try:
+            return not self.git.has_changes(relpath)
+        except GitError as exc:
+            # Cannot prove it is archived, so treat it as if it is not: the
+            # cost is one unconditional GET, the alternative is a lost change.
+            log.warning("could not verify %s against git: %s", document, exc)
+            return False
+
     def crawl_document(self, document: Document) -> DocumentOutcome:
-        headers = {**REQUEST_HEADERS, **self.state.conditional_headers(document.url)}
+        conditional = self.state.conditional_headers(document.url)
         now = self.clock().isoformat().replace("+00:00", "Z")
         try:
-            response = self._fetch(document.url, headers)
+            response = self._fetch(document.url, {**REQUEST_HEADERS, **conditional})
+            if response.status == 304 and conditional:
+                if self.snapshot_is_archived(document):
+                    self.state.record_not_modified(document.url, response.headers, now)
+                    log.info("not modified %s", document)
+                    return DocumentOutcome(
+                        document, Status.NOT_MODIFIED, "304 Not Modified"
+                    )
+                # The validators outlived the snapshot they were issued for.
+                # Forget them and ask for the body, or this document can never
+                # be committed again until the origin edits the page.
+                log.warning(
+                    "stale validators for %s: the snapshot they match is not "
+                    "committed — refetching unconditionally",
+                    document,
+                )
+                self.state.forget(document.url)
+                response = self._fetch(document.url, dict(REQUEST_HEADERS))
         except BlockedError as exc:
             log.warning("blocked %s: %s", document, exc)
             return DocumentOutcome(document, Status.BLOCKED, str(exc))
@@ -474,9 +563,11 @@ class Crawler:
             return DocumentOutcome(document, Status.FAILED, str(exc))
 
         if response.status == 304:
-            self.state.record_not_modified(document.url, response.headers, now)
-            log.info("not modified %s", document)
-            return DocumentOutcome(document, Status.NOT_MODIFIED, "304 Not Modified")
+            # A 304 to a request that carried no validators. The origin is
+            # broken; there is no body to archive either way.
+            detail = "304 Not Modified for an unconditional request"
+            log.warning("failed %s: %s", document, detail)
+            return DocumentOutcome(document, Status.FAILED, detail)
 
         if response.status != 200:
             detail = f"HTTP {response.status}"
@@ -489,7 +580,15 @@ class Crawler:
             log.warning("failed %s: %s", document, detail)
             return DocumentOutcome(document, Status.FAILED, detail)
 
-        extracted = extract_text(response.body, response.url)
+        try:
+            extracted = extract_text(response.body, response.url)
+        except Exception as exc:  # deliberately broad: one page, not the run
+            # trafilatura is a third-party parser over adversarial markup: a
+            # page that makes it raise is a dropped document (SPEC §6), never
+            # an aborted crawl (AC-1).
+            detail = f"extraction raised {type(exc).__name__}: {exc}"
+            log.warning("failed %s: %s", document, detail)
+            return DocumentOutcome(document, Status.FAILED, detail)
         if extracted is None:
             detail = "trafilatura extracted nothing"
             log.warning("failed %s: %s", document, detail)
@@ -502,7 +601,6 @@ class Crawler:
 
         path = self.document_path(document)
         previous = path.read_text(encoding="utf-8") if path.exists() else None
-        self.state.record_response(document.url, response.headers, sha256(text), now)
 
         changed = previous != text
         if changed:
@@ -513,6 +611,8 @@ class Crawler:
             detail = "identical to the stored snapshot"
 
         if not self.commit:
+            # No validators are recorded and no state is saved: a run that does
+            # not archive anything must not teach the next run to stop asking.
             log.info("%s %s", "changed" if changed else "unchanged", document)
             return DocumentOutcome(
                 document, Status.CHANGED if changed else Status.UNCHANGED, detail
@@ -524,12 +624,21 @@ class Crawler:
             # snapshot left uncommitted by an interrupted run rather than
             # leaving the archive tracked-and-broken.
             if not self.git.has_changes(relpath):
+                # Working tree, index and the fetched body all agree, so the
+                # validators describe what the archive holds.
+                self.state.record_response(
+                    document.url, response.headers, sha256(text), now
+                )
                 log.info("unchanged %s", document)
                 return DocumentOutcome(document, Status.UNCHANGED, detail)
             sha = self.git.commit_path(relpath, commit_message(document))
         except GitError as exc:
+            # Deliberately no state write: the body is not in the archive, so
+            # a stored ETag would make the next run 304 past a change that was
+            # never committed.
             log.error("commit failed %s: %s", document, exc)
             return DocumentOutcome(document, Status.FAILED, f"commit failed: {exc}")
+        self.state.record_response(document.url, response.headers, sha256(text), now)
         log.info("changed %s (%s) %s", document, detail, sha[:7])
         return DocumentOutcome(document, Status.CHANGED, detail, commit=sha)
 
@@ -550,9 +659,12 @@ class Crawler:
         report = CrawlReport()
         for document in self.documents(only):
             report.outcomes.append(self.crawl_document(document))
-        if self.state.dirty:
+        # A --no-commit run archives nothing, so it persists nothing either:
+        # writing validators for a snapshot that was never committed is what
+        # makes the *next* run 304 past a real change.
+        if self.state.dirty and self.commit:
             self.state.save()
-            if self.commit and (relpath := self._relpath(self.state.path)):
+            if relpath := self._relpath(self.state.path):
                 # Its own commit: a document commit must contain exactly one
                 # document, because T2 derives a change record from it.
                 try:
@@ -592,7 +704,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-commit",
         action="store_true",
-        help="write files but make no commits",
+        help="write files but make no commits (conditional-GET state is left alone)",
     )
     parser.add_argument(
         "--delay",

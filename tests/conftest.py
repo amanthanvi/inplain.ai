@@ -66,6 +66,22 @@ def not_modified(url: str, **headers: str) -> HttpResponse:
     return response(url, 304, headers)
 
 
+def conditional_html(url: str, body: bytes | None = None, etag: str = '"v1"'):
+    """An origin that really implements conditional GET.
+
+    It answers 304 to a matching ``If-None-Match`` and serves the body
+    otherwise — the behaviour under which a stale stored validator can hide a
+    change that was never committed.
+    """
+
+    def handler(target, headers):
+        if headers.get("If-None-Match") == etag:
+            return not_modified(url)
+        return html_response(url, body, ETag=etag)
+
+    return handler
+
+
 @dataclass
 class Recorded:
     url: str

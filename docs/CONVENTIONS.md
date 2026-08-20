@@ -10,6 +10,8 @@ catalog.json                 # 32 companies / 56 URLs — the curated input
 inplain/                     # ONE Python package, stdlib-leaning
   __init__.py
   crawl.py                   # T1: catalog → fetch → extract → write documents/
+  net.py                     # T1: SSRF-safe, IP-pinned, size-capped transport
+  robots.py                  # T1: protego robots.txt, per origin, fail-closed
   detect.py                  # T2: git diff → change records
   summarize.py               # T3: cited summaries + side-aware validation
   site.py                    # T4: static site generator → _site/
