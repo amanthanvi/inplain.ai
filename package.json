@@ -6,6 +6,7 @@
     "lint:css": "stylelint \"**/*.css\""
   },
   "devDependencies": {
+    "@axe-core/cli": "4.13.0",
     "stylelint": "17.14.1"
   }
 }
