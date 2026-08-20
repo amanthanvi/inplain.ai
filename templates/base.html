@@ -1,0 +1,40 @@
+{#- Base skeleton: skip link, masthead, one <main>, footer. Every page is a
+    complete static document — no script, ever (AC-7). -#}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title }}</title>
+{%- if page.description %}
+<meta name="description" content="{{ page.description }}">
+{%- endif %}
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="masthead">
+<div class="wrap">
+<a class="site-name" href="/">inplain.ai</a>
+<nav class="site-nav" aria-label="Site">
+<a href="/changes/"{% if page.nav == "changes" %} aria-current="page"{% endif %}>Changes</a>
+<a href="/companies/"{% if page.nav == "companies" %} aria-current="page"{% endif %}>Companies</a>
+</nav>
+</div>
+</header>
+<main id="main">
+<div class="wrap">
+{% block main %}{% endblock %}
+</div>
+</main>
+<footer class="site-foot">
+<div class="wrap">
+<span>inplain.ai — what changed, why it matters, and the evidence.</span>
+{%- if site.latest %}
+<span>{{ site.published }} change record{{ "s" if site.published != 1 else "" }} · latest {{ site.latest }}</span>
+{%- endif %}
+</div>
+</footer>
+</body>
+</html>
