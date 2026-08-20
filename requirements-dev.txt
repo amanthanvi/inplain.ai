@@ -1,0 +1,4 @@
+-r requirements.txt
+# Tests never touch the network: the transport is injected, so no HTTP
+# recording library is needed.
+pytest==9.1.1
