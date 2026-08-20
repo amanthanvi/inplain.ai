@@ -31,7 +31,7 @@ every case: it existed to serve a user model that no longer exists.
 | **Billing, tiers, quotas, entitlements** | No revenue timeline. Tiers existed to ration duplicated work that §4 eliminates. |
 | **An HTTP API / BFF** | The worker never called it. ~1,100 lines existed to move rows into a server component. |
 | **A database** | See §4. Git is the datastore. |
-| **A headless-browser renderer** | 56/56 catalog URLs pass over plain HTTP. The pages that fail do so via anti-bot IP blocking, which a browser does not fix. |
+| **A headless-browser renderer** | 52/52 catalog URLs pass over plain HTTP. The pages that fail do so via anti-bot IP blocking, which a browser does not fix. |
 | **PDF extraction and OCR** | Zero PDFs in the catalog. Never executed in production. |
 | **Self-hosted PostHog, Redis, a proxy service** | Analytics infrastructure for a product with no users. |
 | **In-app notifications** | Nothing to notify, nobody to notify. |
@@ -91,7 +91,7 @@ the product's own history inspectable with the same tool it is built on.
 
 We publish: **changed passages, the cited summary, and a link to the source.**
 
-We do not mirror full policy text. Republishing 24k–210k characters × 56
+We do not mirror full policy text. Republishing 24k–210k characters × 52
 documents is wholesale reproduction of copyrighted works; publishing the changed
 passages with commentary is not the same act and is a far smaller surface.
 
@@ -100,7 +100,7 @@ the input, not the publication.
 
 ## 6. Catalog
 
-`catalog.json`, 32 companies / 56 URLs, all validated 200 + robots-allow +
+`catalog.json`, 30 companies / 52 URLs, all validated 200 + robots-allow +
 ≥500 extracted characters. Contributions by pull request against that file.
 
 A document is dropped, not tracked-and-broken, when it cannot be fetched

@@ -71,7 +71,7 @@ charges ~5.5% (min $0.80) on credit purchases ([OpenRouter FAQ][d], accessed
 
 ## Cost at our volume
 
-~56 documents, each changing a few times a year → call it **300 summaries/year**
+~52 documents, each changing a few times a year → call it **300 summaries/year**
 (generous). Per summary: ~15k input tokens (prompt + hunks; most diffs are far
 smaller) + ~1.5k output tokens.
 

@@ -104,7 +104,7 @@ snapshot, not against "yesterday". Mitigations T6 should encode:
   free: In public repositories." (same page) — i.e. **$0, no minute
   metering**.
 
-Sizing: a daily crawl of 56 URLs with per-host politeness delays, plus pip
+Sizing: a daily crawl of 52 URLs with per-host politeness delays, plus pip
 install, diff, summarize, and a static build of tens of pages, is realistically
 5–10 minutes/run → **~150–300 minutes/month**, plus CI pushes. Comfortably
 inside the private-repo Free allowance, and free outright once public.

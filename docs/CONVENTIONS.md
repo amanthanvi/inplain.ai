@@ -6,7 +6,7 @@ one layout. KISS, YAGNI, delete by default.
 ## Layout
 
 ```
-catalog.json                 # 32 companies / 56 URLs — the curated input
+catalog.json                 # 30 companies / 52 URLs — the curated input
 inplain/                     # ONE Python package, stdlib-leaning
   __init__.py
   crawl.py                   # T1: catalog → fetch → extract → write documents/
