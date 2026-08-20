@@ -1,0 +1,615 @@
+/* static/site.css — semantic stylesheet for the generated site (D1).
+ *
+ * Surfaces (T4): the change feed (home), the change view, per-company
+ * pages, and the company index. Class names follow the chosen prototype
+ * (prototypes/a-docket.html, direction A); the surfaces the prototype
+ * did not cover extend the same vocabulary.
+ *
+ * References var(--*) from static/tokens.css ONLY — no raw colours, no
+ * raw px. Enforced by stylelint (`npm run lint:css`).
+ */
+
+/* ------------------------------------------------------------- base -- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Smooth scroll (citation → hunk jumps) is opt-in via motion preference,
+   never unconditional. scrollIntoView({behavior:"smooth"}) is the classic
+   reduced-motion escapee; anchor jumps here are pure CSS and gated. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh; /* dvh, not vh — mobile URL-bar safe (SPEC §9) */
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+a {
+  color: inherit;
+}
+
+/* Every interactive element gets a visible focus ring, ≥3:1 against the
+   paper in both themes (5.78:1 light / 7.85:1 dark). v0.2.0 had zero
+   focus-visible rules; this is the global floor. */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Visually hidden, still read by assistive tech — carries the
+   "Added:" / "Removed:" labels so the diff never depends on colour. */
+.sr {
+  position: absolute;
+  width: var(--hairline);
+  height: var(--hairline);
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Skip link — first focusable element on every page */
+.skip {
+  position: absolute;
+  left: var(--space-2);
+  top: var(--space-2);
+  z-index: var(--z-overlay);
+  padding: var(--space-2) var(--space-3);
+  background: var(--paper);
+  color: var(--accent);
+  border: var(--hairline) solid var(--rule);
+  border-radius: var(--radius-sm);
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+/* ----------------------------------------------------------- layout -- */
+.wrap {
+  max-width: 78ch;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-5) var(--space-9);
+}
+
+/* --------------------------------------------------------- masthead -- */
+.masthead {
+  border-bottom: var(--hairline) solid var(--rule);
+}
+
+.masthead .wrap {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+.site-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-kicker);
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.site-nav {
+  margin-left: auto;
+  display: flex;
+  gap: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current="page"] {
+  color: var(--ink);
+}
+
+/* -------------------------------------------- change-view header ----- */
+/* The one place with a little more life (prototype README: header lifted
+   partway toward editorial). */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-kicker);
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: var(--space-4);
+}
+
+.kicker .co {
+  color: var(--ink);
+  font-weight: var(--weight-bold);
+}
+
+.kicker .tick {
+  width: var(--space-4);
+  height: var(--stroke-2);
+  background: var(--accent);
+  border-radius: var(--hairline);
+  flex: 0 0 auto;
+}
+
+h1 {
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+  margin: 0 0 var(--space-3);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.014em;
+  max-width: 26ch;
+}
+
+.lede {
+  color: var(--soft);
+  font-size: var(--text-md);
+  line-height: var(--leading-lede);
+  margin: 0 0 var(--space-5);
+  max-width: 60ch;
+}
+
+.meta {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  border-top: var(--hairline) solid var(--rule);
+  border-bottom: var(--hairline) solid var(--rule);
+  padding: var(--space-3) 0;
+  margin-bottom: var(--space-6);
+  align-items: baseline;
+}
+
+.meta .span {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+/* Stat figures — shared by .meta (change view) and .stats (feed cards).
+   Diff green/red is a separate semantic channel from the citation
+   accent; using it for totals reinforces the mapping. */
+.n {
+  font-weight: var(--weight-bold);
+}
+
+.plus .n {
+  color: var(--add-ink);
+}
+
+.minus .n {
+  color: var(--rm-ink);
+}
+
+/* Similarity ratio is a display badge, never a gate (SPEC §7) */
+.badge {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--muted);
+  border: var(--hairline) solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-1);
+  white-space: nowrap;
+}
+
+/* Effective-date change — the single most legally meaningful line in a
+   policy; surfaced, never buried (SPEC §7). */
+.effdate {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink);
+  background: var(--panel);
+  border-left: var(--stroke-3) solid var(--rule);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+/* ---------------------------------------------------- section heads -- */
+h2 {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: var(--weight-semibold);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+/* ------------------------------------------------- summary + citations */
+ul.sum {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+ul.sum li {
+  margin-bottom: var(--space-3);
+}
+
+/* The citation is the primary summary→evidence control. AA floor: 12px
+   mono at 5.78:1 light / 7.85:1 dark (v0.2.0 shipped it at ~10.9px,
+   3.08:1 — the smallest, lowest-contrast element on the page). */
+.cit {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: var(--hairline) solid var(--accent);
+  padding-bottom: var(--hairline);
+  white-space: nowrap;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.cit:hover {
+  background: var(--accent);
+  color: var(--paper);
+}
+
+/* ------------------------------------------------------------ hunks -- */
+.hunk {
+  border: var(--hairline) solid var(--rule);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-3);
+  overflow: hidden;
+  scroll-margin-top: var(--space-5);
+}
+
+.hunk:target {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 var(--stroke-2) var(--target-glow);
+}
+
+.hh {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  background: var(--panel);
+  border-bottom: var(--hairline) solid var(--rule);
+  padding: var(--space-1) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hid {
+  font-weight: var(--weight-bold);
+  color: var(--ink);
+}
+
+.hb {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-diff);
+}
+
+/* Diff lines. Floor items:
+   - Colour is never the sole cue: .mk gutter mark + .sr label per line.
+   - No mid-token word-breaking: word-break stays normal; overflow-wrap
+     only breaks a token that is longer than the whole line (a URL),
+     which is the minimum needed to avoid horizontal overflow.        */
+.ln {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+.ln.rm {
+  background: var(--rm-bg);
+  color: var(--rm-ink);
+}
+
+.ln.ad {
+  background: var(--add-bg);
+  color: var(--add-ink);
+}
+
+.mk {
+  flex: 0 0 1ch;
+  font-weight: var(--weight-bold);
+  opacity: 0.75;
+}
+
+.tx {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Context lines around a hunk (schema: context_before / context_after) */
+.ln.cx {
+  color: var(--muted);
+}
+
+/* Source note — we link, we don't republish */
+.src {
+  margin-top: var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.src a {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------ change feed -- */
+/* Home page and per-company history: a docket of changes. */
+ul.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feed .item {
+  border-bottom: var(--hairline) solid var(--rule);
+  padding: var(--space-5) 0;
+}
+
+.item .item-meta {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin: 0 0 var(--space-2);
+}
+
+.item .when {
+  color: var(--muted);
+}
+
+.item .who {
+  color: var(--ink);
+  font-weight: var(--weight-bold);
+  text-decoration: none;
+}
+
+.item .who:hover {
+  text-decoration: underline;
+}
+
+.item .doct {
+  color: var(--muted);
+}
+
+/* Feed headline — an h2 or h3 carrying class "headline" escapes the
+   uppercase section-label treatment. */
+.headline {
+  font-family: var(--font-text);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.014em;
+  text-transform: none;
+  color: var(--ink);
+  font-weight: var(--weight-semibold);
+  margin: 0 0 var(--space-2);
+  max-width: 40ch;
+}
+
+.headline a {
+  text-decoration: none;
+}
+
+.headline a:hover {
+  text-decoration: underline;
+}
+
+.item .stats {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ----------------------------------------------------- company page -- */
+.co-head {
+  margin-bottom: var(--space-6);
+}
+
+/* Tracked documents on a company page */
+ul.docs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.docs li {
+  display: flex;
+  gap: var(--space-4);
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: var(--space-3) 0;
+  border-bottom: var(--hairline) solid var(--rule);
+}
+
+.docs .doc-name {
+  font-weight: var(--weight-semibold);
+}
+
+.docs .doc-src {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.docs .doc-src a {
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------- company index -- */
+ul.index {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.index .row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: var(--space-3) 0;
+  border-bottom: var(--hairline) solid var(--rule);
+}
+
+.row .co-name {
+  font-weight: var(--weight-semibold);
+}
+
+.row .co-name a {
+  text-decoration: none;
+}
+
+.row .co-name a:hover {
+  text-decoration: underline;
+}
+
+.row .co-count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ footer -- */
+.site-foot {
+  border-top: var(--hairline) solid var(--rule);
+}
+
+.site-foot .wrap {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-top: var(--space-5);
+  padding-bottom: var(--space-5);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.site-foot a {
+  color: var(--muted);
+}
+
+/* -------------------------------------------------------- responsive -- */
+@media (max-width: 40em) {
+  h1 {
+    font-size: var(--text-lg);
+  }
+
+  .lede {
+    font-size: var(--text-base);
+  }
+
+  .wrap {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  .meta .span {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* ---------------------------------------------------- reduced motion -- */
+/* Covers EVERYTHING: animations, transitions, and smooth scroll (which
+   is additionally opt-in only, above). The motion tokens themselves are
+   also zeroed in tokens.css. v0.2.0 covered only a hero animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------------------- print -- */
+/* This is an evidence tool: a printed change record must stand alone.
+   Colour is dropped entirely — the ± gutter marks and the hidden
+   Added:/Removed: labels carry the diff, by design. */
+@media print {
+  body {
+    background: var(--print-paper);
+    color: var(--print-ink);
+  }
+
+  .masthead,
+  .site-foot,
+  .skip {
+    display: none;
+  }
+
+  .hunk {
+    break-inside: avoid;
+    border-color: var(--print-ink);
+    box-shadow: none;
+  }
+
+  .ln.ad,
+  .ln.rm {
+    background: var(--print-paper);
+    color: var(--print-ink);
+  }
+
+  .cit {
+    color: var(--print-ink);
+    border-bottom-color: var(--print-ink);
+  }
+
+  a {
+    text-decoration: underline;
+  }
+
+  /* The evidence trail survives on paper: print the source URL */
+  .src a::after {
+    content: " (" attr(href) ")";
+  }
+}

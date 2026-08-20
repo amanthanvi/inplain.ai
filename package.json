@@ -1,0 +1,11 @@
+{
+  "name": "inplain-dev-tooling",
+  "private": true,
+  "description": "Dev-only tooling for CI: stylelint gate on the CSS token boundary. No runtime Node anywhere in the product.",
+  "scripts": {
+    "lint:css": "stylelint \"**/*.css\""
+  },
+  "devDependencies": {
+    "stylelint": "17.14.1"
+  }
+}
