@@ -165,9 +165,15 @@ Non-negotiable floor, from measured failures in v0.2.0:
 
 ## 11. Open
 
-- Hosting target for the static site and the scheduled crawl.
-- Model and provider for summaries, to be chosen against a golden set built from
-  real catalog diffs rather than from vendor rankings.
+- ~~Hosting target for the static site and the scheduled crawl~~ — **resolved
+  2026-08-19: GitHub Actions + GitHub Pages** (`docs/hosting.md`; Pages deploy
+  gated behind the repo going public, which is itself gated on the credential
+  rotation and history rewrite in issue #8).
+- ~~Model and provider for summaries~~ — **provisionally resolved 2026-08-19:
+  `claude-sonnet-5` via Anthropic direct, one outage-only fallback**
+  (`docs/model-eval.md`). The 17-entry golden set and `eval/run_eval.py` are
+  committed; the pick is confirmed by the measured exact-quote citation
+  validity rate once an API key lands in repo secrets.
 - ~~Whether word-level intra-line highlighting ships in v1~~ — **resolved
   2026-08-19: no.** Line-level marks in v1; the hunk schema reserves
   `word_spans` so it can ship later without a format change. See

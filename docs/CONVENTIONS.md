@@ -40,7 +40,9 @@ _site/                       # build output — gitignored
 
 - **Python 3.13**, `requests` + `protego` + `trafilatura` for the crawler,
   `jinja2` allowed for templating. No framework, no database, no server.
-- Dependencies pinned exactly; add nothing without need.
+- Dependencies pinned exactly; add nothing without need. `requirements.lock`
+  freezes the transitive closure for CI (`pip install -c requirements.lock`);
+  regenerate it from a fresh venv when a pin changes.
 - Tests never touch the network (`responses` or monkeypatched session).
 - Every module runnable as `python -m inplain.<module>`; CI composes them.
 - CSS: no raw hex/px outside `static/tokens.css` (stylelint-enforced).

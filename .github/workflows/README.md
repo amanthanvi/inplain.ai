@@ -26,7 +26,7 @@ pages. On a push to `main` with `DEPLOY_PAGES=true`, the checked site deploys.
 | Failures make noise a human sees | `alert-on-failure` job creates-or-updates (and pins) the issue **"Scheduled crawl failing"** with the run link; close it once a scheduled run is green |
 | Citation integrity — AC-3/AC-4 (quote verbatim, on the named side) | pytest in `ci.yml` runs the full suite, citation-integrity tests included, on every push and PR |
 | Token boundary — no raw hex/px outside `static/tokens.css` (D1, SPEC §9) | `npm run lint:css` (stylelint) in `ci.yml` |
-| Accessibility floor (SPEC §9) | axe at `--tags wcag2a,wcag2aa` with `--exit` against the built pages (fixed pages + company pages + up to 10 change pages, one per template class) in `ci.yml` |
+| Accessibility floor (SPEC §9) | axe at `--tags wcag2a,wcag2aa` with `--exit` against the built pages (fixed pages + the first 3 company pages + up to 10 change pages — one page per template class, since pages of a class share markup) in `ci.yml` |
 | Model spend / fork safety — summarize never runs in CI | summarize exists only in `crawl.yml`; secrets are absent on fork PRs anyway (hosting.md §5) |
 | Same workflows private and public | deploy gated on the `DEPLOY_PAGES` repo variable; while unset/false, `_site/` is uploaded as a plain build artifact instead |
 
@@ -35,7 +35,11 @@ pages. On a push to `main` with `DEPLOY_PAGES=true`, the checked site deploys.
 1. **`MODEL_API_KEY`** — Settings → Secrets and variables → Actions →
    *Secrets* → New repository secret. Until it exists, the summarize step
    logs a skip and exits 0; records stay retryable and are summarized by the
-   first run that has the key.
+   first run that has the key. A summarize *failure* (key present, provider
+   down) also cannot cost the day's crawl: the archive is pushed before
+   summarize runs, the site still deploys with honest summary-less records,
+   and the failure raises the pinned alert issue via the job's
+   `summarize_failed` output.
 2. **`DEPLOY_PAGES`** — same page, *Variables* tab → New repository variable,
    value `true`. Set it only after the repo is public and Settings → Pages →
    Source is **GitHub Actions** (hosting.md §7 runbook, steps 5–13; the

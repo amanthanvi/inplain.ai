@@ -39,7 +39,7 @@ jobs:
           python-version: "3.13"
           cache: pip
       - name: Install pinned dependencies
-        run: python -m pip install -r requirements-dev.txt
+        run: python -m pip install -r requirements-dev.txt -c requirements.lock
       - name: pytest (full suite, citation integrity included)
         run: python -m pytest
 
@@ -80,16 +80,10 @@ jobs:
           # so the driver can never drift out of sync with the browser.
           CHROMEDRIVER_SKIP_DOWNLOAD: "true"
         run: |
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements.txt -c requirements.lock
           npm ci
-      - name: Build the static site
-        run: |
-          python -m inplain.site
-          if [ -f inplain/feeds.py ]; then
-            python -m inplain.feeds
-          else
-            echo "inplain.feeds not present yet (T5); skipping feeds"
-          fi
+      - name: Build the static site (feeds are written by the site build)
+        run: python -m inplain.site
       - name: Serve the built site
         run: |
           (cd _site && python -m http.server 8000 --bind 127.0.0.1 &)

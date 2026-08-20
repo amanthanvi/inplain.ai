@@ -30,10 +30,13 @@ defaults:
     shell: bash
 
 jobs:
-  # Crawl → detect → summarize → build, all in one job: a failure at any step
-  # stops the job before the deploy artifact exists, so a failed crawl cannot
-  # publish a broken site. A PARTIAL crawl is a success by design — one
-  # unreachable document must not block the other 55 — so inplain.crawl runs
+  # Crawl → detect → push the archive → summarize → build, all in one job: a
+  # crawl/detect failure stops the job before the deploy artifact exists, so a
+  # failed crawl cannot publish a broken site. The archive (snapshots + change
+  # records) is pushed BEFORE summarize so a model-provider outage can never
+  # discard the day's crawl; records publish honestly summary-less and the
+  # next run retries them. A PARTIAL crawl is a success by design — one
+  # unreachable document must not block the others — so inplain.crawl runs
   # without --strict here and per-document problems are surfaced in the step
   # summary instead of failing the run.
   crawl:
@@ -41,6 +44,8 @@ jobs:
     # A hung crawl must not hold the concurrency group for the 6h default
     # while the next scheduled run queues behind it.
     timeout-minutes: 30
+    outputs:
+      summarize_failed: ${{ steps.summarize.outputs.summarize_failed }}
     permissions:
       contents: write # the crawl commits snapshots and change records back
     steps:
@@ -59,7 +64,7 @@ jobs:
           cache: pip
 
       - name: Install pinned dependencies
-        run: python -m pip install -r requirements.txt
+        run: python -m pip install -r requirements.txt -c requirements.lock
 
       - name: Set the workflow's git identity
         run: |
@@ -83,28 +88,6 @@ jobs:
       - name: Detect changes (documents/ history → changes/*.json)
         run: python -m inplain.detect
 
-      - name: Summarize new change records
-        env:
-          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
-        run: |
-          if [ -z "${MODEL_API_KEY}" ]; then
-            note="MODEL_API_KEY secret is not set; summarize skipped. Records stay retryable — the next run with a key summarizes them."
-            echo "$note"
-            echo "**Summarize:** $note" >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          set +e
-          python -m inplain.summarize | tee "$RUNNER_TEMP/summarize-report.txt"
-          status=$?
-          set -e
-          {
-            echo "## Summarize report"
-            echo '```'
-            cat "$RUNNER_TEMP/summarize-report.txt"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-          exit "$status"
-
       - name: Commit change records
         run: |
           # First snapshots produce no change records, so changes/ may not
@@ -118,20 +101,61 @@ jobs:
             git commit -m "crawl: change records"
           fi
 
-      - name: Build the static site
+      - name: Push the archive (snapshots + change records)
+        # BEFORE summarize on purpose: the archive must never be hostage to
+        # the model provider. GITHUB_TOKEN on purpose (see the header): its
+        # pushes trigger no workflow runs. Nothing to push is a normal,
+        # successful outcome.
+        run: git push origin "HEAD:$GITHUB_REF_NAME"
+
+      - name: Summarize new change records
+        id: summarize
+        env:
+          MODEL_API_KEY: ${{ secrets.MODEL_API_KEY }}
+        # A summarize failure does NOT fail this job: the archive is already
+        # pushed, records publish honestly summary-less (feeds and pages both
+        # carry a "no validated summary" state), and every unsummarised
+        # record is retried on the next run. The failure is surfaced through
+        # the alert job via the summarize_failed output instead.
         run: |
-          python -m inplain.site
-          # T5's feed generator, once it lands, slots in without touching CI.
-          if [ -f inplain/feeds.py ]; then
-            python -m inplain.feeds
+          if [ -z "${MODEL_API_KEY}" ]; then
+            note="MODEL_API_KEY secret is not set; summarize skipped. Records stay retryable — the next run with a key summarizes them."
+            echo "$note"
+            echo "**Summarize:** $note" >> "$GITHUB_STEP_SUMMARY"
+            echo "summarize_failed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          set +e
+          python -m inplain.summarize | tee "$RUNNER_TEMP/summarize-report.txt"
+          status=$?
+          set -e
+          {
+            echo "## Summarize report"
+            echo '```'
+            cat "$RUNNER_TEMP/summarize-report.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -ne 0 ]; then
+            echo "summarize_failed=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::summarize left records unsummarised (exit $status); they stay retryable"
           else
-            echo "inplain.feeds not present yet (T5); skipping feeds"
+            echo "summarize_failed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Push snapshots and change records
-        # GITHUB_TOKEN on purpose (see the header): its pushes trigger no
-        # workflow runs. Nothing to push is a normal, successful outcome.
-        run: git push origin "HEAD:$GITHUB_REF_NAME"
+      - name: Commit and push summaries
+        run: |
+          if [ -d changes ]; then
+            git add changes/
+          fi
+          if git diff --cached --quiet; then
+            echo "no new summaries"
+          else
+            git commit -m "crawl: summaries"
+            git push origin "HEAD:$GITHUB_REF_NAME"
+          fi
+
+      - name: Build the static site (feeds are written by the site build)
+        run: python -m inplain.site
 
       # --- deploy: gated on the DEPLOY_PAGES repository variable so the same
       # workflow works while the repo is private (Pages unavailable on Free)
@@ -178,7 +202,7 @@ jobs:
   # issue, created once and updated per failure, never duplicated.
   alert-on-failure:
     needs: [crawl, deploy]
-    if: always() && contains(needs.*.result, 'failure')
+    if: always() && (contains(needs.*.result, 'failure') || needs.crawl.outputs.summarize_failed == 'true')
     runs-on: ubuntu-latest
     permissions:
       issues: write
