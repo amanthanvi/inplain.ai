@@ -1,0 +1,44 @@
+{
+  "id": "constructed-negation-opt-out-flip",
+  "source": "constructed",
+  "company": "example",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 342,
+      "new_start": 342,
+      "context_before": [
+        "We send service announcements and administrative messages relating to your account."
+      ],
+      "removed": [
+        "You may not opt out of receiving these communications."
+      ],
+      "added": [
+        "You may opt out of receiving these communications at any time in your account settings."
+      ],
+      "context_after": [],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "Users can now opt out of these communications; the previous text said they could not.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "removed",
+            "quote": "You may not opt out of receiving these communications."
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "You may opt out of receiving these communications at any time"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Discriminating case: a one-word negation flip ('may not' to 'may') that reverses the meaning. Fuzzy matching at any threshold would cross-match these sides; exact side-aware validation must not."
+}

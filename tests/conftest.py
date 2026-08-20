@@ -18,6 +18,11 @@ from requests.structures import CaseInsensitiveDict
 
 from inplain.net import HttpResponse, TransportError
 
+import sys
+
+# Make eval/run_eval.py and eval/wayback_diff.py importable as modules.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "eval"))
+
 PUBLIC_IP = "93.184.216.34"
 
 PARAGRAPH = (

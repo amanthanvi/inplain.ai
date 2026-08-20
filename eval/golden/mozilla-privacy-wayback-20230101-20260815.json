@@ -1,0 +1,45 @@
+{
+  "id": "mozilla-privacy-wayback-20230101-20260815",
+  "source": "wayback",
+  "company": "mozilla",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 8,
+      "new_start": 8,
+      "context_before": [
+        "How do we learn information about you?",
+        "We learn information about you when:",
+        "- you give it to us directly (e.g., when you choose to send us crash reports);"
+      ],
+      "removed": [
+        "- we collect it automatically through our products and services (e.g., when your Firefox browser checks with us to see if is up to date);"
+      ],
+      "added": [
+        "- we collect it automatically through our products and services (e.g., when your Firefox browser checks with us to see if it is up to date);"
+      ],
+      "context_after": [
+        "- someone else tells us information about you (e.g., when Thunderbird works with your email providers to set up your account); or",
+        "- when we try and understand more about you based on information you've given to us (e.g., when we use your IP address to customize language for some of our services).",
+        "What do we do with your information once we have it?"
+      ],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "A typo was corrected in the sentence about Firefox update checks ('to see if is' became 'to see if it is'); the meaning is unchanged.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "when your Firefox browser checks with us to see if it is up to date"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Real diff between Wayback captures 20230101023812 and 20260815025459 of https://www.mozilla.org/en-US/privacy/, extracted with trafilatura. Expected bullets are hand-written against these hunks. Discriminating case: the only change is cosmetic (a typo fix). A good model must not invent a material claim here."
+}

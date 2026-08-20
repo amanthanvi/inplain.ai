@@ -1,0 +1,45 @@
+{
+  "id": "constructed-biometric-collection-added",
+  "source": "constructed",
+  "company": "example",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 155,
+      "new_start": 155,
+      "context_before": [
+        "Information We Collect",
+        "- Device information, such as hardware model and operating system version."
+      ],
+      "removed": [],
+      "added": [
+        "We may collect biometric identifiers, such as face geometry and voiceprints, to provide identity-verification and personalization features. Biometric identifiers are retained until you delete your account or withdraw consent, whichever comes first."
+      ],
+      "context_after": [
+        "- Log information, including details of how you used our service."
+      ],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "A new category of collected data was added: biometric identifiers such as face geometry and voiceprints, retained until account deletion or consent withdrawal.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "We may collect biometric identifiers, such as face geometry and voiceprints"
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "retained until you delete your account or withdraw consent"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Pure insertion of a new sensitive-data category (added side only)."
+}

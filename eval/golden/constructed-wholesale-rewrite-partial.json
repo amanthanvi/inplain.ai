@@ -1,0 +1,149 @@
+{
+  "id": "constructed-wholesale-rewrite-partial",
+  "source": "constructed",
+  "company": "example",
+  "doc": "tos",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 1,
+      "new_start": 1,
+      "context_before": [],
+      "removed": [
+        "Terms of Use (v3.2, October 2024)"
+      ],
+      "added": [
+        "Terms of Service"
+      ],
+      "context_after": [
+        "1. Acceptance of Terms"
+      ],
+      "word_spans": null
+    },
+    {
+      "id": "h2",
+      "old_start": 18,
+      "new_start": 15,
+      "context_before": [
+        "9. Dispute Resolution"
+      ],
+      "removed": [
+        "Any dispute arising out of or relating to these Terms may be brought in any court of competent jurisdiction in the State of New York."
+      ],
+      "added": [
+        "Any dispute arising out of or relating to these Terms will be resolved exclusively through final and binding individual arbitration administered by the American Arbitration Association, and you waive your right to a trial by jury and to participate in a class action."
+      ],
+      "context_after": [],
+      "word_spans": null
+    },
+    {
+      "id": "h3",
+      "old_start": 24,
+      "new_start": 21,
+      "context_before": [],
+      "removed": [
+        "These Terms are governed by the laws of the State of New York, without regard to conflict of law principles."
+      ],
+      "added": [
+        "These Terms are governed by the laws of the State of Delaware, without regard to conflict of law principles."
+      ],
+      "context_after": [],
+      "word_spans": null
+    },
+    {
+      "id": "h4",
+      "old_start": 30,
+      "new_start": 27,
+      "context_before": [
+        "11. Changes to These Terms"
+      ],
+      "removed": [
+        "We reserve the right to modify these Terms at any time. Continued use of the services constitutes acceptance of the modified Terms."
+      ],
+      "added": [
+        "We may update these Terms from time to time. If we make material changes, we will provide at least 30 days' notice before the changes take effect."
+      ],
+      "context_after": [],
+      "word_spans": null
+    },
+    {
+      "id": "h5",
+      "old_start": 36,
+      "new_start": 33,
+      "context_before": [],
+      "removed": [
+        "Our total liability to you for any claim arising out of these Terms shall not exceed the amount you paid to us in the twelve months preceding the claim."
+      ],
+      "added": [
+        "Our total liability to you for any claim arising out of these Terms shall not exceed one hundred dollars ($100) or the amount you paid to us in the twelve months preceding the claim, whichever is greater."
+      ],
+      "context_after": [],
+      "word_spans": null
+    },
+    {
+      "id": "h6",
+      "old_start": 44,
+      "new_start": 41,
+      "context_before": [],
+      "removed": [
+        "Questions about these Terms should be directed to legal@example.com."
+      ],
+      "added": [
+        "Questions about these Terms should be directed to our support portal.",
+        "Our Privacy Policy, which describes how we handle your personal information, is incorporated into these Terms by reference."
+      ],
+      "context_after": [],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "Disputes must now go to binding individual arbitration with a jury-trial and class-action waiver; previously they could be brought in court.",
+        "citations": [
+          {
+            "hunk": "h2",
+            "side": "removed",
+            "quote": "may be brought in any court of competent jurisdiction"
+          },
+          {
+            "hunk": "h2",
+            "side": "added",
+            "quote": "final and binding individual arbitration"
+          },
+          {
+            "hunk": "h2",
+            "side": "added",
+            "quote": "you waive your right to a trial by jury and to participate in a class action"
+          }
+        ]
+      },
+      {
+        "text": "Material changes to the Terms now come with at least 30 days' notice instead of taking effect on continued use.",
+        "citations": [
+          {
+            "hunk": "h4",
+            "side": "removed",
+            "quote": "Continued use of the services constitutes acceptance of the modified Terms."
+          },
+          {
+            "hunk": "h4",
+            "side": "added",
+            "quote": "we will provide at least 30 days' notice before the changes take effect"
+          }
+        ]
+      },
+      {
+        "text": "The governing law moved from New York to Delaware.",
+        "citations": [
+          {
+            "hunk": "h3",
+            "side": "added",
+            "quote": "governed by the laws of the State of Delaware"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Discriminating case: a wholesale rewrite where the expected summary covers only the material hunks (3 of 6). Partial coverage is recorded in the G1 schema (covered_hunks/total_hunks), never faked to 100%."
+}

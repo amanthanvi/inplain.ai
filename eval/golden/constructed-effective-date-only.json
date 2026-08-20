@@ -1,0 +1,46 @@
+{
+  "id": "constructed-effective-date-only",
+  "source": "constructed",
+  "company": "example",
+  "doc": "tos",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 2,
+      "new_start": 2,
+      "context_before": [
+        "Terms of Service"
+      ],
+      "removed": [
+        "Effective date: January 1, 2025"
+      ],
+      "added": [
+        "Effective date: March 15, 2026"
+      ],
+      "context_after": [
+        "Welcome, and thank you for using our services. These Terms of Service govern your access to and use of our websites and applications."
+      ],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "The only change is the effective date, which moved from January 1, 2025 to March 15, 2026.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "removed",
+            "quote": "Effective date: January 1, 2025"
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "Effective date: March 15, 2026"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Discriminating case: effective-date-only change (SPEC AC-5). v0.2.0 stripped these lines as noise; here it is the entire change record."
+}

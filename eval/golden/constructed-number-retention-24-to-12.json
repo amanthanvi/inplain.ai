@@ -1,0 +1,46 @@
+{
+  "id": "constructed-number-retention-24-to-12",
+  "source": "constructed",
+  "company": "example",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 501,
+      "new_start": 501,
+      "context_before": [
+        "Data Retention"
+      ],
+      "removed": [
+        "We retain server logs containing your IP address and device identifiers for 24 months from the date of collection."
+      ],
+      "added": [
+        "We retain server logs containing your IP address and device identifiers for 12 months from the date of collection."
+      ],
+      "context_after": [
+        "Backup copies may persist for up to 90 additional days before being overwritten."
+      ],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "Server-log retention was cut from 24 months to 12 months.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "removed",
+            "quote": "for 24 months from the date of collection"
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "for 12 months from the date of collection"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Discriminating case: a two-character number change. The quote must carry the number so a paraphrasing model fails validation."
+}

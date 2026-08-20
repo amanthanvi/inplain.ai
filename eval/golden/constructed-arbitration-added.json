@@ -1,0 +1,49 @@
+{
+  "id": "constructed-arbitration-added",
+  "source": "constructed",
+  "company": "example",
+  "doc": "tos",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 402,
+      "new_start": 402,
+      "context_before": [
+        "Dispute Resolution and Arbitration"
+      ],
+      "removed": [
+        "Any claim or dispute between you and us arising out of these Terms may be resolved in the courts of your place of residence."
+      ],
+      "added": [
+        "Any claim or dispute between you and us arising out of these Terms will be resolved by binding individual arbitration, and you waive your right to a jury trial and to participate in a class action or class-wide arbitration."
+      ],
+      "context_after": [],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "Court access was replaced by mandatory individual arbitration, with an explicit waiver of jury trials and class actions.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "removed",
+            "quote": "may be resolved in the courts of your place of residence"
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "will be resolved by binding individual arbitration"
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "you waive your right to a jury trial and to participate in a class action"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Classic material ToS change: forum shift from courts to arbitration."
+}

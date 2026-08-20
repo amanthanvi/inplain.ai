@@ -1,0 +1,39 @@
+{
+  "id": "constructed-class-waiver-removed",
+  "source": "constructed",
+  "company": "example",
+  "doc": "tos",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 388,
+      "new_start": 388,
+      "context_before": [
+        "Limitations"
+      ],
+      "removed": [
+        "You waive any right to participate in a class action lawsuit or class-wide arbitration against us."
+      ],
+      "added": [],
+      "context_after": [
+        "These Terms constitute the entire agreement between you and us regarding the services."
+      ],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "The class-action and class-arbitration waiver was removed — users regain the right to participate in class proceedings.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "removed",
+            "quote": "You waive any right to participate in a class action lawsuit or class-wide arbitration"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. A change in the user's favor, removal-side-only citation. Guards against harnesses that assume every change is a worsening or has added text."
+}
