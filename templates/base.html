@@ -11,6 +11,10 @@
 {%- endif %}
 <link rel="stylesheet" href="/static/tokens.css">
 <link rel="stylesheet" href="/static/site.css">
+<link rel="alternate" type="application/atom+xml" title="inplain.ai — material policy changes" href="/feed.xml">
+{%- if page.company_feed %}
+<link rel="alternate" type="application/atom+xml" title="{{ page.company_feed.title }}" href="{{ page.company_feed.href }}">
+{%- endif %}
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>

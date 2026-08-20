@@ -2,3 +2,6 @@
 # Tests never touch the network: the transport is injected, so no HTTP
 # recording library is needed.
 pytest==9.1.1
+# AC-8 is enforced by test, not by eye: tests parse the generated Atom feeds
+# and assert well-formedness (bozo == 0) plus the RFC-4287 requirements.
+feedparser==6.0.14
