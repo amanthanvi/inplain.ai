@@ -1,0 +1,10 @@
+# Runtime dependencies. Pinned exactly; add nothing without need.
+protego==0.6.2
+requests==2.34.2
+trafilatura==2.2.0
+# Transitive, pinned on purpose: the SSRF address pinning in inplain/net.py
+# rides on urllib3 internals (init_poolmanager's pool_kwargs merge, and
+# server_hostname driving both SNI and certificate matching while the socket
+# connects to the literal IP). A minor urllib3 bump could move that without
+# any of our code changing, so this one floats with review, not with pip.
+urllib3==2.7.0
