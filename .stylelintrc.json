@@ -1,0 +1,30 @@
+{
+  "ignoreFiles": ["node_modules/**", "_site/**"],
+  "rules": {
+    "color-no-hex": [true, { "message": "Raw hex colours live in static/tokens.css only — use var(--*)." }],
+    "color-named": ["never", { "message": "Named colours live in static/tokens.css only — use var(--*)." }],
+    "function-disallowed-list": [
+      ["rgb", "rgba", "hsl", "hsla", "hwb", "lab", "lch", "oklab", "oklch", "color", "light-dark"],
+      { "message": "Raw colour functions live in static/tokens.css only — use var(--*)." }
+    ],
+    "unit-disallowed-list": [
+      ["px"],
+      { "message": "Raw px lives in static/tokens.css only — use the --space-*/--text-*/stroke tokens." }
+    ],
+    "declaration-property-value-disallowed-list": [
+      { "/.*/": ["/100vh/"] },
+      { "message": "Use 100dvh, not 100vh (SPEC §9)." }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["static/tokens.css"],
+      "rules": {
+        "color-no-hex": null,
+        "color-named": null,
+        "function-disallowed-list": null,
+        "unit-disallowed-list": null
+      }
+    }
+  ]
+}

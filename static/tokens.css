@@ -1,0 +1,139 @@
+/* static/tokens.css — the token layer (D1).
+ *
+ * ALL raw values (colours, px) live here as custom properties.
+ * static/site.css references var(--*) only; the boundary is enforced by
+ * stylelint (`npm run lint:css`, wired into CI by T6).
+ *
+ * Palette source of truth: prototypes/build.py (CSS_A), direction A
+ * "reference instrument". Light and dark are DESIGNED SEPARATELY, not
+ * swapped by token: every state colour was measured against its own
+ * theme's paper before use (ratios noted inline, from
+ * prototypes/README.md).
+ */
+
+:root {
+  /* ---------------------------------------------------- typography -- */
+  --font-text: Charter, "Iowan Old Style", "Source Serif 4", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale — seven steps, whole pixels. v0.2.0 drifted to fifteen
+     sizes including 12.5 / 13.5 / 15.5px; a size not on this scale is a
+     bug, not a nuance. */
+  --text-2xs: 11px;  /* uppercase micro-labels: hunk header, kicker      */
+  --text-xs: 12px;   /* citations, metadata rows, footer                 */
+  --text-sm: 14px;   /* diff body (mono), source notes, card metadata    */
+  --text-base: 17px; /* body prose                                       */
+  --text-md: 18px;   /* lede                                             */
+  --text-lg: 24px;   /* feed headlines, page titles at narrow widths     */
+  --text-xl: 30px;   /* change-view headline                             */
+
+  /* Line heights (unitless) */
+  --leading-tight: 1.22; /* headlines            */
+  --leading-lede: 1.55;
+  --leading-body: 1.62;
+  --leading-diff: 1.65;
+
+  /* Tracking for uppercase mono labels */
+  --tracking-caps: 0.08em;
+  --tracking-kicker: 0.13em;
+
+  /* Weights. The text face's axis maxes at 700 — v0.2.0 shipped 750 and
+     760, which rendered identically to 700. Nothing above 700, ever. */
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ------------------------------------------------------- spacing -- */
+  /* 2 / 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96.
+     Off-scale margins were the dominant drift in v0.2.0 (marginTop: 10
+     ×23, marginTop: 6 ×19). Everything spaces from this scale. */
+  --space-0: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* --------------------------------------------- strokes and radii -- */
+  --hairline: 1px; /* rules, borders, and the .sr 1px box */
+  --stroke-2: 2px;
+  --stroke-3: 3px; /* left accent bars */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+
+  /* Focus ring geometry (ring colour is per-theme, below) */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* ------------------------------------------------------- z scale -- */
+  --z-base: 0;
+  --z-raised: 1;
+  --z-nav: 10;
+  --z-overlay: 100; /* skip link */
+
+  /* -------------------------------------------------------- motion -- */
+  --motion-fast: 120ms;
+  --motion-slow: 240ms;
+  --motion-ease: ease-out;
+
+  /* --------------------------------- print (theme-independent ink) -- */
+  --print-paper: #ffffff;
+  --print-ink: #000000;
+
+  /* -------------- LIGHT palette — designed against paper #fbfbf9 ---- */
+  --paper: #fbfbf9;
+  --ink: #16171a;
+  --soft: #3b3d42;
+  --muted: #5c5f66;
+  --rule: #e3e3df;
+  --panel: rgba(22, 23, 26, 0.04); /* hunk-header fill: ink at 4% */
+
+  /* Accent belongs to citations (and source links) ONLY.  5.78:1 */
+  --accent: #0b5cd5;
+  --focus-ring: #0b5cd5; /* 5.78:1 on paper — comfortably ≥ 3:1 */
+
+  /* Diff state colours — a separate semantic channel from the accent */
+  --add-bg: #e6f4ea;
+  --add-ink: #0b6b2f; /*  6.42:1 on paper */
+  --rm-bg: #fdeaea;
+  --rm-ink: #9b1c1c; /*  7.87:1 on paper */
+
+  --target-glow: rgba(11, 92, 213, 0.22); /* ring on a cited :target hunk */
+}
+
+/* ---------------- DARK palette — designed against paper #101114 ------
+   Not a lightness flip of the light theme: each value was picked and
+   measured on its own ground. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #101114;
+    --ink: #e9e9ea;
+    --soft: #c6c8cd;
+    --muted: #9a9da5;
+    --rule: #26282e;
+    --panel: rgba(233, 233, 234, 0.04);
+
+    --accent: #6aa9ff; /*  7.85:1 on paper */
+    --focus-ring: #6aa9ff;
+
+    --add-bg: #13301d;
+    --add-ink: #7fd39b; /* 10.51:1 on paper */
+    --rm-bg: #3a1618;
+    --rm-ink: #f2a3a3; /*  9.48:1 on paper */
+
+    --target-glow: rgba(106, 169, 255, 0.22);
+  }
+}
+
+/* Reduced motion zeroes the motion tokens at the source; site.css also
+   carries a belt-and-braces kill-all for anything token-independent. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0s;
+    --motion-slow: 0s;
+  }
+}
