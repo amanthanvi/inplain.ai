@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>Companies</h1>
+<p class="lede">Every company whose policy documents this site tracks, with
+the number of material changes on record.</p>
+<ul class="index">
+{%- for company in companies %}
+<li class="row"><span class="co-name"><a href="{{ company.url }}">{{ company.name }}</a></span><span class="co-count">{{ company.change_count }} change{{ "s" if company.change_count != 1 else "" }}</span></li>
+{%- endfor %}
+</ul>
+{% endblock %}

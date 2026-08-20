@@ -1,0 +1,53 @@
+{#- Shared markup, following the class contract in static/site.css
+    (prototypes/a-docket.html, direction A).
+
+    Diff floor (SPEC §9): colour is never the only cue — every changed line
+    carries a `+`/`−` gutter mark (aria-hidden) AND a visually-hidden
+    "Added:"/"Removed:" text label. Each .ln keeps its spans on ONE source
+    line because .ln is white-space: pre-wrap. -#}
+
+{% macro hunk(h) -%}
+<section class="hunk" id="{{ h.id }}">
+<div class="hh"><span class="hid">{{ h.id | upper }}</span><span>{{ h.kind }}</span><span>old line {{ h.old_start }} · new line {{ h.new_start }}</span></div>
+<div class="hb">
+{%- for line in h.context_before %}
+<div class="ln cx"><span class="mk" aria-hidden="true"></span><span class="sr">Context:</span> <span class="tx">{{ line }}</span></div>
+{%- endfor %}
+{%- for line in h.removed %}
+<div class="ln rm"><span class="mk" aria-hidden="true">−</span><span class="sr">Removed:</span> <span class="tx">{{ line }}</span></div>
+{%- endfor %}
+{%- for line in h.added %}
+<div class="ln ad"><span class="mk" aria-hidden="true">+</span><span class="sr">Added:</span> <span class="tx">{{ line }}</span></div>
+{%- endfor %}
+{%- for line in h.context_after %}
+<div class="ln cx"><span class="mk" aria-hidden="true"></span><span class="sr">Context:</span> <span class="tx">{{ line }}</span></div>
+{%- endfor %}
+</div>
+</section>
+{%- endmacro %}
+
+{#- One feed entry (home, /changes/, company history). Citation links are
+    plain anchors into the change page — they work with JS disabled. -#}
+{% macro feed_item(item, level=2) -%}
+<li class="item">
+<p class="item-meta">
+<span class="when"><time datetime="{{ item.date }}">{{ item.date }}</time></span>
+<a class="who" href="{{ item.company_url }}">{{ item.company_name }}</a>
+<span class="doct">{{ item.doc_title }}</span>
+</p>
+<h{{ level }} class="headline"><a href="{{ item.url }}">{{ item.headline }}</a></h{{ level }}>
+{%- if item.bullets %}
+<ul class="sum">
+{%- for bullet in item.bullets %}
+<li>{{ bullet.text }}{% for cite in bullet.citations %} <a class="cit" href="{{ item.url }}#{{ cite.hunk }}" title="Jump to the changed passage">[{{ cite.hunk | upper }}]</a>{% endfor %}</li>
+{%- endfor %}
+</ul>
+{%- endif %}
+<p class="stats">
+<span class="plus"><span class="n">+{{ item.added_chars }}</span> added</span>
+<span class="minus"><span class="n">−{{ item.removed_chars }}</span> removed</span>
+<span><span class="n">{{ item.hunk_count }}</span> passage{{ "s" if item.hunk_count != 1 else "" }}</span>
+<span class="badge">similarity {{ item.badge }}</span>
+</p>
+</li>
+{%- endmacro %}

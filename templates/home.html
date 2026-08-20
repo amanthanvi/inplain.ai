@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block main %}
+<h1>Recent changes</h1>
+<p class="lede">A public record of how the privacy policies and terms of
+well-known companies change: the changed passages, a summary that cites them,
+and a link to the source.</p>
+{%- if items %}
+<h2>Latest material changes</h2>
+<ul class="feed">
+{%- for item in items %}
+{{ m.feed_item(item, level=3) }}
+{%- endfor %}
+</ul>
+{%- if more %}
+<p class="src"><a href="/changes/">All {{ site.published }} changes →</a></p>
+{%- endif %}
+{%- else %}
+<p>No material changes recorded yet. The <a href="/companies/">tracked
+companies</a> are being watched; changes appear here as they are detected.</p>
+{%- endif %}
+{% endblock %}

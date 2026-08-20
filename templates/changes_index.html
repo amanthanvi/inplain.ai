@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block main %}
+<h1>All changes</h1>
+{%- if companies_with_changes %}
+<nav aria-label="Filter by company">
+<h2>By company</h2>
+<p class="stats">
+{%- for company in companies_with_changes %}
+<span><a href="{{ company.url }}">{{ company.name }}</a> <span class="badge">{{ company.change_count }}</span></span>
+{%- endfor %}
+</p>
+</nav>
+{%- endif %}
+{%- if items %}
+<h2>Every material change, newest first</h2>
+<ul class="feed">
+{%- for item in items %}
+{{ m.feed_item(item, level=3) }}
+{%- endfor %}
+</ul>
+{%- else %}
+<p>No material changes recorded yet.</p>
+{%- endif %}
+{% endblock %}
