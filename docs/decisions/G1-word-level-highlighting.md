@@ -53,7 +53,7 @@ This is the contract T2 produces, T3 extends, and T4/T5 consume.
     "added_chars": 1234,            // absolute changed content — the gate
     "removed_chars": 56,
     "similarity_badge": 0.98,       // display only, never a gate
-    "effective_date_change": null   // or {"from": "…", "to": "…"}
+    "effective_date_change": null   // or {"from": "…", "to": "…"}; one side may be null (date added or removed outright)
   },
   "hunks": [
     {

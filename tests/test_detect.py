@@ -226,6 +226,19 @@ def test_effective_date_only_change_is_material(repo):
     assert hunk["added"] == ["Effective date: March 15, 2026"]
 
 
+
+def test_one_sided_effective_date_change_records_the_present_side():
+    from inplain.detect import assess_materiality, diff_lines
+
+    old = ["Effective date: January 5, 2024", "We collect data."]
+    new = ["We collect data."]
+    m = assess_materiality(diff_lines(old, new))
+    assert m.material
+    assert m.effective_date_change == {"from": "2024-01-05", "to": None}
+
+    m = assess_materiality(diff_lines(new, old))
+    assert m.effective_date_change == {"from": None, "to": "2024-01-05"}
+
 def test_subthreshold_cosmetic_edit_is_suppressed_with_reason(repo):
     """Suppressed means unpublished, not unrecorded: the record is written,
     carries material:false, and names a machine-readable reason."""
@@ -390,9 +403,12 @@ def test_prototype_sample_pair_roundtrips_through_git(repo):
     assert not (ours_added - sample_added)
     # ... and the sides never bleed into each other
     assert not ours_removed & sample_added - sample_removed
-    # the prototype's effective-date line was removed without a replacement,
-    # so {from, to} cannot both parse — the field stays null
-    assert record["materiality"]["effective_date_change"] is None
+    # the prototype's effective-date line was removed without a replacement:
+    # the removed side is recorded, the absent side is null
+    assert record["materiality"]["effective_date_change"] == {
+        "from": "2026-04-02",
+        "to": None,
+    }
 
 
 # --------------------------------------------------------------------------

@@ -127,7 +127,7 @@ class Materiality:
     added_chars: int
     removed_chars: int
     similarity_badge: float  # display only, never a gate
-    effective_date_change: dict[str, str] | None = None  # {"from", "to"}
+    effective_date_change: dict[str, str | None] | None = None  # {"from", "to"}, one side may be null
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -262,8 +262,12 @@ def validate_materiality(materiality: Any, where: str = "materiality") -> None:
             f"{where}: effective_date_change must be null or {{from, to}}",
         )
         _expect(
-            all(isinstance(v, str) and v for v in change.values()),
-            f"{where}: effective_date_change values must be non-empty strings",
+            all(v is None or (isinstance(v, str) and v) for v in change.values()),
+            f"{where}: effective_date_change values must be non-empty strings or null",
+        )
+        _expect(
+            any(v is not None for v in change.values()),
+            f"{where}: effective_date_change must carry at least one side",
         )
 
 

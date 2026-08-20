@@ -258,8 +258,11 @@ def assess_materiality(diff: Diff) -> Materiality:
     date_from = _first_effective_date(diff.removed_lines)
     date_to = _first_effective_date(diff.added_lines)
     effective_touched = date_from is not None or date_to is not None
+    # One-sided is real: a date line added where none was, or removed with no
+    # replacement, still describes what happened to the date — the absent side
+    # is recorded as null so the renderer can say so.
     effective_date_change = (
-        {"from": date_from, "to": date_to} if date_from and date_to else None
+        {"from": date_from, "to": date_to} if (date_from is not None or date_to is not None) else None
     )
 
     if added_chars >= SENTENCE_CHARS:
