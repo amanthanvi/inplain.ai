@@ -168,7 +168,7 @@ h1 {
   line-height: var(--leading-tight);
   margin: 0 0 var(--space-3);
   font-weight: var(--weight-semibold);
-  letter-spacing: -0.014em;
+  letter-spacing: var(--tracking-tight);
   max-width: 26ch;
 }
 
@@ -418,7 +418,7 @@ ul.feed {
   font-family: var(--font-text);
   font-size: var(--text-lg);
   line-height: var(--leading-tight);
-  letter-spacing: -0.014em;
+  letter-spacing: var(--tracking-tight);
   text-transform: none;
   color: var(--ink);
   font-weight: var(--weight-semibold);

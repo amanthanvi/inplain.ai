@@ -34,6 +34,7 @@
   --leading-diff: 1.65;
 
   /* Tracking for uppercase mono labels */
+  --tracking-tight: -0.014em; /* display serif headlines */
   --tracking-caps: 0.08em;
   --tracking-kicker: 0.13em;
 

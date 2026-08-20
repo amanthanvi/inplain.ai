@@ -132,6 +132,12 @@ class Aggregate:
         ]
         return sum(ratios) / len(ratios) if ratios else 0.0
 
+    @property
+    def parse_failures(self) -> int:
+        # A parse-failed entry contributes zero bullets and zero citations, so
+        # it would silently inflate the validity rate unless surfaced here.
+        return sum(1 for e in self.entries if e.parse_failure)
+
 
 def score_bullets(bullets: list[dict[str, Any]], hunks: list[dict[str, Any]],
                   entry_id: str) -> EntryScore:
@@ -325,6 +331,7 @@ def report_aggregate(agg: Aggregate, label: str) -> None:
     print()
     print(f"== {label} ==")
     print(f"entries scored:          {len(agg.entries)}")
+    print(f"parse failures:          {agg.parse_failures}")
     print(f"citation validity rate:  {agg.citation_validity_rate:.1%}")
     print(f"claim-drop rate:         {agg.claim_drop_rate:.1%}")
     print(f"mean hunk coverage:      {agg.mean_coverage:.1%}")

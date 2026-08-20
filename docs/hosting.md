@@ -49,9 +49,10 @@ workflow runs:
 So: `crawl.yml` checks out, crawls, commits with `GITHUB_TOKEN`, then **builds
 and deploys the site in the same run** (via `actions/upload-pages-artifact` +
 `actions/deploy-pages`). No second workflow needs to fire, and `ci.yml`'s
-`push` trigger stays silent. The exceptions to the rule are only
-`workflow_dispatch` and `repository_dispatch`, neither of which the crawl
-uses. Corollary for T6: **never** swap the crawl's push credential for a PAT
+`push` trigger stays silent. The documented exceptions to the rule are
+`workflow_dispatch`, `repository_dispatch`, and `pull_request` events on a
+`GITHUB_TOKEN`-created branch (opened/synchronize/reopened) — none of which
+the crawl uses (it pushes to the default branch and opens no PRs). Corollary for T6: **never** swap the crawl's push credential for a PAT
 or GitHub App token, or the loop protection disappears (same doc).
 
 **Belt and braces**, both documented in
@@ -180,10 +181,13 @@ accessed 2026-08-19) — we need one. It is never written to `documents/`,
 secret exists in the target architecture: the site is static and the crawler
 authenticates to nothing.
 
-Fork-safety note for T6, since the endgame is public: secrets are not passed
-to workflows triggered from forks, and `pull_request` runs from forks get a
-read-only `GITHUB_TOKEN` — keep the summarize step out of any
-`pull_request`-triggered workflow.
+Fork-safety note for T6, since the endgame is public: "With the exception of
+`GITHUB_TOKEN`, secrets are not passed to the runner when a workflow is
+triggered from a forked repository"
+([using secrets in GitHub Actions](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions),
+accessed 2026-08-19) — so a fork PR can never see `MODEL_API_KEY`; keep the
+summarize step out of any `pull_request`-triggered workflow regardless, so it
+never even attempts to run without it.
 
 ## 6. Custom-domain cutover (owner-access-required throughout)
 
@@ -203,7 +207,10 @@ The same doc recommends **verifying the custom domain before adding it** (to
 prevent takeover) and notes **Enforce HTTPS** can take up to 24 h to become
 available. Because the zone is Cloudflare-managed: set the new records to
 **DNS-only (grey cloud)** at least until GitHub has issued the certificate and
-Enforce HTTPS is on; a proxied record can stall GitHub's cert issuance.
+Enforce HTTPS is on. (Operational guidance, no single primary source: GitHub's
+custom-domain doc specifies records pointing directly at the Pages IPs and
+does not cover proxied setups; Cloudflare's proxy answers with its own
+certificate, which is exactly the condition that stalls issuance.)
 
 Vercel teardown (owner dashboard): remove `inplain.ai` and `www.inplain.ai`
 from the Vercel project's Domains, then delete the project (and the Clerk
@@ -249,7 +256,7 @@ No new accounts, no new platforms, $0/month in the public endgame.
 
 ### After going public
 
-9. Enable Pages: Settings → Pages → Source: **GitHub Actions**; set the
+9. (owner — repo admin) Enable Pages: Settings → Pages → Source: **GitHub Actions**; set the
    `DEPLOY_PAGES` variable (or equivalent gate) so `crawl.yml`'s deploy step
    runs; trigger `workflow_dispatch` and confirm the site serves at
    `amanthanvi.github.io/…`.
@@ -257,7 +264,7 @@ No new accounts, no new platforms, $0/month in the public endgame.
     association), then in Cloudflare DNS (owner): replace the Vercel A records
     with the four Pages A + four AAAA records, repoint `www` to
     `amanthanvi.github.io`, DNS-only. (Owner access required.)
-11. Once the cert is issued, tick **Enforce HTTPS** (may take up to 24 h to
+11. (owner — repo admin) Once the cert is issued, tick **Enforce HTTPS** (may take up to 24 h to
     be offered).
 12. Confirm the site, RSS feeds, and old deep links; then (owner) remove the
     domains from the Vercel project and delete the project.
