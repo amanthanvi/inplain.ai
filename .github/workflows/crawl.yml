@@ -38,6 +38,9 @@ jobs:
   # summary instead of failing the run.
   crawl:
     runs-on: ubuntu-latest
+    # A hung crawl must not hold the concurrency group for the 6h default
+    # while the next scheduled run queues behind it.
+    timeout-minutes: 30
     permissions:
       contents: write # the crawl commits snapshots and change records back
     steps:

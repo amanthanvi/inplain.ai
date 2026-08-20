@@ -114,7 +114,10 @@ jobs:
           if [ -n "${CHROMEWEBDRIVER:-}" ] && [ -x "$CHROMEWEBDRIVER/chromedriver" ]; then
             driver_args=(--chromedriver-path "$CHROMEWEBDRIVER/chromedriver")
           else
-            driver_args=()
+            # CHROMEDRIVER_SKIP_DOWNLOAD=true means the npm fallback driver
+            # was never downloaded — fail loudly rather than half-run.
+            echo "::error::CHROMEWEBDRIVER not provided by the runner image; refusing a silent fallback" >&2
+            exit 1
           fi
           fail=0
           for page in $pages; do
