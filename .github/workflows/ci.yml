@@ -1,0 +1,154 @@
+# T6 — the gates, run before the surfaces they guard can regress:
+#   * pytest — the full suite, including T3's citation-integrity tests (AC-3):
+#     every published citation is verbatim, on the side it names.
+#   * stylelint — D1's token boundary: no raw hex/px outside static/tokens.css.
+#   * axe — the built pages hold WCAG 2.x AA. v0.2.0 specified this floor,
+#     violated it, and signed it off as done — because nothing checked.
+#
+# summarize NEVER runs here (docs/hosting.md §5): secrets are absent on fork
+# PRs, and CI must not spend model tokens. The crawl workflow owns summarize.
+name: ci
+
+on:
+  push:
+    # Belt-and-braces against the crawl-commit loop (hosting.md §1): crawler
+    # output could not retrigger CI even if its push credential ever changed.
+    paths-ignore:
+      - "documents/**"
+      - "changes/**"
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: pytest (full suite, citation integrity included)
+        run: python -m pytest
+
+  lint-css:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install pinned dev tooling
+        env:
+          # axe's chromedriver dependency is not used in this job.
+          CHROMEDRIVER_SKIP_DOWNLOAD: "true"
+        run: npm ci
+      - name: stylelint (D1 token boundary)
+        run: npm run lint:css
+
+  # Build the site from the repo's real changes/ (an empty archive must build)
+  # and run axe against the built pages at WCAG 2.x AA.
+  build-and-axe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install pinned dependencies
+        env:
+          # The runner image ships Chrome with a matching chromedriver
+          # (pointed at by $CHROMEWEBDRIVER); skip the npm package's download
+          # so the driver can never drift out of sync with the browser.
+          CHROMEDRIVER_SKIP_DOWNLOAD: "true"
+        run: |
+          python -m pip install -r requirements.txt
+          npm ci
+      - name: Build the static site
+        run: |
+          python -m inplain.site
+          if [ -f inplain/feeds.py ]; then
+            python -m inplain.feeds
+          else
+            echo "inplain.feeds not present yet (T5); skipping feeds"
+          fi
+      - name: Serve the built site
+        run: |
+          (cd _site && python -m http.server 8000 --bind 127.0.0.1 &)
+          for _ in $(seq 1 40); do
+            curl -sf -o /dev/null http://127.0.0.1:8000/ && exit 0
+            sleep 0.5
+          done
+          echo "static server did not come up" >&2
+          exit 1
+      - name: axe (WCAG 2.x AA on the built pages)
+        run: |
+          # One page per template is the gate: the fixed pages always exist;
+          # company pages exist even with an empty archive; change pages
+          # appear once real records land and are then covered newest-first.
+          pages="/ /404.html /changes/ /companies/"
+          for d in $(find _site/companies -mindepth 1 -maxdepth 1 -type d | sort | head -3); do
+            pages="$pages /companies/$(basename "$d")/"
+          done
+          for d in $(find _site/changes -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | head -10); do
+            pages="$pages /changes/$(basename "$d")/"
+          done
+          if [ -n "${CHROMEWEBDRIVER:-}" ] && [ -x "$CHROMEWEBDRIVER/chromedriver" ]; then
+            driver_args=(--chromedriver-path "$CHROMEWEBDRIVER/chromedriver")
+          else
+            driver_args=()
+          fi
+          fail=0
+          for page in $pages; do
+            echo "=== axe $page"
+            npx axe "http://127.0.0.1:8000$page" \
+              --tags wcag2a,wcag2aa --exit "${driver_args[@]}" || fail=1
+          done
+          exit "$fail"
+      # On a push to main with Pages enabled, the checked site ships (the
+      # "occasional CI deploy" of hosting.md §3 — template/CSS changes go
+      # live without waiting for the next crawl).
+      - name: Upload Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site/
+
+  deploy:
+    needs: [test, lint-css, build-and-axe]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_PAGES == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    # Serialize with crawl.yml's deploy job so two Pages deployments never race.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
