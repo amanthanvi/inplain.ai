@@ -1,0 +1,46 @@
+{
+  "id": "constructed-negation-sell-to-share",
+  "source": "constructed",
+  "company": "example",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 214,
+      "new_start": 214,
+      "context_before": [
+        "Information Sharing"
+      ],
+      "removed": [
+        "We do not sell your personal information to third parties."
+      ],
+      "added": [
+        "We do not share your personal information with third parties for their own direct marketing purposes without your consent."
+      ],
+      "context_after": [
+        "We may disclose aggregated or de-identified information that cannot reasonably be used to identify you."
+      ],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "The flat promise not to sell personal information was replaced with a narrower promise about 'sharing' for third-party marketing — the new text no longer rules out selling data.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "removed",
+            "quote": "We do not sell your personal information to third parties."
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "We do not share your personal information with third parties for their own direct marketing purposes without your consent."
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Discriminating case: sell-to-share negation flip. A citation quoting 'do not sell' against the added side must fail side-aware validation."
+}

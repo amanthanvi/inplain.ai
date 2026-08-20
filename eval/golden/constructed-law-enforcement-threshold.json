@@ -1,0 +1,44 @@
+{
+  "id": "constructed-law-enforcement-threshold",
+  "source": "constructed",
+  "company": "example",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 620,
+      "new_start": 620,
+      "context_before": [
+        "Disclosures for Legal Reasons"
+      ],
+      "removed": [
+        "We disclose the contents of your account to law enforcement only when required to do so by a valid court order or search warrant."
+      ],
+      "added": [
+        "We may disclose the contents of your account in response to lawful requests from government authorities, including to meet national security or law enforcement requirements."
+      ],
+      "context_after": [],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "The bar for handing account contents to authorities dropped from requiring a court order or search warrant to any 'lawful request' from government authorities.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "removed",
+            "quote": "only when required to do so by a valid court order or search warrant"
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "in response to lawful requests from government authorities"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Material weakening expressed through qualifier changes ('only when required' to 'may ... in response to lawful requests')."
+}

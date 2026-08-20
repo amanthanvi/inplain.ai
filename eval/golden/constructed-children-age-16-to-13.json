@@ -1,0 +1,44 @@
+{
+  "id": "constructed-children-age-16-to-13",
+  "source": "constructed",
+  "company": "example",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 710,
+      "new_start": 710,
+      "context_before": [
+        "Children's Privacy"
+      ],
+      "removed": [
+        "Our services are not directed to children under 16, and we do not knowingly collect personal information from children under 16."
+      ],
+      "added": [
+        "Our services are not directed to children under 13, and we do not knowingly collect personal information from children under 13."
+      ],
+      "context_after": [],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "The children's privacy threshold dropped from under-16 to under-13, so data of 13-to-15-year-olds is no longer excluded.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "removed",
+            "quote": "children under 16"
+          },
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "children under 13"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Number change where both sides are near-identical strings; quoting the wrong side must fail validation."
+}

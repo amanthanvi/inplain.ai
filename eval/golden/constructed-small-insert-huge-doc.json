@@ -1,0 +1,41 @@
+{
+  "id": "constructed-small-insert-huge-doc",
+  "source": "constructed",
+  "company": "example",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "id": "h1",
+      "old_start": 1412,
+      "new_start": 1412,
+      "context_before": [
+        "We use commercially reasonable safeguards designed to protect the personal information we maintain.",
+        "Categories of recipients are described in the section above."
+      ],
+      "removed": [],
+      "added": [
+        "We sell personal information, as that term is defined under the California Consumer Privacy Act, to advertising partners, unless you exercise your right to opt out."
+      ],
+      "context_after": [
+        "You can exercise the rights described in this section by visiting our privacy portal.",
+        "We will not discriminate against you for exercising any of these rights."
+      ],
+      "word_spans": null
+    }
+  ],
+  "expected": {
+    "bullets": [
+      {
+        "text": "One sentence buried deep in the policy now states that personal information is sold to advertising partners unless you opt out.",
+        "citations": [
+          {
+            "hunk": "h1",
+            "side": "added",
+            "quote": "We sell personal information, as that term is defined under the California Consumer Privacy Act, to advertising partners, unless you exercise your right to opt out."
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Hand-constructed from typical policy language. Discriminating case from SPEC 7: a ~160-character material insert into a 65,000-character document (whole-document similarity ~0.998, which is why the ratio is a badge, never a gate). One hunk, added side only."
+}
