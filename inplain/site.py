@@ -283,6 +283,7 @@ class BuildReport:
     published: int = 0
     suppressed: int = 0
     companies: int = 0
+    feeds: int = 0
     out_dir: Path | None = None
     page_paths: list[str] = field(default_factory=list)
 
@@ -315,6 +316,7 @@ class SiteBuilder:
         title: str,
         nav: str | None = None,
         description: str | None = None,
+        company_feed: dict[str, str] | None = None,
         **context: Any,
     ) -> None:
         html = self.env.get_template(template).render(
@@ -322,6 +324,9 @@ class SiteBuilder:
                 "title": title,
                 "nav": nav,
                 "description": description,
+                # Company pages additionally autodiscover their own feed; the
+                # global feed link is on every page (base template).
+                "company_feed": company_feed,
                 # aria-current="page" belongs only on the nav link that IS the
                 # current page; descendants mark section membership instead.
                 "is_changes_index": relpath == "changes/index.html",
@@ -431,6 +436,10 @@ class SiteBuilder:
                 site=site,
                 change=change,
             )
+        # Imported here, not at module top: feeds.py builds on this module's
+        # loaders, so the import must run after site.py is fully initialised.
+        from . import feeds
+
         for company in companies:
             self._write_page(
                 report,
@@ -438,10 +447,22 @@ class SiteBuilder:
                 "company.html",
                 title=f"{company['name']} — tracked policies · inplain.ai",
                 nav="companies",
+                company_feed={
+                    "title": feeds.company_feed_title(company["name"]),
+                    "href": f"/companies/{company['slug']}/feed.xml",
+                },
                 site=site,
                 company=company,
                 items=items_by_company[company["slug"]],
             )
+
+        # The feeds are part of the site build (AC-8): same publish filter,
+        # same output tree, so pages and feeds can never disagree.
+        report.feeds = len(
+            feeds.write_feeds(
+                records=published, companies=companies, out_dir=self.out_dir
+            )
+        )
 
         report.out_dir = self.out_dir
         return report
@@ -494,7 +515,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     print(
         f"pages={report.pages} published={report.published} "
-        f"suppressed={report.suppressed} companies={report.companies}"
+        f"suppressed={report.suppressed} companies={report.companies} "
+        f"feeds={report.feeds}"
     )
     return 0
 
