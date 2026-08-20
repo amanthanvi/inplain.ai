@@ -35,6 +35,7 @@ from pathlib import Path
 from typing import Any
 
 SCHEMA_VERSION = 1
+_HUNK_ID = re.compile(r"h[0-9]+")
 MAX_CONTEXT_LINES = 3
 SHORT_SHA_LEN = 7
 
@@ -202,8 +203,8 @@ def validate_hunk(hunk: Any, where: str = "hunk") -> None:
         f"{where}: keys must be exactly {sorted(HUNK_KEYS)}, got {sorted(hunk)}",
     )
     _expect(
-        isinstance(hunk["id"], str) and hunk["id"] != "",
-        f"{where}: id must be a non-empty string",
+        isinstance(hunk["id"], str) and _HUNK_ID.fullmatch(hunk["id"]) is not None,
+        f"{where}: id must match h<number> (it is a DOM anchor target)",
     )
     for key in ("old_start", "new_start"):
         _expect(

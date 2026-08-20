@@ -427,6 +427,17 @@ class ModelRequestError(ModelError):
     """The request itself was refused (4xx other than 429): bad key, bad
     model id, oversized request. A fallback would fail identically."""
 
+    def __init__(self, message: str, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+
+
+# Refusal statuses that depend on THIS record's payload (oversized or
+# malformed content), not on the run's configuration: skip the record and
+# keep going. Everything else — auth, bad model id, unclassified transport —
+# would fail identically for every remaining record and halts the run.
+PER_RECORD_STATUSES = frozenset({400, 413, 422})
+
 
 class ModelReplyError(ModelError):
     """The HTTP call succeeded but the response body was not a usable
@@ -478,7 +489,7 @@ class AnthropicClient:
             # An unclassified transport fault. Treated as a request error, not
             # an outage: we do not spend on a fallback for a failure mode we
             # have not understood.
-            raise ModelRequestError(f"request failed: {exc}") from exc
+            raise ModelRequestError(f"request failed: {exc}", status=None) from exc
 
         status = getattr(response, "status_code", None)
         try:
@@ -486,7 +497,9 @@ class AnthropicClient:
         except requests.exceptions.HTTPError as exc:
             if status in OUTAGE_STATUSES or (isinstance(status, int) and status >= 500):
                 raise ModelOutage(f"model API is unavailable (HTTP {status}): {exc}") from exc
-            raise ModelRequestError(f"model API refused the request (HTTP {status})") from exc
+            raise ModelRequestError(
+                f"model API refused the request (HTTP {status})", status=status
+            ) from exc
 
         try:
             body = response.json()
@@ -683,10 +696,23 @@ class Summarizer:
             )
             return outcome
         except ModelError as exc:
-            # Pre-reply failure: no spend, nothing written, nothing changed —
-            # and it will repeat for every remaining record, so halt the run.
+            # Pre-reply failure: no spend, nothing written, nothing changed.
             outcome.status = MODEL_ERROR
             outcome.detail = str(exc)
+            if (
+                isinstance(exc, ModelRequestError)
+                and exc.status in PER_RECORD_STATUSES
+            ):
+                # This record's payload was refused; the next record may be
+                # fine. Skip it (retryable) rather than starving the queue.
+                log.warning(
+                    "%s: request refused for this record, skipping: %s",
+                    record_id,
+                    exc,
+                )
+                return outcome
+            # Auth, bad model id, outage after fallback, or an unclassified
+            # fault: it will repeat for every remaining record, so halt.
             outcome.halt = True
             log.warning("%s: model call failed, record left unsummarised: %s", record_id, exc)
             return outcome

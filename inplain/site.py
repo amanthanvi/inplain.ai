@@ -318,7 +318,15 @@ class SiteBuilder:
         **context: Any,
     ) -> None:
         html = self.env.get_template(template).render(
-            page={"title": title, "nav": nav, "description": description},
+            page={
+                "title": title,
+                "nav": nav,
+                "description": description,
+                # aria-current="page" belongs only on the nav link that IS the
+                # current page; descendants mark section membership instead.
+                "is_changes_index": relpath == "changes/index.html",
+                "is_companies_index": relpath == "companies/index.html",
+            },
             **context,
         )
         path = self.out_dir / relpath
@@ -334,9 +342,7 @@ class SiteBuilder:
         # Validate EVERYTHING before writing anything: all-or-nothing.
         catalog = load_catalog(self.catalog_path)
         records = load_records(self.changes_dir)
-        published = [r for r in records if r["materiality"]["material"]]
-        published.sort(key=lambda r: r["id"])
-        published.sort(key=lambda r: r["detected_at"], reverse=True)
+        published = load_published_records(self.changes_dir)
 
         report = BuildReport(
             published=len(published),
@@ -418,8 +424,9 @@ class SiteBuilder:
                 nav="changes",
                 description=(
                     f"{change['headline']} on {change['date']}: "
-                    f"{change['hunk_count']} changed passages, with citations "
-                    "and a link to the source."
+                    f"{change['hunk_count']} changed "
+                    f"{'passage' if change['hunk_count'] == 1 else 'passages'}, "
+                    "with citations and a link to the source."
                 ),
                 site=site,
                 change=change,

@@ -18,8 +18,8 @@
 <div class="wrap">
 <a class="site-name" href="/">inplain.ai</a>
 <nav class="site-nav" aria-label="Site">
-<a href="/changes/"{% if page.nav == "changes" %} aria-current="page"{% endif %}>Changes</a>
-<a href="/companies/"{% if page.nav == "companies" %} aria-current="page"{% endif %}>Companies</a>
+<a href="/changes/"{% if page.is_changes_index %} aria-current="page"{% elif page.nav == "changes" %} aria-current="true"{% endif %}>Changes</a>
+<a href="/companies/"{% if page.is_companies_index %} aria-current="page"{% elif page.nav == "companies" %} aria-current="true"{% endif %}>Companies</a>
 </nav>
 </div>
 </header>

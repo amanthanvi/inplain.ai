@@ -765,6 +765,41 @@ class TestFallback:
         summarizer(changes, client).run()
         assert client.models == [summarize.DEFAULT_MODEL]
 
+    def test_per_record_refusal_skips_the_record_and_continues(self, changes):
+        # A 413-class refusal is a property of one record's payload, not of
+        # the run: the poisoned record is skipped (retryable) and the queue
+        # is not starved.
+        paths = {
+            path: path.read_bytes()
+            for path in (
+                write_record(changes, make_record(seed="aaa")),
+                write_record(changes, make_record(seed="bbb")),
+            )
+        }
+        client = FakeClient(
+            ModelRequestError("model API refused the request (HTTP 413)", status=413),
+            reply([bullet("t", [cite(quote="You may opt out")])]),
+        )
+        report = summarizer(changes, client).run()
+        assert not report.aborted
+        assert len(report.outcomes) == 2
+        assert report.written == 1
+        summarised = [p for p in paths if "summary" in schema.load_record(p)]
+        assert len(summarised) == 1, "the record after the refused one is reached"
+        (skipped,) = [p for p in paths if p not in summarised]
+        _unchanged(skipped, paths[skipped])
+        assert client.models == [summarize.DEFAULT_MODEL, summarize.DEFAULT_MODEL]
+
+    def test_auth_refusal_still_halts_the_run(self, changes):
+        for seed in ("aaa", "bbb"):
+            write_record(changes, make_record(seed=seed))
+        client = FakeClient(
+            ModelRequestError("model API refused the request (HTTP 401)", status=401)
+        )
+        report = summarizer(changes, client).run()
+        assert report.aborted
+        assert len(report.outcomes) == 1
+
     def test_outage_on_both_models_halts_the_run_and_touches_nothing(self, changes):
         paths = [write_record(changes, make_record(seed=f"r{i}")) for i in range(3)]
         before = [p.read_bytes() for p in paths]
