@@ -168,8 +168,10 @@ Non-negotiable floor, from measured failures in v0.2.0:
 - Hosting target for the static site and the scheduled crawl.
 - Model and provider for summaries, to be chosen against a golden set built from
   real catalog diffs rather than from vendor rankings.
-- Whether word-level intra-line highlighting ships in v1 (backend contract:
-  the hunk shape must carry it).
+- ~~Whether word-level intra-line highlighting ships in v1~~ — **resolved
+  2026-08-19: no.** Line-level marks in v1; the hunk schema reserves
+  `word_spans` so it can ship later without a format change. See
+  `docs/decisions/G1-word-level-highlighting.md`.
 
 ## 12. Decisions
 
