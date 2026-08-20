@@ -731,10 +731,12 @@ def test_an_unknown_slug_is_refused(repo):
         make_crawler(repo, FakeTransport(base_routes())).run(only=["nope"])
 
 
-def test_the_real_catalog_flattens_to_32_companies_and_56_documents():
+def test_the_real_catalog_flattens_to_30_companies_and_52_documents():
+    # 2026-08-20: amazon (403), ebay/tos and microsoft/privacy (robots)
+    # were dropped after the first honest crawl — see catalog.json history.
     documents = load_catalog(Path(__file__).resolve().parent.parent / "catalog.json")
-    assert len(documents) == 56
-    assert len({d.company for d in documents}) == 32
+    assert len(documents) == 52
+    assert len({d.company for d in documents}) == 30
     assert all(d.url.startswith("https://") for d in documents)
     assert all(d.relpath == f"documents/{d.company}/{d.doc}.txt" for d in documents)
 
