@@ -405,6 +405,11 @@ def sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _failed(document: Document, detail: str) -> DocumentOutcome:
+    log.warning("failed %s: %s", document, detail)
+    return DocumentOutcome(document, Status.FAILED, detail)
+
+
 # --------------------------------------------------------------------------
 # the crawler
 
@@ -559,20 +564,14 @@ class Crawler:
         if response.status == 304:
             # A 304 to a request that carried no validators. The origin is
             # broken; there is no body to archive either way.
-            detail = "304 Not Modified for an unconditional request"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, "304 Not Modified for an unconditional request")
 
         if response.status != 200:
-            detail = f"HTTP {response.status}"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, f"HTTP {response.status}")
 
         content_type = response.headers.get("Content-Type", "")
         if content_type and not any(t in content_type.lower() for t in TEXTUAL_TYPES):
-            detail = f"non-textual Content-Type {content_type!r}"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, f"non-textual Content-Type {content_type!r}")
 
         try:
             extracted = extract_text(response.body, response.url)
@@ -580,18 +579,12 @@ class Crawler:
             # trafilatura is a third-party parser over adversarial markup: a
             # page that makes it raise is a dropped document (SPEC §6), never
             # an aborted crawl (AC-1).
-            detail = f"extraction raised {type(exc).__name__}: {exc}"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, f"extraction raised {type(exc).__name__}: {exc}")
         if extracted is None:
-            detail = "trafilatura extracted nothing"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, "trafilatura extracted nothing")
         text = normalise(extracted)
         if len(text) < MIN_EXTRACTED_CHARS:
-            detail = f"extracted only {len(text)} characters"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, f"extracted only {len(text)} characters")
 
         path = self.document_path(document)
         previous = path.read_text(encoding="utf-8") if path.exists() else None
