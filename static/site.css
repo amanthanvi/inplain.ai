@@ -630,10 +630,15 @@ td:last-child {
 
   .hunk {
     border-color: var(--print-ink);
+  }
+
+  /* A passage may cross a page; a line of it, or its header, may not. */
+  .ln {
     break-inside: avoid;
   }
 
   .claim-text,
+  .hh,
   h2 {
     break-after: avoid;
   }
