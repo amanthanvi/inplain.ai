@@ -254,7 +254,7 @@ def doc_list(c: dict) -> str:
     return ", ".join(DOC_TITLES.get(k, k.title()) for k in sorted(c["policy_urls"]))
 
 
-def font_face(family: str, files: list[tuple[str, int, str]]) -> str:
+def font_face(family: str, files: list[tuple[str, str | int, str]]) -> str:
     return "".join(
         f"@font-face{{font-family:'{family}';font-style:{style};font-weight:{weight};font-display:swap;src:url(../../fonts/{f}) format('woff2')}}"
         for f, weight, style in files
@@ -369,7 +369,8 @@ def a_changes() -> str:
 # passages follow in document order. The cited quote is highlighted inside
 # the passage like a highlighter pen on a record.
 
-D_FONTS = font_face("Literata", [("Literata-400-normal.woff2", 400, "normal"), ("Literata-400-italic.woff2", 400, "italic"), ("Literata-600-normal.woff2", 600, "normal"), ("Literata-700-normal.woff2", 700, "normal")])
+# One variable file per style (weight axis 400–900), not one file per weight.
+D_FONTS = font_face("Literata", [("Literata-latin.woff2", "400 700", "normal"), ("Literata-italic-latin.woff2", "400 700", "italic")])
 D_CSS = D_FONTS + SR + """
 :root{--paper:#fff;--ink:#141414;--soft:#3d3d3d;--muted:#666;--rule:#d4d4d4;--rule-soft:#ebebeb;--accent:#0b6666;
   --add-bg:#e9f5ec;--add-ink:#0e5a2b;--add-line:#2e8b4c;--rm-bg:#fbeaea;--rm-ink:#8c1d1d;--rm-line:#c33;--hl:#fff3b0;--hl-ink:#141414;--focus:#0b6666}

@@ -1,6 +1,6 @@
 A "launch empty" tree that already holds Snapshots is not empty: the first crawl diffs against them.
 
-The v0.3 tree carried 53 Document Snapshots committed on 2026-08-20 as the
+The v0.3 tree carried 52 Document Snapshots committed on 2026-08-20 as the
 diffing substrate. The first scheduled-style crawl on 2026-09-27 therefore
 compared five-week-old text against today's Documents and produced 15 real
 Change records (run 36311267387). Change detection always diffs against the
