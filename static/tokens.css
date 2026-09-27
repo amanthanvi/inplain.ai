@@ -143,18 +143,19 @@
     --rule: #34373b;
     --rule-soft: #26292d;
 
-    --accent: #7fd6d6;  /* 10.48:1; 8.53:1 on --add-bg, 4.99:1 on --hl */
+    --accent: #7fd6d6;  /* 10.48:1; 8.53:1 on --add-bg; 3.42:1 on --hl, where no link sits */
     --focus-ring: #7fd6d6;
 
     --add-bg: #12301c;
-    --add-ink: #9ee2b6; /*  9.56:1 on --add-bg, 5.60:1 inside --hl */
+    --add-ink: #9ee2b6; /*  9.56:1 on --add-bg; 3.84:1 on --hl, so not used there */
     --rm-bg: #3a1719;
-    --rm-ink: #f5b0b0;  /*  8.90:1 on --rm-bg, 4.68:1 inside --hl */
+    --rm-ink: #f5b0b0;  /*  8.90:1 on --rm-bg; 3.21:1 on --hl, so not used there */
 
     /* A brighter amber than a dark ground would suggest, so the quote is
        unmistakable on both Sides: 2.49:1 vs --add-bg, 2.77:1 vs --rm-bg.
-       The Side inks drop below 4.5:1 on it, so quoted text takes its own
-       cream ink: 5.31:1. The Side stays told by the line's ground, the
+       The Side inks drop below 4.5:1 on it (3.84:1 added, 3.21:1 removed;
+       the accent would be 3.42:1), so quoted text takes its own cream
+       ink: 5.31:1. The Side stays told by the line's ground, the
        gutter mark and the hidden label. */
     --hl: #7a6400;
     --hl-ink: #fff6d5;

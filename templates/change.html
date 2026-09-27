@@ -7,7 +7,7 @@
 <h1>{{ change.headline }}</h1>
 <dl class="facts">
 <dt>Compared</dt>
-<dd>the version seen on <span class="date">{{ change.date }}</span> against the previous version (commits <a class="sha" href="{{ change.commit_url }}" rel="external">{{ change.commit }}</a> → <a class="sha" href="{{ change.parent_commit_url }}" rel="external">{{ change.parent_commit }}</a>)</dd>
+<dd>the version seen on <span class="date">{{ change.date }}</span> against the previous version (commits <a class="sha" href="{{ change.parent_commit_url }}" rel="external">{{ change.parent_commit }}</a> → <a class="sha" href="{{ change.commit_url }}" rel="external">{{ change.commit }}</a>)</dd>
 <dt>Passages changed</dt>
 <dd>{{ change.hunk_count }}, {{ change.unchanged }}</dd>
 <dt>Characters</dt>

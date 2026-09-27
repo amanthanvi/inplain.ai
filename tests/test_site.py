@@ -354,8 +354,11 @@ def test_change_view_header_and_facts(built: SimpleNamespace) -> None:
     assert "the version seen on" in html and "against the previous version" in html
     assert "snapshot" not in html.lower()
     commit = f"{site.REPO_URL}/commit/"
-    assert f'<a class="sha" href="{commit}{sha("a")}" rel="external">aaaaaaa</a>' in html
-    assert f'<a class="sha" href="{commit}{sha("f")}" rel="external">fffffff</a>' in html
+    # Old → new, the same direction as the effective-date line.
+    assert (
+        f'(commits <a class="sha" href="{commit}{sha("f")}" rel="external">fffffff</a>'
+        f' → <a class="sha" href="{commit}{sha("a")}" rel="external">aaaaaaa</a>)'
+    ) in html
     assert '<time datetime="2026-05-01">2026-05-01</time>' in html
     assert 'href="https://example.test/privacy"' in html  # source link
 

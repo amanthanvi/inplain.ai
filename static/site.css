@@ -573,6 +573,21 @@ td:last-child {
    strike/underline carry the diff, a cited quote is boxed, and the source
    address is printed after its link. */
 @media print {
+  /* Paper is paper whatever the screen theme: every colour token resolves
+     to the print ink or paper, so a dark preference cannot leak dark ink
+     or a dark highlight onto the page. */
+  :root {
+    color-scheme: light;
+    --paper: var(--print-paper);
+    --ink: var(--print-ink);
+    --soft: var(--print-ink);
+    --muted: var(--print-ink);
+    --accent: var(--print-ink);
+    --add-ink: var(--print-ink);
+    --rm-ink: var(--print-ink);
+    --hl-ink: var(--print-ink);
+  }
+
   body {
     background: var(--print-paper);
     color: var(--print-ink);
@@ -656,6 +671,7 @@ td:last-child {
 
   mark.q {
     background: none;
+    color: var(--print-ink);
     outline: var(--hairline) solid var(--print-ink);
   }
 }
