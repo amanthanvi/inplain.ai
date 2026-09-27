@@ -1,7 +1,8 @@
 # CI is the runtime (T6)
 
 There is no always-on process (SPEC §4). Two workflows run everything;
-`docs/hosting.md` is the verified spec for their mechanics.
+`docs/hosting.md` is the verified spec for their mechanics, and
+`docs/operations.md` says what a human does when one of them needs help.
 
 ## `crawl.yml` — scheduled daily (04:17 UTC) + `workflow_dispatch`
 
