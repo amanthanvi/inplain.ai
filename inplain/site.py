@@ -71,10 +71,6 @@ log = logging.getLogger("inplain.site")
 # part of the data root, so --root never relocates them.
 TEMPLATES_DIR = REPO_ROOT / "templates"
 STATIC_DIR = REPO_ROOT / "static"
-STYLESHEETS = ("tokens.css", "site.css")
-# The self-hosted typeface (Literata, SIL OFL 1.1): copied as a directory
-# into _site/static/fonts/. No font is ever requested from a third party.
-FONTS_DIR = STATIC_DIR / "fonts"
 
 # The public repository: every Change record links the two commits it
 # compares, so a reader can audit the diff with git itself (SPEC §4). Kept
@@ -644,11 +640,9 @@ class SiteBuilder:
             shutil.rmtree(self.out_dir)
         self.out_dir.mkdir(parents=True)
 
-        static_out = self.out_dir / "static"
-        static_out.mkdir()
-        for name in STYLESHEETS:
-            shutil.copyfile(STATIC_DIR / name, static_out / name)
-        shutil.copytree(FONTS_DIR, static_out / "fonts")
+        # static/ ships whole: the two stylesheets and the self-hosted Literata
+        # (SIL OFL 1.1). No font is ever requested from a third party.
+        shutil.copytree(STATIC_DIR, self.out_dir / "static")
 
         self._write_page(
             report,
