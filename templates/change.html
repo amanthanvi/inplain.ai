@@ -2,38 +2,64 @@
 {% import "macros.html" as m %}
 {% block main %}
 <article>
-<p class="kicker"><span class="tick"></span><a class="co" href="{{ change.company_url }}">{{ change.company_name }}</a> <span>· {{ change.doc_title }}</span></p>
+<header class="record-head">
+<p class="crumb"><a href="{{ change.company_url }}">{{ change.company_name }}</a> · {{ change.doc_title }} · detected <time datetime="{{ change.date }}">{{ change.date }}</time></p>
 <h1>{{ change.headline }}</h1>
-<div class="meta">
-<span class="plus"><span class="n">+{{ change.added_chars }}</span> added</span>
-<span class="minus"><span class="n">−{{ change.removed_chars }}</span> removed</span>
-<span><span class="n">{{ change.hunk_count }}</span> passage{{ "s" if change.hunk_count != 1 else "" }}</span>
-<span class="badge">similarity {{ change.badge }}</span>
-<span class="span">detected <time datetime="{{ change.date }}">{{ change.date }}</time></span>
-</div>
-{%- if change.effective_date %}
-<p class="effdate">{{ change.effective_date }}</p>
+<dl class="facts">
+<dt>Compared</dt>
+<dd>the version seen on <span class="date">{{ change.date }}</span> against the previous version (commits <a class="sha" href="{{ change.parent_commit_url }}" rel="external">{{ change.parent_commit }}</a> → <a class="sha" href="{{ change.commit_url }}" rel="external">{{ change.commit }}</a>)</dd>
+<dt>Passages changed</dt>
+<dd>{{ change.hunk_count }}, {{ change.unchanged }}</dd>
+<dt>Characters</dt>
+<dd>{% if change.added_chars != "0" %}<span class="plus">+{{ change.added_chars }}</span> added{% endif %}{% if change.added_chars != "0" and change.removed_chars != "0" %}, {% endif %}{% if change.removed_chars != "0" %}<span class="minus">−{{ change.removed_chars }}</span> removed{% endif %}</dd>
+{%- if change.effective_date_fact %}
+<dt>Effective date</dt>
+<dd class="effdate">{{ change.effective_date_fact }}</dd>
 {%- endif %}
-<h2>What changed</h2>
-{%- if change.bullets %}
-<ul class="sum">
-{%- for bullet in change.bullets %}
-<li>{{ bullet.text }}{% for cite in bullet.citations %} <a class="cit" href="#{{ cite.hunk }}" title="Jump to the changed passage">[{{ cite.hunk | upper }}]</a>{% endfor %}</li>
+<dt>Source</dt>
+<dd><a href="{{ change.source_url }}" rel="external">{{ change.source_host }}</a>, linked, not republished</dd>
+</dl>
+</header>
+{%- if change.claims %}
+<h2>What changed, with the evidence</h2>
+<p class="legend">{{ change.claims | length }} claim{{ "s" if change.claims | length != 1 else "" }}, each followed by the passage it cites. The cited words are highlighted.{% if change.has_marks %} Inside a replaced passage, struck words were removed and underlined words were added.{% endif %}</p>
+<ol class="claims" role="list">
+{%- for claim in change.claims %}
+<li class="claim" id="{{ claim.id }}">
+<p class="claim-text">{{ claim.text }}</p>
+<div class="evidence">
+{%- for h in claim.evidence %}
+{{ m.hunk(h) }}
 {%- endfor %}
-</ul>
+{%- for ref in claim.elsewhere %}
+<p class="see">Evidence: <a href="#{{ ref.hunk.id }}">passage {{ ref.hunk.number }}</a>, shown under claim {{ ref.claim }}.</p>
+{%- endfor %}
+</div>
+</li>
+{%- endfor %}
+</ol>
 {%- if change.coverage_note %}
-<p>{{ change.coverage_note }}</p>
+<p class="legend">{{ change.coverage_note }}</p>
+{%- endif %}
+{%- if change.rest %}
+<h2>The other {{ change.rest | length }} changed passage{{ "s" if change.rest | length != 1 else "" }}</h2>
+<p class="legend">In document order. No claim in the summary cites {{ "these" if change.rest | length != 1 else "this one" }}.</p>
+{%- for h in change.rest %}
+{{ m.hunk(h) }}
+{%- endfor %}
 {%- endif %}
 {%- else %}
+<h2>The changed passages</h2>
 <p>No validated summary is available for this change. Every claim we publish
 must cite the changed text verbatim; none validated here. The changed passages
-below are the complete record.</p>
+below, in document order, are the complete record.</p>
+{%- if change.has_marks %}
+<p class="legend">Inside a replaced passage, struck words were removed and underlined words were added.</p>
 {%- endif %}
-<h2>The changed passages</h2>
 {%- for h in change.hunks %}
 {{ m.hunk(h) }}
 {%- endfor %}
-<p class="src">We publish the changed passages only — never the full document.
-Full policy at <a href="{{ change.source_url }}" rel="external">{{ change.source_host }}</a> — we link, we don't republish.</p>
+{%- endif %}
+<p class="source">We publish the changed passages only, never the full document. The full {{ change.doc_title }} is at <a href="{{ change.source_url }}" rel="external">{{ change.source_host }}</a>.</p>
 </article>
 {% endblock %}

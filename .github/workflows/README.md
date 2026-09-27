@@ -1,12 +1,13 @@
 # CI is the runtime (T6)
 
 There is no always-on process (SPEC §4). Two workflows run everything;
-`docs/hosting.md` is the verified spec for their mechanics.
+`docs/hosting.md` is the verified spec for their mechanics, and
+`docs/operations.md` says what a human does when one of them needs help.
 
 ## `crawl.yml` — scheduled daily (04:17 UTC) + `workflow_dispatch`
 
-crawl → detect → summarize → build `_site/` → push → deploy, in one job so a
-failure at any step stops the run before anything ships. A **partial** crawl
+crawl → detect → push the archive → summarize → build `_site/` → deploy, in one job so a
+failure at any step stops the run before anything deploys. A **partial** crawl
 (some documents unreachable) is a success by design; per-document problems are
 surfaced in the run's step summary, never swallowed.
 

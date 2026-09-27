@@ -47,11 +47,11 @@ import re
 import subprocess
 import sys
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import schema
+from . import REPO_ROOT, schema, setup_cli_logging
 from .schema import ChangeRecord, Hunk, Materiality
 
 log = logging.getLogger("inplain.detect")
@@ -181,8 +181,8 @@ def normalized_chars(lines: Sequence[str]) -> int:
 def _first_effective_date(lines: Sequence[str]) -> str | None:
     """The date from the first effective-date line among ``lines``, or None."""
     for line in lines:
-        if is_effective_date_line(line):
-            return parse_effective_date(line)
+        if _EFFECTIVE_KEYWORDS.search(line) and (date := parse_effective_date(line)):
+            return date
     return None
 
 
@@ -261,9 +261,7 @@ def assess_materiality(diff: Diff) -> Materiality:
     # One-sided is real: a date line added where none was, or removed with no
     # replacement, still describes what happened to the date — the absent side
     # is recorded as null so the renderer can say so.
-    effective_date_change = (
-        {"from": date_from, "to": date_to} if (date_from is not None or date_to is not None) else None
-    )
+    effective_date_change = {"from": date_from, "to": date_to} if effective_touched else None
 
     if added_chars >= SENTENCE_CHARS:
         material, reason = True, REASON_ADDED
@@ -358,7 +356,6 @@ class DetectReport:
     created: int = 0  # material records written this run
     suppressed: int = 0  # immaterial records written this run (still recorded)
     skipped: int = 0  # ledger hits, first snapshots, no-op commits
-    record_ids: list[str] = field(default_factory=list)
 
 
 class Detector:
@@ -499,7 +496,6 @@ class Detector:
                     continue
                 payload = record.to_dict()
                 schema.dump_record(payload, out_path)
-                report.record_ids.append(record.id)
                 materiality = record.materiality
                 if materiality.material:
                     report.created += 1
@@ -552,17 +548,10 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _default_root() -> Path:
-    return Path(__file__).resolve().parent.parent
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    logging.basicConfig(
-        level=logging.WARNING, format="%(levelname)s %(message)s", stream=sys.stderr
-    )
-    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
-    root = args.root or _default_root()
+    setup_cli_logging(log, args.verbose)
+    root = args.root or REPO_ROOT
     detector = Detector(
         root, documents_dir=args.documents, changes_dir=args.changes
     )

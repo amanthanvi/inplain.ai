@@ -1,22 +1,37 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
 {% block main %}
+{%- if items %}
 <h1>Recent changes</h1>
 <p class="lede">A public record of how the privacy policies and terms of
-well-known companies change: the changed passages, a summary that cites them,
-and a link to the source.</p>
-{%- if items %}
-<h2>Latest material changes</h2>
-<ul class="feed">
+service of well-known companies change: the changed passages, a summary that
+cites them, and a link to the source.</p>
+<h2 class="list-h">Latest material changes</h2>
+<ol class="entries">
 {%- for item in items %}
-{{ m.feed_item(item, level=3) }}
+{{ m.entry(item, level=3) }}
 {%- endfor %}
-</ul>
+</ol>
 {%- if more %}
-<p class="src"><a href="/changes/">All {{ site.published }} changes →</a></p>
+<p class="more"><a href="/changes/">All {{ site.published }} changes</a></p>
 {%- endif %}
 {%- else %}
-<p>No material changes recorded yet. The <a href="/companies/">tracked
-companies</a> are being watched; changes appear here as they are detected.</p>
+<h1>No policy has changed yet.</h1>
+<p class="lede">inplain.ai keeps a public record of how the privacy policies
+and terms of service of well-known companies change: the changed passages, a
+summary that cites them, and a link to the source.</p>
+<div class="watch">
+<p>Watching {{ site.documents }} documents from {{ site.catalog_companies }}
+companies since <time datetime="{{ site.watch_since }}">{{ site.watch_since }}</time>.
+Each document is read once a day.</p>
+<p>The first material change appears here and in the
+<a href="/feed.xml" type="application/atom+xml">Atom feed</a>; nothing is backfilled.</p>
+</div>
+<h2>The watched documents</h2>
+<ul class="register">
+{%- for company in watched %}
+<li><a href="{{ company.url }}">{{ company.name }}</a> <span>{{ company.doc_list }}</span></li>
+{%- endfor %}
+</ul>
 {%- endif %}
 {% endblock %}

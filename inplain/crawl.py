@@ -39,7 +39,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -47,6 +47,7 @@ from urllib.parse import urljoin
 
 import trafilatura
 
+from . import REPO_ROOT, setup_cli_logging
 from .net import (
     DEFAULT_TIMEOUT,
     MAX_BYTES,
@@ -117,10 +118,6 @@ class DocumentOutcome:
     detail: str = ""
     commit: str | None = None
 
-    @property
-    def ok(self) -> bool:
-        return self.status in (Status.CHANGED, Status.UNCHANGED, Status.NOT_MODIFIED)
-
 
 @dataclass
 class CrawlReport:
@@ -188,7 +185,6 @@ class Politeness:
         self._sleep = sleep
         self._monotonic = monotonic
         self._last: dict[str, float] = {}
-        self.slept: list[tuple[str, float]] = []
 
     def wait(self, host: str, minimum: float | None = None) -> None:
         delay = self.delay if minimum is None else max(self.delay, minimum)
@@ -197,7 +193,6 @@ class Politeness:
         if last is not None and delay > 0:
             remaining = delay - (now - last)
             if remaining > 0:
-                self.slept.append((host, remaining))
                 self._sleep(remaining)
                 now = self._monotonic()
         self._last[host] = now
@@ -244,11 +239,7 @@ class CrawlState:
             raw = json.loads(path.read_text(encoding="utf-8"))
             for url, entry in (raw.get("urls") or {}).items():
                 self._entries[url] = UrlState(
-                    etag=entry.get("etag"),
-                    last_modified=entry.get("last_modified"),
-                    content_sha256=entry.get("content_sha256"),
-                    last_fetched_at=entry.get("last_fetched_at"),
-                    last_checked_at=entry.get("last_checked_at"),
+                    **{f.name: entry.get(f.name) for f in fields(UrlState)}
                 )
 
     def get(self, url: str) -> UrlState:
@@ -411,6 +402,11 @@ def sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _failed(document: Document, detail: str) -> DocumentOutcome:
+    log.warning("failed %s: %s", document, detail)
+    return DocumentOutcome(document, Status.FAILED, detail)
+
+
 # --------------------------------------------------------------------------
 # the crawler
 
@@ -565,20 +561,14 @@ class Crawler:
         if response.status == 304:
             # A 304 to a request that carried no validators. The origin is
             # broken; there is no body to archive either way.
-            detail = "304 Not Modified for an unconditional request"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, "304 Not Modified for an unconditional request")
 
         if response.status != 200:
-            detail = f"HTTP {response.status}"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, f"HTTP {response.status}")
 
         content_type = response.headers.get("Content-Type", "")
         if content_type and not any(t in content_type.lower() for t in TEXTUAL_TYPES):
-            detail = f"non-textual Content-Type {content_type!r}"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, f"non-textual Content-Type {content_type!r}")
 
         try:
             extracted = extract_text(response.body, response.url)
@@ -586,18 +576,12 @@ class Crawler:
             # trafilatura is a third-party parser over adversarial markup: a
             # page that makes it raise is a dropped document (SPEC §6), never
             # an aborted crawl (AC-1).
-            detail = f"extraction raised {type(exc).__name__}: {exc}"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, f"extraction raised {type(exc).__name__}: {exc}")
         if extracted is None:
-            detail = "trafilatura extracted nothing"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, "trafilatura extracted nothing")
         text = normalise(extracted)
         if len(text) < MIN_EXTRACTED_CHARS:
-            detail = f"extracted only {len(text)} characters"
-            log.warning("failed %s: %s", document, detail)
-            return DocumentOutcome(document, Status.FAILED, detail)
+            return _failed(document, f"extracted only {len(text)} characters")
 
         path = self.document_path(document)
         previous = path.read_text(encoding="utf-8") if path.exists() else None
@@ -723,19 +707,10 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _default_root() -> Path:
-    return Path(__file__).resolve().parent.parent
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    # Root stays at WARNING so trafilatura's per-paragraph debug chatter does
-    # not drown the crawl log; our own logger is the one --verbose opens up.
-    logging.basicConfig(
-        level=logging.WARNING, format="%(levelname)s %(message)s", stream=sys.stderr
-    )
-    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
-    root = args.root or _default_root()
+    setup_cli_logging(log, args.verbose)
+    root = args.root or REPO_ROOT
     crawler = Crawler(
         root,
         catalog_path=args.catalog,

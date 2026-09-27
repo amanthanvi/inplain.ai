@@ -318,9 +318,15 @@ def call_model(provider: str, api_key: str, model: str, prompt: str,
 
     def redact(text: str) -> str:
         # requests repeats a rejected header value, key included, in its
-        # error, as a repr: a stray \r or space is escaped, the rest verbatim.
+        # error, as a repr: control characters inside the key are escaped, so
+        # the escaped forms are replaced as well as the key as written.
         secret = api_key.strip()
-        return text.replace(secret, "[key]") if secret else text
+        if not secret:
+            return text
+        forms = {secret, repr(secret)[1:-1], secret.encode("unicode_escape").decode()}
+        for form in sorted(forms, key=len, reverse=True):
+            text = text.replace(form, "[key]")
+        return text
 
     post = requests.post if post is None else post
     url, headers, payload = build_request(provider, api_key, model, prompt)

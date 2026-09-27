@@ -1,14 +1,19 @@
-{#- Shared markup, following the class contract in static/site.css
-    (prototypes/a-docket.html, direction A).
+{#- Shared markup for direction D, "register" (#37).
 
     Diff floor (SPEC §9): colour is never the only cue — every changed line
     carries a `+`/`−` gutter mark (aria-hidden) AND a visually-hidden
-    "Added:"/"Removed:" text label. Each .ln keeps its spans on ONE source
-    line because .ln is white-space: pre-wrap. -#}
+    "Added:"/"Removed:" text label. Word marks are <del>/<ins> (a strike and
+    an underline); a cited quote is <mark class="q"> (a background). Line
+    text arrives pre-escaped and pre-marked from site.py. Each .ln keeps its
+    spans on ONE source line because .tx is white-space: pre-wrap. -#}
 
 {% macro hunk(h) -%}
 <section class="hunk" id="{{ h.id }}">
-<div class="hh"><span class="hid">{{ h.id | upper }}</span><span>{{ h.kind }}</span><span>old line {{ h.old_start }} · new line {{ h.new_start }}</span></div>
+<p class="hh"><span><b>Passage {{ h.number }}</b> of {{ h.total }}</span> <span>{{ h.kind_label }}</span> <span>old line {{ h.old_start }} · new line {{ h.new_start }}</span>
+{%- if h.cited_by | length > 1 %} <span>cited by claims {% for n in h.cited_by %}<a href="#claim-{{ n }}">{{ n }}</a>{{ " and " if loop.revindex == 2 else ", " if not loop.last else "" }}{% endfor %}</span>{% endif %}</p>
+{%- if h.spacing_only %}
+<p class="note">Only spacing or line breaks changed.</p>
+{%- endif %}
 <div class="hb">
 {%- for line in h.context_before %}
 <div class="ln cx"><span class="mk" aria-hidden="true"></span><span class="sr">Context:</span> <span class="tx">{{ line }}</span></div>
@@ -26,28 +31,18 @@
 </section>
 {%- endmacro %}
 
-{#- One feed entry (home, /changes/, company history). Citation links are
-    plain anchors into the change page — they work with JS disabled. -#}
-{% macro feed_item(item, level=2) -%}
-<li class="item">
-<p class="item-meta">
-<span class="when"><time datetime="{{ item.date }}">{{ item.date }}</time></span>
-<a class="who" href="{{ item.company_url }}">{{ item.company_name }}</a>
-<span class="doct">{{ item.doc_title }}</span>
-</p>
-<h{{ level }} class="headline"><a href="{{ item.url }}">{{ item.headline }}</a></h{{ level }}>
-{%- if item.bullets %}
-<ul class="sum">
-{%- for bullet in item.bullets %}
-<li>{{ bullet.text }}{% for cite in bullet.citations %} <a class="cit" href="{{ item.url }}#{{ cite.hunk }}" title="Jump to the changed passage">[{{ cite.hunk | upper }}]</a>{% endfor %}</li>
-{%- endfor %}
-</ul>
+{#- One entry in a list of Change records (home, /changes/, a Company page):
+    when · Company · Document, the headline, the first Claim, the counts. -#}
+{% macro entry(item, level=2) -%}
+<li class="entry">
+<p class="when"><time datetime="{{ item.date }}">{{ item.date }}</time> · <a href="{{ item.company_url }}">{{ item.company_name }}</a> · {{ item.doc_title }}</p>
+<h{{ level }}><a href="{{ item.url }}">{{ item.headline }}</a></h{{ level }}>
+{%- if item.effective_date %}
+<p class="effdate">{{ item.effective_date }}</p>
 {%- endif %}
-<p class="stats">
-<span class="plus"><span class="n">+{{ item.added_chars }}</span> added</span>
-<span class="minus"><span class="n">−{{ item.removed_chars }}</span> removed</span>
-<span><span class="n">{{ item.hunk_count }}</span> passage{{ "s" if item.hunk_count != 1 else "" }}</span>
-<span class="badge">similarity {{ item.badge }}</span>
-</p>
+{%- if item.first_claim %}
+<p>{{ item.first_claim }}{% if item.claims | length > 1 %} <a href="{{ item.url }}">Read all {{ item.claims | length }} claims and the evidence</a>{% endif %}</p>
+{%- endif %}
+<p class="counts">{{ item.passages }} changed · {% if item.added_chars != "0" and item.removed_chars != "0" %}<span class="plus">+{{ item.added_chars }}</span> / <span class="minus">−{{ item.removed_chars }}</span> characters{% elif item.added_chars != "0" %}<span class="plus">+{{ item.added_chars }}</span> characters added{% else %}<span class="minus">−{{ item.removed_chars }}</span> characters removed{% endif %} · {{ item.unchanged }}</p>
 </li>
 {%- endmacro %}
