@@ -177,9 +177,13 @@ Non-negotiable floor, from measured failures in v0.2.0:
 - ~~Design direction~~ — **re-decided 2026-09-27: direction D, "register"**,
   with Literata self-hosted as the one typeface (`prototypes/README.md`,
   issue #37). Provisional under the owner's delegation.
-- ~~Whether word-level intra-line highlighting ships in v1~~ — **resolved
-  2026-08-19: no.** Line-level marks in v1; the hunk schema reserves
-  `word_spans` so it can ship later without a format change. See
+- ~~Whether word-level intra-line highlighting ships in v1~~ — **re-decided
+  2026-09-27: yes, at launch.** Spans are computed at build time in
+  `inplain/site.py` from a Hunk's removed and added text and rendered as
+  `<del>`/`<ins>` inside the stacked lines (strike and underline, never colour
+  alone); records are untouched, `word_spans` stays `null` at
+  `schema_version` 1, and Citations still validate against whole lines on
+  their Side. Provisional under the owner's delegation; see issue #38 and
   `docs/decisions/G1-word-level-highlighting.md`.
 
 ## 12. Decisions
