@@ -2,24 +2,30 @@
 {% import "macros.html" as m %}
 {% block main %}
 <h1>All changes</h1>
-{%- if companies_with_changes %}
-<nav aria-label="Filter by company">
-<h2>By company</h2>
-<p class="stats">
-{%- for company in companies_with_changes %}
-<span><a href="{{ company.url }}">{{ company.name }}</a> <span class="badge">{{ company.change_count }}</span></span>
-{%- endfor %}
-</p>
-</nav>
-{%- endif %}
 {%- if items %}
-<h2>Every material change, newest first</h2>
-<ul class="feed">
-{%- for item in items %}
-{{ m.feed_item(item, level=3) }}
+<p class="lede">Every material change on record, newest first.
+{{ site.published }} change{{ "s" if site.published != 1 else "" }} from
+{{ companies_with_changes | length }} compan{{ "ies" if companies_with_changes | length != 1 else "y" }}.</p>
+<nav aria-label="Filter by company">
+<table>
+<caption class="sr">Changes on record by company</caption>
+<thead><tr><th scope="col">Company</th><th scope="col" class="num">Changes</th></tr></thead>
+<tbody>
+{%- for company in companies_with_changes %}
+<tr><th scope="row"><a href="{{ company.url }}">{{ company.name }}</a></th><td class="num">{{ company.change_count }}</td></tr>
 {%- endfor %}
-</ul>
+</tbody>
+</table>
+</nav>
+<h2 class="list-h">Newest first</h2>
+<ol class="entries">
+{%- for item in items %}
+{{ m.entry(item, level=3) }}
+{%- endfor %}
+</ol>
 {%- else %}
-<p>No material changes recorded yet.</p>
+<p class="lede">No material changes recorded yet. The
+<a href="/companies/">watched companies</a> are read once a day; the first
+change appears here and in the <a href="/feed.xml">Atom feed</a>.</p>
 {%- endif %}
 {% endblock %}

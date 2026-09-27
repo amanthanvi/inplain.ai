@@ -1,14 +1,29 @@
 {#- Base skeleton: skip link, masthead, one <main>, footer. Every page is a
-    complete static document — no script, ever (AC-7). -#}
+    complete static document — no script, ever (AC-7). Share metadata is
+    text only: no image, no generator. -#}
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>{{ page.title }}</title>
-{%- if page.description %}
 <meta name="description" content="{{ page.description }}">
+{%- if page.url %}
+<link rel="canonical" href="{{ page.url }}">
 {%- endif %}
+<meta property="og:site_name" content="inplain.ai">
+<meta property="og:type" content="{{ page.share.type }}">
+<meta property="og:title" content="{{ page.share.title }}">
+<meta property="og:description" content="{{ page.share.description or page.description }}">
+{%- if page.url %}
+<meta property="og:url" content="{{ page.url }}">
+{%- endif %}
+{%- if page.share.published_time %}
+<meta property="article:published_time" content="{{ page.share.published_time }}">
+{%- endif %}
+<meta name="twitter:card" content="summary">
+<link rel="preload" href="/static/fonts/Literata-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/static/tokens.css">
 <link rel="stylesheet" href="/static/site.css">
 <link rel="alternate" type="application/atom+xml" title="inplain.ai — material policy changes" href="/feed.xml">
@@ -20,10 +35,11 @@
 <a class="skip" href="#main">Skip to content</a>
 <header class="masthead">
 <div class="wrap">
-<a class="site-name" href="/">inplain.ai</a>
+<a class="brand" href="/">inplain.ai</a>
 <nav class="site-nav" aria-label="Site">
 <a href="/changes/"{% if page.is_changes_index %} aria-current="page"{% elif page.nav == "changes" %} aria-current="true"{% endif %}>Changes</a>
 <a href="/companies/"{% if page.is_companies_index %} aria-current="page"{% elif page.nav == "companies" %} aria-current="true"{% endif %}>Companies</a>
+<a href="/feed.xml" type="application/atom+xml">Feed</a>
 </nav>
 </div>
 </header>
@@ -34,9 +50,11 @@
 </main>
 <footer class="site-foot">
 <div class="wrap">
-<span>inplain.ai — what changed, why it matters, and the evidence.</span>
+<p>inplain.ai — what changed, why it matters, and the evidence.</p>
 {%- if site.latest %}
-<span>{{ site.published }} change record{{ "s" if site.published != 1 else "" }} · latest {{ site.latest }}</span>
+<p>{{ site.published }} change record{{ "s" if site.published != 1 else "" }} · latest {{ site.latest }}</p>
+{%- else %}
+<p>Watching {{ site.documents }} documents from {{ site.catalog_companies }} companies.</p>
 {%- endif %}
 </div>
 </footer>

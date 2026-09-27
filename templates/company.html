@@ -1,27 +1,32 @@
 {% extends "base.html" %}
 {% import "macros.html" as m %}
 {% block main %}
-<div class="co-head">
-<p class="kicker"><span class="tick"></span><span class="co">{{ company.name }}</span></p>
+<p class="crumb"><a href="/companies/">Companies</a> · {{ company.name }}</p>
 <h1>{{ company.name }}</h1>
-</div>
-<h2>Tracked documents</h2>
+<p class="lede">{{ company.summary }}</p>
+<h2>Watched documents</h2>
 {%- if company.docs %}
-<ul class="docs">
+<table>
+<caption class="sr">Watched documents of {{ company.name }}</caption>
+<thead><tr><th scope="col">Document</th><th scope="col">Last change</th><th scope="col">Source</th></tr></thead>
+<tbody>
 {%- for doc in company.docs %}
-<li><span class="doc-name">{{ doc.title }}</span>{% if doc.last_changed %} <span>last change <time datetime="{{ doc.last_changed }}">{{ doc.last_changed }}</time></span>{% endif %}{% if doc.source_url %} <span class="doc-src"><a href="{{ doc.source_url }}" rel="external">source</a></span>{% endif %}</li>
+<tr><th scope="row">{{ doc.title }}</th>
+<td>{% if doc.last_changed %}<time datetime="{{ doc.last_changed }}">{{ doc.last_changed }}</time>{% else %}none on record{% endif %}</td>
+<td>{% if doc.source_url %}<a href="{{ doc.source_url }}" rel="external">{{ doc.source_host }}</a>{% endif %}</td></tr>
 {%- endfor %}
-</ul>
+</tbody>
+</table>
 {%- else %}
-<p>No documents are tracked for this company.</p>
+<p>No documents are watched for this company.</p>
 {%- endif %}
-<h2>Change history</h2>
+<h2 class="list-h">Changes on record</h2>
 {%- if items %}
-<ul class="feed">
+<ol class="entries">
 {%- for item in items %}
-{{ m.feed_item(item, level=3) }}
+{{ m.entry(item, level=3) }}
 {%- endfor %}
-</ul>
+</ol>
 {%- else %}
 <p>No material changes recorded yet for {{ company.name }}.</p>
 {%- endif %}
