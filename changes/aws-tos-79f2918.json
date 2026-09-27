@@ -30,11 +30,11 @@
   ],
   "id": "aws-tos-79f2918",
   "materiality": {
-    "added_chars": 182,
+    "added_chars": 0,
     "effective_date_change": null,
-    "material": true,
-    "reason": "added_prose_exceeds_sentence_threshold",
-    "removed_chars": 182,
+    "material": false,
+    "reason": "whitespace_only",
+    "removed_chars": 0,
     "similarity_badge": 0.9973
   },
   "parent_commit": "ea91d1dbac4094341d656914cb56236fca7b5a5a",

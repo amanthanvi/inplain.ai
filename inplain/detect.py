@@ -25,6 +25,9 @@ Decisions, each traceable to a verified v0.2.0 defect:
   the changed lines, surfaced as ``materiality.effective_date_change``, and an
   effective-date-only change is material. They are never treated as cosmetic.
 * **Known-cosmetic suppression** covers copyright lines and page numbers only.
+* **A spacing-only Hunk buys nothing**: when its Sides differ only in
+  whitespace or line breaks it is left out of the gate (:func:`spacing_only`,
+  the same rule the site uses to say "Only spacing or line breaks changed").
 * **Every suppression records its reason**: an immaterial change still gets a
   record, with ``material: false`` and a machine-readable reason. Suppressed
   means unpublished, never unrecorded.
@@ -70,6 +73,7 @@ REASON_REMOVED = "removed_prose_exceeds_sentence_threshold"
 REASON_EFFECTIVE_DATE = "effective_date_change"
 REASON_BELOW_THRESHOLD = "below_sentence_threshold"
 REASON_COSMETIC = "known_cosmetic_only"
+REASON_SPACING = "whitespace_only"
 
 # Known-cosmetic patterns: copyright lines and page numbers, and NOTHING that
 # could match an effective-date line (v0.2.0 stripped those as noise, which
@@ -178,6 +182,14 @@ def normalized_chars(lines: Sequence[str]) -> int:
     return sum(len(_WHITESPACE.sub(" ", line).strip()) for line in lines)
 
 
+def spacing_only(removed: Sequence[str], added: Sequence[str]) -> bool:
+    """Both Sides exist and differ only in whitespace or line breaks. One rule
+    for the Materiality gate and the site's "Only spacing" label."""
+    return bool(removed and added) and (
+        "".join("".join(removed).split()) == "".join("".join(added).split())
+    )
+
+
 def _first_effective_date(lines: Sequence[str]) -> str | None:
     """The date from the first effective-date line among ``lines``, or None."""
     for line in lines:
@@ -249,21 +261,28 @@ def assess_materiality(diff: Diff) -> Materiality:
     material on their own (AC-5). ``added_chars``/``removed_chars`` record
     exactly what was gated. The document-similarity ratio takes no part in the
     decision — it is stored as a display badge and nothing more.
+    Spacing-only Hunks are left out entirely: their Sides carry the same
+    words, so they add and remove nothing.
     """
-    removed_prose = [line for line in diff.removed_lines if not is_cosmetic_line(line)]
-    added_prose = [line for line in diff.added_lines if not is_cosmetic_line(line)]
+    changed = [h for h in diff.hunks if not spacing_only(h.removed, h.added)]
+    removed_lines = [line for hunk in changed for line in hunk.removed]
+    added_lines = [line for hunk in changed for line in hunk.added]
+    removed_prose = [line for line in removed_lines if not is_cosmetic_line(line)]
+    added_prose = [line for line in added_lines if not is_cosmetic_line(line)]
     added_chars = normalized_chars(added_prose)
     removed_chars = normalized_chars(removed_prose)
 
-    date_from = _first_effective_date(diff.removed_lines)
-    date_to = _first_effective_date(diff.added_lines)
+    date_from = _first_effective_date(removed_lines)
+    date_to = _first_effective_date(added_lines)
     effective_touched = date_from is not None or date_to is not None
     # One-sided is real: a date line added where none was, or removed with no
     # replacement, still describes what happened to the date — the absent side
     # is recorded as null so the renderer can say so.
     effective_date_change = {"from": date_from, "to": date_to} if effective_touched else None
 
-    if added_chars >= SENTENCE_CHARS:
+    if diff.hunks and not changed:
+        material, reason = False, REASON_SPACING
+    elif added_chars >= SENTENCE_CHARS:
         material, reason = True, REASON_ADDED
     elif removed_chars >= SENTENCE_CHARS:
         material, reason = True, REASON_REMOVED
@@ -271,7 +290,7 @@ def assess_materiality(diff: Diff) -> Materiality:
         # An effective-date-only change IS material (AC-5), and the reason
         # records exactly that.
         material, reason = True, REASON_EFFECTIVE_DATE
-    elif not added_prose and not removed_prose and (diff.added_lines or diff.removed_lines):
+    elif not added_prose and not removed_prose and (added_lines or removed_lines):
         material, reason = False, REASON_COSMETIC
     else:
         material, reason = False, REASON_BELOW_THRESHOLD
