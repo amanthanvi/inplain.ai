@@ -93,7 +93,8 @@ from . import REPO_ROOT, schema, setup_cli_logging
 log = logging.getLogger("inplain.summarize")
 
 # -- model -----------------------------------------------------------------
-# Measured, not provisional (docs/model-eval.md, 2026-09-27 re-run, issue #36):
+# Measured on 2026-09-27 (docs/model-eval.md, issue #36; provisional under the
+# owner's delegation until the cutover):
 # over three passes of the 17-entry golden set, grok-4.7 returned 528/528
 # Valid citations with 0 parse failures and the highest Hunk coverage (99.6%);
 # gemini-3.8-flash was also clean (198/198) and is the fastest, from a

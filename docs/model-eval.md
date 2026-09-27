@@ -19,8 +19,12 @@ were measured on the same harness, brought up to the August method first
 tokens, 3 retries, 4-way parallel, and **the provider pinned per model with
 fallbacks off**, with the served provider recorded on every call. Raw results
 per pass: `eval/results/openrouter-bakeoff-2026-09/pass{1,2,3}.json`, plus
-`aggregate.json`. Total spend: **$1.33** on OpenRouter's meter, against the
-$10 ceiling.
+`aggregate.json`. Total spend: **$1.33 on OpenRouter's meter plus about
+$1.13 billed by Google directly**, because the two Gemini models ran on the
+Google API key attached to the owner's OpenRouter account (`is_byok: true`
+in the results); about $2.46 in all, against the $10 ceiling. The same
+applies in production: the Gemini fallback works only while that Google key
+stays attached to the OpenRouter account whose key is `MODEL_API_KEY`.
 
 Passes: pass 1 on all ten; pass 2 on the eight with no parse failure and at
 least 99% validity; pass 3 on the four with a clean sheet after two passes.
@@ -34,7 +38,7 @@ least 99% validity; pass 3 on the four with a clean sheet after two passes.
 | `qwen/qwen3.8-flash` | 1 | **100.0%** (93/93) | 2/17 | 88.2% | 41.1s | $0.56 |
 | `deepseek/deepseek-v4.1-flash` | 2 | **99.6%** (262/263) | 0/34 | 99.4% | 29.5s | $0.64 |
 | `anthropic/claude-sonnet-5` | 2 | **99.6%** (228/229) | 0/34 | 97.5% | 8.0s | $4.98 |
-| `openai/gpt-6-luna` | 2 | **99.6%** (219/220) | 0/34 | 96.6% | 5.7s | $0.17 |
+| `openai/gpt-6-luna` | 2 | **99.5%** (219/220) | 0/34 | 96.6% | 5.7s | $0.17 |
 | `xiaomi/mimo-v2.6-flash` | 2 | **98.7%** (374/379) | 0/34 | 99.2% | 19.2s | $0.19 |
 | `minimax/minimax-m3` | 1 | **95.2%** (120/126) | 1/17 | 90.5% | 11.3s | $0.81 |
 
