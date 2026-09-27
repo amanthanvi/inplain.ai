@@ -174,6 +174,9 @@ Non-negotiable floor, from measured failures in v0.2.0:
   (`docs/model-eval.md`). The 17-entry golden set and `eval/run_eval.py` are
   committed; the pick is confirmed by the measured exact-quote citation
   validity rate once an API key lands in repo secrets.
+- ~~Design direction~~ — **re-decided 2026-09-27: direction D, "register"**,
+  with Literata self-hosted as the one typeface (`prototypes/README.md`,
+  issue #37). Provisional under the owner's delegation.
 - ~~Whether word-level intra-line highlighting ships in v1~~ — **resolved
   2026-08-19: no.** Line-level marks in v1; the hunk schema reserves
   `word_spans` so it can ship later without a format change. See
