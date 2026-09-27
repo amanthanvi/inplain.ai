@@ -1,8 +1,8 @@
 """T3 — cited summaries and side-aware citation validation (issue #23).
 
-No network: the HTTP call is injected into :class:`AnthropicClient` (tests hand
-it real ``requests.Response`` objects, so the error classification runs for
-real), and the Summarizer takes the client as an argument.
+No network: the HTTP call is injected into :class:`OpenRouterClient` (tests
+hand it real ``requests.Response`` objects, so the error classification runs
+for real), and the Summarizer takes the client as an argument.
 
 The load-bearing test in this file is
 :class:`TestAC3SweepOverWrittenSummaries`: every citation in every summary this
@@ -24,10 +24,10 @@ import requests
 from inplain import schema
 from inplain import summarize
 from inplain.summarize import (
-    AnthropicClient,
     ModelOutage,
     ModelReplyError,
     ModelRequestError,
+    OpenRouterClient,
     Summarizer,
     build_prompt,
     citation_is_valid,
@@ -39,7 +39,8 @@ from inplain.summarize import (
     select_hunks,
 )
 
-from run_eval import load_golden  # eval/ is on sys.path via conftest
+import run_eval  # eval/ is on sys.path via conftest
+from run_eval import load_golden
 
 # ---------------------------------------------------------------------------
 # fixtures — change records built from the golden hunks
@@ -170,13 +171,12 @@ def http_response(payload=None, status=200, *, text=None) -> requests.Response:
     return response
 
 
-def messages_body(text: str) -> dict:
+def completion_body(text: str | None) -> dict:
     return {
-        "id": "msg_1",
-        "type": "message",
-        "role": "assistant",
+        "id": "gen-1",
         "model": summarize.DEFAULT_MODEL,
-        "content": [{"type": "text", "text": text}],
+        "provider": summarize.PROVIDER_PINS[summarize.DEFAULT_MODEL],
+        "choices": [{"message": {"role": "assistant", "content": text}, "finish_reason": "stop"}],
     }
 
 
@@ -383,21 +383,70 @@ class TestSelectHunks:
 # ---------------------------------------------------------------------------
 
 
-class TestAnthropicClient:
-    def _client(self, post):
-        return AnthropicClient("test-key", post=post)
+MODEL = summarize.DEFAULT_MODEL
 
-    def test_happy_path_returns_the_text_blocks(self):
+
+class TestOpenRouterClient:
+    def _client(self, post):
+        return OpenRouterClient("test-key", post=post)
+
+    def test_happy_path_returns_the_message_content(self):
         seen = {}
 
         def post(url, headers=None, json=None, timeout=None):
             seen.update(url=url, headers=headers, payload=json, timeout=timeout)
-            return http_response(messages_body('{"bullets": []}'))
+            return http_response(completion_body('{"bullets": []}'))
 
-        assert self._client(post).complete("m", "sys", "user") == '{"bullets": []}'
-        assert seen["headers"]["x-api-key"] == "test-key"
-        assert seen["payload"]["system"] == "sys"
-        assert seen["payload"]["messages"][0]["content"] == "user"
+        assert self._client(post).complete(MODEL, "sys", "user") == '{"bullets": []}'
+        assert seen["url"] == "https://openrouter.ai/api/v1/chat/completions"
+        assert seen["headers"]["Authorization"] == "Bearer test-key"
+        assert seen["payload"]["model"] == MODEL
+        assert seen["payload"]["messages"] == [
+            {"role": "system", "content": "sys"},
+            {"role": "user", "content": "user"},
+        ]
+
+    def test_the_provider_is_pinned_with_no_fallback_and_no_data_collection(self):
+        seen = {}
+
+        def post(url, headers=None, json=None, timeout=None):
+            seen.update(payload=json)
+            return http_response(completion_body('{"bullets": []}'))
+
+        self._client(post).complete(MODEL, "s", "u")
+        assert seen["payload"]["provider"] == {
+            "order": [summarize.PROVIDER_PINS[MODEL]],
+            "allow_fallbacks": False,
+            "data_collection": "deny",
+        }
+        assert "require_parameters" not in seen["payload"]["provider"]
+
+    def test_temperature_zero_except_for_models_that_reject_it(self, monkeypatch):
+        monkeypatch.setitem(summarize.PROVIDER_PINS, "vendor/accepts", "vendor")
+        monkeypatch.setitem(summarize.PROVIDER_PINS, "anthropic/claude-sonnet-5", "anthropic")
+        sent = []
+
+        def post(url, headers=None, json=None, timeout=None):
+            sent.append(json)
+            return http_response(completion_body('{"bullets": []}'))
+
+        self._client(post).complete("vendor/accepts", "s", "u")
+        self._client(post).complete("anthropic/claude-sonnet-5", "s", "u")
+        assert sent[0]["temperature"] == 0
+        assert "temperature" not in sent[1]
+
+    def test_the_request_matches_the_method_the_bake_off_measured(self):
+        # the output cap and the temperature rule are the harness's, so the
+        # measured result predicts production
+        assert summarize.MAX_OUTPUT_TOKENS == run_eval.MAX_TOKENS
+        assert summarize.NO_TEMPERATURE == run_eval.NO_TEMPERATURE
+
+    def test_an_unpinned_model_is_refused_without_a_call(self):
+        def post(*args, **kwargs):  # pragma: no cover - must not be reached
+            raise AssertionError("an unpinned model must never reach the network")
+
+        with pytest.raises(ModelRequestError, match="no provider pin"):
+            self._client(post).complete("vendor/unlisted", "s", "u")
 
     @pytest.mark.parametrize(
         "exc",
@@ -408,7 +457,7 @@ class TestAnthropicClient:
             raise exc
 
         with pytest.raises(ModelOutage):
-            self._client(post).complete("m", "s", "u")
+            self._client(post).complete(MODEL, "s", "u")
 
     @pytest.mark.parametrize("status", [429, 500, 502, 503, 529])
     def test_server_errors_and_rate_limits_are_outages(self, status):
@@ -416,22 +465,22 @@ class TestAnthropicClient:
             return http_response({"error": "x"}, status=status)
 
         with pytest.raises(ModelOutage):
-            self._client(post).complete("m", "s", "u")
+            self._client(post).complete(MODEL, "s", "u")
 
-    @pytest.mark.parametrize("status", [400, 401, 403, 404])
+    @pytest.mark.parametrize("status", [400, 401, 402, 403, 404])
     def test_client_errors_are_request_errors_not_outages(self, status):
         def post(*args, **kwargs):
             return http_response({"error": "x"}, status=status)
 
         with pytest.raises(ModelRequestError):
-            self._client(post).complete("m", "s", "u")
+            self._client(post).complete(MODEL, "s", "u")
 
     def test_request_error_message_does_not_leak_the_key(self):
         def post(*args, **kwargs):
-            return http_response({"error": "invalid x-api-key"}, status=401)
+            return http_response({"error": {"message": "No auth credentials found"}}, status=401)
 
         with pytest.raises(ModelRequestError) as info:
-            self._client(post).complete("m", "s", "u")
+            self._client(post).complete(MODEL, "s", "u")
         assert "test-key" not in str(info.value)
 
     def test_non_json_body_is_a_reply_error(self):
@@ -439,19 +488,24 @@ class TestAnthropicClient:
             return http_response(text="<html>gateway</html>")
 
         with pytest.raises(ModelReplyError):
-            self._client(post).complete("m", "s", "u")
+            self._client(post).complete(MODEL, "s", "u")
 
-    @pytest.mark.parametrize("body", [{"content": "not a list"}, {}, {"content": [{"type": "tool_use"}]}, []])
+    @pytest.mark.parametrize(
+        "body",
+        [{"choices": "not a list"}, {}, {"choices": []}, {"choices": [{}]}, []],
+    )
     def test_unexpected_envelope_shape_is_a_reply_error(self, body):
         def post(*args, **kwargs):
             return http_response(body)
 
-        if body == {"content": [{"type": "tool_use"}]}:
-            # no text blocks is an empty string, not a crash
-            assert self._client(post).complete("m", "s", "u") == ""
-            return
         with pytest.raises(ModelReplyError):
-            self._client(post).complete("m", "s", "u")
+            self._client(post).complete(MODEL, "s", "u")
+
+    def test_null_content_is_an_empty_reply_not_a_crash(self):
+        def post(*args, **kwargs):
+            return http_response(completion_body(None))
+
+        assert self._client(post).complete(MODEL, "s", "u") == ""
 
     def test_unclassified_transport_faults_are_not_outages(self):
         # no fallback spend for a failure mode we have not understood
@@ -459,13 +513,14 @@ class TestAnthropicClient:
             raise requests.exceptions.TooManyRedirects("loop")
 
         with pytest.raises(ModelRequestError):
-            self._client(post).complete("m", "s", "u")
+            self._client(post).complete(MODEL, "s", "u")
 
 
 class TestResolveApiKey:
-    def test_prefers_model_api_key_then_anthropic(self):
-        assert resolve_api_key({"MODEL_API_KEY": "a", "ANTHROPIC_API_KEY": "b"}) == "a"
-        assert resolve_api_key({"ANTHROPIC_API_KEY": "b"}) == "b"
+    def test_prefers_model_api_key_then_openrouter(self):
+        assert resolve_api_key({"MODEL_API_KEY": "a", "OPENROUTER_API_KEY": "b"}) == "a"
+        assert resolve_api_key({"OPENROUTER_API_KEY": "b"}) == "b"
+        assert resolve_api_key({"ANTHROPIC_API_KEY": "c"}) is None
 
     def test_blank_and_missing_are_no_key(self):
         assert resolve_api_key({}) is None
@@ -821,12 +876,12 @@ class TestCli:
         path = write_record(changes, make_record())
         before = path.read_bytes()
         monkeypatch.delenv("MODEL_API_KEY", raising=False)
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
 
         def never(*args, **kwargs):  # pragma: no cover - must not be reached
             raise AssertionError("no client may be built without a key")
 
-        monkeypatch.setattr(summarize, "AnthropicClient", never)
+        monkeypatch.setattr(summarize, "OpenRouterClient", never)
         monkeypatch.setattr(
             Summarizer, "run", lambda *a, **k: pytest.fail("the run must not start")
         )
@@ -839,7 +894,7 @@ class TestCli:
         path = write_record(changes, make_record())
         before = path.read_bytes()
         monkeypatch.delenv("MODEL_API_KEY", raising=False)
-        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
         code = summarize.main(
             ["--root", str(changes.parent), "--changes", str(changes), "--dry-run"]
         )
@@ -851,16 +906,16 @@ class TestCli:
         write_record(changes, make_record())
         monkeypatch.setenv("MODEL_API_KEY", "k")
         monkeypatch.setattr(
-            summarize, "AnthropicClient", lambda *a, **k: FakeClient("COMPLIANT")
+            summarize, "OpenRouterClient", lambda *a, **k: FakeClient("COMPLIANT")
         )
         code = summarize.main(["--root", str(changes.parent), "--changes", str(changes)])
         assert code == 1
         assert "failed=1" in capsys.readouterr().out
 
     def test_nothing_to_do_is_success(self, changes, monkeypatch, capsys):
-        monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
+        monkeypatch.setenv("OPENROUTER_API_KEY", "k")
         monkeypatch.setattr(
-            summarize, "AnthropicClient", lambda *a, **k: FakeClient("unused")
+            summarize, "OpenRouterClient", lambda *a, **k: FakeClient("unused")
         )
         code = summarize.main(["--root", str(changes.parent), "--changes", str(changes)])
         assert code == 0
@@ -870,7 +925,7 @@ class TestCli:
         write_record(changes, make_record())
         client = FakeClient(reply([bullet("t", [cite(quote="You may opt out")])]))
         monkeypatch.setenv("MODEL_API_KEY", "k")
-        monkeypatch.setattr(summarize, "AnthropicClient", lambda *a, **k: client)
+        monkeypatch.setattr(summarize, "OpenRouterClient", lambda *a, **k: client)
         summarize.main(
             [
                 "--root",

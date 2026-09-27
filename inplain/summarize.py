@@ -68,7 +68,7 @@ Other decisions, each traceable to a verified v0.2.0 defect:
   truncated or invalid record behind.
 
 Keys come from the environment only — ``MODEL_API_KEY``, falling back to
-``ANTHROPIC_API_KEY`` — never from files, and their absence is refused before
+``OPENROUTER_API_KEY`` — never from files, and their absence is refused before
 anything is read or written.
 """
 
@@ -93,16 +93,34 @@ from . import schema
 log = logging.getLogger("inplain.summarize")
 
 # -- model -----------------------------------------------------------------
-# Provisional choice from docs/model-eval.md: claude-sonnet-5 via the Anthropic
-# Messages API, direct. The single fallback is used ONLY when the primary is
-# unavailable (outage class), never on malformed output.
-DEFAULT_MODEL = "claude-sonnet-5"
-FALLBACK_MODEL = "claude-opus-4-8"
+# PLACEHOLDERS (#36): set DEFAULT_MODEL, FALLBACK_MODEL and their provider pins
+# from the measured golden-set bake-off before this ships. The single fallback
+# is used ONLY when the primary is unavailable (outage class), never on
+# malformed output.
+DEFAULT_MODEL = "PLACEHOLDER/primary-set-by-36-bakeoff"
+FALLBACK_MODEL = "PLACEHOLDER/fallback-set-by-36-bakeoff"
 
-API_URL = "https://api.anthropic.com/v1/messages"
-ANTHROPIC_VERSION = "2023-06-01"
+# The one OpenRouter provider each model is served by, with fallbacks off, so
+# production runs on the endpoint that was measured. Unpinned, OpenRouter
+# load-balances by price across backends and quantizations. A model with no
+# pin is refused before any call.
+PROVIDER_PINS = {
+    DEFAULT_MODEL: "PLACEHOLDER-provider",
+    FALLBACK_MODEL: "PLACEHOLDER-provider",
+}
+
+# Models that get no `temperature` (Anthropic returns 400 for non-default
+# sampling on Sonnet 5), exactly as eval/run_eval.py measured them.
+# `require_parameters` is never sent: paired with `temperature` it leaves these
+# models no endpoint.
+NO_TEMPERATURE = frozenset({"openai/gpt-6-luna", "anthropic/claude-sonnet-5"})
+
+API_URL = "https://openrouter.ai/api/v1/chat/completions"
 REQUEST_TIMEOUT = 180  # seconds
-MAX_OUTPUT_TOKENS = 4096
+# The cap the bake-off measured at (eval/run_eval.py). Reasoning tokens count
+# toward it, so a lower cap here could truncate replies the measurement
+# counted as clean.
+MAX_OUTPUT_TOKENS = 12000
 
 # Outage-class HTTP statuses: retry later, and the ONE fallback model is
 # allowed. Everything else 4xx is a request/configuration fault — a fallback
@@ -441,11 +459,11 @@ PER_RECORD_STATUSES = frozenset({400, 413, 422})
 
 class ModelReplyError(ModelError):
     """The HTTP call succeeded but the response body was not a usable
-    Messages-API payload. Malformed output NEVER triggers the fallback."""
+    chat-completions payload. Malformed output NEVER triggers the fallback."""
 
 
-class AnthropicClient:
-    """The Anthropic Messages API, with the HTTP call injected.
+class OpenRouterClient:
+    """OpenRouter chat completions, with the HTTP call injected.
 
     ``post`` is the seam: production passes ``requests.post``, tests pass a
     fake that returns real ``requests.Response`` objects, so error
@@ -466,17 +484,27 @@ class AnthropicClient:
         self.url = url
 
     def complete(self, model: str, system: str, user: str) -> str:
+        if model not in PROVIDER_PINS:
+            raise ModelRequestError(f"no provider pin for {model}; add it to PROVIDER_PINS")
         headers = {
-            "x-api-key": self._api_key,
-            "anthropic-version": ANTHROPIC_VERSION,
-            "content-type": "application/json",
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
         }
-        payload = {
+        payload: dict[str, Any] = {
             "model": model,
             "max_tokens": MAX_OUTPUT_TOKENS,
-            "system": system,
-            "messages": [{"role": "user", "content": user}],
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "provider": {
+                "order": [PROVIDER_PINS[model]],
+                "allow_fallbacks": False,
+                "data_collection": "deny",
+            },
         }
+        if model not in NO_TEMPERATURE:
+            payload["temperature"] = 0
         try:
             response = self._post(
                 self.url, headers=headers, json=payload, timeout=self.timeout
@@ -509,19 +537,18 @@ class AnthropicClient:
             raise ModelReplyError(f"response body was not JSON: {exc}") from exc
 
         try:
-            blocks = body["content"]
-            text = "".join(
-                block["text"] for block in blocks if block.get("type") == "text"
-            )
-        except (KeyError, IndexError, TypeError, AttributeError) as exc:
+            text = body["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
             raise ModelReplyError(f"response had an unexpected shape: {exc}") from exc
-        return text
+        # null content (e.g. the output cap hit mid-reasoning) is an empty
+        # reply: a parse-failure no-op, never a crash.
+        return text or ""
 
 
 def resolve_api_key(env: dict[str, str] | None = None) -> str | None:
     """The key, from the environment ONLY. Never from a file, never a default."""
     source = os.environ if env is None else env
-    for name in ("MODEL_API_KEY", "ANTHROPIC_API_KEY"):
+    for name in ("MODEL_API_KEY", "OPENROUTER_API_KEY"):
         value = (source.get(name) or "").strip()
         if value:
             return value
@@ -588,7 +615,7 @@ class Summarizer:
         root: Path,
         *,
         changes_dir: Path | None = None,
-        client: AnthropicClient | None = None,
+        client: OpenRouterClient | None = None,
         model: str = DEFAULT_MODEL,
         fallback_model: str | None = FALLBACK_MODEL,
         budget: int = HUNK_CHAR_BUDGET,
@@ -875,7 +902,7 @@ def build_parser() -> argparse.ArgumentParser:
             "Write a cited summary into every material change record that does "
             "not have one. Every citation is validated against the named side "
             "of the named hunk; a claim that fails is dropped, never repaired. "
-            "The API key is read from MODEL_API_KEY or ANTHROPIC_API_KEY and "
+            "The API key is read from MODEL_API_KEY or OPENROUTER_API_KEY and "
             "from nowhere else."
         ),
     )
@@ -918,13 +945,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         api_key = resolve_api_key()
         if not api_key:
             print(
-                "No API key found. Set MODEL_API_KEY (or ANTHROPIC_API_KEY) in the "
+                "No API key found. Set MODEL_API_KEY (or OPENROUTER_API_KEY) in the "
                 "environment; keys are never read from files. Use --dry-run to see "
                 "what would be summarized without a key.",
                 file=sys.stderr,
             )
             return 2
-        client = AnthropicClient(api_key)
+        client = OpenRouterClient(api_key)
 
     root = args.root or _default_root()
     summarizer = Summarizer(
