@@ -47,12 +47,11 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from . import REPO_ROOT, setup_cli_logging
 from .schema import SchemaError
 from .site import doc_title, load_catalog, load_published_records
 
 log = logging.getLogger("inplain.feeds")
-
-_REPO = Path(__file__).resolve().parent.parent
 
 ATOM_NS = "http://www.w3.org/2005/Atom"
 # Serialize Atom as the default namespace (plain <feed>, <entry>, …).
@@ -264,11 +263,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    logging.basicConfig(
-        level=logging.WARNING, format="%(levelname)s %(message)s", stream=sys.stderr
-    )
-    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
-    root = args.root or _REPO
+    setup_cli_logging(log, args.verbose)
+    root = args.root or REPO_ROOT
     try:
         catalog = load_catalog(args.catalog or root / "catalog.json")
         published = load_published_records(args.changes or root / "changes")

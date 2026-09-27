@@ -88,7 +88,7 @@ from typing import Any
 
 import requests
 
-from . import schema
+from . import REPO_ROOT, schema, setup_cli_logging
 
 log = logging.getLogger("inplain.summarize")
 
@@ -901,16 +901,9 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _default_root() -> Path:
-    return Path(__file__).resolve().parent.parent
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    logging.basicConfig(
-        level=logging.WARNING, format="%(levelname)s %(message)s", stream=sys.stderr
-    )
-    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+    setup_cli_logging(log, args.verbose)
 
     client = None
     if not args.dry_run:
@@ -926,7 +919,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 2
         client = AnthropicClient(api_key)
 
-    root = args.root or _default_root()
+    root = args.root or REPO_ROOT
     summarizer = Summarizer(
         root,
         changes_dir=args.changes,
