@@ -467,11 +467,11 @@
   ],
   "id": "aws-privacy-ea91d1d",
   "materiality": {
-    "added_chars": 3045,
+    "added_chars": 0,
     "effective_date_change": null,
-    "material": true,
-    "reason": "added_prose_exceeds_sentence_threshold",
-    "removed_chars": 3045,
+    "material": false,
+    "reason": "whitespace_only",
+    "removed_chars": 0,
     "similarity_badge": 0.9371
   },
   "parent_commit": "62d65bdd464df625beb18c3d43df5f88b682b106",
