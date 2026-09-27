@@ -186,7 +186,7 @@ Governing Laws and Governing Courts
 “Losses” means any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys’ fees).
 “Policies” means the Acceptable Use Policy, Privacy Notice, the Site Terms, the Service Terms, and the AWS Trademark Guidelines.
 “Privacy Notice” means the privacy notice located at http://aws.amazon.com/privacy (and any successor or related locations designated by us), as may be updated by us from time to time.
-“Service” means each of the services made available by us or our affiliates, including those web services described in the Service Terms. Services do not include Third-Party Content.
+“Service” means each of the services made available by us or our affiliates, including those web services described in the Service Terms. Services do not include Third-Party Content. 
                           “Service Level Agreement” means all service level agreements that we offer with respect to the Services and post on the AWS Site, as they may be updated by us from time to time. The service level agreements we offer with respect to the Services are located at https://aws.amazon.com/legal/service-level-agreements/ (and any successor or related locations designated by us), as may be updated by us from time to time.
 “Service Terms” means the rights and restrictions for particular Services located at http://aws.amazon.com/serviceterms (and any successor or related locations designated by us), as may be updated by us from time to time.
 “Site Terms” means the terms of use of the AWS Site located at http://aws.amazon.com/terms/ (and any successor or related locations designated by us), as may be updated by us from time to time.
