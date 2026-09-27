@@ -8,6 +8,83 @@ publishes through.
 
 Raw per-model results: `eval/results/openrouter-bakeoff-2026-08-21.json`.
 
+## 2026-09-27 re-run: the measured pick is `x-ai/grok-4.7`, fallback `google/gemini-3.8-flash`
+
+Resolves issue #36 and closes the "provisional" status SPEC §11 carried since
+August. Seven candidates released or repriced since the August bake-off
+(`docs/research/2026-09-model-candidates.md`) and the three August controls
+were measured on the same harness, brought up to the August method first
+(PR #47): temperature 0 (omitted for `openai/gpt-6-luna` and
+`anthropic/claude-sonnet-5`, which reject non-default sampling), 12,000 max
+tokens, 3 retries, 4-way parallel, and **the provider pinned per model with
+fallbacks off**, with the served provider recorded on every call. Raw results
+per pass: `eval/results/openrouter-bakeoff-2026-09/pass{1,2,3}.json`, plus
+`aggregate.json`. Total spend: **$1.33 on OpenRouter's meter plus about
+$1.13 billed by Google directly**, because the two Gemini models ran on the
+Google API key attached to the owner's OpenRouter account (`is_byok: true`
+in the results); about $2.46 in all, against the $10 ceiling. The same
+applies in production: the Gemini fallback works only while that Google key
+stays attached to the OpenRouter account whose key is `MODEL_API_KEY`.
+
+Passes: pass 1 on all ten; pass 2 on the eight with no parse failure and at
+least 99% validity; pass 3 on the four with a clean sheet after two passes.
+
+| Model | Runs | Validity (valid/total citations) | Parse fails | Coverage | Mean latency | $/yr at 300 summaries |
+|---|---|---|---|---|---|---|
+| `x-ai/grok-4.7` | 3 | **100.0%** (528/528) | 0/51 | 99.6% | 18.2s | $4.18 |
+| `qwen/qwen3.7-flash` | 3 | **100.0%** (209/209) | 0/51 | 94.3% | 30.7s | $0.14 |
+| `google/gemini-3.7-flash` | 3 | **100.0%** (197/197) | 0/51 | 92.2% | 3.7s | $1.51 |
+| `google/gemini-3.8-flash` | 3 | **100.0%** (198/198) | 0/51 | 92.1% | 4.7s | $1.82 |
+| `qwen/qwen3.8-flash` | 1 | **100.0%** (93/93) | 2/17 | 88.2% | 41.1s | $0.56 |
+| `deepseek/deepseek-v4.1-flash` | 2 | **99.6%** (262/263) | 0/34 | 99.4% | 29.5s | $0.64 |
+| `anthropic/claude-sonnet-5` | 2 | **99.6%** (228/229) | 0/34 | 97.5% | 8.0s | $4.98 |
+| `openai/gpt-6-luna` | 2 | **99.5%** (219/220) | 0/34 | 96.6% | 5.7s | $0.17 |
+| `xiaomi/mimo-v2.6-flash` | 2 | **98.7%** (374/379) | 0/34 | 99.2% | 19.2s | $0.19 |
+| `minimax/minimax-m3` | 1 | **95.2%** (120/126) | 1/17 | 90.5% | 11.3s | $0.81 |
+
+Notes on the field:
+
+- `x-ai/grok-4.7` was the only model with **zero defects of either kind over
+  three passes and 528 citations** while also citing 99.6% of Hunks. Its mean
+  latency hides a long tail: median 4.5 s, slowest call 136 s. That is inside
+  the crawl's 30-minute budget for a day's records, and `summarize.py`'s
+  request timeout is 300 s so one slow call is not misread as an outage.
+- `google/gemini-3.8-flash` and `google/gemini-3.7-flash` were equally clean
+  and are the fastest in the field (medians around 3 s), but cover about 92%
+  of Hunks: the summaries are thinner. 3.8 is preferred over 3.7 as the newer
+  snapshot at the same price. Google's promo price doubles on 2027-01-01.
+- `qwen/qwen3.7-flash` was clean again (as in August, near enough) at nine
+  cents a year, but takes 30 s a call with 2,500 reasoning tokens and offers
+  no structured outputs.
+- `anthropic/claude-sonnet-5`, the provisional production default since
+  August, measured 228/229 with no parse failures: good, but not better than
+  the winners, and the most expensive. This settles the transport question:
+  Anthropic-direct had no measured justification, and production now runs
+  through OpenRouter.
+- `deepseek/deepseek-v4.1-flash` could not be served by DeepSeek's own
+  endpoint: the account's no-training guardrail removes it, and with
+  fallbacks off there is no endpoint. Re-measured pinned to Fireworks:
+  262/263, slow (29.5 s mean). `xiaomi/mimo-v2.6-flash` has the widest
+  coverage after Grok but five invalid citations. `minimax/minimax-m3`, the
+  August fallback, dropped to 95.2% on its now-pinned first-party endpoint.
+
+Decision, by the August rubric (validity, then parse reliability, then
+coverage, then latency; cost only breaks near-ties): **primary
+`x-ai/grok-4.7` pinned to `xai`; outage-only fallback
+`google/gemini-3.8-flash` pinned to `google-ai-studio`.** Cost did not enter:
+the whole field costs $0.14 to $4.98 a year, and Grok's $4.18 is below
+Gemini's 2027 price.
+
+One caveat the audit (#40, item 4) raised and this run did not fix: the
+harness scores its own single-turn prompt, while production sends a system
+prompt, a fenced user turn and a per-Claim keep rule. The gate is the same
+(pinned by `tests/test_gate_equivalence.py`), so validity transfers; the
+coverage and latency figures are indicative. Aligning the harness with the
+shipped prompt is an open owner decision.
+
+Made by the lead under the owner's delegation (2026-09-27). Provisional until
+the cutover: comment `veto` on #36 to reverse.
+
 ## Method
 
 - **Prompt and scoring are `eval/run_eval.py`'s**, unmodified — the citation
@@ -177,18 +254,19 @@ second vendor account and a second code path.
 
 ## What this changes in the code
 
-`inplain/summarize.py` currently talks to the Anthropic Messages API directly
+**Made on 2026-09-27 (issue #36).** As written in August, `inplain/summarize.py` talked to the Anthropic Messages API directly
 (`API_URL`, `anthropic-version` header, `content[].text` response shape) with
 `DEFAULT_MODEL = "claude-sonnet-5"` and `FALLBACK_MODEL = "claude-opus-4-8"`.
-Adopting this recommendation is a contained change, **not yet made**:
+Adopting the measured pick was a contained change:
 
 1. Point `API_URL` at `https://openrouter.ai/api/v1/chat/completions`, swap the
    auth header to `Authorization: Bearer`, and read
    `body["choices"][0]["message"]["content"]`.
-2. `DEFAULT_MODEL = "google/gemini-3.7-flash"`,
-   `FALLBACK_MODEL = "minimax/minimax-m3"`.
-3. Send the `provider` block (pinned order, `data_collection: "deny"`,
-   `require_parameters: true`) and `temperature: 0`.
+2. `DEFAULT_MODEL = "x-ai/grok-4.7"`,
+   `FALLBACK_MODEL = "google/gemini-3.8-flash"` (the 2026-09-27 re-run above supersedes August's pair).
+3. Send the `provider` block (pinned order, fallbacks off, `data_collection: "deny"`)
+   and `temperature: 0`. `require_parameters` is never sent: paired with
+   `temperature` it leaves models that reject sampling parameters no endpoint.
 4. The secret stays `MODEL_API_KEY` — only its value changes.
    `.github/workflows/` needs no edit.
 

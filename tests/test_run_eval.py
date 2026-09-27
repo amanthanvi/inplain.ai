@@ -2,7 +2,7 @@
 
 No network: the HTTP call is injected into ``call_model``/``run_model`` as
 ``post`` and returns real ``requests.Response`` objects, the way
-tests/test_summarize.py drives AnthropicClient.
+tests/test_summarize.py drives OpenRouterClient.
 """
 
 from __future__ import annotations

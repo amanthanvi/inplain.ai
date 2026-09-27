@@ -169,11 +169,13 @@ Non-negotiable floor, from measured failures in v0.2.0:
   2026-08-19: GitHub Actions + GitHub Pages** (`docs/hosting.md`; Pages deploy
   gated behind the repo going public, which is itself gated on the credential
   rotation in issue #8; its history rewrite was executed on 2026-08-03).
-- ~~Model and provider for summaries~~ — **provisionally resolved 2026-08-19:
-  `claude-sonnet-5` via Anthropic direct, one outage-only fallback**
-  (`docs/model-eval.md`). The 17-entry golden set and `eval/run_eval.py` are
-  committed; the pick is confirmed by the measured exact-quote citation
-  validity rate once an API key lands in repo secrets.
+- ~~Model and provider for summaries~~ — **measured and resolved 2026-09-27:
+  `x-ai/grok-4.7` through OpenRouter, pinned to xAI, with
+  `google/gemini-3.8-flash` as the one outage-only fallback**
+  (`docs/model-eval.md`, issue #36): 528/528 Valid citations over three passes
+  of the 17-entry golden set, 0 parse failures, 99.6% Hunk coverage. The
+  August-provisional `claude-sonnet-5` via Anthropic direct measured 228/229
+  and is retired. Provisional under the owner's delegation until the cutover.
 - ~~Design direction~~ — **re-decided 2026-09-27: direction D, "register"**,
   with Literata self-hosted as the one typeface (`prototypes/README.md`,
   issue #37). Provisional under the owner's delegation.
