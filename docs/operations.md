@@ -1,8 +1,8 @@
 # Operations
 
-There is no server. The daily `crawl` workflow is the whole runtime
-(`.github/workflows/README.md`), so there are exactly two signals a human
-ever has to act on.
+There is no server. The daily `crawl` workflow is the runtime
+(`.github/workflows/README.md`; `ci.yml` also deploys on a push to `main`),
+so there are exactly two signals a human ever has to act on.
 
 ## 1. The pinned issue "Scheduled crawl failing" opens
 
@@ -18,7 +18,9 @@ it, so a red run means something systemic.
      was lost; the next run diffs across both days. Fix the cause on a
      `ticket/*` branch through a pull request, then re-run with
      `gh workflow run crawl --ref main`.
-   - **Push failed:** usually a concurrent human push to `main`. Just re-run.
+   - **Push failed:** for example a concurrent push to `main`. Start a new
+     run with `gh workflow run crawl --ref main`; GitHub's "Re-run jobs"
+     replays the same stale commit and fails the same way.
    - **Build failed on a record:** `python -m inplain.site` refuses a whole
      build over one invalid Change record (all-or-nothing). Fix or remove
      the record through a pull request; the archive is already safe.
@@ -36,13 +38,19 @@ reliably count as activity.
 
 1. Actions tab → `crawl` → **Enable workflow**.
 2. Run it once by hand (`gh workflow run crawl --ref main`) to catch up.
-3. Any human commit, issue or pull request resets the clock; there is no
-   other cure.
+3. Human activity (commits, issues) keeps the clock from running out.
 
 ## Things that never need a human
 
 - Two runs cannot overlap: the `crawl` concurrency group queues a delayed
   scheduled run behind a manual one.
-- A hung run is killed after 30 minutes and the next one proceeds.
 - The crawl's push uses `GITHUB_TOKEN`, so it starts no workflow run and can
   never loop. Do not replace it with a personal access token.
+
+## One gap to know about
+
+A run that hits the 30-minute timeout is recorded as cancelled, not failed,
+and the alert job only reacts to failures. A crawl that hangs every day
+would therefore stop the archive silently. Until the alert condition also
+covers cancelled runs, glance at the Actions tab if the site's "latest"
+date stops moving.
