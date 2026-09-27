@@ -243,8 +243,8 @@ def _coalesce(text: str, spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
 
 
 def _quote_spans(lines: list[str], quote: str) -> list[list[Any]]:
-    """Where a Citation's quote sits on its Side, per line — found by the
-    same tolerance the validator allows (whitespace runs, then case)."""
+    """Where a Citation's quote sits on its Side, per line: its words across any
+    whitespace, exact case first, then ``re.IGNORECASE`` — not the validator's casefold."""
     words = quote.split()
     if not words:
         return []
