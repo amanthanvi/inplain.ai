@@ -20,6 +20,7 @@ from inplain.detect import (
     REASON_COSMETIC,
     REASON_EFFECTIVE_DATE,
     REASON_REMOVED,
+    REASON_SPACING,
     SENTENCE_CHARS,
     Detector,
     assess_materiality,
@@ -165,6 +166,67 @@ def test_removed_prose_beyond_threshold_is_material():
     assert materiality.removed_chars >= SENTENCE_CHARS
 
 
+# A spacing-only Hunk buys no Materiality (SPEC §7: formatting churn cannot).
+# Its two Sides carry the same words, so counting both would let whitespace
+# publish a record and let one quote validate as either Side.
+
+LONG_LINE = "We share device identifiers with service providers who help us run the service."
+
+
+def test_spacing_only_hunk_is_suppressed_with_reason():
+    spaced = LONG_LINE.replace("device identifiers", "device  identifiers")
+    materiality = assess_materiality(diff_lines(["a", LONG_LINE, "z"], ["a", spaced, "z"]))
+    assert materiality.material is False
+    assert materiality.reason == REASON_SPACING
+    assert materiality.added_chars == materiality.removed_chars == 0
+
+
+def test_trailing_whitespace_only_hunk_is_suppressed():
+    # the shape of the two AWS records: a trailing (non-breaking) space added
+    old = ["a", LONG_LINE + "\xa0", "z"]
+    new = ["a", LONG_LINE + "\xa0 ", "z"]
+    materiality = assess_materiality(diff_lines(old, new))
+    assert materiality.material is False
+    assert materiality.reason == REASON_SPACING
+
+
+def test_reflowed_line_is_not_material():
+    first, second = LONG_LINE[:40].rstrip(), LONG_LINE[40:].lstrip()
+    materiality = assess_materiality(diff_lines(["a", LONG_LINE, "z"], ["a", first, second, "z"]))
+    assert materiality.material is False
+    assert materiality.reason == REASON_SPACING
+
+
+def test_sentence_insert_beside_a_spacing_only_hunk_stays_material():
+    old = ["a", LONG_LINE, "b", "c", "d", "e"]
+    new = ["a", LONG_LINE + " ", "b", "c", "d", SELL_SENTENCE, "e"]
+    diff = diff_lines(old, new)
+    assert len(diff.hunks) == 2
+    materiality = assess_materiality(diff)
+    assert materiality.material is True
+    assert materiality.reason == REASON_ADDED
+    assert materiality.added_chars == len(SELL_SENTENCE)  # only the real insert
+    assert materiality.removed_chars == 0
+
+
+def test_spacing_only_effective_date_line_is_not_a_date_change():
+    old = ["a", "Effective date: January 1, 2025", "z"]
+    new = ["a", "Effective date:  January 1, 2025 ", "z"]
+    materiality = assess_materiality(diff_lines(old, new))
+    assert materiality.effective_date_change is None
+    assert materiality.material is False
+    assert materiality.reason == REASON_SPACING
+
+
+def test_effective_date_change_beside_a_spacing_only_hunk_is_still_material():
+    old = ["Effective date: January 1, 2025", "b", "c", "d", LONG_LINE]
+    new = ["Effective date: March 15, 2026", "b", "c", "d", LONG_LINE + " "]
+    materiality = assess_materiality(diff_lines(old, new))
+    assert materiality.material is True
+    assert materiality.reason == REASON_EFFECTIVE_DATE
+    assert materiality.effective_date_change == {"from": "2025-01-01", "to": "2026-03-15"}
+
+
 # --------------------------------------------------------------------------
 # the detector against real repositories
 
@@ -253,6 +315,18 @@ def test_subthreshold_cosmetic_edit_is_suppressed_with_reason(repo):
     assert materiality["material"] is False
     assert materiality["reason"] == REASON_COSMETIC
     assert materiality["added_chars"] == 0  # cosmetic lines are not prose
+    assert record["hunks"], "suppressed records still carry the evidence"
+
+
+def test_spacing_only_commit_is_recorded_as_suppressed(repo):
+    commit_doc(repo, BASE_LINES)
+    changed = [line + " " for line in BASE_LINES]
+    sha = commit_doc(repo, changed)
+    report = Detector(repo).run()
+    assert report.created == 0 and report.suppressed == 1
+    record = schema.load_record(repo / "changes" / f"example-privacy-{sha[:7]}.json")
+    assert record["materiality"]["material"] is False
+    assert record["materiality"]["reason"] == REASON_SPACING
     assert record["hunks"], "suppressed records still carry the evidence"
 
 

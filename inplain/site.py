@@ -62,6 +62,7 @@ from jinja2 import Environment, FileSystemLoader
 from markupsafe import Markup, escape
 
 from . import REPO_ROOT, schema, setup_cli_logging
+from .detect import spacing_only
 from .schema import SchemaError
 
 log = logging.getLogger("inplain.site")
@@ -204,13 +205,6 @@ def _per_line(lines: list[str], spans: list[tuple[int, int]]) -> list[list[Any]]
             out.append([index, local])
         offset = hi + 1
     return out
-
-
-def spacing_only(removed: list[str], added: list[str]) -> bool:
-    """Both Sides exist and differ only in whitespace or line breaks."""
-    return bool(removed and added) and (
-        "".join("".join(removed).split()) == "".join("".join(added).split())
-    )
 
 
 def word_spans(removed: list[str], added: list[str]) -> dict[str, Any] | None:
