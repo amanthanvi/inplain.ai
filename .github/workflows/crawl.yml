@@ -202,7 +202,10 @@ jobs:
   # issue, created once and updated per failure, never duplicated.
   alert-on-failure:
     needs: [crawl, deploy]
-    if: always() && (contains(needs.*.result, 'failure') || needs.crawl.outputs.summarize_failed == 'true')
+    # 'cancelled' covers a crawl killed by its 30-minute timeout, which GitHub
+    # records as cancelled rather than failed; without it a daily hang would
+    # stop the archive silently (docs/operations.md).
+    if: always() && (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || needs.crawl.outputs.summarize_failed == 'true')
     runs-on: ubuntu-latest
     permissions:
       issues: write

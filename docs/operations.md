@@ -46,12 +46,6 @@ reliably count as activity.
   scheduled run behind a manual one.
 - The crawl's push uses `GITHUB_TOKEN`, so it starts no workflow run and can
   never loop. Do not replace it with a personal access token.
-
-## One gap to know about
-
-A run that hits the 30-minute timeout is recorded as cancelled, not failed,
-and the alert job only reacts to failures. A crawl that hangs every day
-would therefore stop the archive silently. Until the alert condition also
-covers cancelled runs (#48), glance at the date of the last successful `crawl` run in
-the Actions tab once a week; the site's "latest" date is not a heartbeat,
-it only moves when a material change is found.
+- A run that hangs is killed after 30 minutes. GitHub records that as
+  cancelled, not failed, and the alert job reacts to both, so it opens the
+  same issue.
