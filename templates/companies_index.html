@@ -1,11 +1,19 @@
 {% extends "base.html" %}
 {% block main %}
 <h1>Companies</h1>
-<p class="lede">Every company whose policy documents this site tracks, with
-the number of material changes on record.</p>
-<ul class="index">
+<p class="lede">Every company whose policy documents this site watches, with
+the number of material changes on record. Watching {{ site.documents }}
+documents from {{ site.catalog_companies }} companies since
+<time datetime="{{ site.watch_since }}">{{ site.watch_since }}</time>.</p>
+<table>
+<caption class="sr">Watched companies, their documents and changes on record</caption>
+<thead><tr><th scope="col">Company</th><th scope="col">Watched documents</th><th scope="col" class="num">Changes</th></tr></thead>
+<tbody>
 {%- for company in companies %}
-<li class="row"><span class="co-name"><a href="{{ company.url }}">{{ company.name }}</a></span><span class="co-count">{{ company.change_count }} change{{ "s" if company.change_count != 1 else "" }}</span></li>
+<tr><th scope="row"><a href="{{ company.url }}">{{ company.name }}</a></th>
+<td>{{ company.doc_list }}</td>
+<td class="num">{{ company.change_count }}</td></tr>
 {%- endfor %}
-</ul>
+</tbody>
+</table>
 {% endblock %}

@@ -1,53 +1,80 @@
-/* static/tokens.css — the token layer (D1).
+/* static/tokens.css — the token layer.
  *
- * ALL raw values (colours, px) live here as custom properties.
+ * ALL raw values (colours, px, font files) live here as custom properties.
  * static/site.css references var(--*) only; the boundary is enforced by
- * stylelint (`npm run lint:css`, wired into CI by T6).
+ * stylelint (`npm run lint:css`, in CI).
  *
- * Palette source of truth: prototypes/build.py (CSS_A), direction A
- * "reference instrument". Light and dark are DESIGNED SEPARATELY, not
- * swapped by token: every state colour was measured against its own
- * theme's paper before use (ratios noted inline, from
- * prototypes/README.md).
+ * Direction D, "register" (#37): white paper, black ink, one teal accent,
+ * Literata for everything. Light and dark are DESIGNED SEPARATELY, not
+ * swapped by token: every colour was measured against its own theme's
+ * ground before use (WCAG 2 contrast ratios noted inline).
  */
 
-:root {
-  /* ---------------------------------------------------- typography -- */
-  --font-text: Charter, "Iowan Old Style", "Source Serif 4", Georgia, serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+/* ------------------------------------------------------------ typeface --
+   Literata (TypeTogether for Google), SIL Open Font License 1.1, latin
+   subset, self-hosted: no font is ever requested from a third party.
+   The upright file is a variable font (weight axis 400–900) and is
+   declared once for the 400–700 range the site uses; the italic file is
+   a static 400. */
+@font-face {
+  font-family: Literata;
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/static/fonts/Literata-latin.woff2") format("woff2");
+}
 
-  /* Type scale — seven steps, whole pixels. v0.2.0 drifted to fifteen
-     sizes including 12.5 / 13.5 / 15.5px; a size not on this scale is a
+@font-face {
+  font-family: Literata;
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/static/fonts/Literata-italic-latin.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* ---------------------------------------------------- typography -- */
+  --font-text: Literata, Georgia, serif;
+
+  /* Type scale — eight steps, whole pixels. A size not on this scale is a
      bug, not a nuance. */
-  --text-2xs: 11px;  /* uppercase micro-labels: hunk header, kicker      */
-  --text-xs: 12px;   /* citations, metadata rows, footer                 */
-  --text-sm: 14px;   /* diff body (mono), source notes, card metadata    */
-  --text-base: 17px; /* body prose                                       */
-  --text-md: 18px;   /* lede                                             */
-  --text-lg: 24px;   /* feed headlines, page titles at narrow widths     */
-  --text-xl: 30px;   /* change-view headline                             */
+  --text-xs: 14px;   /* hunk header, legend, footer, table heads           */
+  --text-sm: 15px;   /* crumb, facts, entry date line and counts           */
+  --text-diff: 16px; /* passage text inside a Hunk                         */
+  --text-base: 17px; /* body prose                                         */
+  --text-md: 19px;   /* lede, Claim text, brand                            */
+  --text-lg: 22px;   /* section headings, entry headlines                  */
+  --text-xl: 27px;   /* page title at narrow widths                        */
+  --text-2xl: 34px;  /* page title                                         */
 
   /* Line heights (unitless) */
-  --leading-tight: 1.22; /* headlines            */
-  --leading-lede: 1.55;
-  --leading-body: 1.62;
-  --leading-diff: 1.65;
+  --leading-title: 1.15;
+  --leading-heading: 1.25;
+  --leading-lede: 1.5;
+  --leading-diff: 1.55;
+  --leading-body: 1.6;
 
-  /* Tracking for uppercase mono labels */
-  --tracking-tight: -0.014em; /* display serif headlines */
-  --tracking-caps: 0.08em;
-  --tracking-kicker: 0.13em;
+  --tracking-title: -0.01em;
 
-  /* Weights. The text face's axis maxes at 700 — v0.2.0 shipped 750 and
-     760, which rendered identically to 700. Nothing above 700, ever. */
+  /* Weights. Nothing above 700 (the upright file goes to 900; the site
+     does not). */
   --weight-regular: 400;
   --weight-semibold: 600;
   --weight-bold: 700;
 
+  /* The reading column: masthead, main and footer all share it, set in
+     rem so a different font size inside never shifts the column edge
+     (the 2025 footer defect was a ch-based width under a smaller size). */
+  --measure: 41.25rem;  /* 660px */
+  --measure-text: 60ch; /* lede and legend line length */
+  --claim-indent: 2.4em;
+  --gutter-mark: 1.6ch;
+
   /* ------------------------------------------------------- spacing -- */
-  /* 2 / 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96.
-     Off-scale margins were the dominant drift in v0.2.0 (marginTop: 10
-     ×23, marginTop: 6 ×19). Everything spaces from this scale. */
+  /* 2 / 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96. Everything spaces
+     from this scale. */
   --space-0: 2px;
   --space-1: 4px;
   --space-2: 8px;
@@ -59,82 +86,69 @@
   --space-8: 64px;
   --space-9: 96px;
 
-  /* --------------------------------------------- strokes and radii -- */
+  /* ------------------------------------------------ strokes, lines -- */
   --hairline: 1px; /* rules, borders, and the .sr 1px box */
-  --stroke-2: 2px;
-  --stroke-3: 3px; /* left accent bars */
-  --radius-sm: 3px;
-  --radius-md: 6px;
+  --stroke-2: 2px; /* word-mark strike and underline, :target ring */
+  --underline-offset: 3px;
 
   /* Focus ring geometry (ring colour is per-theme, below) */
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
 
   /* ------------------------------------------------------- z scale -- */
-  --z-base: 0;
-  --z-raised: 1;
-  --z-nav: 10;
   --z-overlay: 100; /* skip link */
-
-  /* -------------------------------------------------------- motion -- */
-  --motion-fast: 120ms;
-  --motion-slow: 240ms;
-  --motion-ease: ease-out;
 
   /* --------------------------------- print (theme-independent ink) -- */
   --print-paper: #ffffff;
   --print-ink: #000000;
 
-  /* -------------- LIGHT palette — designed against paper #fbfbf9 ---- */
-  --paper: #fbfbf9;
-  --ink: #16171a;
-  --soft: #3b3d42;
-  --muted: #5c5f66;
-  --rule: #e3e3df;
-  --panel: rgba(22, 23, 26, 0.04); /* hunk-header fill: ink at 4% */
+  /* ------------------------ LIGHT palette — designed on paper #ffffff -- */
+  --paper: #ffffff;
+  --ink: #141414;       /* 18.42:1 */
+  --soft: #3d3d3d;      /* 10.86:1 — lede */
+  --muted: #666666;     /*  5.74:1; 5.12:1 on --add-bg, 4.94:1 on --rm-bg */
+  --rule: #d4d4d4;      /* decorative rules only */
+  --rule-soft: #ebebeb;
 
-  /* Accent belongs to citations (and source links) ONLY.  5.78:1 */
-  --accent: #0b5cd5;
-  --focus-ring: #0b5cd5; /* 5.78:1 on paper — comfortably ≥ 3:1 */
+  /* The one accent: links and the focus ring. 6.76:1 on paper, 6.03:1
+     on --add-bg, 5.81:1 on --rm-bg, 4.69:1 on --hl. */
+  --accent: #0b6666;
+  --focus-ring: #0b6666; /* ≥ 3:1 on every ground above */
 
-  /* Diff state colours — a separate semantic channel from the accent */
-  --add-bg: #e6f4ea;
-  --add-ink: #0b6b2f; /*  6.42:1 on paper */
-  --rm-bg: #fdeaea;
-  --rm-ink: #9b1c1c; /*  7.87:1 on paper */
+  /* Diff Sides — a separate semantic channel from the accent. Word marks
+     draw their strike/underline in currentColor, so they inherit these
+     ratios. */
+  --add-bg: #e9f5ec;
+  --add-ink: #0e5a2b;   /* 7.45:1 on --add-bg, 5.79:1 inside --hl */
+  --rm-bg: #fbeaea;
+  --rm-ink: #8c1d1d;    /* 7.82:1 on --rm-bg, 6.31:1 inside --hl */
 
-  --target-glow: rgba(11, 92, 213, 0.22); /* ring on a cited :target hunk */
+  /* The cited quote: a highlighter background, never a line (lines are
+     the word marks). Distinct in hue and lightness from both Sides
+     (1.29:1 vs --add-bg, 1.24:1 vs --rm-bg); ink on it 12.78:1. */
+  --hl: #fcd34d;
 }
 
-/* ---------------- DARK palette — designed against paper #101114 ------
+/* ------------------------ DARK palette — designed on paper #17191c ----
    Not a lightness flip of the light theme: each value was picked and
    measured on its own ground. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #101114;
-    --ink: #e9e9ea;
-    --soft: #c6c8cd;
-    --muted: #9a9da5;
-    --rule: #26282e;
-    --panel: rgba(233, 233, 234, 0.04);
+    --paper: #17191c;
+    --ink: #ececec;     /* 14.91:1 */
+    --soft: #cfcfcf;    /* 11.31:1 */
+    --muted: #9d9d9d;   /*  6.49:1; 5.28:1 on --add-bg, 5.88:1 on --rm-bg */
+    --rule: #34373b;
+    --rule-soft: #26292d;
 
-    --accent: #6aa9ff; /*  7.85:1 on paper */
-    --focus-ring: #6aa9ff;
+    --accent: #7fd6d6;  /* 10.48:1; 8.53:1 on --add-bg, 4.99:1 on --hl */
+    --focus-ring: #7fd6d6;
 
-    --add-bg: #13301d;
-    --add-ink: #7fd39b; /* 10.51:1 on paper */
-    --rm-bg: #3a1618;
-    --rm-ink: #f2a3a3; /*  9.48:1 on paper */
+    --add-bg: #12301c;
+    --add-ink: #9ee2b6; /*  9.56:1 on --add-bg, 5.60:1 inside --hl */
+    --rm-bg: #3a1719;
+    --rm-ink: #f5b0b0;  /*  8.90:1 on --rm-bg, 4.68:1 inside --hl */
 
-    --target-glow: rgba(106, 169, 255, 0.22);
-  }
-}
-
-/* Reduced motion zeroes the motion tokens at the source; site.css also
-   carries a belt-and-braces kill-all for anything token-independent. */
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --motion-fast: 0s;
-    --motion-slow: 0s;
+    --hl: #5a4d0c;      /* 1.71:1 vs --add-bg, 1.90:1 vs --rm-bg */
   }
 }
