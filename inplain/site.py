@@ -77,6 +77,11 @@ STATIC_DIR = REPO_ROOT / "static"
 # here, not in feeds.py, because only the pages link commits.
 REPO_URL = "https://github.com/amanthanvi/inplain.ai"
 
+# The canonical origin (hosting decision: docs/hosting.md): page share
+# metadata and the feeds (which import it from here) need absolute URLs;
+# the pages themselves keep root-relative links.
+SITE_URL = "https://inplain.ai"
+
 # The date of the catalog's first baseline Snapshots (the first ``crawl:``
 # commits under documents/). Every Change record compares against a Snapshot
 # from this date or later; nothing earlier is on record. A constant, not a
@@ -533,8 +538,45 @@ class BuildReport:
     feeds: int = 0
 
 
-def _environment() -> Environment:
-    return Environment(
+def build_site(*, catalog_path: Path, changes_dir: Path, out_dir: Path) -> BuildReport:
+    # Imported here, not at module top: feeds.py builds on this module's
+    # loaders, so the import must run after site.py is fully initialised.
+    from . import feeds
+
+    out_dir = Path(out_dir)
+    # Validate EVERYTHING before writing anything: all-or-nothing.
+    catalog = load_catalog(catalog_path)
+    records = load_records(changes_dir)
+    published = load_published_records(changes_dir)
+
+    report = BuildReport(
+        published=len(published),
+        suppressed=len(records) - len(published),
+    )
+
+    changes = [_change_view(record) for record in published]
+    companies = _company_views(catalog, published)
+    # Listings read alphabetically by name ("Amazon Web Services" files
+    # under A, not under its slug "aws"); the slug breaks ties.
+    by_name = sorted(companies, key=lambda c: (c["name"].casefold(), c["slug"]))
+    catalog_slugs = {entry["slug"] for entry in catalog}
+    report.companies = len(companies)
+    items_by_company = {company["slug"]: [] for company in companies}
+    for change in changes:
+        items_by_company[change["company"]].append(change)
+
+    site = {
+        "published": len(published),
+        # The footer's "generated" moment is the newest record's date —
+        # never the wall clock (deterministic rebuilds).
+        "latest": published[0]["detected_at"][:10] if published else None,
+        # What is watched, counted from the catalog; since a fixed date.
+        "documents": sum(len(entry["policy_urls"]) for entry in catalog),
+        "catalog_companies": len(catalog),
+        "watch_since": WATCH_SINCE,
+    }
+
+    env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
         autoescape=True,  # hunk text is untrusted document content
         trim_blocks=True,
@@ -542,22 +584,7 @@ def _environment() -> Environment:
         keep_trailing_newline=True,
     )
 
-
-class SiteBuilder:
-    def __init__(self, *, catalog_path: Path, changes_dir: Path, out_dir: Path) -> None:
-        self.catalog_path = Path(catalog_path)
-        self.changes_dir = Path(changes_dir)
-        self.out_dir = Path(out_dir)
-        self.env = _environment()
-        from . import feeds  # see build(): feeds.py imports this module
-
-        self.site_url = feeds.SITE_URL
-
-    # -- one page -----------------------------------------------------------
-
-    def _write_page(
-        self,
-        report: BuildReport,
+    def write_page(
         relpath: str,
         template: str,
         *,
@@ -573,8 +600,8 @@ class SiteBuilder:
         # paths and so has none.
         url = None
         if relpath != "404.html":
-            url = f"{self.site_url}/{relpath.removesuffix('index.html')}"
-        html = self.env.get_template(template).render(
+            url = f"{SITE_URL}/{relpath.removesuffix('index.html')}"
+        html = env.get_template(template).render(
             page={
                 "title": title,
                 "nav": nav,
@@ -591,173 +618,116 @@ class SiteBuilder:
             },
             **context,
         )
-        path = self.out_dir / relpath
+        path = out_dir / relpath
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(html, encoding="utf-8", newline="\n")
         report.pages += 1
         log.debug("wrote %s", relpath)
 
-    # -- the build ------------------------------------------------------------
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True)
 
-    def build(self) -> BuildReport:
-        # Validate EVERYTHING before writing anything: all-or-nothing.
-        catalog = load_catalog(self.catalog_path)
-        records = load_records(self.changes_dir)
-        published = load_published_records(self.changes_dir)
+    # static/ ships whole: the two stylesheets and the self-hosted Literata
+    # (SIL OFL 1.1). No font is ever requested from a third party.
+    shutil.copytree(STATIC_DIR, out_dir / "static")
 
-        report = BuildReport(
-            published=len(published),
-            suppressed=len(records) - len(published),
+    write_page(
+        "index.html",
+        "home.html",
+        title="inplain.ai — the record of policy changes",
+        description=(
+            "What changed in the privacy policies and terms of well-known "
+            "companies: the changed passages, a cited summary, and a link "
+            "to the source."
+        ),
+        share={"title": "inplain.ai — the record of policy changes"},
+        site=site,
+        items=changes[:FEED_LIMIT],
+        more=len(changes) > FEED_LIMIT,
+        watched=[c for c in by_name if c["slug"] in catalog_slugs],
+    )
+    write_page(
+        "404.html",
+        "404.html",
+        title="Page not found · inplain.ai",
+        description="This page does not exist on inplain.ai.",
+        site=site,
+    )
+    write_page(
+        "changes/index.html",
+        "changes_index.html",
+        title="All changes · inplain.ai",
+        description=(
+            "Every material change to a watched privacy policy or terms "
+            "of service, newest first, with the evidence."
+        ),
+        nav="changes",
+        site=site,
+        items=changes,
+        companies_with_changes=[c for c in by_name if c["change_count"]],
+    )
+    write_page(
+        "companies/index.html",
+        "companies_index.html",
+        title="Companies · inplain.ai",
+        description=(
+            f"The {len(companies)} companies whose privacy policies and "
+            "terms of service inplain.ai watches."
+        ),
+        nav="companies",
+        site=site,
+        companies=by_name,
+    )
+    for change in changes:
+        description = (
+            f"{change['headline']} on {change['date']}: "
+            f"{change['passages']} changed, "
+            "with citations and a link to the source."
         )
-
-        changes = [_change_view(record) for record in published]
-        companies = _company_views(catalog, published)
-        # Listings read alphabetically by name ("Amazon Web Services" files
-        # under A, not under its slug "aws"); the slug breaks ties.
-        by_name = sorted(companies, key=lambda c: (c["name"].casefold(), c["slug"]))
-        catalog_slugs = {entry["slug"] for entry in catalog}
-        report.companies = len(companies)
-        items_by_company = {company["slug"]: [] for company in companies}
-        for change in changes:
-            items_by_company[change["company"]].append(change)
-
-        site = {
-            "published": len(published),
-            # The footer's "generated" moment is the newest record's date —
-            # never the wall clock (deterministic rebuilds).
-            "latest": published[0]["detected_at"][:10] if published else None,
-            # What is watched, counted from the catalog; since a fixed date.
-            "documents": sum(len(entry["policy_urls"]) for entry in catalog),
-            "catalog_companies": len(catalog),
-            "watch_since": WATCH_SINCE,
-        }
-
-        if self.out_dir.exists():
-            shutil.rmtree(self.out_dir)
-        self.out_dir.mkdir(parents=True)
-
-        # static/ ships whole: the two stylesheets and the self-hosted Literata
-        # (SIL OFL 1.1). No font is ever requested from a third party.
-        shutil.copytree(STATIC_DIR, self.out_dir / "static")
-
-        self._write_page(
-            report,
-            "index.html",
-            "home.html",
-            title="inplain.ai — the record of policy changes",
-            description=(
-                "What changed in the privacy policies and terms of well-known "
-                "companies: the changed passages, a cited summary, and a link "
-                "to the source."
-            ),
-            share={"title": "inplain.ai — the record of policy changes"},
-            site=site,
-            items=changes[:FEED_LIMIT],
-            more=len(changes) > FEED_LIMIT,
-            watched=[c for c in by_name if c["slug"] in catalog_slugs],
-        )
-        self._write_page(
-            report,
-            "404.html",
-            "404.html",
-            title="Page not found · inplain.ai",
-            description="This page does not exist on inplain.ai.",
-            site=site,
-        )
-        self._write_page(
-            report,
-            "changes/index.html",
-            "changes_index.html",
-            title="All changes · inplain.ai",
-            description=(
-                "Every material change to a watched privacy policy or terms "
-                "of service, newest first, with the evidence."
+        write_page(
+            f"changes/{change['id']}/index.html",
+            "change.html",
+            title=(
+                f"{change['company_name']} {change['doc_title']} — "
+                f"change of {change['date']} · inplain.ai"
             ),
             nav="changes",
+            description=description,
+            share={
+                "type": "article",
+                "title": f"{change['headline']} ({change['date']})",
+                # The first Claim is what a share card should say; a
+                # summary-less record falls back to the plain facts.
+                "description": change["first_claim"] or description,
+                "published_time": change["detected_at"],
+            },
             site=site,
-            items=changes,
-            companies_with_changes=[c for c in by_name if c["change_count"]],
+            change=change,
         )
-        self._write_page(
-            report,
-            "companies/index.html",
-            "companies_index.html",
-            title="Companies · inplain.ai",
+    for company in companies:
+        write_page(
+            f"companies/{company['slug']}/index.html",
+            "company.html",
+            title=f"{company['name']} — tracked policies · inplain.ai",
             description=(
-                f"The {len(companies)} companies whose privacy policies and "
-                "terms of service inplain.ai watches."
+                f"How {company['name']}'s watched policy documents have "
+                f"changed: {company['summary']}"
             ),
             nav="companies",
+            company_feed={
+                "title": feeds.company_feed_title(company["name"]),
+                "href": f"/companies/{company['slug']}/feed.xml",
+            },
             site=site,
-            companies=by_name,
+            company=company,
+            items=items_by_company[company["slug"]],
         )
-        for change in changes:
-            description = (
-                f"{change['headline']} on {change['date']}: "
-                f"{change['passages']} changed, "
-                "with citations and a link to the source."
-            )
-            self._write_page(
-                report,
-                f"changes/{change['id']}/index.html",
-                "change.html",
-                title=(
-                    f"{change['company_name']} {change['doc_title']} — "
-                    f"change of {change['date']} · inplain.ai"
-                ),
-                nav="changes",
-                description=description,
-                share={
-                    "type": "article",
-                    "title": f"{change['headline']} ({change['date']})",
-                    # The first Claim is what a share card should say; a
-                    # summary-less record falls back to the plain facts.
-                    "description": change["first_claim"] or description,
-                    "published_time": change["detected_at"],
-                },
-                site=site,
-                change=change,
-            )
-        # Imported here, not at module top: feeds.py builds on this module's
-        # loaders, so the import must run after site.py is fully initialised.
-        from . import feeds
 
-        for company in companies:
-            self._write_page(
-                report,
-                f"companies/{company['slug']}/index.html",
-                "company.html",
-                title=f"{company['name']} — tracked policies · inplain.ai",
-                description=(
-                    f"How {company['name']}'s watched policy documents have "
-                    f"changed: {company['summary']}"
-                ),
-                nav="companies",
-                company_feed={
-                    "title": feeds.company_feed_title(company["name"]),
-                    "href": f"/companies/{company['slug']}/feed.xml",
-                },
-                site=site,
-                company=company,
-                items=items_by_company[company["slug"]],
-            )
-
-        # The feeds are part of the site build (AC-8): same publish filter,
-        # same output tree, so pages and feeds can never disagree.
-        report.feeds = len(
-            feeds.write_feeds(
-                records=published, companies=companies, out_dir=self.out_dir
-            )
-        )
-        return report
-
-
-def build_site(
-    *, catalog_path: Path, changes_dir: Path, out_dir: Path
-) -> BuildReport:
-    return SiteBuilder(
-        catalog_path=catalog_path, changes_dir=changes_dir, out_dir=out_dir
-    ).build()
+    # The feeds are part of the site build (AC-8): same publish filter,
+    # same output tree, so pages and feeds can never disagree.
+    report.feeds = len(feeds.write_feeds(records=published, companies=companies, out_dir=out_dir))
+    return report
 
 
 # --------------------------------------------------------------------------

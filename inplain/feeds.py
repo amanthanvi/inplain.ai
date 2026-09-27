@@ -3,7 +3,7 @@
 With no accounts and no email, the feeds are the only mechanism that brings
 anyone back. One global feed at ``/feed.xml`` and one per company at
 ``/companies/<slug>/feed.xml``, generated as part of the site build
-(:meth:`inplain.site.SiteBuilder.build` calls :func:`write_feeds`) and also
+(:func:`inplain.site.build_site` calls :func:`write_feeds`) and also
 runnable standalone as ``python -m inplain.feeds``.
 
 Load-bearing decisions:
@@ -49,7 +49,7 @@ from typing import Any
 
 from . import REPO_ROOT, setup_cli_logging
 from .schema import SchemaError
-from .site import doc_title, load_catalog, load_published_records
+from .site import SITE_URL, doc_title, load_catalog, load_published_records
 
 log = logging.getLogger("inplain.feeds")
 
@@ -58,11 +58,6 @@ ATOM_NS = "http://www.w3.org/2005/Atom"
 # ``default_namespace=`` on tostring() cannot be used instead: it rejects the
 # unqualified attributes (rel, href, type) Atom links require.
 ET.register_namespace("", ATOM_NS)
-
-# The canonical origin the feeds link to (hosting decision: docs/hosting.md).
-# Feed READERS need absolute URLs; the pages themselves keep root-relative
-# links.
-SITE_URL = "https://inplain.ai"
 
 # Tag-URI scheme (RFC 4151): authority + the FIXED date the scheme was
 # adopted. Changing either would change every published entry id and make
