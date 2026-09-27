@@ -1,5 +1,14 @@
 # G1 — Word-level intra-line highlighting does not ship in v1
 
+> **Superseded on 2026-09-27** by the decision on
+> [#38](https://github.com/amanthanvi/inplain.ai/issues/38), made by the lead
+> under the owner's delegation and provisional until the cutover: word-level
+> marks **do** ship at launch, computed at build time in `inplain/site.py`
+> and never stored. Everything below about the schema still holds:
+> `word_spans` stays `null` at `schema_version` 1, published records are
+> immutable, and Citations quote and validate against whole lines on their
+> Side. Only resolution item 1 changes.
+
 **Decided:** 2026-08-19, by the owner. Resolves
 [#28](https://github.com/amanthanvi/inplain.ai/issues/28).
 
