@@ -9,7 +9,8 @@ sources on **2026-08-19**; none are from memory.
 **Recommendation in one line:** GitHub Actions for the daily crawl and the
 build, GitHub Pages for the site, one repository secret for the model API key,
 zero new accounts — with the public deploy gated on the repo going public
-(which is itself gated on #8's key rotation and the prepared history rewrite).
+(which is itself gated on #8's key rotation; its history rewrite was executed
+on 2026-08-03).
 
 Facts observed 2026-08-19 that frame everything below:
 
@@ -118,9 +119,11 @@ inside the private-repo Free allowance, and free outright once public.
 - Consequence: **while the repo is private on a Free plan, GitHub Pages cannot
   serve the site at all.** This is fine: the site must not go live before the
   repo goes public anyway, because publishing requires the datastore-is-git
-  trust story and, more bluntly, the history still contains a live Clerk
-  `sk_live` key until #8's rotation + rewrite land. Private-phase runs upload
-  `_site/` as a workflow artifact for inspection instead of deploying.
+  trust story and, more bluntly, the live Clerk `sk_live` key is not yet
+  rotated (#8): the 2026-08-03 history rewrite removed it from every branch,
+  but GitHub's `refs/pull/1..6/head` still reach pre-rewrite commits.
+  Private-phase runs upload `_site/` as a workflow artifact for inspection
+  instead of deploying.
 
 ### Pages limits vs this site's scale
 
@@ -247,8 +250,9 @@ No new accounts, no new platforms, $0/month in the public endgame.
 5. Create the `MODEL_API_KEY` repository secret (Settings → Secrets and
    variables → Actions) once R2 picks the provider.
 6. Complete #8: rotate/revoke the live Clerk `sk_live` key (and any other
-   credential in history), then execute the prepared git-history rewrite.
-   **Hard gate for step 8.**
+   credential in history). The git-history rewrite was already executed on
+   2026-08-03; rotation also makes harmless the six pre-rewrite
+   `refs/pull/1..6/head` refs GitHub keeps. **Hard gate for step 8.**
 7. Verify `inplain.ai` as a custom domain on the GitHub account
    (Settings → Pages → verified domains) *before* any DNS change, per §6.
 8. Flip the repository to **public** (Settings → General → Change visibility)
@@ -288,9 +292,11 @@ No new accounts, no new platforms, $0/month in the public endgame.
   the owner is on Free (assumed), the private phase simply cannot deploy
   Pages — the runbook already accounts for that; nothing breaks if it turns
   out to be Pro.
-- **Secret in history:** until step 6 completes, flipping public exposes the
-  live Clerk key. The runbook hard-gates on it; the risk is sequencing error,
-  not design.
+- **Secret in history:** no branch reaches the live Clerk key since the
+  2026-08-03 rewrite (re-verified 2026-09-27), but GitHub's six
+  `refs/pull/1..6/head` refs still reach pre-rewrite commits, so until step 6's
+  rotation completes, flipping public exposes the live key. The runbook
+  hard-gates on it; the risk is sequencing error, not design.
 - **Proxied-DNS vs Pages TLS:** the zone being on Cloudflare means an
   accidental orange-cloud on the new records can stall GitHub's certificate
   issuance. Runbook specifies DNS-only.

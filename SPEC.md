@@ -168,7 +168,7 @@ Non-negotiable floor, from measured failures in v0.2.0:
 - ~~Hosting target for the static site and the scheduled crawl~~ — **resolved
   2026-08-19: GitHub Actions + GitHub Pages** (`docs/hosting.md`; Pages deploy
   gated behind the repo going public, which is itself gated on the credential
-  rotation and history rewrite in issue #8).
+  rotation in issue #8; its history rewrite was executed on 2026-08-03).
 - ~~Model and provider for summaries~~ — **provisionally resolved 2026-08-19:
   `claude-sonnet-5` via Anthropic direct, one outage-only fallback**
   (`docs/model-eval.md`). The 17-entry golden set and `eval/run_eval.py` are
