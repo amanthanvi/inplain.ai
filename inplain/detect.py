@@ -51,7 +51,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from . import schema
+from . import REPO_ROOT, schema, setup_cli_logging
 from .schema import ChangeRecord, Hunk, Materiality
 
 log = logging.getLogger("inplain.detect")
@@ -548,17 +548,10 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _default_root() -> Path:
-    return Path(__file__).resolve().parent.parent
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    logging.basicConfig(
-        level=logging.WARNING, format="%(levelname)s %(message)s", stream=sys.stderr
-    )
-    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
-    root = args.root or _default_root()
+    setup_cli_logging(log, args.verbose)
+    root = args.root or REPO_ROOT
     detector = Detector(
         root, documents_dir=args.documents, changes_dir=args.changes
     )

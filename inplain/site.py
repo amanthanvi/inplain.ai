@@ -52,16 +52,15 @@ from urllib.parse import urlsplit
 
 from jinja2 import Environment, FileSystemLoader
 
-from . import schema
+from . import REPO_ROOT, schema, setup_cli_logging
 from .schema import SchemaError
 
 log = logging.getLogger("inplain.site")
 
 # Templates and stylesheets ship with the package's source tree; they are not
 # part of the data root, so --root never relocates them.
-_REPO = Path(__file__).resolve().parent.parent
-TEMPLATES_DIR = _REPO / "templates"
-STATIC_DIR = _REPO / "static"
+TEMPLATES_DIR = REPO_ROOT / "templates"
+STATIC_DIR = REPO_ROOT / "static"
 STYLESHEETS = ("tokens.css", "site.css")
 
 # The home feed shows the most recent material changes; the full list lives
@@ -494,11 +493,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    logging.basicConfig(
-        level=logging.WARNING, format="%(levelname)s %(message)s", stream=sys.stderr
-    )
-    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
-    root = args.root or _REPO
+    setup_cli_logging(log, args.verbose)
+    root = args.root or REPO_ROOT
     try:
         report = build_site(
             catalog_path=args.catalog or root / "catalog.json",

@@ -47,6 +47,7 @@ from urllib.parse import urljoin
 
 import trafilatura
 
+from . import REPO_ROOT, setup_cli_logging
 from .net import (
     DEFAULT_TIMEOUT,
     MAX_BYTES,
@@ -706,19 +707,10 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _default_root() -> Path:
-    return Path(__file__).resolve().parent.parent
-
-
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    # Root stays at WARNING so trafilatura's per-paragraph debug chatter does
-    # not drown the crawl log; our own logger is the one --verbose opens up.
-    logging.basicConfig(
-        level=logging.WARNING, format="%(levelname)s %(message)s", stream=sys.stderr
-    )
-    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
-    root = args.root or _default_root()
+    setup_cli_logging(log, args.verbose)
+    root = args.root or REPO_ROOT
     crawler = Crawler(
         root,
         catalog_path=args.catalog,
