@@ -304,29 +304,19 @@ def _date(value: str | None) -> Markup:
     return Markup('<span class="date">{}</span>').format(value)
 
 
-def _effective_date_text(change: dict[str, str | None] | None) -> Markup | None:
+def _effective_date(change: dict[str, str | None] | None, *, fact: bool = False) -> Markup | None:
+    """The Effective-date change as an item's line, or (``fact``) worded for
+    the ``Effective date`` row of the facts."""
     if change is None:
         return None
     date_from, date_to = change.get("from"), change.get("to")
     if date_from and date_to:
-        return Markup("Effective date changed: {} → {}").format(
-            _date(date_from), _date(date_to)
-        )
-    if date_to:
-        return Markup("Effective date added: {}").format(_date(date_to))
-    return Markup("Effective date removed (was {})").format(_date(date_from))
-
-
-def _effective_date_fact(change: dict[str, str | None] | None) -> Markup | None:
-    """The same fact, worded for the ``Effective date`` row of the facts."""
-    if change is None:
-        return None
-    date_from, date_to = change.get("from"), change.get("to")
-    if date_from and date_to:
-        return Markup("changed from {} to {}").format(_date(date_from), _date(date_to))
-    if date_to:
-        return Markup("added: {} (no date stated before)").format(_date(date_to))
-    return Markup("removed (was {})").format(_date(date_from))
+        line, row = "Effective date changed: {0} → {1}", "changed from {0} to {1}"
+    elif date_to:
+        line, row = "Effective date added: {1}", "added: {1} (no date stated before)"
+    else:
+        line, row = "Effective date removed (was {0})", "removed (was {0})"
+    return Markup(row if fact else line).format(_date(date_from), _date(date_to))
 
 
 def _unchanged_text(similarity: float) -> str:
@@ -491,10 +481,8 @@ def _change_view(record: dict[str, Any]) -> dict[str, Any]:
         "hunk_count": total,
         "passages": _plural(total, "passage"),
         "unchanged": _unchanged_text(materiality["similarity_badge"]),
-        "effective_date": _effective_date_text(materiality["effective_date_change"]),
-        "effective_date_fact": _effective_date_fact(
-            materiality["effective_date_change"]
-        ),
+        "effective_date": _effective_date(materiality["effective_date_change"]),
+        "effective_date_fact": _effective_date(materiality["effective_date_change"], fact=True),
         "claims": claims,
         "first_claim": claims[0]["text"] if claims else None,
         "coverage_note": _coverage_note(record),
