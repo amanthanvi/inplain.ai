@@ -117,10 +117,6 @@ class DocumentOutcome:
     detail: str = ""
     commit: str | None = None
 
-    @property
-    def ok(self) -> bool:
-        return self.status in (Status.CHANGED, Status.UNCHANGED, Status.NOT_MODIFIED)
-
 
 @dataclass
 class CrawlReport:
@@ -188,7 +184,6 @@ class Politeness:
         self._sleep = sleep
         self._monotonic = monotonic
         self._last: dict[str, float] = {}
-        self.slept: list[tuple[str, float]] = []
 
     def wait(self, host: str, minimum: float | None = None) -> None:
         delay = self.delay if minimum is None else max(self.delay, minimum)
@@ -197,7 +192,6 @@ class Politeness:
         if last is not None and delay > 0:
             remaining = delay - (now - last)
             if remaining > 0:
-                self.slept.append((host, remaining))
                 self._sleep(remaining)
                 now = self._monotonic()
         self._last[host] = now

@@ -45,7 +45,7 @@ import logging
 import shutil
 import sys
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -284,8 +284,6 @@ class BuildReport:
     suppressed: int = 0
     companies: int = 0
     feeds: int = 0
-    out_dir: Path | None = None
-    page_paths: list[str] = field(default_factory=list)
 
 
 def _environment() -> Environment:
@@ -338,7 +336,6 @@ class SiteBuilder:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(html, encoding="utf-8", newline="\n")
         report.pages += 1
-        report.page_paths.append(relpath)
         log.debug("wrote %s", relpath)
 
     # -- the build ------------------------------------------------------------
@@ -463,8 +460,6 @@ class SiteBuilder:
                 records=published, companies=companies, out_dir=self.out_dir
             )
         )
-
-        report.out_dir = self.out_dir
         return report
 
 
