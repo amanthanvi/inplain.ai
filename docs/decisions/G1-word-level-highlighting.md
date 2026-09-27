@@ -7,7 +7,7 @@
 > and never stored. Everything below about the schema still holds:
 > `word_spans` stays `null` at `schema_version` 1, published records are
 > immutable, and Citations quote and validate against whole lines on their
-> Side. Only resolution item 1 changes.
+> Side. Only resolution item 1 changes; the rationale below is historical.
 
 **Decided:** 2026-08-19, by the owner. Resolves
 [#28](https://github.com/amanthanvi/inplain.ai/issues/28).

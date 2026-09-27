@@ -182,9 +182,6 @@ Non-negotiable floor, from measured failures in v0.2.0:
   `schema_version` 1, and Citations still validate against whole lines on
   their Side. Provisional under the owner's delegation; see issue #38 and
   `docs/decisions/G1-word-level-highlighting.md`.
-- ~~Design direction~~ — **re-decided 2026-09-27: direction D, "register"**,
-  with Literata self-hosted as the one typeface (`prototypes/README.md`,
-  issue #37). Provisional under the owner's delegation.
 
 ## 12. Decisions
 
