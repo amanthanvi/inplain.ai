@@ -369,8 +369,8 @@ def a_changes() -> str:
 # passages follow in document order. The cited quote is highlighted inside
 # the passage like a highlighter pen on a record.
 
-# One variable file per style (weight axis 400–900), not one file per weight.
-D_FONTS = font_face("Literata", [("Literata-latin.woff2", "400 700", "normal"), ("Literata-italic-latin.woff2", "400 700", "italic")])
+# The upright file is the variable font (weight axis 400–900); the italic is a static 400.
+D_FONTS = font_face("Literata", [("Literata-latin.woff2", "400 700", "normal"), ("Literata-italic-latin.woff2", 400, "italic")])
 D_CSS = D_FONTS + SR + """
 :root{--paper:#fff;--ink:#141414;--soft:#3d3d3d;--muted:#666;--rule:#d4d4d4;--rule-soft:#ebebeb;--accent:#0b6666;
   --add-bg:#e9f5ec;--add-ink:#0e5a2b;--add-line:#2e8b4c;--rm-bg:#fbeaea;--rm-ink:#8c1d1d;--rm-line:#c33;--hl:#fff3b0;--hl-ink:#141414;--focus:#0b6666}

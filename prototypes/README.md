@@ -12,7 +12,8 @@ decision was made on the thing itself rather than on tidy invented examples.
 **The data.** `sample-hunks.json` is Google's privacy policy, first-party
 archived version 2026-04-02 against the version live on 2026-08-03,
 extracted exactly as the pipeline does: 18 Hunks, including replaced
-paragraphs of 560 to 1,280 characters that differ by a handful of words. The
+paragraphs of roughly 550 to 1,000 characters that differ by a handful of
+words. The
 Summary in `build.py` is hand-written in the shape `summarize.py` emits, and
 every Citation is checked against its Side before a page is written, the way
 the product checks them. The homepage is rendered in its empty state, which
@@ -39,8 +40,9 @@ no JavaScript.
 python prototypes/build.py      # writes prototypes/out/<a|d|e|f>/*.html
 ```
 
-`out/` is gitignored. Only Literata is kept under `fonts/` (one variable
-file per style, weight axis 400–900, latin subset, OFL); E and F
+`out/` is gitignored. Only Literata is kept under `fonts/` (the upright
+file is the variable font, weight axis 400–900; the italic is a static 400;
+latin subsets, OFL); E and F
 fall back to Georgia and the system sans unless their Google Fonts files
 (Source Serif 4, IBM Plex Sans; both OFL) are dropped into `fonts/`.
 
