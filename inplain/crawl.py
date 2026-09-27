@@ -39,7 +39,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -244,11 +244,7 @@ class CrawlState:
             raw = json.loads(path.read_text(encoding="utf-8"))
             for url, entry in (raw.get("urls") or {}).items():
                 self._entries[url] = UrlState(
-                    etag=entry.get("etag"),
-                    last_modified=entry.get("last_modified"),
-                    content_sha256=entry.get("content_sha256"),
-                    last_fetched_at=entry.get("last_fetched_at"),
-                    last_checked_at=entry.get("last_checked_at"),
+                    **{f.name: entry.get(f.name) for f in fields(UrlState)}
                 )
 
     def get(self, url: str) -> UrlState:

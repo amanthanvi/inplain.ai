@@ -503,9 +503,7 @@ class AnthropicClient:
 
         try:
             body = response.json()
-        except json.JSONDecodeError as exc:
-            raise ModelReplyError(f"response body was not JSON: {exc}") from exc
-        except ValueError as exc:
+        except ValueError as exc:  # json.JSONDecodeError is a ValueError
             raise ModelReplyError(f"response body was not JSON: {exc}") from exc
 
         try:

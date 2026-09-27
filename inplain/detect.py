@@ -181,8 +181,8 @@ def normalized_chars(lines: Sequence[str]) -> int:
 def _first_effective_date(lines: Sequence[str]) -> str | None:
     """The date from the first effective-date line among ``lines``, or None."""
     for line in lines:
-        if is_effective_date_line(line):
-            return parse_effective_date(line)
+        if _EFFECTIVE_KEYWORDS.search(line) and (date := parse_effective_date(line)):
+            return date
     return None
 
 
@@ -261,9 +261,7 @@ def assess_materiality(diff: Diff) -> Materiality:
     # One-sided is real: a date line added where none was, or removed with no
     # replacement, still describes what happened to the date — the absent side
     # is recorded as null so the renderer can say so.
-    effective_date_change = (
-        {"from": date_from, "to": date_to} if (date_from is not None or date_to is not None) else None
-    )
+    effective_date_change = {"from": date_from, "to": date_to} if effective_touched else None
 
     if added_chars >= SENTENCE_CHARS:
         material, reason = True, REASON_ADDED
