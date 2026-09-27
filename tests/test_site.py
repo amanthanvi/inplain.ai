@@ -262,7 +262,8 @@ def test_literata_is_self_hosted(built: SimpleNamespace) -> None:
     _site/static/fonts/, byte-identical, and no page or stylesheet asks a
     third party for a font."""
     fonts = sorted(p.name for p in (built.out / "static" / "fonts").iterdir())
-    assert fonts == ["Literata-italic-latin.woff2", "Literata-latin.woff2"]
+    # The OFL travels with the font files it licenses.
+    assert fonts == ["Literata-italic-latin.woff2", "Literata-latin.woff2", "OFL.txt"]
     for name in fonts:
         assert (built.out / "static" / "fonts" / name).read_bytes() == (
             site.STATIC_DIR / "fonts" / name
@@ -349,8 +350,26 @@ def test_change_view_header_and_facts(built: SimpleNamespace) -> None:
     assert "<h1>Example changed its Privacy Policy</h1>" in html
     assert '<dl class="facts">' in html
     assert "97% of the text unchanged" in html  # similarity 0.97, as prose
+    # Versions for the reader; the commits as the evidence trail.
+    assert "the version seen on" in html and "against the previous version" in html
+    assert "snapshot" not in html.lower()
+    commit = f"{site.REPO_URL}/commit/"
+    assert f'<a class="sha" href="{commit}{sha("a")}" rel="external">aaaaaaa</a>' in html
+    assert f'<a class="sha" href="{commit}{sha("f")}" rel="external">fffffff</a>' in html
     assert '<time datetime="2026-05-01">2026-05-01</time>' in html
     assert 'href="https://example.test/privacy"' in html  # source link
+
+
+def test_zero_side_is_omitted_from_the_counts(built: SimpleNamespace) -> None:
+    """An added-only change says what was added, never "−0"."""
+    added = built.records["script"]["materiality"]["added_chars"]
+    for path, html in built.pages.items():
+        assert "−0 " not in html and "−0<" not in html, path
+    assert f"+{added}</span> characters added" in built.pages["index.html"]
+    page = change_page(built, "script")
+    assert f"+{added}</span> added</dd>" in page
+    # Both sides present: both shown.
+    assert "</span> / <span class=\"minus\">" in built.pages["index.html"]
 
 
 def test_effective_date_change_is_surfaced(built: SimpleNamespace) -> None:

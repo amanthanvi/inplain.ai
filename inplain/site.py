@@ -76,6 +76,11 @@ STYLESHEETS = ("tokens.css", "site.css")
 # into _site/static/fonts/. No font is ever requested from a third party.
 FONTS_DIR = STATIC_DIR / "fonts"
 
+# The public repository: every Change record links the two commits it
+# compares, so a reader can audit the diff with git itself (SPEC §4). Kept
+# here, not in feeds.py, because only the pages link commits.
+REPO_URL = "https://github.com/amanthanvi/inplain.ai"
+
 # The date of the catalog's first baseline Snapshots (the first ``crawl:``
 # commits under documents/). Every Change record compares against a Snapshot
 # from this date or later; nothing earlier is on record. A constant, not a
@@ -479,7 +484,9 @@ def _change_view(record: dict[str, Any]) -> dict[str, Any]:
         "date": date,
         "detected_at": record["detected_at"],
         "commit": record["commit"][:7],
+        "commit_url": f"{REPO_URL}/commit/{record['commit']}",
         "parent_commit": record["parent_commit"][:7],
+        "parent_commit_url": f"{REPO_URL}/commit/{record['parent_commit']}",
         "added_chars": _thousands(materiality["added_chars"]),
         "removed_chars": _thousands(materiality["removed_chars"]),
         "hunk_count": total,

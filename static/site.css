@@ -382,7 +382,7 @@ ins {
 
 mark.q {
   background: var(--hl);
-  color: inherit;
+  color: var(--hl-ink);
   padding: var(--space-0) 0;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
@@ -605,7 +605,8 @@ td:last-child {
     color: var(--print-ink);
   }
 
-  a[rel~="external"]::after {
+  /* Commit SHAs stay as text: they are their own address. */
+  a[rel~="external"]:not(.sha)::after {
     content: " (" attr(href) ")";
     overflow-wrap: anywhere;
   }

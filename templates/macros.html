@@ -43,6 +43,6 @@
 {%- if item.first_claim %}
 <p>{{ item.first_claim }}{% if item.claims | length > 1 %} <a href="{{ item.url }}">Read all {{ item.claims | length }} claims and the evidence</a>{% endif %}</p>
 {%- endif %}
-<p class="counts">{{ item.passages }} changed · <span class="plus">+{{ item.added_chars }}</span> / <span class="minus">−{{ item.removed_chars }}</span> characters · {{ item.unchanged }}</p>
+<p class="counts">{{ item.passages }} changed · {% if item.added_chars != "0" and item.removed_chars != "0" %}<span class="plus">+{{ item.added_chars }}</span> / <span class="minus">−{{ item.removed_chars }}</span> characters{% elif item.added_chars != "0" %}<span class="plus">+{{ item.added_chars }}</span> characters added{% else %}<span class="minus">−{{ item.removed_chars }}</span> characters removed{% endif %} · {{ item.unchanged }}</p>
 </li>
 {%- endmacro %}

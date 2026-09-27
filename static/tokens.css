@@ -125,8 +125,10 @@
 
   /* The cited quote: a highlighter background, never a line (lines are
      the word marks). Distinct in hue and lightness from both Sides
-     (1.29:1 vs --add-bg, 1.24:1 vs --rm-bg); ink on it 12.78:1. */
+     (1.29:1 vs --add-bg, 1.24:1 vs --rm-bg). In light the Side's own ink
+     stays on it (6.31:1 removed, 5.79:1 added; 12.78:1 plain ink). */
   --hl: #fcd34d;
+  --hl-ink: currentColor;
 }
 
 /* ------------------------ DARK palette — designed on paper #17191c ----
@@ -149,6 +151,12 @@
     --rm-bg: #3a1719;
     --rm-ink: #f5b0b0;  /*  8.90:1 on --rm-bg, 4.68:1 inside --hl */
 
-    --hl: #5a4d0c;      /* 1.71:1 vs --add-bg, 1.90:1 vs --rm-bg */
+    /* A brighter amber than a dark ground would suggest, so the quote is
+       unmistakable on both Sides: 2.49:1 vs --add-bg, 2.77:1 vs --rm-bg.
+       The Side inks drop below 4.5:1 on it, so quoted text takes its own
+       cream ink: 5.31:1. The Side stays told by the line's ground, the
+       gutter mark and the hidden label. */
+    --hl: #7a6400;
+    --hl-ink: #fff6d5;
   }
 }

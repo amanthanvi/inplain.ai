@@ -7,11 +7,11 @@
 <h1>{{ change.headline }}</h1>
 <dl class="facts">
 <dt>Compared</dt>
-<dd>the snapshot of <span class="date">{{ change.date }}</span> (commit {{ change.commit }}) against the one before it (commit {{ change.parent_commit }})</dd>
+<dd>the version seen on <span class="date">{{ change.date }}</span> against the previous version (commits <a class="sha" href="{{ change.commit_url }}" rel="external">{{ change.commit }}</a> → <a class="sha" href="{{ change.parent_commit_url }}" rel="external">{{ change.parent_commit }}</a>)</dd>
 <dt>Passages changed</dt>
 <dd>{{ change.hunk_count }}, {{ change.unchanged }}</dd>
 <dt>Characters</dt>
-<dd><span class="plus">+{{ change.added_chars }}</span> added, <span class="minus">−{{ change.removed_chars }}</span> removed</dd>
+<dd>{% if change.added_chars != "0" %}<span class="plus">+{{ change.added_chars }}</span> added{% endif %}{% if change.added_chars != "0" and change.removed_chars != "0" %}, {% endif %}{% if change.removed_chars != "0" %}<span class="minus">−{{ change.removed_chars }}</span> removed{% endif %}</dd>
 {%- if change.effective_date_fact %}
 <dt>Effective date</dt>
 <dd class="effdate">{{ change.effective_date_fact }}</dd>
