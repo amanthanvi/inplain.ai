@@ -42,8 +42,9 @@ pages. On a push to `main` with `DEPLOY_PAGES=true`, the checked site deploys.
    `summarize_failed` output.
 2. **`DEPLOY_PAGES`** — same page, *Variables* tab → New repository variable,
    value `true`. Set it only after the repo is public and Settings → Pages →
-   Source is **GitHub Actions** (hosting.md §7 runbook, steps 5–13; the
-   history rewrite in #8 is the hard gate before going public).
+   Source is **GitHub Actions** (hosting.md §7 runbook, steps 5–13; #8's
+   credential rotation is the hard gate before going public; its history
+   rewrite was executed on 2026-08-03).
 3. Note: the generated site uses root-absolute URLs (`/changes/…`), so Pages
    must serve at a domain root — the custom domain `inplain.ai` per
    hosting.md §6, not the `/inplain.ai/` project subpath.
