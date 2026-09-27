@@ -1,0 +1,40 @@
+{
+  "commit": "532be5332ac6027b9dc0ed4c6b24bc2732494ed9",
+  "company": "dropbox",
+  "company_name": "Dropbox",
+  "detected_at": "2026-09-27T10:03:59Z",
+  "doc": "tos",
+  "hunks": [
+    {
+      "added": [
+        "Dropbox’s Terms of Service will be changing effective January 1, 2027. Click here to review the new terms."
+      ],
+      "context_after": [
+        "For users with a separate DocSend or Dropbox Sign account, the DocSend Terms of Service can be found here, and the Dropbox Sign Terms of Service can be found here.",
+        "Dropbox Terms of Service",
+        "Posted: January 7, 2025"
+      ],
+      "context_before": [],
+      "id": "h1",
+      "new_start": 1,
+      "old_start": 1,
+      "removed": [],
+      "word_spans": null
+    }
+  ],
+  "id": "dropbox-tos-532be53",
+  "materiality": {
+    "added_chars": 106,
+    "effective_date_change": {
+      "from": null,
+      "to": "2027-01-01"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 0,
+    "similarity_badge": 0.9979
+  },
+  "parent_commit": "072f30caf2bec45c723a8288602dc45eb48e4c31",
+  "schema_version": 1,
+  "source_url": "https://www.dropbox.com/terms"
+}

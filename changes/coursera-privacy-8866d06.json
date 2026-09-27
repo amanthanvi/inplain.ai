@@ -1,0 +1,66 @@
+{
+  "commit": "8866d060740f43e2acbf5ab2fdaf982ed749d080",
+  "company": "coursera",
+  "company_name": "Coursera",
+  "detected_at": "2026-09-27T10:03:37Z",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "added": [
+        "Last updated: September 3, 2026."
+      ],
+      "context_after": [
+        "Key Information",
+        "- Coursera, Inc. is the data controller of the Personal Data (as defined below) we process about you, meaning that we determine the means and purposes of collecting, using, storing, disclosing, or otherwise processing your Personal Data. However, if you are participating in a degree program, certain certificate programs where you are required to enroll with the academic institution, or in other circumstances communicated to you, Coursera is the data processor.",
+        "- We collect the Personal Data set out in the \"What Personal Data We Collect\" section of this Privacy Notice below, including account registration details such as name and email, details of Content Offerings you undertake, survey information (where you provide it), identity verification data, and information about your use of the Site (as defined below) and Services."
+      ],
+      "context_before": [
+        "Privacy Notice"
+      ],
+      "id": "h1",
+      "new_start": 2,
+      "old_start": 2,
+      "removed": [
+        "Last updated: May 11, 2026."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "| Identity and Contact Data; Account Registration Data; Demographic Information; Personal Data we collect from your device(s); Education, Career and Skills Information | To facilitate and personalize your interaction with Site features, including tailoring content, recommendations, learning support and engagement tools, and remembering preferences or prior interactions to improve your experience. | For our legitimate interests to run, grow and develop our business including by providing you with a personalized Service | "
+      ],
+      "context_after": [
+        "| Identity and Contact Data; Identity Verification Data | For Services that require identity verification, to verify your identity, and for authenticating that submissions made on the Site were made by you. | With your consent. In the case of biometric data that makes up part of the Identity Verification Data: with your explicit consent or another condition permitted under applicable law | ",
+        "| Identity and Contact Data; Account Registration Data; Content of your Communications; Education, Career and Skills Information; Demographic Information | To manage communications with or from Coursera including to archive information and/or use it for future communications with you where we are legally entitled to do so. | For our legitimate interests to run, grow and develop our business including by communicating effectively with you | ",
+        "| Identity and Contact Data; Account Registration Data; Information about your interests, preferences and affiliations; Content of your Communications; Demographic Information; Personal Data we collect from your device(s) | Where we send you emails, to track the way that you interact with these emails, to optimize and tailor our communications to you. | With your consent | "
+      ],
+      "context_before": [
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Text and/or Images on third party sites; Survey data; Data relating to your use of partner sites | To record and analyze how learners interact with the Site, its features and content, and our Services to build higher quality, more useful Products and/or Services. | For our legitimate interests to run, grow and develop our business | ",
+        "| Identity and Contact Data; Account Registration Data; Content of your Communications; Education, Career and Skills Information; Demographic Information; Text and/or Images on third party sites; Data relating to your use of partner sites | To allow you to access and use the Forums. | To comply with our contract to provide the Forum Services to you, your academic institution, your employer, or other organization that may be providing you with access to Forum Services | ",
+        "| Identity and Contact Data; Account Registration Data; Content of your Communications; Education, Career and Skills Information; Demographic Information | When you participate in a Content Offering through the Site including for tracking attendance, progress, and completion of the Content Offerings. | For our legitimate interests to provide an effective means to track participation in Content Offerings | "
+      ],
+      "id": "h2",
+      "new_start": 57,
+      "old_start": 57,
+      "removed": [
+        "| Identity and Contact Data; Account Registration Data; Demographic Information; Personal Data we collect from your device(s) | To facilitate and personalize your interaction with Site features, including tailoring content, recommendations, learning support and engagement tools, and remembering preferences or prior interactions to improve your experience. | For our legitimate interests to run, grow and develop our business including by providing you with a personalized Service | "
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "coursera-privacy-8866d06",
+  "materiality": {
+    "added_chars": 557,
+    "effective_date_change": {
+      "from": "2026-05-11",
+      "to": "2026-09-03"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 510,
+    "similarity_badge": 0.9875
+  },
+  "parent_commit": "ac2ca90bd15d5e9faeed42297e5574c7f5846060",
+  "schema_version": 1,
+  "source_url": "https://www.coursera.org/about/privacy"
+}

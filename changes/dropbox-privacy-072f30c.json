@@ -1,0 +1,40 @@
+{
+  "commit": "072f30caf2bec45c723a8288602dc45eb48e4c31",
+  "company": "dropbox",
+  "company_name": "Dropbox",
+  "detected_at": "2026-09-27T10:03:56Z",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "added": [
+        "Dropbox’s Privacy Policy will be changing effective January 1, 2027. Click here to review."
+      ],
+      "context_after": [
+        "If your organization signed a Dropbox Business, Dropbox Services, or Dropbox Enterprise Agreement with Dropbox, that Agreement may have modified the privacy policy below. Please contact your organization’s Admin for details.",
+        " ",
+        "Dropbox Privacy Policy"
+      ],
+      "context_before": [],
+      "id": "h1",
+      "new_start": 1,
+      "old_start": 1,
+      "removed": [],
+      "word_spans": null
+    }
+  ],
+  "id": "dropbox-privacy-072f30c",
+  "materiality": {
+    "added_chars": 90,
+    "effective_date_change": {
+      "from": null,
+      "to": "2027-01-01"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 0,
+    "similarity_badge": 0.9974
+  },
+  "parent_commit": "ef2f6871a5ec06cd75a261f276e317b7428edd47",
+  "schema_version": 1,
+  "source_url": "https://www.dropbox.com/privacy"
+}

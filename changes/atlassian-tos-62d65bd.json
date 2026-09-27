@@ -1,0 +1,130 @@
+{
+  "commit": "62d65bdd464df625beb18c3d43df5f88b682b106",
+  "company": "atlassian",
+  "company_name": "Atlassian",
+  "detected_at": "2026-09-27T10:03:17Z",
+  "doc": "tos",
+  "hunks": [
+    {
+      "added": [
+        "Effective starting: October 1, 2026"
+      ],
+      "context_after": [
+        "This Agreement is between Customer and Atlassian. “Customer” means the entity on behalf of which this Agreement is accepted or, if that does not apply, the individual accepting this Agreement. “Atlassian” means the Atlassian entity that owns or operates the Products that Customer uses or accesses listed at https://www.atlassian.com/legal/product-terms.",
+        "If you (the person accepting this Agreement) are accepting this Agreement on behalf of your employer or another entity, you agree that: (i) you have full legal authority to bind your employer or such entity to this Agreement, and (ii) you agree to this Agreement on behalf of your employer or such entity.",
+        "If you are accepting this Agreement using an email address from your employer or another entity, then: (i) you will be deemed to represent that party, (ii) your acceptance of this Agreement will bind your employer or that entity to these terms, and (iii) the word “you” or “Customer” in this Agreement will refer to your employer or that entity."
+      ],
+      "context_before": [
+        "Atlassian provides a wide range of products, services, and deployment options. As part of our dedication to building with heart and balance, we have developed the Atlassian Customer Agreement to encompass all these offerings in a comprehensive and customized manner. Our products adhere to an enterprise-level set of controls and policies that align with various international standards and market expectations. The agreement is crafted to be customer-friendly, undergoing regular updates informed by market practices and customer input. For further insight into our approach, please visit this page.",
+        "Atlassian Customer Agreement"
+      ],
+      "id": "h1",
+      "new_start": 3,
+      "old_start": 3,
+      "removed": [
+        "Effective starting: August 17, 2026"
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "4.7 Usage-Based Offerings. Cloud Products may be, or include access to, Usage-Based Offerings. Atlassian provides Usage-Based Offerings under the Usage-Based Offering Terms."
+      ],
+      "context_after": [
+        "5. Software Products",
+        "This Section 5 only applies to Software Products.",
+        "5.1. Modifications. Atlassian may provide some portions of the Software Products in source code form for Customer to use internally to create bug fixes, configurations or other modifications of the Software Products, as permitted in the Documentation (“Modifications”). Customer must keep such source code secure (on computer devices and online repositories controlled by Customer), confidential, and only make it available to Customer’s employees who have a legitimate need to access and use the source code to create and maintain Modifications. Customer may only use Modifications with the Software Products, and only in accordance with this Agreement, including the Third-Party Code Policy, the Documentation, and Customer’s Scope of Use. Customer must not distribute source code or Modifications to third parties. Customer must securely destroy the source code at the earliest of: (a) Customer no longer needing to use source code to create or maintain Modifications, (b) termination or non-renewal of a relevant Subscription Term, or (c) Atlassian’s request for any reason. Notwithstanding anything else in this Agreement, Atlassian has no support, warranty, indemnity or other responsibility for Modifications."
+      ],
+      "context_before": [
+        "4.4. Data Retrieval. The Documentation describes how Customer may retrieve its Customer Data from the Cloud Products.",
+        "4.5. Removals and Suspension. Atlassian has no obligation to monitor Customer Data. Nonetheless, if Atlassian becomes aware that: (a) Customer Data may violate Law, Section 2.2 (Restrictions), or the rights of others (including relating to a takedown request received following the guidelines for Reporting Copyright and Trademark Violations at https://www.atlassian.com/legal/copyright-and-trademark-violations), or (b) Customer’s use of the Cloud Products threatens the security or operation of the Cloud Products, then Atlassian may: (i) limit access to, or remove, the relevant Customer Data, or (ii) suspend Customer’s or any User’s access to the relevant Cloud Products. Atlassian may also take any such measures where required by Law, or at the request of a governmental authority. When practicable, Atlassian will give Customer the opportunity to remedy the issue before taking any such measures.",
+        "4.6. AI Offerings. Cloud Products may be, or include access to, AI Offerings. Atlassian provides AI Offerings under the AI Terms."
+      ],
+      "id": "h2",
+      "new_start": 28,
+      "old_start": 28,
+      "removed": [],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "“Product-Specific Terms” means terms that apply only to certain Products or features, available at https://www.atlassian.com/legal/product-terms, including the AI Terms and Usage-Based Offering Terms."
+      ],
+      "context_after": [
+        "“Reseller” means a partner authorized by Atlassian to resell Atlassian’s Products, Support and Advisory Services to customers",
+        "“Scope of Use” means Customer’s entitlements to the Products. Such entitlements may be based on: (a) number of licenses, copies or instances, (b) entity, division, business unit, website, or field of use, (c) number and type of Users, (d) number of queries, requests or other usage-based subscription units, or (e) other restrictions or billable units.",
+        "“Security Measures” means Atlassian’s security practices available at https://www.atlassian.com/legal/security-measures."
+      ],
+      "context_before": [
+        "“Policies” means the Acceptable Use Policy, Advisory Services Policy, guidelines for Reporting Copyright and Trademark Violations, Privacy Policy, Security Measures, Service Level Agreement, Support Policy, Third-Party Code Policy and any additional Atlassian policies specified in Product-Specific Terms.",
+        "“Privacy Policy” means Atlassian’s privacy policy available at https://www.atlassian.com/legal/privacy-policy.",
+        "“Products” means the applicable Cloud Products or Software Products made available by Atlassian in connection with an Order. Products also include Atlassian Apps."
+      ],
+      "id": "h3",
+      "new_start": 149,
+      "old_start": 148,
+      "removed": [
+        "“Product-Specific Terms” means terms that apply only to certain Products or features, available at https://www.atlassian.com/legal/product-terms, including the AI Terms."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "“Scope of Use” means Customer’s entitlements to the Products and Usage-Based Offerings. Such entitlements may be based on: (a) number of licenses, copies or instances, (b) entity, division, business unit, website, or field of use, (c) number and type of Users, (d) number of queries, requests or other usage-based units, or (e) other restrictions or billable units."
+      ],
+      "context_after": [
+        "“Security Measures” means Atlassian’s security practices available at https://www.atlassian.com/legal/security-measures.",
+        "“Service Level Agreement” means the service level commitments, if any, for a Cloud Product as described at https://www.atlassian.com/legal/sla.",
+        "“Software Products” means Atlassian’s installed software products and any generally-available bug fixes, updates and upgrades it provides to Customer, including through Support."
+      ],
+      "context_before": [
+        "“Products” means the applicable Cloud Products or Software Products made available by Atlassian in connection with an Order. Products also include Atlassian Apps.",
+        "“Product-Specific Terms” means terms that apply only to certain Products or features, available at https://www.atlassian.com/legal/product-terms, including the AI Terms.",
+        "“Reseller” means a partner authorized by Atlassian to resell Atlassian’s Products, Support and Advisory Services to customers"
+      ],
+      "id": "h4",
+      "new_start": 151,
+      "old_start": 150,
+      "removed": [
+        "“Scope of Use” means Customer’s entitlements to the Products. Such entitlements may be based on: (a) number of licenses, copies or instances, (b) entity, division, business unit, website, or field of use, (c) number and type of Users, (d) number of queries, requests or other usage-based subscription units, or (e) other restrictions or billable units."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "“Usage-Based Offerings” means Usage-Based Offerings as described in the Usage-Based Offering Terms.",
+        "“Usage-Based Offering Terms” means the Atlassian usage-based offering terms available at https://www.atlassian.com/legal/usage-based-offering-terms."
+      ],
+      "context_after": [
+        "“User” means any individual that Customer authorizes to use the Products. Users may include: (i) Customer’s and its Affiliates’ employees, consultants, contractors and agents, (ii) third parties with which Customer or its Affiliates transact business, (iii) individuals invited by Customer’s users, (iv) individuals under managed accounts, or (v) individuals interacting with a Product as Customer’s customer.",
+        "Related content",
+        "Stay informed"
+      ],
+      "context_before": [
+        "“Support” means the level of support for the Products corresponding to Customer’s Scope of Use, as identified in the Support Policy.",
+        "“Support Policy” means the Atlassian support offerings documentation available at https://confluence.atlassian.com/support/atlassian-support-offerings-193299636.html.",
+        "“Third-Party Code Policy” means Atlassian’s third-party code policy available at https://www.atlassian.com/legal/third-party-code-policy."
+      ],
+      "id": "h5",
+      "new_start": 159,
+      "old_start": 158,
+      "removed": [],
+      "word_spans": null
+    }
+  ],
+  "id": "atlassian-tos-62d65bd",
+  "materiality": {
+    "added_chars": 1020,
+    "effective_date_change": {
+      "from": "2026-08-17",
+      "to": "2026-10-01"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 556,
+    "similarity_badge": 0.9828
+  },
+  "parent_commit": "438c738675f3cd22c14627df4990db826df17ccd",
+  "schema_version": 1,
+  "source_url": "https://www.atlassian.com/legal/software-license-agreement"
+}

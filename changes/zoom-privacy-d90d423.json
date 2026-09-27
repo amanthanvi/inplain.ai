@@ -1,0 +1,66 @@
+{
+  "commit": "d90d42328ea6848e7068df75734418ba57b67a92",
+  "company": "zoom",
+  "company_name": "Zoom",
+  "detected_at": "2026-09-27T10:06:16Z",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "added": [
+        "Last updated: September 17, 2026"
+      ],
+      "context_after": [
+        "This Privacy Statement describes the personal data we collect and/or process (which may include collecting, organizing, structuring, storing, using, or disclosing) to provide products and services offered directly by Zoom Communications, Inc. (“Zoom”), including Zoom’s websites, its meetings, webinars, and messaging platform, related collaborative features, and Zoom App Marketplace (“Zoom products and services” or “products and services”). Zoom products and services covered in this Privacy Statement do not include products or services developed by Zoom that are covered under a separate privacy policy (including those listed here). California residents, please see our California Privacy Notice at Collection, and California & Other U.S. State Privacy Rights sections.",
+        "What Personal Data Do We Receive?",
+        "How Do We Share Personal Data?"
+      ],
+      "context_before": [],
+      "id": "h1",
+      "new_start": 1,
+      "old_start": 1,
+      "removed": [
+        "Last updated: July 27, 2026"
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "Privacy Statement Update Notes (September 17, 2026):"
+      ],
+      "context_after": [],
+      "context_before": [
+        "California’s Shine the Light Law",
+        "Under California’s Shine the Light law, you may also ask companies with whom you have formed a business relationship primarily for personal, family or household purposes to provide the names of third parties to which they have disclosed certain personal information (as defined under the Shine the Light law) during the preceding calendar year for their own direct marketing purposes and the categories of personal information disclosed. You may send us requests for this information to privacy@zoom.us. In your request, you must include the statement “Shine the Light Request,” and provide your first and last name and mailing address and certify that you are a California resident. We reserve the right to require additional information to confirm your identity and California residency. Please note that we will not accept requests via telephone, mail, or facsimile, and we are not responsible for notices that are not labeled or sent properly, or that do not have complete information.",
+        "We may update this Privacy Statement periodically to account for changes in our collection and/or processing of personal data, and will post the updated Privacy Statement on our website, with a “Last Updated” date at the top and an Update Note at the bottom. If we make material changes to this Privacy Statement, we will notify you and provide you an opportunity to review before you choose to continue using our products and services."
+      ],
+      "id": "h2",
+      "new_start": 80,
+      "old_start": 80,
+      "removed": [
+        "Privacy Statement Update Notes (July 27, 2026):",
+        "- Add statement for 10DLC Compliance that Zoom will not share opt-in or consent data related to messaging campaigns",
+        "- Update EU/UK Representatives",
+        "- Update data transfer mechanisms to include frameworks beyond the EU Standard Contractual Clauses (SCCs)",
+        "- Provide an option for data subjects to contact Zoom for information on how to reach their local data protection authorities",
+        "- Clarify that users may submit DSAR via phone",
+        "- Clarify that users may set privacy preferences for cookies as well as similar technologies"
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "zoom-privacy-d90d423",
+  "materiality": {
+    "added_chars": 84,
+    "effective_date_change": {
+      "from": "2026-07-27",
+      "to": "2026-09-17"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 587,
+    "similarity_badge": 0.9826
+  },
+  "parent_commit": "73c14b5441b5fa85d0f7e52eb0e51ce6700899b5",
+  "schema_version": 1,
+  "source_url": "https://explore.zoom.us/en/privacy/"
+}
