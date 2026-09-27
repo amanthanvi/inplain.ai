@@ -291,10 +291,6 @@ def _mark_line(text: str, spans: list[tuple[int, int, str]]) -> Markup:
 # view models — templates receive plain, pre-formatted data
 
 
-def _thousands(n: int) -> str:
-    return f"{n:,}"
-
-
 def _plural(n: int, word: str) -> str:
     return f"{n} {word}{'' if n == 1 else 's'}"
 
@@ -486,8 +482,8 @@ def _change_view(record: dict[str, Any]) -> dict[str, Any]:
         "commit_url": f"{REPO_URL}/commit/{record['commit']}",
         "parent_commit": record["parent_commit"][:7],
         "parent_commit_url": f"{REPO_URL}/commit/{record['parent_commit']}",
-        "added_chars": _thousands(materiality["added_chars"]),
-        "removed_chars": _thousands(materiality["removed_chars"]),
+        "added_chars": f"{materiality['added_chars']:,}",
+        "removed_chars": f"{materiality['removed_chars']:,}",
         "hunk_count": total,
         "passages": _plural(total, "passage"),
         "unchanged": _unchanged_text(materiality["similarity_badge"]),
