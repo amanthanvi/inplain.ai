@@ -156,7 +156,8 @@ def test_each_pass_gets_its_own_file_and_the_aggregate_spans_them(tmp_path):
     assert row["mean_reasoning_tokens"] == 250
 
 
-def test_the_key_never_reaches_an_error_or_the_results():
+@pytest.mark.parametrize("key", ["sk-secret\r", "sk-sec\nret"])
+def test_the_key_never_reaches_an_error_or_the_results(key):
     # requests repeats a rejected header value, key included, in its error
     def post(url, headers=None, json=None, timeout=None):
         raise requests.exceptions.InvalidHeader(
@@ -164,8 +165,9 @@ def test_the_key_never_reaches_an_error_or_the_results():
         )
 
     with pytest.raises(run_eval.CallFailed) as info:
-        run_eval.call_model("openrouter", "sk-secret\r", "x-ai/grok-4.7", "p", post)
-    assert "sk-secret" not in str(info.value)
+        run_eval.call_model("openrouter", key, "x-ai/grok-4.7", "p", post)
+    assert "sk-sec" not in str(info.value)
+    assert "[key]" in str(info.value)
 
 
 def test_a_reply_the_gate_cannot_walk_is_a_parse_failure_not_a_crash():
