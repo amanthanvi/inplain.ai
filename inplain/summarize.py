@@ -93,20 +93,22 @@ from . import REPO_ROOT, schema, setup_cli_logging
 log = logging.getLogger("inplain.summarize")
 
 # -- model -----------------------------------------------------------------
-# PLACEHOLDERS (#36): set DEFAULT_MODEL, FALLBACK_MODEL and their provider pins
-# from the measured golden-set bake-off before this ships. The single fallback
-# is used ONLY when the primary is unavailable (outage class), never on
-# malformed output.
-DEFAULT_MODEL = "PLACEHOLDER/primary-set-by-36-bakeoff"
-FALLBACK_MODEL = "PLACEHOLDER/fallback-set-by-36-bakeoff"
+# Measured, not provisional (docs/model-eval.md, 2026-09-27 re-run, issue #36):
+# over three passes of the 17-entry golden set, grok-4.7 returned 528/528
+# Valid citations with 0 parse failures and the highest Hunk coverage (99.6%);
+# gemini-3.8-flash was also clean (198/198) and is the fastest, from a
+# different vendor. The single fallback is used ONLY when the primary is
+# unavailable (outage class), never on malformed output.
+DEFAULT_MODEL = "x-ai/grok-4.7"
+FALLBACK_MODEL = "google/gemini-3.8-flash"
 
 # The one OpenRouter provider each model is served by, with fallbacks off, so
 # production runs on the endpoint that was measured. Unpinned, OpenRouter
 # load-balances by price across backends and quantizations. A model with no
 # pin is refused before any call.
 PROVIDER_PINS = {
-    DEFAULT_MODEL: "PLACEHOLDER-provider",
-    FALLBACK_MODEL: "PLACEHOLDER-provider",
+    DEFAULT_MODEL: "xai",
+    FALLBACK_MODEL: "google-ai-studio",
 }
 
 # Models that get no `temperature` (Anthropic returns 400 for non-default
@@ -116,7 +118,7 @@ PROVIDER_PINS = {
 NO_TEMPERATURE = frozenset({"openai/gpt-6-luna", "anthropic/claude-sonnet-5"})
 
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
-REQUEST_TIMEOUT = 180  # seconds
+REQUEST_TIMEOUT = 300  # seconds; grok-4.7's slowest measured call took 136 s
 # The cap the bake-off measured at (eval/run_eval.py). Reasoning tokens count
 # toward it, so a lower cap here could truncate replies the measurement
 # counted as clean.

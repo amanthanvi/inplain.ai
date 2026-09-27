@@ -1,0 +1,235 @@
+{
+  "method": "eval/run_eval.py prompt + scoring gate; temperature 0 (omitted for anthropic/claude-sonnet-5, openai/gpt-6-luna), max_tokens 12000, 3 retries on 408/429/5xx/timeout/connection error, 4-way parallel per model, provider pinned with fallbacks off",
+  "passes": {
+    "1": [
+      "anthropic/claude-sonnet-5",
+      "deepseek/deepseek-v4.1-flash",
+      "google/gemini-3.7-flash",
+      "google/gemini-3.8-flash",
+      "minimax/minimax-m3",
+      "openai/gpt-6-luna",
+      "qwen/qwen3.7-flash",
+      "qwen/qwen3.8-flash",
+      "x-ai/grok-4.7",
+      "xiaomi/mimo-v2.6-flash"
+    ],
+    "2": [
+      "anthropic/claude-sonnet-5",
+      "deepseek/deepseek-v4.1-flash",
+      "google/gemini-3.7-flash",
+      "google/gemini-3.8-flash",
+      "openai/gpt-6-luna",
+      "qwen/qwen3.7-flash",
+      "x-ai/grok-4.7",
+      "xiaomi/mimo-v2.6-flash"
+    ],
+    "3": [
+      "google/gemini-3.7-flash",
+      "google/gemini-3.8-flash",
+      "qwen/qwen3.7-flash",
+      "x-ai/grok-4.7"
+    ]
+  },
+  "aggregate": [
+    {
+      "model": "x-ai/grok-4.7",
+      "runs": 3,
+      "entries": 51,
+      "citations": 528,
+      "valid": 528,
+      "validity": 1.0,
+      "claim_drop": 0.0,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.9956,
+      "mean_latency": 18.2,
+      "served_providers": {
+        "xAI": 51
+      },
+      "mean_input_tokens": 3911.7,
+      "mean_output_tokens": 1595.7,
+      "mean_reasoning_tokens": 1003.8,
+      "cost_usd": 0.568358
+    },
+    {
+      "model": "qwen/qwen3.7-flash",
+      "runs": 3,
+      "entries": 51,
+      "citations": 209,
+      "valid": 209,
+      "validity": 1.0,
+      "claim_drop": 0.0,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.9427,
+      "mean_latency": 30.7,
+      "served_providers": {
+        "Alibaba": 51
+      },
+      "mean_input_tokens": 2720.8,
+      "mean_output_tokens": 2956.3,
+      "mean_reasoning_tokens": 2546.5,
+      "cost_usd": 0.022565
+    },
+    {
+      "model": "google/gemini-3.7-flash",
+      "runs": 3,
+      "entries": 51,
+      "citations": 197,
+      "valid": 197,
+      "validity": 1.0,
+      "claim_drop": 0.0,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.9216,
+      "mean_latency": 3.7,
+      "served_providers": {
+        "Google AI Studio": 51
+      },
+      "mean_input_tokens": 2723.1,
+      "mean_output_tokens": 798.7,
+      "mean_reasoning_tokens": 583.8,
+      "cost_usd": 0
+    },
+    {
+      "model": "google/gemini-3.8-flash",
+      "runs": 3,
+      "entries": 51,
+      "citations": 198,
+      "valid": 198,
+      "validity": 1.0,
+      "claim_drop": 0.0,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.921,
+      "mean_latency": 4.7,
+      "served_providers": {
+        "Google AI Studio": 51
+      },
+      "mean_input_tokens": 2723.1,
+      "mean_output_tokens": 1074.0,
+      "mean_reasoning_tokens": 878.6,
+      "cost_usd": 0
+    },
+    {
+      "model": "qwen/qwen3.8-flash",
+      "runs": 1,
+      "entries": 17,
+      "citations": 93,
+      "valid": 93,
+      "validity": 1.0,
+      "claim_drop": 0.0,
+      "parse_failures": 2,
+      "call_failures": 0,
+      "coverage": 0.8824,
+      "mean_latency": 41.1,
+      "served_providers": {
+        "Alibaba": 17
+      },
+      "mean_input_tokens": 2771.8,
+      "mean_output_tokens": 3067.1,
+      "mean_reasoning_tokens": 2669.9,
+      "cost_usd": 0.031059
+    },
+    {
+      "model": "deepseek/deepseek-v4.1-flash",
+      "runs": 2,
+      "entries": 34,
+      "citations": 263,
+      "valid": 262,
+      "validity": 0.9962,
+      "claim_drop": 0.0069,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.9941,
+      "mean_latency": 29.5,
+      "served_providers": {
+        "Fireworks": 34
+      },
+      "mean_input_tokens": 2681.8,
+      "mean_output_tokens": 2361.3,
+      "mean_reasoning_tokens": 1964.7,
+      "cost_usd": 0.063485
+    },
+    {
+      "model": "anthropic/claude-sonnet-5",
+      "runs": 2,
+      "entries": 34,
+      "citations": 229,
+      "valid": 228,
+      "validity": 0.9956,
+      "claim_drop": 0.0067,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.9745,
+      "mean_latency": 8.0,
+      "served_providers": {
+        "Anthropic": 34
+      },
+      "mean_input_tokens": 3943.6,
+      "mean_output_tokens": 871.5,
+      "mean_reasoning_tokens": 93.9,
+      "cost_usd": 0.564468
+    },
+    {
+      "model": "openai/gpt-6-luna",
+      "runs": 2,
+      "entries": 34,
+      "citations": 220,
+      "valid": 219,
+      "validity": 0.9955,
+      "claim_drop": 0.0083,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.9657,
+      "mean_latency": 5.7,
+      "served_providers": {
+        "OpenAI": 34
+      },
+      "mean_input_tokens": 2610.6,
+      "mean_output_tokens": 600.5,
+      "mean_reasoning_tokens": 192.5,
+      "cost_usd": 0.01657
+    },
+    {
+      "model": "xiaomi/mimo-v2.6-flash",
+      "runs": 2,
+      "entries": 34,
+      "citations": 379,
+      "valid": 374,
+      "validity": 0.9868,
+      "claim_drop": 0.026,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.9924,
+      "mean_latency": 19.2,
+      "served_providers": {
+        "Xiaomi": 34
+      },
+      "mean_input_tokens": 2625.6,
+      "mean_output_tokens": 964.0,
+      "mean_reasoning_tokens": 204.5,
+      "cost_usd": 0.015906
+    },
+    {
+      "model": "minimax/minimax-m3",
+      "runs": 1,
+      "entries": 17,
+      "citations": 126,
+      "valid": 120,
+      "validity": 0.9524,
+      "claim_drop": 0.0571,
+      "parse_failures": 1,
+      "call_failures": 0,
+      "coverage": 0.9055,
+      "mean_latency": 11.3,
+      "served_providers": {
+        "Minimax": 17
+      },
+      "mean_input_tokens": 2773.5,
+      "mean_output_tokens": 1549.6,
+      "mean_reasoning_tokens": 1121.9,
+      "cost_usd": 0.045174
+    }
+  ]
+}

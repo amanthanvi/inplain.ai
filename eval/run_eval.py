@@ -86,7 +86,7 @@ PROVIDER_PINS = {
     "openai/gpt-6-luna": "openai",
     "qwen/qwen3.8-flash": "alibaba",
     "qwen/qwen3.7-flash": "alibaba",
-    "deepseek/deepseek-v4.1-flash": "deepseek",
+    "deepseek/deepseek-v4.1-flash": "fireworks",  # not "deepseek": the account's no-training guardrail removes DeepSeek's own endpoint,
     "xiaomi/mimo-v2.6-flash": "xiaomi",
     "anthropic/claude-sonnet-5": "anthropic",
     "x-ai/grok-4.7": "xai",
