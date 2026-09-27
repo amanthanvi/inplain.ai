@@ -20,15 +20,18 @@ one flaky generation (docs/model-eval.md, "Method"). Give every pass the same
     python eval/run_eval.py --provider openrouter --out $OUT --pass 3 --model <finalist> ...
 
 Each run writes DIR/pass<N>.json, the raw result of every call (served
-provider, usage including reasoning tokens, latency, finish reason, the reply
-and its score), after each model finishes, then rebuilds DIR/aggregate.json
-from every pass file in DIR. A model already recorded in a pass is refused
-before any call is made, so a pass is never overwritten.
+provider, usage including reasoning tokens and cost, latency, attempts, finish
+reason, the reply and its score), after each model finishes, then rebuilds
+DIR/aggregate.json from every pass file in DIR. A model already recorded in a
+pass is refused before any call is made, so a pass is never overwritten. A
+model whose every call failed is not recorded, so it can be re-run; nor is a
+--limit run, which is a smoke test, not a pass. Run one process per DIR at a
+time.
 
 Request method (August's, docs/model-eval.md): OpenRouter chat completions,
 temperature 0 (not sent to the models in NO_TEMPERATURE), max_tokens 12000,
-3 retries on HTTP 429, 5xx and timeouts with a short backoff, 4 entries in
-parallel per model, and the provider pinned per model (PROVIDER_PINS) with
+3 retries on HTTP 408, 429, 5xx, timeouts and dropped connections with a short
+backoff, 4 entries in parallel per model, and the provider pinned per model (PROVIDER_PINS) with
 fallbacks off. Default service tier only: no service_tier, no :floor or :flex
 suffix. --provider anthropic calls the Anthropic Messages API directly with the
 same max_tokens and retries; it is not the bake-off method.
@@ -94,6 +97,13 @@ PROVIDER_PINS = {
 # returns 400 for non-default sampling on Sonnet 5). `require_parameters` is
 # never sent: paired with `temperature` it leaves these models no endpoint.
 NO_TEMPERATURE = frozenset({"openai/gpt-6-luna", "anthropic/claude-sonnet-5"})
+
+METHOD = (
+    "eval/run_eval.py prompt + scoring gate; temperature 0 (omitted for "
+    f"{', '.join(sorted(NO_TEMPERATURE))}), max_tokens {MAX_TOKENS}, "
+    f"{len(RETRY_BACKOFF)} retries on 408/429/5xx/timeout/connection error, "
+    f"{PARALLEL}-way parallel per model, provider pinned with fallbacks off"
+)
 
 PROMPT_TEMPLATE = """\
 You are summarizing a diff between two versions of a company policy document.
@@ -248,8 +258,8 @@ def load_golden(golden_dir: Path = GOLDEN_DIR, limit: int | None = None) -> list
 
 def resolve_provider(requested: str) -> tuple[str, str]:
     """Return (provider, api_key) from environment. Exits if no key is set."""
-    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
-    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+    anthropic_key = (os.environ.get("ANTHROPIC_API_KEY") or "").strip()
+    openrouter_key = (os.environ.get("OPENROUTER_API_KEY") or "").strip()
     if requested == "anthropic" or (requested == "auto" and anthropic_key):
         if not anthropic_key:
             raise SystemExit("ANTHROPIC_API_KEY is not set in the environment.")
@@ -299,34 +309,44 @@ class CallFailed(Exception):
 
 def call_model(provider: str, api_key: str, model: str, prompt: str,
                post: Any = None) -> dict[str, Any]:
-    """One completion call, retried on 429, 5xx and timeouts. Returns the
-    reply plus what the response says about how it was served. ``post`` is
-    the transport seam; tests inject it, production uses requests.post."""
+    """One completion call, retried on 408, 429, 5xx, timeouts and dropped
+    connections (requests reports a timeout while reading the body as a
+    ConnectionError). Returns the reply plus what the response says about how
+    it was served. ``post`` is the transport seam; tests inject it, production
+    uses requests.post."""
     import requests
+
+    def redact(text: str) -> str:
+        # requests repeats a rejected header value, key included, in its
+        # error, as a repr: a stray \r or space is escaped, the rest verbatim.
+        secret = api_key.strip()
+        return text.replace(secret, "[key]") if secret else text
 
     post = requests.post if post is None else post
     url, headers, payload = build_request(provider, api_key, model, prompt)
-    for backoff in (*RETRY_BACKOFF, None):
+    for attempt, backoff in enumerate((*RETRY_BACKOFF, None), start=1):
         started = time.monotonic()
         try:
             resp = post(url, headers=headers, json=payload, timeout=REQUEST_TIMEOUT)
         except requests.exceptions.Timeout:
             error = f"timed out after {REQUEST_TIMEOUT}s"
+        except requests.exceptions.ConnectionError as exc:
+            error = redact(f"connection failed: {exc}")
         except requests.exceptions.RequestException as exc:
-            raise CallFailed(f"request failed: {exc}") from exc
+            raise CallFailed(redact(f"request failed: {exc}")) from exc
         else:
             latency = time.monotonic() - started
             status = resp.status_code
             if status < 400:
-                return read_response(provider, resp, latency)
+                return {**read_response(provider, resp, latency), "attempts": attempt}
             if status in (401, 402):
                 # Bad key or no credit: every later call fails the same way.
                 # Stop before this model's pass is recorded as all failures.
                 raise SystemExit(f"{provider} returned HTTP {status} for {model}; "
                                  "check the key and credit, nothing was recorded "
                                  "for this model")
-            if status != 429 and status < 500:
-                raise CallFailed(f"HTTP {status}: {resp.text[:300]}")
+            if status not in (408, 429) and status < 500:
+                raise CallFailed(redact(f"HTTP {status}: {resp.text[:300]}"))
             error = f"HTTP {status}"
         if backoff is None:
             break
@@ -434,13 +454,20 @@ def run_model(entries: list[dict], provider: str, api_key: str, model: str,
             record.update(call_model(provider, api_key, model, build_prompt(entry), post))
         except CallFailed as exc:
             record["error"] = str(exc)
-        bullets = parse_bullets(record["reply"]) if "reply" in record else None
-        if bullets is None:
+        score = None
+        if "reply" in record:
+            try:
+                bullets = parse_bullets(record["reply"])
+                if bullets is not None:
+                    score = score_bullets(bullets, entry["hunks"], entry["id"])
+            except (AttributeError, KeyError, TypeError) as exc:
+                # A reply the gate cannot walk (a bullet that is not an
+                # object, an unhashable hunk id): no claim survives.
+                record["malformed"] = str(exc)
+        if score is None:
             score = EntryScore(
                 entry_id=entry["id"], total_hunks=len(entry["hunks"]), parse_failure=True
             )
-        else:
-            score = score_bullets(bullets, entry["hunks"], entry["id"])
         record["score"] = asdict(score)
         print(call_line(record, score), flush=True)
         return record
@@ -515,7 +542,17 @@ def summarize_calls(calls: list[dict[str, Any]]) -> dict[str, Any]:
         "mean_input_tokens": mean([f[0] for f in figures]),
         "mean_output_tokens": mean([f[1] for f in figures]),
         "mean_reasoning_tokens": mean([f[2] for f in figures]),
+        "cost_usd": total_cost(served),
     }
+
+
+def total_cost(calls: list[dict[str, Any]]) -> float | None:
+    """OpenRouter's own per-call cost, summed; None if no call reported one."""
+    costs = [
+        call["usage"]["cost"] for call in calls
+        if isinstance(call["usage"], dict) and isinstance(call["usage"].get("cost"), (int, float))
+    ]
+    return round(sum(costs), 6) if costs else None
 
 
 def pass_path(out: Path, number: int) -> Path:
@@ -525,7 +562,7 @@ def pass_path(out: Path, number: int) -> Path:
 def read_pass(out: Path, number: int) -> dict[str, Any]:
     path = pass_path(out, number)
     if not path.exists():
-        return {"pass": number, "models": {}}
+        return {"pass": number, "method": METHOD, "models": {}}
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
 
@@ -544,12 +581,12 @@ def record_pass(out: Path, number: int, provider: str, model: str,
     """Add one model's calls to pass<N>.json, then rebuild aggregate.json from
     every pass file in ``out``."""
     recorded = read_pass(out, number)
+    _, _, request = build_request(provider, "", model, "")
+    del request["messages"]
     recorded["models"][model] = {
         "finished_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "transport": provider,
-        "provider_pin": PROVIDER_PINS.get(model) if provider == "openrouter" else None,
-        "temperature": 0 if provider == "openrouter" and model not in NO_TEMPERATURE else None,
-        "max_tokens": MAX_TOKENS,
+        "request": request,
         "summary": summarize_calls(calls),
         "calls": calls,
     }
@@ -570,7 +607,9 @@ def record_pass(out: Path, number: int, provider: str, model: str,
         for name, calls in by_model.items()
     ]
     rows.sort(key=lambda r: (-r["validity"], r["parse_failures"], -r["coverage"], r["model"]))
-    write_json(out / "aggregate.json", {"passes": passes, "aggregate": rows})
+    write_json(
+        out / "aggregate.json", {"method": METHOD, "passes": passes, "aggregate": rows}
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -612,19 +651,28 @@ def main(argv: list[str] | None = None) -> int:
     provider, api_key = resolve_provider(args.provider)
     out = args.out or RESULTS_DIR / f"{provider}-bakeoff-{datetime.now(UTC).date()}"
     already = [m for m in models if m in read_pass(out, args.pass_number)["models"]]
-    if already:
+    if already and not args.limit:
         raise SystemExit(
             f"{pass_path(out, args.pass_number)} already records {', '.join(already)}. "
             "A pass is never overwritten: use another --pass or --out."
         )
+    unrecorded, recorded = [], []
     for model in models:
         print(f"evaluating {model} via {provider} on {len(entries)} entries, "
               f"pass {args.pass_number}")
         calls = run_model(entries, provider, api_key, model)
         report_aggregate(aggregate_calls(calls), f"{model} via {provider}")
-        record_pass(out, args.pass_number, provider, model, calls)
-    print(f"\nresults: {pass_path(out, args.pass_number)} and {out / 'aggregate.json'}")
-    return 0
+        if args.limit:
+            print("--limit run: a smoke test, not recorded")
+        elif all("error" in call for call in calls):
+            print(f"every call to {model} failed: not recorded, so it can be re-run")
+            unrecorded.append(model)
+        else:
+            record_pass(out, args.pass_number, provider, model, calls)
+            recorded.append(model)
+    if recorded:
+        print(f"\nresults: {pass_path(out, args.pass_number)} and {out / 'aggregate.json'}")
+    return 1 if unrecorded else 0
 
 
 if __name__ == "__main__":
