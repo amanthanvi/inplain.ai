@@ -47,7 +47,7 @@ import re
 import subprocess
 import sys
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -358,7 +358,6 @@ class DetectReport:
     created: int = 0  # material records written this run
     suppressed: int = 0  # immaterial records written this run (still recorded)
     skipped: int = 0  # ledger hits, first snapshots, no-op commits
-    record_ids: list[str] = field(default_factory=list)
 
 
 class Detector:
@@ -499,7 +498,6 @@ class Detector:
                     continue
                 payload = record.to_dict()
                 schema.dump_record(payload, out_path)
-                report.record_ids.append(record.id)
                 materiality = record.materiality
                 if materiality.material:
                     report.created += 1
