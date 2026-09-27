@@ -381,13 +381,6 @@ def _hunk_view(
     }
 
 
-def _summary_bullets(record: dict[str, Any]) -> list[dict[str, Any]]:
-    summary = record.get("summary")
-    if not isinstance(summary, dict):
-        return []
-    return list(summary.get("bullets") or [])
-
-
 def _claims(
     bullets: list[dict[str, Any]], hunks: dict[str, dict[str, Any]]
 ) -> tuple[list[dict[str, Any]], set[str]]:
@@ -439,7 +432,7 @@ def _change_view(record: dict[str, Any]) -> dict[str, Any]:
     materiality = record["materiality"]
     title = doc_title(record["doc"])
     date = record["detected_at"][:10]
-    bullets = _summary_bullets(record)
+    bullets = record.get("summary", {}).get("bullets", [])
     quotes: dict[str, dict[str, list[str]]] = {}
     for bullet in bullets:
         for citation in bullet["citations"]:
