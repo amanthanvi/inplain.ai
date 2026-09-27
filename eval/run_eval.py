@@ -1,8 +1,37 @@
 """R2 eval harness — score a candidate model on the cited-summary golden set.
 
 Usage:
-    python eval/run_eval.py --model <model-id> [--limit N] [--provider auto|anthropic|openrouter]
     python eval/run_eval.py --self-test        # score the golden expectations themselves
+    python eval/run_eval.py --provider openrouter --pass N --model <id> [<id> ...]
+                            [--out DIR] [--limit N]
+
+The bake-off: pass 1 runs every candidate on the whole golden set; passes 2
+and 3 repeat the finalists, because one pass cannot tell a real ceiling from
+one flaky generation (docs/model-eval.md, "Method"). Give every pass the same
+--out:
+
+    OUT=eval/results/openrouter-bakeoff-2026-09
+    python eval/run_eval.py --provider openrouter --out $OUT --pass 1 --model \\
+        google/gemini-3.8-flash openai/gpt-6-luna qwen/qwen3.8-flash \\
+        deepseek/deepseek-v4.1-flash xiaomi/mimo-v2.6-flash \\
+        anthropic/claude-sonnet-5 x-ai/grok-4.7 \\
+        google/gemini-3.7-flash minimax/minimax-m3 qwen/qwen3.7-flash
+    python eval/run_eval.py --provider openrouter --out $OUT --pass 2 --model <finalist> ...
+    python eval/run_eval.py --provider openrouter --out $OUT --pass 3 --model <finalist> ...
+
+Each run writes DIR/pass<N>.json, the raw result of every call (served
+provider, usage including reasoning tokens, latency, finish reason, the reply
+and its score), after each model finishes, then rebuilds DIR/aggregate.json
+from every pass file in DIR. A model already recorded in a pass is refused
+before any call is made, so a pass is never overwritten.
+
+Request method (August's, docs/model-eval.md): OpenRouter chat completions,
+temperature 0 (not sent to the models in NO_TEMPERATURE), max_tokens 12000,
+3 retries on HTTP 429, 5xx and timeouts with a short backoff, 4 entries in
+parallel per model, and the provider pinned per model (PROVIDER_PINS) with
+fallbacks off. Default service tier only: no service_tier, no :floor or :flex
+suffix. --provider anthropic calls the Anthropic Messages API directly with the
+same max_tokens and retries; it is not the bake-off method.
 
 API keys come ONLY from the environment: ANTHROPIC_API_KEY (Anthropic Messages
 API) or OPENROUTER_API_KEY (OpenRouter chat completions). Keys are never read
@@ -24,13 +53,47 @@ import argparse
 import json
 import os
 import sys
-from dataclasses import dataclass, field
+import time
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
+RESULTS_DIR = Path(__file__).resolve().parent / "results"
 VALID_SIDES = ("added", "removed")
 REQUEST_TIMEOUT = 180  # seconds
+MAX_TOKENS = 12000
+RETRY_BACKOFF = (2, 4, 8)  # seconds before each of the 3 retries
+PARALLEL = 4  # entries in flight per model
+
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
+
+# The one OpenRouter provider each candidate is served by
+# (docs/research/2026-09-model-candidates.md §4). Unpinned, OpenRouter
+# load-balances by price, so a run can hit a different backend or
+# quantization call to call. A model not listed here runs unpinned, with a
+# warning.
+PROVIDER_PINS = {
+    "google/gemini-3.8-flash": "google-ai-studio",
+    "google/gemini-3.7-flash": "google-ai-studio",
+    "openai/gpt-6-luna": "openai",
+    "qwen/qwen3.8-flash": "alibaba",
+    "qwen/qwen3.7-flash": "alibaba",
+    "deepseek/deepseek-v4.1-flash": "deepseek",
+    "xiaomi/mimo-v2.6-flash": "xiaomi",
+    "anthropic/claude-sonnet-5": "anthropic",
+    "x-ai/grok-4.7": "xai",
+    "minimax/minimax-m3": "minimax",
+}
+
+# Models that get no `temperature` at all: they do not accept it (Anthropic
+# returns 400 for non-default sampling on Sonnet 5). `require_parameters` is
+# never sent: paired with `temperature` it leaves these models no endpoint.
+NO_TEMPERATURE = frozenset({"openai/gpt-6-luna", "anthropic/claude-sonnet-5"})
 
 PROMPT_TEMPLATE = """\
 You are summarizing a diff between two versions of a company policy document.
@@ -202,59 +265,114 @@ def resolve_provider(requested: str) -> tuple[str, str]:
     )
 
 
-def call_model(provider: str, api_key: str, model: str, prompt: str) -> str:
-    """One completion call. Raises SystemExit with a specific message on
-    transport failure; callers treat per-entry HTTP errors as parse failures."""
-    import requests
-
+def build_request(provider: str, api_key: str, model: str,
+                  prompt: str) -> tuple[str, dict[str, str], dict[str, Any]]:
+    """(url, headers, payload) for one completion call."""
+    payload: dict[str, Any] = {
+        "model": model,
+        "max_tokens": MAX_TOKENS,
+        "messages": [{"role": "user", "content": prompt}],
+    }
     if provider == "anthropic":
-        url = "https://api.anthropic.com/v1/messages"
         headers = {
             "x-api-key": api_key,
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         }
-        payload = {
-            "model": model,
-            "max_tokens": 4096,
-            "messages": [{"role": "user", "content": prompt}],
-        }
-    else:
-        url = "https://openrouter.ai/api/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-        payload = {
-            "model": model,
-            "max_tokens": 4096,
-            "messages": [{"role": "user", "content": prompt}],
-        }
+        return ANTHROPIC_URL, headers, payload
+    if model not in NO_TEMPERATURE:
+        payload["temperature"] = 0
+    if model in PROVIDER_PINS:
+        payload["provider"] = {"order": [PROVIDER_PINS[model]], "allow_fallbacks": False}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    return OPENROUTER_URL, headers, payload
 
+
+class CallFailed(Exception):
+    """No usable reply: a non-retryable HTTP error, retries exhausted, or an
+    unexpected body. The entry scores as a parse failure (every claim
+    dropped), as August scored its all-404 model."""
+
+
+def call_model(provider: str, api_key: str, model: str, prompt: str,
+               post: Any = None) -> dict[str, Any]:
+    """One completion call, retried on 429, 5xx and timeouts. Returns the
+    reply plus what the response says about how it was served. ``post`` is
+    the transport seam; tests inject it, production uses requests.post."""
+    import requests
+
+    post = requests.post if post is None else post
+    url, headers, payload = build_request(provider, api_key, model, prompt)
+    for backoff in (*RETRY_BACKOFF, None):
+        started = time.monotonic()
+        try:
+            resp = post(url, headers=headers, json=payload, timeout=REQUEST_TIMEOUT)
+        except requests.exceptions.Timeout:
+            error = f"timed out after {REQUEST_TIMEOUT}s"
+        except requests.exceptions.RequestException as exc:
+            raise CallFailed(f"request failed: {exc}") from exc
+        else:
+            latency = time.monotonic() - started
+            status = resp.status_code
+            if status < 400:
+                return read_response(provider, resp, latency)
+            if status in (401, 402):
+                # Bad key or no credit: every later call fails the same way.
+                # Stop before this model's pass is recorded as all failures.
+                raise SystemExit(f"{provider} returned HTTP {status} for {model}; "
+                                 "check the key and credit, nothing was recorded "
+                                 "for this model")
+            if status != 429 and status < 500:
+                raise CallFailed(f"HTTP {status}: {resp.text[:300]}")
+            error = f"HTTP {status}"
+        if backoff is None:
+            break
+        print(f"  {model}: {error}, retrying in {backoff}s")
+        time.sleep(backoff)
+    raise CallFailed(f"{error}; gave up after {len(RETRY_BACKOFF)} retries")
+
+
+def read_response(provider: str, resp: Any, latency: float) -> dict[str, Any]:
     try:
-        resp = requests.post(url, headers=headers, json=payload, timeout=REQUEST_TIMEOUT)
-        resp.raise_for_status()
         body = resp.json()
-    except requests.exceptions.Timeout as exc:
-        raise SystemExit(f"{provider} request timed out after {REQUEST_TIMEOUT}s: {exc}") from exc
-    except requests.exceptions.ConnectionError as exc:
-        raise SystemExit(f"Could not connect to {provider}: {exc}") from exc
-    except requests.exceptions.HTTPError as exc:
-        detail = exc.response.text[:500] if exc.response is not None else ""
-        raise SystemExit(f"{provider} returned HTTP error: {exc}\n{detail}") from exc
-    except json.JSONDecodeError as exc:
-        raise SystemExit(f"{provider} returned a non-JSON response body: {exc}") from exc
-
+    except ValueError as exc:  # json.JSONDecodeError and requests' both subclass it
+        raise CallFailed(f"non-JSON response body: {exc}") from exc
     try:
         if provider == "anthropic":
-            return "".join(
+            reply = "".join(
                 block["text"] for block in body["content"] if block.get("type") == "text"
             )
-        return body["choices"][0]["message"]["content"]
-    except (KeyError, IndexError, TypeError) as exc:
-        raise SystemExit(
-            f"{provider} response had an unexpected shape: {exc}: {str(body)[:500]}"
-        ) from exc
+            served, finish = "anthropic", body.get("stop_reason")
+        else:
+            choice = body["choices"][0]
+            reply = choice["message"]["content"] or ""
+            served, finish = body.get("provider"), choice.get("finish_reason")
+        usage = body.get("usage")
+    except (KeyError, IndexError, TypeError, AttributeError) as exc:
+        raise CallFailed(f"unexpected response shape: {exc}: {str(body)[:300]}") from exc
+    return {
+        "served_provider": served,
+        "usage": usage,
+        "finish_reason": finish,
+        "latency_s": round(latency, 2),
+        "reply": reply,
+    }
+
+
+def usage_figures(usage: Any) -> tuple[Any, Any, Any]:
+    """(input, output, reasoning) tokens from either API's usage block; None
+    where the provider did not report the figure."""
+    if not isinstance(usage, dict):
+        return None, None, None
+    details = usage.get("completion_tokens_details") or {}
+    return (
+        usage.get("prompt_tokens", usage.get("input_tokens")),
+        usage.get("completion_tokens", usage.get("output_tokens")),
+        details.get("reasoning_tokens") if isinstance(details, dict) else None,
+    )
 
 
 def parse_bullets(raw: str) -> list[dict[str, Any]] | None:
@@ -302,29 +420,58 @@ def run_self_test(entries: list[dict]) -> Aggregate:
     return agg
 
 
-def run_model(entries: list[dict], provider: str, api_key: str, model: str) -> Aggregate:
-    agg = Aggregate()
-    for entry in entries:
-        raw = call_model(provider, api_key, model, build_prompt(entry))
-        bullets = parse_bullets(raw)
+def run_model(entries: list[dict], provider: str, api_key: str, model: str,
+              post: Any = None) -> list[dict[str, Any]]:
+    """Every entry through one model, PARALLEL at a time. Returns one record
+    per call, in golden-set order: how it was served, the reply, its score."""
+    if provider == "openrouter" and model not in PROVIDER_PINS:
+        print(f"WARNING: {model} has no provider pin; running unpinned, so "
+              "OpenRouter may route each call to a different backend")
+
+    def one(entry: dict) -> dict[str, Any]:
+        record: dict[str, Any] = {"entry": entry["id"]}
+        try:
+            record.update(call_model(provider, api_key, model, build_prompt(entry), post))
+        except CallFailed as exc:
+            record["error"] = str(exc)
+        bullets = parse_bullets(record["reply"]) if "reply" in record else None
         if bullets is None:
             score = EntryScore(
                 entry_id=entry["id"], total_hunks=len(entry["hunks"]), parse_failure=True
             )
-            print(f"  {entry['id']}: PARSE FAILURE (reply was not the required JSON shape)")
         else:
             score = score_bullets(bullets, entry["hunks"], entry["id"])
-            report_entry(score)
-        agg.add(score)
-    return agg
+        record["score"] = asdict(score)
+        print(call_line(record, score), flush=True)
+        return record
+
+    with ThreadPoolExecutor(max_workers=PARALLEL) as pool:
+        return list(pool.map(one, entries))
 
 
-def report_entry(score: EntryScore) -> None:
-    print(
+def call_line(record: dict[str, Any], score: EntryScore) -> str:
+    if "error" in record:
+        return f"  {score.entry_id}: CALL FAILED ({record['error']})"
+    tokens_in, tokens_out, reasoning = usage_figures(record["usage"])
+    served = (
+        f"[{record['served_provider']}, {tokens_in} in / {tokens_out} out"
+        f" (reasoning {reasoning}), {record['latency_s']}s, {record['finish_reason']}]"
+    )
+    if score.parse_failure:
+        return f"  {score.entry_id}: PARSE FAILURE (reply was not the required JSON shape) {served}"
+    return f"{entry_line(score)} {served}"
+
+
+def entry_line(score: EntryScore) -> str:
+    return (
         f"  {score.entry_id}: citations {score.valid_citations}/{score.total_citations} valid, "
         f"bullets kept {score.kept_bullets}/{score.total_bullets}, "
         f"coverage {score.covered_hunks}/{score.total_hunks} hunks"
     )
+
+
+def report_entry(score: EntryScore) -> None:
+    print(entry_line(score))
 
 
 def report_aggregate(agg: Aggregate, label: str) -> None:
@@ -337,18 +484,118 @@ def report_aggregate(agg: Aggregate, label: str) -> None:
     print(f"mean hunk coverage:      {agg.mean_coverage:.1%}")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", default=None, help="model id to evaluate")
+# ---------------------------------------------------------------------------
+# Results — one file per pass, plus the aggregate over every pass
+# ---------------------------------------------------------------------------
+
+def aggregate_calls(calls: list[dict[str, Any]]) -> Aggregate:
+    return Aggregate(entries=[EntryScore(**call["score"]) for call in calls])
+
+
+def summarize_calls(calls: list[dict[str, Any]]) -> dict[str, Any]:
+    agg = aggregate_calls(calls)
+    served = [call for call in calls if "reply" in call]
+    figures = [usage_figures(call["usage"]) for call in served]
+
+    def mean(values: list[Any]) -> float | None:
+        values = [v for v in values if isinstance(v, (int, float))]
+        return round(sum(values) / len(values), 1) if values else None
+
+    return {
+        "entries": len(calls),
+        "citations": sum(e.total_citations for e in agg.entries),
+        "valid": sum(e.valid_citations for e in agg.entries),
+        "validity": round(agg.citation_validity_rate, 4),
+        "claim_drop": round(agg.claim_drop_rate, 4),
+        "parse_failures": agg.parse_failures,
+        "call_failures": len(calls) - len(served),
+        "coverage": round(agg.mean_coverage, 4),
+        "mean_latency": mean([call["latency_s"] for call in served]),
+        "served_providers": dict(Counter(str(call["served_provider"]) for call in served)),
+        "mean_input_tokens": mean([f[0] for f in figures]),
+        "mean_output_tokens": mean([f[1] for f in figures]),
+        "mean_reasoning_tokens": mean([f[2] for f in figures]),
+    }
+
+
+def pass_path(out: Path, number: int) -> Path:
+    return out / f"pass{number}.json"
+
+
+def read_pass(out: Path, number: int) -> dict[str, Any]:
+    path = pass_path(out, number)
+    if not path.exists():
+        return {"pass": number, "models": {}}
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def write_json(path: Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
+    tmp.replace(path)
+
+
+def record_pass(out: Path, number: int, provider: str, model: str,
+                calls: list[dict[str, Any]]) -> None:
+    """Add one model's calls to pass<N>.json, then rebuild aggregate.json from
+    every pass file in ``out``."""
+    recorded = read_pass(out, number)
+    recorded["models"][model] = {
+        "finished_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "transport": provider,
+        "provider_pin": PROVIDER_PINS.get(model) if provider == "openrouter" else None,
+        "temperature": 0 if provider == "openrouter" and model not in NO_TEMPERATURE else None,
+        "max_tokens": MAX_TOKENS,
+        "summary": summarize_calls(calls),
+        "calls": calls,
+    }
+    write_json(pass_path(out, number), recorded)
+
+    passes: dict[str, list[str]] = {}
+    by_model: dict[str, list[dict[str, Any]]] = {}
+    runs: Counter[str] = Counter()
+    for path in sorted(out.glob("pass*.json")):
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+        passes[str(data["pass"])] = sorted(data["models"])
+        for name, result in data["models"].items():
+            by_model.setdefault(name, []).extend(result["calls"])
+            runs[name] += 1
+    rows = [
+        {"model": name, "runs": runs[name], **summarize_calls(calls)}
+        for name, calls in by_model.items()
+    ]
+    rows.sort(key=lambda r: (-r["validity"], r["parse_failures"], -r["coverage"], r["model"]))
+    write_json(out / "aggregate.json", {"passes": passes, "aggregate": rows})
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--model", nargs="+", default=None, help="model id(s) to evaluate")
     parser.add_argument("--limit", type=int, default=None, help="max golden entries")
     parser.add_argument(
         "--provider", choices=("auto", "anthropic", "openrouter"), default="auto"
     )
     parser.add_argument(
+        "--pass", dest="pass_number", type=int, default=1, metavar="N",
+        help="bake-off pass number; results go to OUT/passN.json (default 1)",
+    )
+    parser.add_argument(
+        "--out", type=Path, default=None,
+        help="results directory for the whole bake-off "
+             "(default eval/results/<provider>-bakeoff-<today>)",
+    )
+    parser.add_argument(
         "--self-test", action="store_true",
         help="score the golden expected bullets themselves (must be 100%%); no key needed",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     entries = load_golden(limit=args.limit)
 
@@ -361,10 +608,22 @@ def main() -> int:
 
     if not args.model:
         parser.error("--model is required unless --self-test is given")
+    models = list(dict.fromkeys(args.model))
     provider, api_key = resolve_provider(args.provider)
-    print(f"evaluating {args.model} via {provider} on {len(entries)} entries")
-    agg = run_model(entries, provider, api_key, args.model)
-    report_aggregate(agg, f"{args.model} via {provider}")
+    out = args.out or RESULTS_DIR / f"{provider}-bakeoff-{datetime.now(UTC).date()}"
+    already = [m for m in models if m in read_pass(out, args.pass_number)["models"]]
+    if already:
+        raise SystemExit(
+            f"{pass_path(out, args.pass_number)} already records {', '.join(already)}. "
+            "A pass is never overwritten: use another --pass or --out."
+        )
+    for model in models:
+        print(f"evaluating {model} via {provider} on {len(entries)} entries, "
+              f"pass {args.pass_number}")
+        calls = run_model(entries, provider, api_key, model)
+        report_aggregate(aggregate_calls(calls), f"{model} via {provider}")
+        record_pass(out, args.pass_number, provider, model, calls)
+    print(f"\nresults: {pass_path(out, args.pass_number)} and {out / 'aggregate.json'}")
     return 0
 
 
