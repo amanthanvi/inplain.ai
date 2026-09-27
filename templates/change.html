@@ -7,7 +7,7 @@
 <h1>{{ change.headline }}</h1>
 <dl class="facts">
 <dt>Compared</dt>
-<dd>the snapshot of {{ change.date }} (commit {{ change.commit }}) against the one before it (commit {{ change.parent_commit }})</dd>
+<dd>the snapshot of <span class="date">{{ change.date }}</span> (commit {{ change.commit }}) against the one before it (commit {{ change.parent_commit }})</dd>
 <dt>Passages changed</dt>
 <dd>{{ change.hunk_count }}, {{ change.unchanged }}</dd>
 <dt>Characters</dt>
@@ -23,7 +23,7 @@
 {%- if change.claims %}
 <h2>What changed, with the evidence</h2>
 <p class="legend">{{ change.claims | length }} claim{{ "s" if change.claims | length != 1 else "" }}, each followed by the passage it cites. The cited words are highlighted.{% if change.has_marks %} Inside a replaced passage, struck words were removed and underlined words were added.{% endif %}</p>
-<ol class="claims">
+<ol class="claims" role="list">
 {%- for claim in change.claims %}
 <li class="claim" id="{{ claim.id }}">
 <p class="claim-text">{{ claim.text }}</p>
@@ -50,11 +50,12 @@
 {%- endif %}
 {%- else %}
 <h2>The changed passages</h2>
-<p class="legend">No validated summary is available for this change. Every claim we
-publish must cite the changed text verbatim; none validated here. The changed
-passages below, in document order, are the complete record.{% if change.has_marks %}
-Inside a replaced passage, struck words were removed and underlined words were
-added.{% endif %}</p>
+<p>No validated summary is available for this change. Every claim we publish
+must cite the changed text verbatim; none validated here. The changed passages
+below, in document order, are the complete record.</p>
+{%- if change.has_marks %}
+<p class="legend">Inside a replaced passage, struck words were removed and underlined words were added.</p>
+{%- endif %}
 {%- for h in change.hunks %}
 {{ m.hunk(h) }}
 {%- endfor %}

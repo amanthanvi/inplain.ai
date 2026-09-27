@@ -229,8 +229,23 @@ def word_spans(removed: list[str], added: list[str]) -> dict[str, Any] | None:
             rem.append((ta[i1][0], ta[i2 - 1][1]))
         if op in ("replace", "insert") and j1 < j2:
             add.append((tb[j1][0], tb[j2 - 1][1]))
-    spans = {"removed": _per_line(removed, rem), "added": _per_line(added, add)}
+    spans = {
+        "removed": _per_line(removed, _coalesce(a, rem)),
+        "added": _per_line(added, _coalesce(b, add)),
+    }
     return spans if spans["removed"] or spans["added"] else None
+
+
+def _coalesce(text: str, spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Join spans separated only by whitespace: "April 15" → "August 25"
+    is one changed phrase, not two words either side of a matching space."""
+    out: list[tuple[int, int]] = []
+    for start, end in spans:
+        if out and not text[out[-1][1] : start].strip():
+            out[-1] = (out[-1][0], end)
+        else:
+            out.append((start, end))
+    return out
 
 
 def _quote_spans(lines: list[str], quote: str) -> list[list[Any]]:
@@ -280,27 +295,34 @@ def _plural(n: int, word: str) -> str:
     return f"{n} {word}{'' if n == 1 else 's'}"
 
 
-def _effective_date_text(change: dict[str, str | None] | None) -> str | None:
+def _date(value: str | None) -> Markup:
+    """A date that never breaks at its hyphens."""
+    return Markup('<span class="date">{}</span>').format(value)
+
+
+def _effective_date_text(change: dict[str, str | None] | None) -> Markup | None:
     if change is None:
         return None
     date_from, date_to = change.get("from"), change.get("to")
     if date_from and date_to:
-        return f"Effective date changed: {date_from} → {date_to}"
+        return Markup("Effective date changed: {} → {}").format(
+            _date(date_from), _date(date_to)
+        )
     if date_to:
-        return f"Effective date added: {date_to}"
-    return f"Effective date removed (was {date_from})"
+        return Markup("Effective date added: {}").format(_date(date_to))
+    return Markup("Effective date removed (was {})").format(_date(date_from))
 
 
-def _effective_date_fact(change: dict[str, str | None] | None) -> str | None:
+def _effective_date_fact(change: dict[str, str | None] | None) -> Markup | None:
     """The same fact, worded for the ``Effective date`` row of the facts."""
     if change is None:
         return None
     date_from, date_to = change.get("from"), change.get("to")
     if date_from and date_to:
-        return f"changed from {date_from} to {date_to}"
+        return Markup("changed from {} to {}").format(_date(date_from), _date(date_to))
     if date_to:
-        return f"added: {date_to} (no date stated before)"
-    return f"removed (was {date_from})"
+        return Markup("added: {} (no date stated before)").format(_date(date_to))
+    return Markup("removed (was {})").format(_date(date_from))
 
 
 def _unchanged_text(similarity: float) -> str:

@@ -68,7 +68,7 @@
      rem so a different font size inside never shifts the column edge
      (the 2025 footer defect was a ch-based width under a smaller size). */
   --measure: 41.25rem;  /* 660px */
-  --measure-text: 60ch; /* lede and legend line length */
+  --measure-text: 60ch; /* lede line length */
   --claim-indent: 2.4em;
   --gutter-mark: 1.6ch;
 

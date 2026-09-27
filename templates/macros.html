@@ -10,7 +10,7 @@
 {% macro hunk(h) -%}
 <section class="hunk" id="{{ h.id }}">
 <p class="hh"><span><b>Passage {{ h.number }}</b> of {{ h.total }}</span> <span>{{ h.kind_label }}</span> <span>old line {{ h.old_start }} · new line {{ h.new_start }}</span>
-{%- if h.cited_by %} <span class="cited-by">cited by claim{{ "s" if h.cited_by | length > 1 else "" }} {% for n in h.cited_by %}<a href="#claim-{{ n }}">{{ n }}</a>{{ ", " if not loop.last else "" }}{% endfor %}</span>{% endif %}</p>
+{%- if h.cited_by | length > 1 %} <span>cited by claims {% for n in h.cited_by %}<a href="#claim-{{ n }}">{{ n }}</a>{{ " and " if loop.revindex == 2 else ", " if not loop.last else "" }}{% endfor %}</span>{% endif %}</p>
 {%- if h.spacing_only %}
 <p class="note">Only spacing or line breaks changed.</p>
 {%- endif %}

@@ -355,10 +355,14 @@ def test_change_view_header_and_facts(built: SimpleNamespace) -> None:
 
 def test_effective_date_change_is_surfaced(built: SimpleNamespace) -> None:
     html = change_page(built, "effdate")
+    date = '<span class="date">{}</span>'.format
     assert "<dt>Effective date</dt>" in html
-    assert "changed from 2025-01-01 to 2026-03-15" in html
-    # …and in the feeds of entries, where the date change is the news.
-    assert "Effective date changed: 2025-01-01 → 2026-03-15" in built.pages["index.html"]
+    assert f"changed from {date('2025-01-01')} to {date('2026-03-15')}" in html
+    # …and in the lists of entries, where the date change is the news.
+    assert (
+        f"Effective date changed: {date('2025-01-01')} → {date('2026-03-15')}"
+        in built.pages["index.html"]
+    )
 
 
 def test_hunk_cited_several_times_renders_once(built: SimpleNamespace) -> None:
@@ -429,6 +433,13 @@ def test_word_spans_for_an_aligned_replacement() -> None:
         "removed": [[0, [[3, 7], [18, 20]]]],
         "added": [[0, [[3, 8], [19, 23]]]],
     }
+
+
+def test_word_spans_join_across_a_matching_space() -> None:
+    """A changed phrase is one mark, not two words around an equal space."""
+    assert site.word_spans(
+        ["Last updated on April 15, 2026."], ["Last updated on August 25, 2026."]
+    ) == {"removed": [[0, [[16, 24]]]], "added": [[0, [[16, 25]]]]}
 
 
 def test_no_word_spans_for_a_rewritten_passage(built: SimpleNamespace) -> None:
