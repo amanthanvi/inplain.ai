@@ -7,7 +7,7 @@ There is no always-on process (SPEC §4). Two workflows run everything;
 ## `crawl.yml` — scheduled daily (04:17 UTC) + `workflow_dispatch`
 
 crawl → detect → push the archive → summarize → build `_site/` → deploy, in one job so a
-failure at any step stops the run before anything ships. A **partial** crawl
+failure at any step stops the run before anything deploys. A **partial** crawl
 (some documents unreachable) is a success by design; per-document problems are
 surfaced in the run's step summary, never swallowed.
 
