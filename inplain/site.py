@@ -336,13 +336,10 @@ def _unchanged_text(similarity: float) -> str:
     return f"{pct:g}% of the text unchanged"
 
 
-_KIND_LABELS = {"replace": "replaced", "insert": "added", "delete": "removed"}
-
-
-def _hunk_kind(hunk: dict[str, Any]) -> str:
+def _kind_label(hunk: dict[str, Any]) -> str:
     if hunk["removed"] and hunk["added"]:
-        return "replace"
-    return "insert" if hunk["added"] else "delete"
+        return "replaced"
+    return "added" if hunk["added"] else "removed"
 
 
 # Context lines locate a passage in the document (often a heading); they are
@@ -383,13 +380,11 @@ def _hunk_view(
         sides[side] = [
             _mark_line(line, per_line.get(index, [])) for index, line in enumerate(lines)
         ]
-    kind = _hunk_kind(hunk)
     return {
         "id": hunk["id"],
         "number": number,
         "total": total,
-        "kind": kind,
-        "kind_label": _KIND_LABELS[kind],
+        "kind_label": _kind_label(hunk),
         "old_start": hunk["old_start"],
         "new_start": hunk["new_start"],
         "spacing_only": spacing_only(hunk["removed"], hunk["added"]),
