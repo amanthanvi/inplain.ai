@@ -25,3 +25,7 @@ _site/
 # Cache
 .ruff_cache/
 .pytest_cache/
+
+# Prototype build output and raw screenshots (prototypes/screenshots/*.webp are tracked)
+prototypes/out/
+prototypes/shots/
