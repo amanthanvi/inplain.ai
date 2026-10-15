@@ -1,0 +1,154 @@
+{
+  "commit": "0a5523f6e28294867300f571f52ad71e63a8d596",
+  "company": "coursera",
+  "company_name": "Coursera",
+  "detected_at": "2026-10-15T04:32:43Z",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "added": [
+        "Last updated: October 14, 2026."
+      ],
+      "context_after": [
+        "Key Information",
+        "- Coursera, Inc. is the data controller of the Personal Data (as defined below) we process about you, meaning that we determine the means and purposes of collecting, using, storing, disclosing, or otherwise processing your Personal Data. However, if you are participating in a degree program, certain certificate programs where you are required to enroll with the academic institution, or in other circumstances communicated to you, Coursera is the data processor.",
+        "- We collect the Personal Data set out in the \"What Personal Data We Collect\" section of this Privacy Notice below, including account registration details such as name and email, details of Content Offerings you undertake, survey information (where you provide it), identity verification data, and information about your use of the Site (as defined below) and Services."
+      ],
+      "context_before": [
+        "Privacy Notice"
+      ],
+      "id": "h1",
+      "new_start": 2,
+      "old_start": 2,
+      "removed": [
+        "Last updated: October 12, 2026."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "- Communications with Coursera: we may receive and record Personal Data when you send us an email message or otherwise contact us, including through the use of an in-platform messaging/chat feature."
+      ],
+      "context_after": [
+        "- Product or Service Purchase Information: information about what Products or Services you have purchased. For more information on payment processing, please see the section on “Personal Data third parties collect from you directly”.",
+        "- Information about your interests, preferences and affiliations: insofar as they relate to the Product and/or Services that we provide (e.g., when you sign-up for email or account updates).",
+        "- Content of your Communications: such as information provided voluntarily in surveys you complete, or in other exchanges with us, including via email or through the use of an in-platform messaging/chat feature with free-text functionality and voice-enabled features (including audio inputs that are transcribed into text). You should not include any unnecessary Personal Data or information of a sensitive nature, whether relating to you or another person, in the Platform’s free-text functionality."
+      ],
+      "context_before": [
+        "We may collect your Personal Data directly from you, including the following:",
+        "- Identity and Contact Data: such as your name, date of birth, mailing address, email address, and phone number.",
+        "- Account Registration Data: if you register for an account on the Site, you may be required to provide us with certain Personal Data including name, email address, username and password. You may also voluntarily provide us with additional Personal Data including when you update or change information for your account."
+      ],
+      "id": "h2",
+      "new_start": 25,
+      "old_start": 25,
+      "removed": [
+        "- Communications with Coursera. we may receive and record Personal Data when you send us an email message or otherwise contact us, including through the use of an in-platform messaging/chat feature."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "- Business Contact Data: We may also collect Business Contact Data about you from third-party commercial sources, your employer or organization, or from publicly available sources."
+      ],
+      "context_after": [
+        "Personal Data third parties collect directly from you",
+        "Our third party partners may collect your Personal Data directly from you in relation to our Products and Services, including the following:",
+        "- Identity Verification. Coursera may offer you the ability to verify your identity for select Services. In order to enroll for these Services, you may be required to provide us or our third-party identity verification vendor with Personal Data such as your name, address, date of birth, a headshot taken using a webcam or device camera, and a photo identification document. Coursera’s third-party identity verification vendor may use this Personal Data to generate biometric facial data, which is destroyed upon successful completion of verification and in no event after 2 years. Additionally, if you apply for financial aid in connection with these Services, you may be required to provide information regarding your income."
+      ],
+      "context_before": [
+        "- Survey data: We may receive Personal Data when you provide information in response to a survey operated by a Content Provider.",
+        "- Data relating to your use of partner sites: This may include information such as the amount of time spent on the partner site and pages viewed. Partner sites providing Content Offering-related tools and services to Coursera users may collect non-financial individual-level user data regarding the individual’s use of that partner site while the partner sites provide those services to Coursera. The partner sites may share that data with Coursera for the purpose of improving our Services, the partner site’s services, and the individual’s education experience.",
+        "- Account registration / invitation data: When an organization invites you to join the Coursera platform through its Enterprise program, Coursera may receive Personal Data about you that the organization provides as part of the invitation / sign-up process."
+      ],
+      "id": "h3",
+      "new_start": 44,
+      "old_start": 44,
+      "removed": [
+        "- Business contact data: We may also collect Business Contact Data about you from third-party commercial sources, your employer or organization, or from publicly available sources."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "We set out in this section each of the legal bases under applicable law (including the EU and UK GDPR) that we rely on, why and how we use your data, and the categories of Personal Data we process."
+      ],
+      "context_after": [
+        "| Category of Personal data | Purpose of processing | Legal basis | ",
+        "|---|---|---|",
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Content of your Communications ; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Survey data; Third Party Payment Processing Data | To allow you to access and use the Site and in order to provide any information, products, or Services that you request from us, including processing your communications via text and voice. | To comply with our contract to provide Services to you, your academic institution, your employer, or other organization that may be providing you with access to our Services | "
+      ],
+      "context_before": [
+        "- Identity Verification. Coursera may offer you the ability to verify your identity for select Services. In order to enroll for these Services, you may be required to provide us or our third-party identity verification vendor with Personal Data such as your name, address, date of birth, a headshot taken using a webcam or device camera, and a photo identification document. Coursera’s third-party identity verification vendor may use this Personal Data to generate biometric facial data, which is destroyed upon successful completion of verification and in no event after 2 years. Additionally, if you apply for financial aid in connection with these Services, you may be required to provide information regarding your income.",
+        "- Third Party Payment Processing. Coursera provides you with the ability to pay for Content Offerings and other Services using a credit card or other methods through a third party payment processing service provider. Please note that our service provider – not Coursera – collects and processes your financial information. Our third party payment processing service providers include Stripe, Braintree, GPay, ApplePay, PayPal, CashApp, Klarna, RazorPay, and dLocal. Each of these payment processors may use your financial information in accordance with their privacy policy, which is linked above.",
+        "Legal bases and Purposes for Processing your Personal Data"
+      ],
+      "id": "h4",
+      "new_start": 50,
+      "old_start": 50,
+      "removed": [
+        "We set out in this section each of the legal bases under applicable law (including the EU and UK GDPR) that we rely on, why and how we use your data, and the categories of Personal Data we process"
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "| Identity and Contact Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Text and/or Images on third party sites; Data relating to your use of partner sites | To send marketing and serve advertising, to inform our marketing and advertising strategies and content, to understand more about our audiences and to personalize our marketing and advertising, and to market the products and Services of Coursera’s affiliates (including Udemy, Inc.) to you. | With your consent | "
+      ],
+      "context_after": [
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Text and/or Images on third party sites; Survey data; Data relating to your use of partner sites | To share your Personal Data with government authorities in response to lawful subpoenas, court orders, or other legal processes. | To comply with our legal obligations | ",
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Text and/or Images on third party sites; Survey data; Data relating to your use of partner sites | To share your Personal Data with government authorities, external advisors and other relevant or affected third parties when we believe it is appropriate; to investigate, prevent, or take action regarding illegal or suspected illegal activities; to protect and defend the rights, property, or safety of Coursera, the Site, our users, customers, or others; and in connection with our Terms of Use and other agreements. | To comply with our legal obligations | ",
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Survey data | To disclose and/or transfer your Personal Data to an acquirer, assignee or other successor entity in connection with a sale, merger, or reorganization of all or substantially all of the equity, business, or assets of Coursera, or becomes an affiliate or subsidiary of Coursera. | For our legitimate interests to engage in a sale, merger, or reorganization process | "
+      ],
+      "context_before": [
+        "| Identity and Contact Data; Account Registration Data; Information about your interests, preferences and affiliations; Content of your Communications; Demographic Information; Personal Data we collect from your device(s) | Where we send you emails, to track the way that you interact with these emails, to optimize and tailor our communications to you. | With your consent | ",
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Content of your Communications; Education, Career and Skills Information; Demographic Information | To share information with our Content Providers and other business partners so they can inform you about their products and services that may be of interest to you where they are legally entitled to do so. | With your consent | ",
+        "| Identity and Contact Data; Content of your Communications; Education, Career and Skills Information; Demographic Information; Survey data | For research related to online education. | For our legitimate interests to run, grow and develop our business including by supporting our Partners carrying out research related to online education | "
+      ],
+      "id": "h5",
+      "new_start": 65,
+      "old_start": 65,
+      "removed": [
+        "| Identity and Contact Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Text and/or Images on third party sites; Data relating to your use of partner sites | To send marketing and serve advertising, to inform our marketing and advertising strategies and content, to understand more about our audiences and to personalize our marketing and advertising, and to market the products and services of Coursera’s affiliates (including Udemy, Inc.) to you. | With your consent | "
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "| Business Contact Data; Identity and Contact Data | To market our business and enterprise products and Services, and those of Coursera's affiliates (including Udemy, Inc.), to existing and prospective Customers, Content Providers, Partners, and Instructors. | For our legitimate interests to run, grow and develop our business; or with your consent, where required by applicable law | "
+      ],
+      "context_after": [
+        "How we use AI",
+        "We use a number of AI Product Features (“Features”) for the purposes set out above. We have grouped the Features into the following categories which –",
+        "- Support teaching and course generation: Features like Course Builder, Program Builder and Smart Ingestion take data from teacher content and produce Coursera-aligned course drafts that students can engage with."
+      ],
+      "context_before": [
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Text and/or Images on third party sites; Survey data; Data relating to your use of partner sites | To share your Personal Data with government authorities in response to lawful subpoenas, court orders, or other legal processes. | To comply with our legal obligations | ",
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Text and/or Images on third party sites; Survey data; Data relating to your use of partner sites | To share your Personal Data with government authorities, external advisors and other relevant or affected third parties when we believe it is appropriate; to investigate, prevent, or take action regarding illegal or suspected illegal activities; to protect and defend the rights, property, or safety of Coursera, the Site, our users, customers, or others; and in connection with our Terms of Use and other agreements. | To comply with our legal obligations | ",
+        "| Identity and Contact Data; Account Registration Data; Product or Service Purchase Information; Information about your interests, preferences and affiliations; Content of your Communications; Education, Career and Skills Information; Demographic Information; Personal Data we collect from your device(s); Survey data | To disclose and/or transfer your Personal Data to an acquirer, assignee or other successor entity in connection with a sale, merger, or reorganization of all or substantially all of the equity, business, or assets of Coursera, or becomes an affiliate or subsidiary of Coursera. | For our legitimate interests to engage in a sale, merger, or reorganization process | "
+      ],
+      "id": "h6",
+      "new_start": 69,
+      "old_start": 69,
+      "removed": [
+        "| Business Contact Data; Identity and Contact Data | To market our business and enterprise products and services, and those of Coursera's affiliates (including Udemy, Inc.), to existing and prospective Customers, Content Providers, Partners, and Instructors. | For our legitimate interests to run, grow and develop our business; or with your consent, where required by applicable law | "
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "coursera-privacy-0a5523f",
+  "materiality": {
+    "added_chars": 1668,
+    "effective_date_change": {
+      "from": "2026-10-12",
+      "to": "2026-10-14"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 1667,
+    "similarity_badge": 0.9624
+  },
+  "parent_commit": "ffb71ff30fc54a6c293596c32ca7593c653ac02a",
+  "schema_version": 1,
+  "source_url": "https://www.coursera.org/about/privacy"
+}
