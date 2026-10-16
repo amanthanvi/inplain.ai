@@ -2,295 +2,295 @@
   "urls": {
     "https://about.gitlab.com/privacy/": {
       "content_sha256": "befa66e82038ea768f250d40bf80b1a9b29c8551d2f32b5b73671b8c0d61b6f1",
-      "etag": "\"1a88a3f3ffb13e395903880eeea7a000\"",
-      "last_checked_at": "2026-10-15T04:33:28.437811Z",
-      "last_fetched_at": "2026-10-15T04:33:28.437811Z"
+      "etag": "\"8881ba5ba5813f9b804ce236e93e700b\"",
+      "last_checked_at": "2026-10-16T04:33:30.457309Z",
+      "last_fetched_at": "2026-10-16T04:33:30.457309Z"
     },
     "https://aws.amazon.com/agreement/": {
       "content_sha256": "f74041df11da34300dd57fe2de77219b9adf4048fb21cdf56afb039014695031",
-      "last_checked_at": "2026-10-15T04:32:26.295444Z",
-      "last_fetched_at": "2026-10-09T04:37:56.906686Z",
-      "last_modified": "Thu, 08 Oct 2026 21:24:32 GMT"
+      "last_checked_at": "2026-10-16T04:32:29.623593Z",
+      "last_fetched_at": "2026-10-16T04:32:29.623593Z",
+      "last_modified": "Fri, 16 Oct 2026 03:35:02 GMT"
     },
     "https://aws.amazon.com/privacy/": {
       "content_sha256": "11b061130536b8fbb053944d24155127028e0700b89e580ec13ffd4ca3f948b0",
-      "last_checked_at": "2026-10-15T04:32:23.065324Z",
-      "last_fetched_at": "2026-10-14T04:34:12.771404Z",
-      "last_modified": "Thu, 08 Oct 2026 21:18:56 GMT"
+      "last_checked_at": "2026-10-16T04:32:26.412672Z",
+      "last_fetched_at": "2026-10-16T04:32:26.412672Z",
+      "last_modified": "Fri, 16 Oct 2026 03:34:11 GMT"
     },
     "https://discord.com/privacy": {
       "content_sha256": "3c89d6287dfeeeecf02bd3315e3e63247c4f8eb1b5cd0e4669587ed94227acdd",
-      "last_checked_at": "2026-10-15T04:32:52.680743Z",
-      "last_fetched_at": "2026-10-15T04:32:52.680743Z",
-      "last_modified": "Wed, 14 Oct 2026 15:40:54 GMT"
+      "last_checked_at": "2026-10-16T04:32:55.345260Z",
+      "last_fetched_at": "2026-10-16T04:32:55.345260Z",
+      "last_modified": "Thu, 15 Oct 2026 19:15:16 GMT"
     },
     "https://discord.com/terms": {
       "content_sha256": "6764a33c5c4f5b8d026ddbd4e371c6e33304371c03396419864caa2ec8371883",
-      "last_checked_at": "2026-10-15T04:32:55.926611Z",
-      "last_fetched_at": "2026-10-15T04:32:55.926611Z",
-      "last_modified": "Wed, 14 Oct 2026 15:42:01 GMT"
+      "last_checked_at": "2026-10-16T04:32:58.502884Z",
+      "last_fetched_at": "2026-10-16T04:32:58.502884Z",
+      "last_modified": "Thu, 15 Oct 2026 19:11:51 GMT"
     },
     "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service": {
       "content_sha256": "000c7a84064e426e18005aea4884b8fd27f941f36279169ed1b23daffa099176",
-      "last_checked_at": "2026-10-15T04:33:26.743142Z",
-      "last_fetched_at": "2026-10-15T04:33:26.743142Z"
+      "last_checked_at": "2026-10-16T04:33:27.339394Z",
+      "last_fetched_at": "2026-10-16T04:33:27.339394Z"
     },
     "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement": {
       "content_sha256": "dd25b34b0dde10a9a9f33e6ce018b89def67f6fe45a09ac9bc99fc66e62f6827",
-      "last_checked_at": "2026-10-15T04:33:21.905986Z",
-      "last_fetched_at": "2026-10-15T04:33:21.905986Z"
+      "last_checked_at": "2026-10-16T04:33:23.912232Z",
+      "last_fetched_at": "2026-10-16T04:33:23.912232Z"
     },
     "https://duckduckgo.com/privacy": {
       "content_sha256": "e147de2976885f0e2e8112c995d2c212170557cd631de33fa9cca7131ff643e1",
-      "etag": "\"6acf7b89-1ba1b\"",
-      "last_checked_at": "2026-10-15T04:33:05.820468Z",
-      "last_fetched_at": "2026-10-15T04:33:05.820468Z"
+      "etag": "\"6ad07942-1ba1b\"",
+      "last_checked_at": "2026-10-16T04:33:08.408693Z",
+      "last_fetched_at": "2026-10-16T04:33:08.408693Z"
     },
     "https://duckduckgo.com/terms": {
       "content_sha256": "f0e8389b5b8a64f2997076b7957f94062672364eb882608bb14c3a81dfbf7668",
-      "etag": "\"6acf7b89-19eda\"",
-      "last_checked_at": "2026-10-15T04:33:09.010090Z",
-      "last_fetched_at": "2026-10-15T04:33:09.010090Z"
+      "etag": "\"6ad07942-19eda\"",
+      "last_checked_at": "2026-10-16T04:33:11.624209Z",
+      "last_fetched_at": "2026-10-16T04:33:11.624209Z"
     },
     "https://explore.zoom.us/en/privacy/": {
       "content_sha256": "69f3271e08f8c5174ec5237fa5c1dc05d5499af474f3d50ab883fc7b0b04ba8e",
-      "last_checked_at": "2026-10-15T04:35:12.363378Z",
-      "last_fetched_at": "2026-10-15T04:35:12.363378Z"
+      "last_checked_at": "2026-10-16T04:35:13.036388Z",
+      "last_fetched_at": "2026-10-16T04:35:13.036388Z"
     },
     "https://explore.zoom.us/en/terms/": {
       "content_sha256": "67c3d18a41a40505b0ffed3045450f642f9b6d3c77f64e258206ee04c342686f",
-      "last_checked_at": "2026-10-15T04:35:24.888996Z",
-      "last_fetched_at": "2026-10-15T04:35:24.888996Z"
+      "last_checked_at": "2026-10-16T04:35:25.389901Z",
+      "last_fetched_at": "2026-10-16T04:35:25.389901Z"
     },
     "https://foundation.wikimedia.org/wiki/Policy:Privacy_policy": {
       "content_sha256": "e2a6b5ffaa9dd78e6592df77c43ecdbd80b532c1b4817eb888cd95f468e1c27c",
-      "last_checked_at": "2026-10-15T04:35:06.094528Z",
-      "last_fetched_at": "2026-10-15T04:35:06.094528Z",
-      "last_modified": "Thu, 15 Oct 2026 03:07:33 GMT"
+      "last_checked_at": "2026-10-16T04:35:06.681901Z",
+      "last_fetched_at": "2026-10-16T04:35:06.681901Z",
+      "last_modified": "Fri, 16 Oct 2026 03:35:09 GMT"
     },
     "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use": {
       "content_sha256": "83d332d7698c7c934d5ecb2cd5e41aa94fc698e2286e5c984d11ba43cfd4e9b3",
-      "last_checked_at": "2026-10-15T04:35:09.396503Z",
-      "last_fetched_at": "2026-10-15T04:35:09.396503Z",
-      "last_modified": "Thu, 15 Oct 2026 02:31:50 GMT"
+      "last_checked_at": "2026-10-16T04:35:10.028386Z",
+      "last_fetched_at": "2026-10-16T04:35:10.028386Z",
+      "last_modified": "Fri, 16 Oct 2026 03:35:12 GMT"
     },
     "https://help.netflix.com/legal/privacy": {
       "content_sha256": "52aa3bcde4f9fff3ec5ed75c20fa2be966fd88ec71f326e8313cc44c1fd36f54",
-      "last_checked_at": "2026-10-15T04:33:44.307899Z",
-      "last_fetched_at": "2026-10-15T04:33:44.307899Z"
+      "last_checked_at": "2026-10-16T04:33:46.310386Z",
+      "last_fetched_at": "2026-10-16T04:33:46.310386Z"
     },
     "https://help.netflix.com/legal/termsofuse": {
       "content_sha256": "a2824158d7e700437275f5c83dfbc0ed264878d732ea04b37ddf3832af04c2e9",
-      "last_checked_at": "2026-10-15T04:33:47.878081Z",
-      "last_fetched_at": "2026-10-15T04:33:47.878081Z"
+      "last_checked_at": "2026-10-16T04:33:49.585206Z",
+      "last_fetched_at": "2026-10-16T04:33:49.585206Z"
     },
     "https://policies.google.com/privacy": {
       "content_sha256": "14b84bcc14984273f2984d03d7269631bbfc2c6be4103d2a61975ea4501cfe00",
-      "last_checked_at": "2026-10-15T04:33:31.660837Z",
-      "last_fetched_at": "2026-10-15T04:33:31.660837Z"
+      "last_checked_at": "2026-10-16T04:33:33.567087Z",
+      "last_fetched_at": "2026-10-16T04:33:33.567087Z"
     },
     "https://policies.google.com/terms": {
       "content_sha256": "8e4ee7631f9b3c805941f0cef6f339ecba523b64bcbf924ee7375a05b01e0b4f",
-      "last_checked_at": "2026-10-15T04:33:35.018369Z",
-      "last_fetched_at": "2026-10-15T04:33:35.018369Z"
+      "last_checked_at": "2026-10-16T04:33:37.074379Z",
+      "last_fetched_at": "2026-10-16T04:33:37.074379Z"
     },
     "https://proton.me/legal/privacy": {
       "content_sha256": "48f5f277378e3fc3ec689ec69db523ffa4e1ad7fb32b52651fca1a72c2e86e06",
-      "etag": "\"99e5-65dcd3e19bef8\"",
-      "last_checked_at": "2026-10-15T04:34:01.952303Z",
-      "last_fetched_at": "2026-10-15T04:34:01.952303Z",
-      "last_modified": "Wed, 14 Oct 2026 13:52:31 GMT"
+      "etag": "\"99e5-65de2922cf855\"",
+      "last_checked_at": "2026-10-16T04:34:02.520034Z",
+      "last_fetched_at": "2026-10-16T04:34:02.520034Z",
+      "last_modified": "Thu, 15 Oct 2026 15:19:16 GMT"
     },
     "https://proton.me/legal/terms": {
       "content_sha256": "4709dbda457224e68834706c6dc3d858fa6c8989b17123ff99cdf3e454a2fbea",
-      "etag": "\"bb03-65dcd425943bc\"",
-      "last_checked_at": "2026-10-15T04:34:05.936223Z",
-      "last_fetched_at": "2026-10-15T04:34:05.936223Z",
-      "last_modified": "Wed, 14 Oct 2026 13:53:43 GMT"
+      "etag": "\"bb03-65de292201fba\"",
+      "last_checked_at": "2026-10-16T04:34:06.496282Z",
+      "last_fetched_at": "2026-10-16T04:34:06.496282Z",
+      "last_modified": "Thu, 15 Oct 2026 15:19:15 GMT"
     },
     "https://slack.com/privacy-policy": {
       "content_sha256": "ed782509630316e10f47cf550969369cf61897b981e1cef7fd1d6e05ec43a6a2",
-      "last_checked_at": "2026-10-15T04:34:31.405916Z",
-      "last_fetched_at": "2026-10-15T04:34:31.405916Z"
+      "last_checked_at": "2026-10-16T04:34:31.479688Z",
+      "last_fetched_at": "2026-10-16T04:34:31.479688Z"
     },
     "https://slack.com/terms-of-service": {
       "content_sha256": "8d7c5df5616cf2df4b05ffe46d59763f43b33c1a5a47898a5866c8b55fd97916",
-      "last_checked_at": "2026-10-15T04:34:37.909916Z",
-      "last_fetched_at": "2026-10-15T04:34:37.909916Z"
+      "last_checked_at": "2026-10-16T04:34:37.894934Z",
+      "last_fetched_at": "2026-10-16T04:34:37.894934Z"
     },
     "https://stripe.com/legal/ssa": {
       "content_sha256": "1a466ae63702fbe58a611d0a589192163e01c2b3bfcab6d69922ed460668900a",
-      "last_checked_at": "2026-10-15T04:34:53.633469Z",
-      "last_fetched_at": "2026-10-15T04:34:53.633469Z"
+      "last_checked_at": "2026-10-16T04:34:54.146390Z",
+      "last_fetched_at": "2026-10-16T04:34:54.146390Z"
     },
     "https://stripe.com/privacy": {
       "content_sha256": "474fcb916b1e9914552ae26a0569f7f51a9bdf5416ddfbabf786f0259e94c7cb",
-      "last_checked_at": "2026-10-15T04:34:50.217339Z",
-      "last_fetched_at": "2026-10-15T04:34:50.217339Z"
+      "last_checked_at": "2026-10-16T04:34:50.908586Z",
+      "last_fetched_at": "2026-10-16T04:34:50.908586Z"
     },
     "https://www.airbnb.com/help/article/2908": {
       "content_sha256": "575ae2bd0692e06e95c4d8785cc6cfd2e0f2a3aad0a6797e7996c3be956743c2",
-      "last_checked_at": "2026-10-15T04:31:57.155681Z",
-      "last_fetched_at": "2026-10-15T04:31:57.155681Z"
+      "last_checked_at": "2026-10-16T04:32:00.205960Z",
+      "last_fetched_at": "2026-10-16T04:32:00.205960Z"
     },
     "https://www.anthropic.com/legal/consumer-terms": {
       "content_sha256": "0d5397c1640e647858877ec507edc0216f33b27da148ff42cad93feabce534ea",
-      "last_checked_at": "2026-10-15T04:32:07.802522Z",
-      "last_fetched_at": "2026-10-15T04:32:07.802522Z"
+      "last_checked_at": "2026-10-16T04:32:11.368874Z",
+      "last_fetched_at": "2026-10-16T04:32:11.368874Z"
     },
     "https://www.anthropic.com/privacy": {
       "content_sha256": "66c03d59d66bf331a016d78413fa219396d1af21c525dce6641b3774fdab6750",
-      "last_checked_at": "2026-10-15T04:32:01.136438Z",
-      "last_fetched_at": "2026-10-15T04:32:01.136438Z"
+      "last_checked_at": "2026-10-16T04:32:04.891381Z",
+      "last_fetched_at": "2026-10-16T04:32:04.891381Z"
     },
     "https://www.apple.com/legal/privacy/en-ww/": {
       "content_sha256": "287233a56234f16c2f01d2d29e8a7d576ed0b7dc1aa23a6e873d928515f61401",
-      "last_checked_at": "2026-10-15T04:32:10.443491Z",
-      "last_fetched_at": "2026-10-15T04:32:10.443491Z"
+      "last_checked_at": "2026-10-16T04:32:14.166809Z",
+      "last_fetched_at": "2026-10-16T04:32:14.166809Z"
     },
     "https://www.atlassian.com/legal/privacy-policy": {
       "content_sha256": "1d6163d65ab8f8ee19af51be221b954343515ba28b072e24326e8484e00d8472",
-      "last_checked_at": "2026-10-15T04:32:13.787001Z",
-      "last_fetched_at": "2026-10-15T04:32:13.787001Z",
-      "last_modified": "Wed, 14 Oct 2026 22:00:23 GMT"
+      "last_checked_at": "2026-10-16T04:32:17.236700Z",
+      "last_fetched_at": "2026-10-16T04:32:17.236700Z",
+      "last_modified": "Thu, 15 Oct 2026 22:35:45 GMT"
     },
     "https://www.atlassian.com/legal/software-license-agreement": {
       "content_sha256": "bff5b262b0789d22998aa4128ed3a38d7fb07591155203ce2681f713a100af83",
-      "last_checked_at": "2026-10-15T04:32:17.078460Z",
-      "last_fetched_at": "2026-10-15T04:32:17.078460Z",
-      "last_modified": "Wed, 14 Oct 2026 22:02:48 GMT"
+      "last_checked_at": "2026-10-16T04:32:20.480141Z",
+      "last_fetched_at": "2026-10-16T04:32:20.480141Z",
+      "last_modified": "Thu, 15 Oct 2026 22:33:30 GMT"
     },
     "https://www.canva.com/policies/privacy-policy/": {
       "content_sha256": "74c0cef388fb4d518ccc5314ebddd1deb5b39cd3fe5dcb03824475f3d3d73f01",
-      "last_checked_at": "2026-10-15T04:32:29.300931Z",
-      "last_fetched_at": "2026-10-15T04:32:29.300931Z"
+      "last_checked_at": "2026-10-16T04:32:32.644387Z",
+      "last_fetched_at": "2026-10-16T04:32:32.644387Z"
     },
     "https://www.cloudflare.com/privacypolicy/": {
       "content_sha256": "6cf78c487ca5e2b3ea464a62c3aac21ff1fb5d5d89aa89a80d83c4293f476433",
-      "last_checked_at": "2026-10-15T04:32:32.719069Z",
-      "last_fetched_at": "2026-10-15T04:32:32.719069Z"
+      "last_checked_at": "2026-10-16T04:32:35.821855Z",
+      "last_fetched_at": "2026-10-16T04:32:35.821855Z"
     },
     "https://www.cloudflare.com/website-terms/": {
       "content_sha256": "671b1e7ad006541f70802865f37606dfe56c7911bd5e3f1b6c49e22ad1612e93",
-      "last_checked_at": "2026-10-15T04:32:36.302742Z",
-      "last_fetched_at": "2026-10-15T04:32:36.302742Z"
+      "last_checked_at": "2026-10-16T04:32:39.211372Z",
+      "last_fetched_at": "2026-10-16T04:32:39.211372Z"
     },
     "https://www.coursera.org/about/privacy": {
       "content_sha256": "68894f50f03c790bd1772e74e24a99bf3657a4dc28665f3d0e7925dafeb54b90",
-      "etag": "W/\"6ba36-4Ah/cMNVCaQXFZ1bTmBYWtOJATY\"",
-      "last_checked_at": "2026-10-15T04:32:39.403954Z",
-      "last_fetched_at": "2026-10-15T04:32:39.403954Z"
+      "etag": "W/\"6b607-yq90sui4LP6JCs3GSiOdZ1Wusw8\"",
+      "last_checked_at": "2026-10-16T04:32:42.328168Z",
+      "last_fetched_at": "2026-10-16T04:32:42.328168Z"
     },
     "https://www.coursera.org/about/terms": {
       "content_sha256": "b3d8fd7f129a08578dbb16b8154d48c8831e57762c5c140b4abd1d1699e9b1a5",
-      "etag": "W/\"6a9d9-AE8YdkAzJxmYlTmfy8ZIgx53/1Y\"",
-      "last_checked_at": "2026-10-15T04:32:43.357371Z",
-      "last_fetched_at": "2026-10-15T04:32:43.357371Z"
+      "etag": "W/\"6a51b-Eltrv1+RTHwT02HPNUcU2+i2hM8\"",
+      "last_checked_at": "2026-10-16T04:32:46.754101Z",
+      "last_fetched_at": "2026-10-16T04:32:46.754101Z"
     },
     "https://www.digitalocean.com/legal/privacy-policy": {
       "content_sha256": "8ad9dfea6ca8b25c92a959376fdc421f7946615205f2915182425800d4b95279",
-      "etag": "W/\"12docti7ss24nxb\"",
-      "last_checked_at": "2026-10-15T04:32:45.961521Z",
-      "last_fetched_at": "2026-10-15T04:32:45.961521Z"
+      "etag": "W/\"dgegibpev14o1k\"",
+      "last_checked_at": "2026-10-16T04:32:48.893585Z",
+      "last_fetched_at": "2026-10-16T04:32:48.893585Z"
     },
     "https://www.digitalocean.com/legal/terms-of-service-agreement": {
       "content_sha256": "242328760244deac4fe9a42fbcb265c24a8d899faf26f16ed2d02d881b538252",
-      "etag": "W/\"slyoj5in7n69p9\"",
-      "last_checked_at": "2026-10-15T04:32:49.694313Z",
-      "last_fetched_at": "2026-10-15T04:32:49.694313Z"
+      "etag": "W/\"isrf3fbn9o69p9\"",
+      "last_checked_at": "2026-10-16T04:32:52.463587Z",
+      "last_fetched_at": "2026-10-16T04:32:52.463587Z"
     },
     "https://www.dropbox.com/privacy": {
       "content_sha256": "9d9569e24e58e16513a810700bebed2b8ceb001ed498803286acd88597a2c659",
-      "last_checked_at": "2026-10-15T04:32:59.087291Z",
-      "last_fetched_at": "2026-10-15T04:32:59.087291Z"
+      "last_checked_at": "2026-10-16T04:33:01.647369Z",
+      "last_fetched_at": "2026-10-16T04:33:01.647369Z"
     },
     "https://www.dropbox.com/terms": {
       "content_sha256": "68ca628806ecfa8770619f346e354bd3c272af411101351e3c6087d955e075ec",
-      "last_checked_at": "2026-10-15T04:33:02.774173Z",
-      "last_fetched_at": "2026-10-15T04:33:02.774173Z"
+      "last_checked_at": "2026-10-16T04:33:05.333786Z",
+      "last_fetched_at": "2026-10-16T04:33:05.333786Z"
     },
     "https://www.ebay.com/help/policies/member-behavior-policies/user-privacy-notice-privacy-policy?id=4260": {
       "content_sha256": "99ac5101a0807a28e4bfd0175caf9d8d79d2378b909c1bb0b4c354a9ff0be88d",
-      "last_checked_at": "2026-10-15T04:33:12.033674Z",
-      "last_fetched_at": "2026-10-15T04:33:12.033674Z"
+      "last_checked_at": "2026-10-16T04:33:14.621517Z",
+      "last_fetched_at": "2026-10-16T04:33:14.621517Z"
     },
     "https://www.figma.com/legal/privacy/": {
       "content_sha256": "2d0dd2332cb5d666b5eb2920ca6b83e129d342433cb3c6d084dcad5f46c441d4",
-      "etag": "\"7lz1ya5cvh12nc0\"",
-      "last_checked_at": "2026-10-15T04:33:18.406657Z",
-      "last_fetched_at": "2026-10-15T04:33:18.406657Z"
+      "etag": "\"lr0q82a7qe12tyg\"",
+      "last_checked_at": "2026-10-16T04:33:20.574363Z",
+      "last_fetched_at": "2026-10-16T04:33:20.574363Z"
     },
     "https://www.mozilla.org/en-US/about/legal/terms/services/": {
       "content_sha256": "41b6234a57f78c0541c3d87ba12989429ee6fb67f11ced7ae4af397909327591",
       "etag": "\"b3ebaa4208a78f8dd655e2b4afe2c30c\"",
-      "last_checked_at": "2026-10-15T04:33:41.322616Z",
+      "last_checked_at": "2026-10-16T04:33:43.107405Z",
       "last_fetched_at": "2026-10-14T04:35:32.646639Z"
     },
     "https://www.mozilla.org/en-US/privacy/": {
       "content_sha256": "27e4869b6883996e65df0fbc37413fa9e2f1080924c428a53f18ee8ffb4f13b9",
       "etag": "\"dbf55f66ee34680c4eb9ec15726b619b\"",
-      "last_checked_at": "2026-10-15T04:33:38.006829Z",
+      "last_checked_at": "2026-10-16T04:33:39.836571Z",
       "last_fetched_at": "2026-10-14T04:35:29.391103Z"
     },
     "https://www.paypal.com/us/legalhub/paypal/useragreement-full": {
       "content_sha256": "290418a8dffbd63b80ccacbefe968831c097e063f1d5dc8f3de4b8689f319369",
-      "etag": "W/\"246103-UVoQ509DTN79CQLqmmoxCP3P8eQ\"",
-      "last_checked_at": "2026-10-15T04:33:58.679991Z",
-      "last_fetched_at": "2026-10-15T04:33:58.679991Z"
+      "last_checked_at": "2026-10-16T04:33:59.225342Z",
+      "last_fetched_at": "2026-10-16T04:33:59.225342Z"
     },
     "https://www.paypal.com/us/legalhub/privacy-full": {
-      "content_sha256": "cb63979efd648fa1a1fe56bf57378a8029b6a49698db7cede65dc97bb77fd2a0",
-      "etag": "W/\"19e8b7-oOuOajNUSDtbGNDj0c/CCvzACF4\"",
-      "last_checked_at": "2026-10-15T04:33:50.816790Z",
-      "last_fetched_at": "2026-10-15T04:33:50.816790Z"
+      "content_sha256": "e373f61588cd4f7c07736c4bc439231f4ed7c4c16dbaccbeeb48c82d5490e29f",
+      "last_checked_at": "2026-10-16T04:33:52.557341Z",
+      "last_fetched_at": "2026-10-16T04:33:52.557341Z"
     },
     "https://www.redditinc.com/policies/user-agreement": {
       "content_sha256": "38c1082b0652de013f6784881b459d747b6663facb29181b045e112d54cf480b",
-      "last_checked_at": "2026-10-15T04:34:09.022759Z",
-      "last_fetched_at": "2026-10-15T04:34:09.022759Z",
+      "last_checked_at": "2026-10-16T04:34:09.548072Z",
+      "last_fetched_at": "2026-10-16T04:34:09.548072Z",
       "last_modified": "Tue, 13 Oct 2026 20:39:22 GMT"
     },
     "https://www.salesforce.com/company/privacy/": {
       "content_sha256": "c5e6a8916d0d9237adde977e789a0802577942b11c4d484c31d50c1090ca1f0a",
-      "etag": "W/\"9cd22-SvBsVLAo81snZPE3MaJaHWGHdWg\"",
-      "last_checked_at": "2026-10-15T04:34:15.600913Z",
-      "last_fetched_at": "2026-10-15T04:34:15.600913Z"
+      "etag": "W/\"9d102-yVzOPR5IK8EbJaJmfQWPGDk3hDY\"",
+      "last_checked_at": "2026-10-16T04:34:15.944509Z",
+      "last_fetched_at": "2026-10-16T04:34:15.944509Z"
     },
     "https://www.shopify.com/legal/privacy": {
       "content_sha256": "2479befe4cec981236cae3e9b1113ce9a599e46e9b0767f2f773501c63558100",
-      "last_checked_at": "2026-10-15T04:34:25.078888Z",
-      "last_fetched_at": "2026-10-15T04:34:25.078888Z"
+      "last_checked_at": "2026-10-16T04:34:25.346855Z",
+      "last_fetched_at": "2026-10-16T04:34:25.346855Z",
+      "last_modified": "Fri, 16 Oct 2026 04:25:17 GMT"
     },
     "https://www.shopify.com/legal/terms": {
       "content_sha256": "c86886c447cefdedd3daae9d4bdef811344c93ab110caeabc00d2889a003f98a",
-      "last_checked_at": "2026-10-15T04:34:28.375661Z",
-      "last_fetched_at": "2026-10-15T04:34:28.375661Z"
+      "last_checked_at": "2026-10-16T04:34:28.472852Z",
+      "last_fetched_at": "2026-10-16T04:34:28.472852Z",
+      "last_modified": "Fri, 16 Oct 2026 04:25:17 GMT"
     },
     "https://www.spotify.com/us/legal/end-user-agreement/": {
       "content_sha256": "555d772e9da0dee9c45a37def90c93aef5b0bf5417e8a8c7769c54e04de3ee6b",
-      "etag": "\"130v2dvdlkz42ii\"",
-      "last_checked_at": "2026-10-15T04:34:47.463372Z",
-      "last_fetched_at": "2026-10-15T04:34:47.463372Z"
+      "etag": "\"vfr0e5caqb42ii\"",
+      "last_checked_at": "2026-10-16T04:34:47.410063Z",
+      "last_fetched_at": "2026-10-16T04:34:47.410063Z"
     },
     "https://www.spotify.com/us/legal/privacy-policy/": {
       "content_sha256": "dfd8e48cac72ff05cc3d8f611d552b4d83bbed0d93a282f8f4980a92ab41ebe9",
-      "etag": "\"sfjct32bau47fx\"",
-      "last_checked_at": "2026-10-15T04:34:43.808477Z",
-      "last_fetched_at": "2026-10-15T04:34:43.808477Z"
+      "etag": "\"p8zi03rgsg47fx\"",
+      "last_checked_at": "2026-10-16T04:34:43.894230Z",
+      "last_fetched_at": "2026-10-16T04:34:43.894230Z"
     },
     "https://www.twitch.tv/p/en/legal/privacy-notice/": {
       "content_sha256": "e303134f74f6a2c64cd3df158b175ecc616f82901d96ad37cee40d3705e5e3b1",
       "etag": "\"16b1442570550acc9a5943f4fab5e1ed\"",
-      "last_checked_at": "2026-10-15T04:34:56.626906Z",
+      "last_checked_at": "2026-10-16T04:34:57.227592Z",
       "last_fetched_at": "2026-09-27T10:05:48.225073Z",
-      "last_modified": "Thu, 15 Oct 2026 00:19:37 GMT"
+      "last_modified": "Fri, 16 Oct 2026 00:18:41 GMT"
     },
     "https://www.twitch.tv/p/en/legal/terms-of-service/": {
       "content_sha256": "2692038807d588317df617332d91363d056f09cfa6ec88612efc27fcd799f327",
       "etag": "\"c392d103e3ba9eeb4a35ee789c1b5c26\"",
-      "last_checked_at": "2026-10-15T04:35:03.105898Z",
+      "last_checked_at": "2026-10-16T04:35:03.663615Z",
       "last_fetched_at": "2026-09-27T10:05:54.749915Z",
-      "last_modified": "Thu, 15 Oct 2026 00:19:38 GMT"
+      "last_modified": "Fri, 16 Oct 2026 00:18:42 GMT"
     }
   },
   "version": 1
