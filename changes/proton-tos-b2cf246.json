@@ -1,0 +1,43 @@
+{
+  "commit": "b2cf246469503ebd9d6b329eed66226f791907e7",
+  "company": "proton",
+  "company_name": "Proton",
+  "detected_at": "2026-10-20T04:33:56Z",
+  "doc": "tos",
+  "hunks": [
+    {
+      "added": [
+        "If you have been inactive on your free Account for a consecutive period of 12 months or more, access to your Account and all or part of the data associated with your Account (including but not limited to emails stored in Proton Mail, files stored on Proton Drive, calendar entries in Proton Calendar and passwords in Proton Pass) may be deleted. As a mere courtesy, the Company will aim to send notice to the recovery email associated with your Account 30, 15 and 7 days in advance before such action is taken."
+      ],
+      "context_after": [
+        "Accounts under an active paid subscription are always considered active and no action will be taken against your paid Account under this section. Terminating your active paid subscription (or being downgraded to free due to a failure to pay for the subscription) will make your Account subject to this section again.",
+        "If your account is free, you are considered active by performing one of the following actions at least once in a period of 12 months:",
+        "- logging in to your Account on our web, desktop or mobile apps; or"
+      ],
+      "context_before": [
+        "If you would like to contest the suspension of your account, please submit an appeal through our Abuse Appeal Form.",
+        "3. Inactive Accounts",
+        "The Company reserves the right to suspend or delete free Accounts that have been inactive for a consecutive period of 12 months and/or part or all of their associated data and content according to this section."
+      ],
+      "id": "h1",
+      "new_start": 37,
+      "old_start": 37,
+      "removed": [
+        "If you have been inactive on your free Account for a consecutive period of 12 months or more, access to your Account and all or part of the data associated with your Account (including but not limited to emails stored in Proton Mail, files stored on Proton Drive, calendar entries in Proton Calendar and passwords in Proton Pass) may be deleted. You will receive notices 30, 15 and 7 days in advance before such action is taken on the recovery email associated with your Account."
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "proton-tos-b2cf246",
+  "materiality": {
+    "added_chars": 510,
+    "effective_date_change": null,
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 479,
+    "similarity_badge": 0.9892
+  },
+  "parent_commit": "8fe200c00453de5c6e8b882c9eadd8e1a7cd76a4",
+  "schema_version": 1,
+  "source_url": "https://proton.me/legal/terms"
+}
