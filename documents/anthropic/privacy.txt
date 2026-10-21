@@ -1,4 +1,3 @@
-Privacy Policy
 Anthropic is an AI safety and research company working to build reliable, interpretable, and steerable AI systems.
 This Privacy Policy explains how we collect, use, disclose, and process your personal data when you use our website, Claude.ai, or other Anthropic products and services (the “Services”). This Privacy Policy does not apply to content that we process on behalf of customers of our business offerings, such as our Enterprise accounts. Our use of that data is governed by our customer agreements covering access to and use of those offerings.
 Please see our Non-User Privacy Policy for information on how our large language models are ‘trained’ and how personal data obtained from third party sources, including where others may submit personal data when using our services, may be used when developing or delivering our products and services.
@@ -105,20 +104,6 @@ If you have any questions about this Privacy Policy, or have any questions, comp
 You can email us at privacy@anthropic.com and contact our Data Protection Officer at dpo@anthropic.com.
 Please note that under many countries' laws, you have the right to lodge a complaint with the supervisory authority in the place in which you live or work. A full list of EU supervisory authorities’ contact details is available here. If you live or work in the UK, you have the right to lodge a complaint with the UK Information Commissioner’s Office. If you live in Brazil, you have the right to lodge a complaint with the Brazilian Data Protection Authority (ANPD). If you live in Australia, you have the right to lodge a complaint with the Office of the Australian Information Commissioner.
 10. Legal Bases for Processing
-| Purpose | Type of Data | Legal Basis | 
-|---|---|---|
-| To provide, maintain and facilitate any products and services offered to you with respect to your Anthropic account, which are governed by our Terms of Service |  |  | 
-| To provide, maintain and facilitate optional services and features that enhance platform functionality and user experience |  |  | 
-| To provide you with service updates, communications, and to provide tailored recommendations about our Services that may be of interest to you. |  |  | 
-| To create and administer your Anthropic account |  |  | 
-| To facilitate payments for products and services provided by Anthropic |  |  | 
-| To prevent and investigate fraud, abuse, and violations of our Usage Policy, unlawful or criminal activity, unauthorized access to or use of personal data or Anthropic systems and networks, to protect our rights and the rights of others, to protect your safety or that of any other person, and to meet legal, governmental and institutional policy obligations |  |  | 
-| To investigate and resolve disputes |  |  | 
-| To investigate and resolve security issues |  |  | 
-| To debug and to identify and repair errors that impair existing functionality |  |  | 
-| To improve the Services and conduct research (excluding model training) |  |  | 
-| To improve the Services and conduct research (including model training). See our Non-User Privacy Policy for more details on the data used to train our models, and the different stages of development. |  |  | 
-| To enforce our Terms of Service and similar terms and agreements, including our Usage Policy. |  |  | 
 11. Regional Supplemental Disclosures
 Supplemental Disclosures for Residents of Canada
 These supplemental disclosures contain additional information relevant to residents of Canada. This content should be read in conjunction with the rest of our Privacy Policy. In case of conflict between our Privacy Policy and these supplemental disclosures, the supplemental disclosures shall prevail in relation to residents of Canada.
