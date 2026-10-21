@@ -1,0 +1,37 @@
+{
+  "commit": "538a7f4b97a2cdda93f35f5640c676fc36f5e8f5",
+  "company": "anthropic",
+  "company_name": "Anthropic",
+  "detected_at": "2026-10-21T04:32:56Z",
+  "doc": "tos",
+  "hunks": [
+    {
+      "added": [],
+      "context_after": [
+        "Welcome to Anthropic! Before you access our services, please read these Terms of Service.",
+        "These Terms of Service (“Terms”) govern your use of Claude.ai, Claude Pro, and other products and services that we may offer for individuals, along with any associated apps, software, and websites (together, our “Services”). These Terms are a contract between you and Anthropic, PBC (\"Anthropic\") (and not our Providers), and they include our Acceptable Use Policy. By accessing our Services, you agree to these Terms.",
+        "Please read our Privacy Policy, which describes how we collect and use personal information."
+      ],
+      "context_before": [],
+      "id": "h1",
+      "new_start": 1,
+      "old_start": 1,
+      "removed": [
+        "Consumer Terms of Service"
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "anthropic-tos-538a7f4",
+  "materiality": {
+    "added_chars": 0,
+    "effective_date_change": null,
+    "material": false,
+    "reason": "below_sentence_threshold",
+    "removed_chars": 25,
+    "similarity_badge": 0.9995
+  },
+  "parent_commit": "5f4d8f492a09159b908449de1b78d71c118ab76f",
+  "schema_version": 1,
+  "source_url": "https://www.anthropic.com/legal/consumer-terms"
+}

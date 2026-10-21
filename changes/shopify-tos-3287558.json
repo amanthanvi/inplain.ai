@@ -1,0 +1,66 @@
+{
+  "commit": "32875589f09679054272091d5bccd63c764e47f6",
+  "company": "shopify",
+  "company_name": "Shopify",
+  "detected_at": "2026-10-21T04:35:18Z",
+  "doc": "tos",
+  "hunks": [
+    {
+      "added": [
+        "Last updated on: October 20, 2026"
+      ],
+      "context_after": [
+        "Welcome to Shopify! By signing up for a Shopify Account (as defined in Section 1) or by using any Shopify Services (as defined below), you are agreeing to be bound by the following terms and conditions (the \"Terms of Service\").",
+        "As used in these Terms of Service, \"we\", \"us\", \"our\" and \"Shopify\" means the applicable Shopify Contracting Party (as defined in Section 13 below), and \"you\" means the Shopify User (if registering for or using a Shopify Service as an individual), or the business employing the Shopify User (if registering for or using a Shopify Service as a business) and any of its affiliates.",
+        "Shopify provides a complete commerce platform that enables merchants to unify their commerce activities. Among other features, this platform includes a range of tools for merchants to build and customize online stores, sell in multiple places (including web, mobile, social media, online marketplaces and other online locations (\"Online Services\") and in person (\"POS Services\")), manage products, inventory, payments, fulfillment, shipping, business operations, marketing and advertising, and engage with existing and potential customers. Any such service or services offered by Shopify are referred to in these Terms of Services as the \"Service(s)\". Any new features or tools which are added to the current Services will also be subject to the Terms of Service. You can review the current version of the Terms of Service at any time at https://shopify.com/legal/terms."
+      ],
+      "context_before": [
+        "Terms of Service"
+      ],
+      "id": "h1",
+      "new_start": 2,
+      "old_start": 2,
+      "removed": [
+        "Last updated on: August 1, 2026"
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "- Your access to and use of any tax-related tools that Shopify offers to you (\"Shopify Tax\") is subject to the Shopify Tax Terms of Service."
+      ],
+      "context_after": [
+        "6. Confidentiality",
+        "- \"Confidential Information\" will include, but will not be limited to, any and all information associated with a party's business and not publicly known, including specific business information, technical processes and formulas, software, customer lists, prospective customer lists, names, addresses and other information regarding customers and prospective customers, product designs, sales, costs (including any relevant processing fees), price lists, and other unpublished financial information, business plans and marketing data, and any other confidential and proprietary information, whether or not marked as confidential or proprietary. Shopify's Confidential Information includes all information that you receive relating to us, or to the Services, that is not known to the general public including information related to our security program and practices.",
+        "- Each party agrees to use the other party's Confidential Information solely as necessary for performing its obligations under these Terms of Service and in accordance with any other obligations in these Terms of Service including this Section 6. Each party agrees that it will take all reasonable steps, at least substantially equivalent to the steps it takes to protect its own proprietary information, to prevent the duplication, disclosure or use of any such Confidential Information, other than (i) by or to its employees, agents and subcontractors who must have access to such Confidential Information to perform such party's obligations hereunder, who each will treat such Confidential Information as provided herein, and who are each subject to obligations of confidentiality to such party that are at least as stringent as those contained herein; or (ii) as required by any law, regulation, or order of any court of proper jurisdiction over the parties and the subject matter contained in these Terms of Service, provided that, if legally permitted, the receiving party will give the disclosing party prompt written notice and use commercially reasonable efforts to ensure that such disclosure is accorded confidential treatment. Confidential Information will not include any information that the receiving party can prove: (A) was already in the public domain, or was already known by or in the possession of the receiving party, at the time of disclosure of such information; (B) is independently developed by the receiving party without use of or reference to the other party's Confidential Information, and without breaching any provisions of these Terms of Service; or (C) is thereafter rightly obtained by the receiving party from a source other than the disclosing party without breaching any provision of these Terms of Service."
+      ],
+      "context_before": [
+        "- You are solely responsible for determining, collecting, withholding, reporting, and remitting applicable taxes, duties, fees, surcharges and additional charges that arise from or as a result of any sale on your Shopify Store or your use of the Services. The Services are not a marketplace. Any contract of sale made through the Services is directly between you and the customer.",
+        "- You must maintain an accurate location in the administrative console of your Shopify Store. If you change jurisdictions you must promptly update your location in the administrative console.",
+        "- Shopify does not provide refunds."
+      ],
+      "id": "h2",
+      "new_start": 77,
+      "old_start": 77,
+      "removed": [
+        "- Your access to and use of any tools that Shopify offers to you that help you calculate or estimate taxes that arise from or as a result of a sale on your Store (\"Shopify Tax\") is subject to the Shopify Tax Terms of Service or that help you file such taxes (\"Shopify Tax Automated Filing\") is subject to the Shopify Tax Automated Filing Terms of Service."
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "shopify-tos-3287558",
+  "materiality": {
+    "added_chars": 173,
+    "effective_date_change": {
+      "from": "2026-08-01",
+      "to": "2026-10-20"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 386,
+    "similarity_badge": 0.9962
+  },
+  "parent_commit": "538a7f4b97a2cdda93f35f5640c676fc36f5e8f5",
+  "schema_version": 1,
+  "source_url": "https://www.shopify.com/legal/terms"
+}
