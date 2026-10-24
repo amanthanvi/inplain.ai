@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 from inplain import detect, schema
-from inplain.crawl import Document, commit_message
+from inplain.crawl import Document
+from inplain.git import commit_message
 from inplain.detect import (
     REASON_ADDED,
     REASON_BELOW_THRESHOLD,

@@ -11,13 +11,12 @@ import inplain.crawl as crawl_module
 from inplain.crawl import (
     STATE_FILENAME,
     Crawler,
-    Git,
-    GitError,
     Politeness,
     Status,
     build_parser,
     load_catalog,
 )
+from inplain.git import Git, GitError, message_identity
 from inplain.net import USER_AGENT, SizeCapExceeded
 
 from .conftest import (
@@ -109,6 +108,8 @@ def test_commit_message_identifies_company_doc_and_url(repo):
     assert "company: Example (example)" in message
     assert "doc: privacy" in message
     assert f"url: {PRIVACY}" in message
+    # detect reads the message back with the parser that lives beside the writer
+    assert message_identity(message) == ("Example", PRIVACY)
 
 
 def test_each_changed_document_is_its_own_commit(repo):

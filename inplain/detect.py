@@ -46,7 +46,6 @@ import argparse
 import difflib
 import logging
 import re
-import subprocess
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -54,6 +53,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from . import REPO_ROOT, schema, setup_cli_logging
+from .git import Git, GitError, message_identity
 from .schema import ChangeRecord, Hunk, Materiality
 
 log = logging.getLogger("inplain.detect")
@@ -133,8 +133,6 @@ _DATE_PATTERNS = (
 )
 
 _DOCUMENT_FILE = re.compile(r"^(?P<company>[a-z0-9-]+)/(?P<doc>[a-z0-9-]+)\.txt$")
-_MESSAGE_COMPANY = re.compile(r"^company:\s*(?P<name>.+?)\s*\((?P<slug>[^)]+)\)\s*$", re.M)
-_MESSAGE_URL = re.compile(r"^url:\s*(?P<url>\S+)\s*$", re.M)
 
 _WHITESPACE = re.compile(r"\s+")
 
@@ -312,67 +310,6 @@ def assess_materiality(diff: Diff) -> Materiality:
 
 
 # --------------------------------------------------------------------------
-# git — read-only access to the datastore
-
-
-class GitError(RuntimeError):
-    pass
-
-
-class GitReader:
-    def __init__(self, root: Path) -> None:
-        self.root = Path(root)
-
-    def _run(self, *args: str) -> bytes:
-        result = subprocess.run(
-            ["git", "-C", str(self.root), "-c", "core.quotepath=false", *args],
-            capture_output=True,
-        )
-        if result.returncode != 0:
-            stderr = result.stderr.decode("utf-8", "replace").strip()
-            raise GitError(f"git {' '.join(args)} failed ({result.returncode}): {stderr}")
-        return result.stdout
-
-    def document_commits(self, docs_relpath: str) -> list[tuple[str, str, str, list[str]]]:
-        """(sha, author_date_iso, message, files) for every commit that
-        touched ``docs_relpath``, oldest first."""
-        out = self._run(
-            "log",
-            "--reverse",
-            "--format=%x1e%H%x1f%aI%x1f%B%x1f",
-            "--name-only",
-            "--",
-            docs_relpath,
-        ).decode("utf-8", "replace")
-        commits = []
-        for chunk in out.split("\x1e"):
-            if not chunk.strip():
-                continue
-            sha, author_date, message, names = chunk.split("\x1f", 3)
-            files = [line.strip() for line in names.splitlines() if line.strip()]
-            commits.append((sha.strip(), author_date.strip(), message, files))
-        return commits
-
-    def parent_sha(self, sha: str) -> str | None:
-        """The first parent's full sha, or None for a root commit."""
-        try:
-            out = self._run("rev-parse", "--verify", "--quiet", f"{sha}^")
-        except GitError:
-            return None
-        return out.decode("ascii", "replace").strip() or None
-
-    def path_exists_at(self, sha: str, relpath: str) -> bool:
-        try:
-            self._run("cat-file", "-e", f"{sha}:{relpath}")
-            return True
-        except GitError:
-            return False
-
-    def blob_text(self, sha: str, relpath: str) -> str:
-        return self._run("show", f"{sha}:{relpath}").decode("utf-8", "replace")
-
-
-# --------------------------------------------------------------------------
 # the detector
 
 
@@ -394,7 +331,7 @@ class Detector:
         self.root = Path(root)
         self.documents_dir = Path(documents_dir or self.root / "documents")
         self.changes_dir = Path(changes_dir or self.root / "changes")
-        self.git = GitReader(self.root)
+        self.git = Git(self.root)
         self._catalog: dict[str, dict[str, object]] | None = None
 
     def _docs_relpath(self) -> str:
@@ -426,10 +363,7 @@ class Detector:
     def _identity(self, company: str, doc: str, message: str) -> tuple[str, str]:
         """(company_name, source_url): the T1 commit message is authoritative
         (it is immutable alongside the snapshot); catalog.json is the fallback."""
-        name_match = _MESSAGE_COMPANY.search(message)
-        url_match = _MESSAGE_URL.search(message)
-        name = name_match.group("name") if name_match else None
-        url = url_match.group("url") if url_match else None
+        name, url = message_identity(message)
         if name is None or url is None:
             entry = self._catalog_entry(company)
             if name is None:
