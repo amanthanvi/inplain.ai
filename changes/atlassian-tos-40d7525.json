@@ -1,0 +1,74 @@
+{
+  "commit": "40d75253cf01606e9bd98f0569e1797797b95c22",
+  "company": "atlassian",
+  "company_name": "Atlassian",
+  "detected_at": "2026-10-24T04:30:56Z",
+  "doc": "tos",
+  "hunks": [
+    {
+      "added": [
+        "Atlassian Customer Agreement"
+      ],
+      "context_after": [
+        "Atlassian provides a wide range of products, services, and deployment options. As part of our dedication to building with heart and balance, we have developed the Atlassian Customer Agreement to encompass all these offerings in a comprehensive and customized manner. Our products adhere to an enterprise-level set of controls and policies that align with various international standards and market expectations. The agreement is crafted to be customer-friendly, undergoing regular updates informed by market practices and customer input. For further insight into our approach, please visit this page."
+      ],
+      "context_before": [],
+      "id": "h1",
+      "new_start": 1,
+      "old_start": 1,
+      "removed": [],
+      "word_spans": null
+    },
+    {
+      "added": [],
+      "context_after": [
+        "Effective starting: October 1, 2026",
+        "This Agreement is between Customer and Atlassian. “Customer” means the entity on behalf of which this Agreement is accepted or, if that does not apply, the individual accepting this Agreement. “Atlassian” means the Atlassian entity that owns or operates the Products that Customer uses or accesses listed at https://www.atlassian.com/legal/product-terms.",
+        "If you (the person accepting this Agreement) are accepting this Agreement on behalf of your employer or another entity, you agree that: (i) you have full legal authority to bind your employer or such entity to this Agreement, and (ii) you agree to this Agreement on behalf of your employer or such entity."
+      ],
+      "context_before": [
+        "Atlassian provides a wide range of products, services, and deployment options. As part of our dedication to building with heart and balance, we have developed the Atlassian Customer Agreement to encompass all these offerings in a comprehensive and customized manner. Our products adhere to an enterprise-level set of controls and policies that align with various international standards and market expectations. The agreement is crafted to be customer-friendly, undergoing regular updates informed by market practices and customer input. For further insight into our approach, please visit this page."
+      ],
+      "id": "h2",
+      "new_start": 3,
+      "old_start": 2,
+      "removed": [
+        "Atlassian Customer Agreement"
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "Recommended for you"
+      ],
+      "context_after": [
+        "Stay informed",
+        "Subscribe to receive notifications from us about updates to our legal terms (including our legal policies) and our list of sub-processors."
+      ],
+      "context_before": [
+        "“Usage-Based Offerings” means Usage-Based Offerings as described in the Usage-Based Offering Terms.",
+        "“Usage-Based Offering Terms” means the Atlassian usage-based offering terms available at https://www.atlassian.com/legal/usage-based-offering-terms.",
+        "“User” means any individual that Customer authorizes to use the Products. Users may include: (i) Customer’s and its Affiliates’ employees, consultants, contractors and agents, (ii) third parties with which Customer or its Affiliates transact business, (iii) individuals invited by Customer’s users, (iv) individuals under managed accounts, or (v) individuals interacting with a Product as Customer’s customer."
+      ],
+      "id": "h3",
+      "new_start": 162,
+      "old_start": 162,
+      "removed": [
+        "Related content"
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "atlassian-tos-40d7525",
+  "materiality": {
+    "added_chars": 47,
+    "effective_date_change": null,
+    "material": false,
+    "reason": "below_sentence_threshold",
+    "removed_chars": 43,
+    "similarity_badge": 0.999
+  },
+  "parent_commit": "6b379c25b5e79400a3829bc3eba017ebb620d360",
+  "schema_version": 1,
+  "source_url": "https://www.atlassian.com/legal/software-license-agreement"
+}
