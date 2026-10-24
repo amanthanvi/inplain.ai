@@ -50,7 +50,7 @@ worse than no product.
 Rules:
 - Exact match, or whitespace/case-tolerant match. Nothing else.
 - A quote must contain at least one whole word of three or more characters. A
-  shorter quote (`"a"`, `"We may"`) appears on almost any side and is not
+  shorter quote (`"a"`, `"We do"`) appears on almost any side and is not
   evidence.
 - Every citation carries `side: added | removed` and validates against that side
   only.
