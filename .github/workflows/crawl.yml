@@ -147,7 +147,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           if [ "$status" -ne 0 ]; then
             echo "summarize_failed=true" >> "$GITHUB_OUTPUT"
-            echo "::warning::summarize left records unsummarised (exit $status); they stay retryable"
+            echo "::warning::summarize left records unsummarised (exit $status); the next run retries them, except any listed as capped= (docs/operations.md)"
           else
             echo "summarize_failed=false" >> "$GITHUB_OUTPUT"
           fi
