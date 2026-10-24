@@ -876,7 +876,7 @@ class Summarizer:
             },
             "bullets": kept,
         }
-        _write_record(candidate, path)
+        schema.dump_record(candidate, path)
         outcome.status = WRITTEN
         log.info(
             "%s: wrote %d bullet(s) with %d citation(s) via %s, %d claim(s) dropped, "
@@ -945,29 +945,11 @@ def _count_attempt(path: Path) -> int:
     try:
         record = schema.load_record(path)
         record["summary_attempts"] = record.get("summary_attempts", 0) + 1
-        _write_record(record, path)
+        schema.dump_record(record, path)
         return record["summary_attempts"]
     except Exception as exc:  # noqa: BLE001 - after the spend, nothing raises
         log.warning("%s: could not count the failed attempt: %s", path.stem, exc)
         return 0
-
-
-def _write_record(record: dict[str, Any], path: Path) -> None:
-    """Validate in full, then replace atomically.
-
-    Validation happens before anything touches the destination, and the
-    replacement is a single ``os.replace`` from a sibling temp file, so a
-    failure at any point leaves the original record byte-identical and valid.
-    """
-    schema.validate_record(record)
-    text = schema.dumps_record(record)
-    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
-    try:
-        tmp.write_text(text, encoding="utf-8", newline="\n")
-        os.replace(tmp, path)
-    finally:
-        if tmp.exists():
-            tmp.unlink()
 
 
 # ---------------------------------------------------------------------------

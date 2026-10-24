@@ -7,6 +7,8 @@ __pycache__/
 dist/
 _site/
 *.egg-info/
+# schema.dump_record's temp file, if a run is killed mid-write
+changes/*.tmp
 
 # Environment
 # .env.example files are tracked on purpose; nothing else is.

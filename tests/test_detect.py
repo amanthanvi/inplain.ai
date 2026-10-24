@@ -276,6 +276,25 @@ def test_real_change_produces_a_valid_record(repo):
     assert SELL_SENTENCE in added
 
 
+def test_a_failed_write_leaves_no_record_for_the_ledger_to_trust(repo, monkeypatch):
+    """A killed or failed write must not leave a truncated changes/<id>.json:
+    existence is the ledger, so one would be "already recorded" forever."""
+    commit_doc(repo, BASE_LINES)
+    sha = commit_doc(repo, BASE_LINES[:4] + [SELL_SENTENCE] + BASE_LINES[4:])
+
+    def boom(src, dst):
+        raise OSError("disk went away mid-write")
+
+    monkeypatch.setattr(schema.os, "replace", boom)
+    with pytest.raises(OSError):
+        Detector(repo).run()
+    assert list((repo / "changes").iterdir()) == []
+    monkeypatch.undo()
+
+    assert Detector(repo).run().created == 1, "the next run is not wedged"
+    assert (repo / "changes" / f"example-privacy-{sha[:7]}.json").exists()
+
+
 def test_effective_date_only_change_is_material(repo):
     """AC-5: an effective-date-only change produces a material change record,
     with the reason recording exactly that."""

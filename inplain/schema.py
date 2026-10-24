@@ -29,6 +29,7 @@ record never dirties the archive.
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -340,17 +341,29 @@ def dumps_record(record: dict[str, Any]) -> str:
     return json.dumps(record, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
 
 
-def dump_record(record: dict[str, Any], path: Path, *, validate: bool = True) -> None:
-    if validate:
-        validate_record(record)
+def dump_record(record: dict[str, Any], path: Path) -> None:
+    """Validate in full, then replace atomically — the one record writer.
+
+    Validation happens before anything touches the destination, and the
+    replacement is a single ``os.replace`` from a sibling temp file, so a
+    failure at any point leaves the original record byte-identical and valid,
+    and never leaves a truncated file for detect's ledger to trust.
+    """
+    validate_record(record)
+    text = dumps_record(record)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(dumps_record(record), encoding="utf-8", newline="\n")
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    try:
+        tmp.write_text(text, encoding="utf-8", newline="\n")
+        os.replace(tmp, path)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
 
 
-def load_record(path: Path, *, validate: bool = True) -> dict[str, Any]:
+def load_record(path: Path) -> dict[str, Any]:
     record = json.loads(Path(path).read_text(encoding="utf-8"))
-    if validate:
-        validate_record(record)
+    validate_record(record)
     return record
 
 
