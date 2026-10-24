@@ -6,6 +6,7 @@ __pycache__/
 # Build
 dist/
 _site/
+._site.tmp/
 *.egg-info/
 # schema.dump_record's temp file, if a run is killed mid-write
 changes/*.tmp

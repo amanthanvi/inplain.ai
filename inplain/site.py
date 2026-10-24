@@ -482,6 +482,29 @@ class BuildReport:
 
 
 def build_site(*, catalog_path: Path, changes_dir: Path, out_dir: Path) -> BuildReport:
+    """Render into a sibling temp dir, then swap it in for ``out_dir``: a
+    failure at any point, rendering included, leaves the previous site as it
+    was. An ``out_dir`` holding the inputs (``--out .``) is refused, because
+    the swap would delete them."""
+    out_dir = Path(out_dir).resolve()
+    for source in (catalog_path, changes_dir):
+        if Path(source).resolve().is_relative_to(out_dir):
+            raise ValueError(f"output {out_dir} contains the input {source}; refusing")
+    tmp = out_dir.with_name(f".{out_dir.name}.tmp")
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    try:
+        report = _render(catalog_path=catalog_path, changes_dir=changes_dir, out_dir=tmp)
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    tmp.rename(out_dir)
+    return report
+
+
+def _render(*, catalog_path: Path, changes_dir: Path, out_dir: Path) -> BuildReport:
     # Imported here, not at module top: feeds.py imports SITE_URL and
     # doc_title from this module, so it must be fully initialised first.
     from . import feeds

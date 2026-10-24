@@ -778,6 +778,35 @@ def test_filename_id_mismatch_fails_the_build(tmp_path: Path) -> None:
         )
 
 
+def test_a_rendering_failure_leaves_the_previous_site(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """All-or-nothing covers rendering too: the build happens in a sibling
+    temp dir and only a finished build replaces the old site."""
+    write_inputs(tmp_path, make_records())
+    out = tmp_path / "_site"
+    inputs = {"catalog_path": tmp_path / "catalog.json", "changes_dir": tmp_path / "changes"}
+    build_site(**inputs, out_dir=out)
+    before = {p: p.read_bytes() for p in out.rglob("*") if p.is_file()}
+
+    def boom(record):
+        raise RuntimeError("a template bug")
+
+    monkeypatch.setattr(site, "_change_view", boom)
+    with pytest.raises(RuntimeError):
+        build_site(**inputs, out_dir=out)
+    assert {p: p.read_bytes() for p in out.rglob("*") if p.is_file()} == before
+    assert not (tmp_path / "._site.tmp").exists(), "no half-built tree is left behind"
+
+
+def test_an_output_dir_holding_the_inputs_is_refused(tmp_path: Path) -> None:
+    """`--out .` would delete the working tree on the swap."""
+    write_inputs(tmp_path, make_records())
+    code = site.main(["--root", str(tmp_path), "--out", str(tmp_path)])
+    assert code == 2
+    assert (tmp_path / "catalog.json").is_file() and (tmp_path / "changes").is_dir()
+
+
 def test_missing_changes_dir_builds_an_empty_site(tmp_path: Path) -> None:
     (tmp_path / "catalog.json").write_text(
         json.dumps(CATALOG), encoding="utf-8", newline="\n"
