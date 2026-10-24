@@ -731,11 +731,14 @@ class TestPartialCoverage:
 
 
 def _unchanged(path: Path, before: bytes, *, attempts: int | None = None) -> None:
-    """Byte-identical except, when the failure was the record's own, its
-    ``summary_attempts`` count (the only key a failed run may write)."""
+    """Byte-identical except, after a paid run, its ``summary_attempts`` count
+    (the only key a failed run may write)."""
     record = schema.load_record(path)  # still valid
     assert "summary" not in record, "a failed run must leave the record unsummarised"
-    assert record.pop("summary_attempts", None) == attempts
+    if attempts is None:
+        assert path.read_bytes() == before, "the record was modified by a failed run"
+        return
+    assert record.pop("summary_attempts") == attempts
     assert schema.dumps_record(record).encode("utf-8") == before, (
         "the record was modified by a failed run"
     )
@@ -847,6 +850,29 @@ class TestRetryCap:
         assert written["summary"]["bullets"]
         assert "summary_attempts" not in written
 
+    def test_a_failed_write_after_the_reply_counts(self, changes, monkeypatch):
+        path = write_record(changes, make_record())
+        before = path.read_bytes()
+
+        def boom(*args):
+            raise RuntimeError("something nobody predicted")
+
+        monkeypatch.setattr(Summarizer, "_finish", boom)
+        report = summarizer(changes, FakeClient(reply([bullet()]))).run()
+        assert report.outcomes[0].status == summarize.WRITE_FAILURE
+        _unchanged(path, before, attempts=1)
+
+    def test_a_refusal_before_any_reply_is_not_counted(self, changes):
+        """A run-wide 400 (a bad model id or parameter) refuses every record at
+        no cost; counting it would cap the whole queue and silence the alert."""
+        path = write_record(changes, make_record())
+        before = path.read_bytes()
+        refused = ModelRequestError("model API refused the request (HTTP 400)", status=400)
+        for _ in range(summarize.MAX_SUMMARY_ATTEMPTS + 1):
+            report = summarizer(changes, FakeClient(refused)).run()
+            assert report.failed == 1, "it keeps alerting"
+        _unchanged(path, before)
+
 
 class TestFallback:
     def test_outage_falls_back_once(self, changes):
@@ -900,7 +926,7 @@ class TestFallback:
         summarised = [p for p in paths if "summary" in schema.load_record(p)]
         assert len(summarised) == 1, "the record after the refused one is reached"
         (skipped,) = [p for p in paths if p not in summarised]
-        _unchanged(skipped, paths[skipped], attempts=1)
+        _unchanged(skipped, paths[skipped])
         assert client.models == [summarize.DEFAULT_MODEL, summarize.DEFAULT_MODEL]
 
     def test_auth_refusal_still_halts_the_run(self, changes):

@@ -124,7 +124,8 @@ jobs:
         # A summarize failure does NOT fail this job: the archive is already
         # pushed, records publish honestly summary-less (feeds and pages both
         # carry a "no validated summary" state), and every unsummarised
-        # record is retried on the next run. The failure is surfaced through
+        # record is retried on the next run (up to MAX_SUMMARY_ATTEMPTS paid
+        # failures per record, inplain/summarize.py). The failure is surfaced through
         # the alert job via the summarize_failed output instead.
         run: |
           if [ -z "${MODEL_API_KEY}" ]; then

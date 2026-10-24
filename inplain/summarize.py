@@ -50,11 +50,12 @@ Other decisions, each traceable to a verified v0.2.0 defect:
   the spend, which rolled the status back and stranded the change silently.
   Parse failure and zero-surviving-bullets are no-ops, not errors: the record
   keeps no ``summary`` key, so the next run picks it up again.
-* **Retries are capped per record.** A failed run that is the record's fault
-  (not an outage) raises its ``summary_attempts``, the only key a failed run
-  writes. After :data:`MAX_SUMMARY_ATTEMPTS` the record is no longer sent, so
-  one that can never produce a Valid citation stops being billed and alerting
-  daily. Deleting the key re-queues it.
+* **Retries are capped per record.** A run where the model answered but no
+  summary was written raises the record's ``summary_attempts``, the only key a
+  failed run writes; a refusal or outage before any reply costs nothing and
+  is not counted. After :data:`MAX_SUMMARY_ATTEMPTS` the record is no longer
+  sent, so one that can never produce a Valid citation stops being billed and
+  alerting daily. Deleting the key re-queues it.
 * **Transport errors are caught by class, never bare.** The one fallback model
   (:data:`FALLBACK_MODEL`) is used **only** on outage-class failures — timeout,
   connection error, 5xx, 429 — and **never** on malformed output. v0.2.0's
@@ -597,6 +598,9 @@ class Outcome:
     # The failure will repeat for every remaining record (the model is down or
     # is refusing us), so the run stops rather than burning the schedule.
     halt: bool = False
+    # The model replied (the spend happened); a failure then counts against
+    # the record's MAX_SUMMARY_ATTEMPTS.
+    answered: bool = False
 
     @property
     def ok(self) -> bool:
@@ -732,9 +736,10 @@ class Summarizer:
             # The API answered — the spend happened — but the envelope was not
             # usable. Per-record no-op; the next record may well be fine.
             outcome.status = MODEL_ERROR
+            outcome.answered = True
             outcome.detail = str(exc)
             log.warning(
-                "%s: unusable reply envelope (%s); record is unchanged and retryable",
+                "%s: unusable reply envelope (%s); record left unsummarised and retryable",
                 record_id,
                 exc,
             )
@@ -761,6 +766,7 @@ class Summarizer:
             log.warning("%s: model call failed, record left unsummarised: %s", record_id, exc)
             return outcome
         outcome.model = used_model
+        outcome.answered = True
 
         # ---- past this line NOTHING may raise ----------------------------
         try:
@@ -773,7 +779,7 @@ class Summarizer:
             outcome.status = WRITE_FAILURE
             outcome.detail = f"{type(exc).__name__}: {exc}"
             log.warning(
-                "%s: summary was not written (%s); record is unchanged and retryable",
+                "%s: summary was not written (%s); record left unsummarised and retryable",
                 record_id,
                 outcome.detail,
             )
@@ -887,15 +893,15 @@ class Summarizer:
                 report.aborted = outcome.detail
                 log.warning("stopping this run: %s", outcome.detail)
                 break
-            if not outcome.ok and outcome.status != UNREADABLE:
+            if outcome.answered and not outcome.ok:
                 _count_attempt(path)
         return report
 
 
 def _count_attempt(path: Path) -> None:
-    """One more failed run on this record's own account (an outage halts the
-    run before this). Never raises: the count is a cost control, and a record
-    it cannot update stays exactly as it was."""
+    """One more paid run that wrote no summary for this record. Never raises:
+    the count is a cost control, and a record it cannot update stays exactly
+    as it was."""
     try:
         record = schema.load_record(path)
         record["summary_attempts"] = record.get("summary_attempts", 0) + 1
