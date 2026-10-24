@@ -108,7 +108,7 @@ def write_feed_inputs(root: Path, records: dict[str, dict]) -> None:
     )
 
 
-# Global feed order: newest first, exactly load_published_records' order.
+# Global feed order: newest first, exactly schema.published's order.
 GLOBAL_ORDER = ("hostile", "script", "injection", "wholesale", "effdate", "negation")
 EXAMPLE_ORDER = ("hostile", "injection", "wholesale", "effdate", "negation")
 

@@ -16,7 +16,7 @@ from types import SimpleNamespace
 import pytest
 
 from inplain import schema, site
-from inplain.site import build_site, load_published_records
+from inplain.site import build_site
 
 GOLDEN_DIR = Path(__file__).resolve().parents[1] / "eval" / "golden"
 
@@ -293,8 +293,8 @@ def test_full_document_text_never_published(built: SimpleNamespace) -> None:
         assert CANARY not in html, f"documents/ content leaked into {path}"
 
 
-def test_load_published_records_filters_and_sorts(built: SimpleNamespace) -> None:
-    published = load_published_records(built.root / "changes")
+def test_published_filters_and_sorts(built: SimpleNamespace) -> None:
+    published = schema.published(schema.load_records(built.root / "changes"))
     assert [r["id"] for r in published] == [
         built.records[key]["id"]
         for key in ("script", "injection", "wholesale", "effdate", "negation")
@@ -532,7 +532,7 @@ def test_marks_never_enter_the_text_a_citation_validates_against(
     the mark tags are removed."""
     from inplain.summarize import citation_is_valid
 
-    for record in load_published_records(built.root / "changes"):
+    for record in schema.published(schema.load_records(built.root / "changes")):
         original = built.records[
             next(k for k, r in built.records.items() if r["id"] == record["id"])
         ]
