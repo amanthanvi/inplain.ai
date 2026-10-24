@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import http.server
+import shutil
 import socket
+import ssl
+import subprocess
 import threading
 
 import pytest
@@ -229,3 +232,44 @@ def test_pinned_transport_wraps_a_refused_connection():
         port = probe.getsockname()[1]
     with pytest.raises(TransportError):
         net.PinnedTransport().get(_target(port), {}, 5, 1000)
+
+
+@pytest.mark.skipif(shutil.which("openssl") is None, reason="needs the openssl CLI")
+def test_pinned_https_sends_the_real_name_as_sni_and_verifies_the_certificate(tmp_path):
+    """The reason for the urllib3 pin: over TLS the socket goes to the pinned
+    IP while SNI and certificate matching use the real hostname. A throwaway
+    self-signed certificate (generated here, never stored) must be refused."""
+    cert, key = tmp_path / "cert.pem", tmp_path / "key.pem"
+    subprocess.run(
+        ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
+         "-subj", "/CN=example.test", "-keyout", str(key), "-out", str(cert)],
+        check=True, capture_output=True,
+    )
+    names: list[str | None] = []
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(cert, key)
+    context.sni_callback = lambda sock, name, ctx: names.append(name)
+
+    class Quiet(http.server.HTTPServer):
+        def handle_error(self, request, client_address):
+            pass  # the client aborts the handshake on purpose
+
+    server = Quiet(("127.0.0.1", 0), http.server.BaseHTTPRequestHandler)
+    server.socket = context.wrap_socket(server.socket, server_side=True)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        port = server.server_address[1]
+        target = net.Target(
+            url=f"https://example.test:{port}/p",
+            scheme="https",
+            host="example.test",
+            host_header=f"example.test:{port}",
+            port=port,
+            ip="127.0.0.1",
+        )
+        with pytest.raises(TransportError):  # self-signed: verification fails
+            net.PinnedTransport().get(target, {}, 5, 1000)
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert names == ["example.test"]
