@@ -268,6 +268,25 @@ def test_dump_and_load_roundtrip_lf_only(tmp_path):
     assert load_record(path) == record
 
 
+CHANGES = sorted((Path(__file__).resolve().parents[1] / "changes").glob("*.json"))
+
+
+@pytest.mark.parametrize("path", CHANGES, ids=lambda p: p.stem)
+def test_committed_records_reserialize_byte_for_byte_from_the_dataclasses(path):
+    """The construction side (to_dict) reproduces every committed record's
+    bytes, so no re-serialization can dirty the archive."""
+    raw = path.read_text(encoding="utf-8")
+    data = json.loads(raw)
+    optional = ("summary", "summary_attempts")
+    record = ChangeRecord(
+        **{k: v for k, v in data.items() if k not in {"id", "materiality", "hunks", *optional}},
+        materiality=Materiality(**data["materiality"]),
+        hunks=[Hunk(**hunk) for hunk in data["hunks"]],
+    )
+    extra = {k: data[k] for k in optional if k in data}
+    assert dumps_record({**record.to_dict(), **extra}) == raw
+
+
 def test_dump_validates_by_default(tmp_path):
     record = make_record(hunks=[])
     with pytest.raises(SchemaError):
