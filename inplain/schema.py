@@ -409,15 +409,29 @@ def load_catalog(path: Path) -> list[dict[str, Any]]:
             raise ValueError(f"catalog[{index}]: must be an object")
         if not isinstance(entry.get("slug"), str) or not _SLUG.fullmatch(entry["slug"]):
             raise ValueError(f"catalog[{index}]: slug must be a lowercase slug")
-        if not isinstance(entry.get("name"), str) or not entry["name"]:
-            raise ValueError(f"catalog[{index}]: name must be a non-empty string")
+        # The name and URLs are written as lines of the Snapshot commit message,
+        # which detect parses back: a line break in either could forge one.
+        name = entry.get("name")
+        if not isinstance(name, str) or not name or not name.isprintable():
+            raise ValueError(f"catalog[{index}]: name must be a non-empty, one-line string")
         urls = entry.get("policy_urls")
         if not isinstance(urls, dict) or not urls:
             raise ValueError(f"catalog[{index}]: policy_urls must be a non-empty object")
         for doc, url in urls.items():
             if not _SLUG.fullmatch(doc):
                 raise ValueError(f"catalog[{index}]: document {doc!r} must be a lowercase slug")
-            parts = urlsplit(url) if isinstance(url, str) else None
-            if parts is None or parts.scheme != "https" or not parts.hostname:
-                raise ValueError(f"catalog[{index}]: {doc} URL must be https")
+            if not _is_https_url(url):
+                raise ValueError(f"catalog[{index}]: {doc} URL must be https, with no spaces")
     return entries
+
+
+def _is_https_url(url: Any) -> bool:
+    # isprintable() rejects every whitespace but the space, which urlsplit
+    # would otherwise strip or keep silently.
+    if not isinstance(url, str) or not url.isprintable() or " " in url:
+        return False
+    try:
+        parts = urlsplit(url)
+        return parts.scheme == "https" and bool(parts.hostname)
+    except ValueError:  # e.g. an unbalanced IPv6 bracket
+        return False

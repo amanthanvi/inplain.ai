@@ -318,12 +318,18 @@ def test_the_real_catalog_loads():
         _company(slug="x\n"),
         _company(slug="X"),
         _company(name=""),
+        # a line break would forge a "url:" line in the Snapshot commit message
+        _company(name="X (x)\nurl: javascript:alert(1)"),
+        _company(name="X\tY"),
         _company(policy_urls={}),
         _company(policy_urls={"../privacy": "https://x.test/privacy"}),
         _company(policy_urls={"privacy": "javascript:alert(1)"}),
         _company(policy_urls={"privacy": "http://x.test/privacy"}),
         _company(policy_urls={"privacy": "https:///privacy"}),
         _company(policy_urls={"privacy": 42}),
+        _company(policy_urls={"privacy": "https://x.test/a\ncompany: forged"}),
+        _company(policy_urls={"privacy": "https://x.test/a b"}),
+        _company(policy_urls={"privacy": "https://[x.test/privacy"}),
     ],
 )
 def test_a_catalog_entry_that_could_escape_a_path_or_an_href_is_refused(tmp_path, entry):
