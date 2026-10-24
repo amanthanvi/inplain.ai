@@ -217,10 +217,10 @@ def diff_lines(old_lines: Sequence[str], new_lines: Sequence[str]) -> Diff:
 
     Each non-equal opcode becomes one hunk with up to MAX_CONTEXT_LINES of
     surrounding context, stopping at the neighbouring hunk: a line another
-    hunk removes is never shown as unchanged context. The similarity badge is character-weighted (matched
-    line characters over total characters) so it reflects "how much of the
-    document is unchanged" — computed from these same opcodes, and stored for
-    display only.
+    hunk removes is never shown as unchanged context. The similarity badge is
+    character-weighted (matched line characters over total characters) so it
+    reflects "how much of the document is unchanged" — computed from these
+    same opcodes, and stored for display only.
     """
     matcher = difflib.SequenceMatcher(None, list(old_lines), list(new_lines), autojunk=False)
     hunks: list[Hunk] = []
