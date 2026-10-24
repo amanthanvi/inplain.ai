@@ -1,21 +1,25 @@
 # Design prototypes (#37)
 
-> **Chosen (provisional, 2026-09-27): D — register.** Literata for everything,
+> **Chosen 2026-09-27, confirmed by the owner 2026-10-24: D — register.** Literata for everything,
 > white paper, each Claim followed by the passage it cites with the quoted
 > words highlighted, word-level marks inside replaced passages. A, E and F are
 > kept as screenshots for the record. Decision, scores and rationale are on
 > [#37](https://github.com/amanthanvi/inplain.ai/issues/37).
 
-Throwaway pages that render the same real data in every direction, so the
+Throwaway pages that rendered the same real data in every direction, so the
 decision was made on the thing itself rather than on tidy invented examples.
+With D built into the site (#39) and confirmed, the generator
+(`build.py`) and its copy of the fonts are deleted; both stay in git
+history. What remains is the record: this file, the screenshots, and the
+sample data, which `tests/test_detect.py` still reads.
 
 **The data.** `sample-hunks.json` is Google's privacy policy, first-party
 archived version 2026-04-02 against the version live on 2026-08-03,
 extracted exactly as the pipeline does: 18 Hunks, including replaced
 paragraphs of roughly 550 to 1,000 characters that differ by a handful of
 words. The
-Summary in `build.py` is hand-written in the shape `summarize.py` emits, and
-every Citation is checked against its Side before a page is written, the way
+Summary in `build.py` was hand-written in the shape `summarize.py` emits, and
+every Citation was checked against its Side before a page was written, the way
 the product checks them. The homepage is rendered in its empty state, which
 is the launch state; the Company page and the Change record index carry the
 one record.
@@ -34,28 +38,18 @@ Shared by all four, because they are the SPEC §9 floor and not choices:
 changed line; light and dark designed separately; reduced motion; print;
 no JavaScript.
 
-## Regenerate
-
-```bash
-python prototypes/build.py      # writes prototypes/out/<a|d|e|f>/*.html
-```
-
-`out/` is gitignored. Only Literata is kept under `fonts/` (the upright
-file is the variable font, weight axis 400–900; the italic is a static 400;
-latin subsets, OFL); E and F
-fall back to Georgia and the system sans unless their Google Fonts files
-(Source Serif 4, IBM Plex Sans; both OFL) are dropped into `fonts/`.
+## Screenshots
 
 The screenshots under `screenshots/` were taken with Playwright driving
-Chrome at 1280px and 390px, light and dark, from `out/`. They are the
-record the blind panel judged.
+Chrome at 1280px and 390px, light and dark, from the generated pages. They
+are the record the blind panel judged.
 
 ## Word-level marks
 
-`build.py` also contains the candidate build-time computation for word-level
+`build.py` also contained the candidate build-time computation for word-level
 marks (`word_spans`): a token diff of a Hunk's removed text against its
 added text, expressed as character offsets in G1's reserved shape, applied
 only when the two sides align (similarity 0.5 or better). Marks are
 presentation; Citations keep validating against whole lines on their Side.
-`wordmarks.html` in each direction shows passages 2 and 6 without and with
-them. This feeds [#38](https://github.com/amanthanvi/inplain.ai/issues/38).
+`wordmarks.html` in each direction showed passages 2 and 6 without and with
+them. The shipped version lives in `inplain/site.py` (`word_spans`). This fed [#38](https://github.com/amanthanvi/inplain.ai/issues/38).
