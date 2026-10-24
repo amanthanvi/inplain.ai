@@ -157,6 +157,17 @@ def test_context_is_capped_at_three_lines():
     assert hunk.new_start == 6
 
 
+def test_context_stops_at_the_neighbouring_hunk():
+    """A line another Hunk removes is never shown as unchanged context."""
+    old = ["A", "B removed", "C", "D will change", "E"]
+    new = ["A", "B2", "C", "D2", "E"]
+    first, second = diff_lines(old, new).hunks
+    assert first.context_before == ["A"]
+    assert first.context_after == ["C"]
+    assert second.context_before == ["C"]
+    assert second.context_after == ["E"]
+
+
 def test_removed_prose_beyond_threshold_is_material():
     old = ["keep", "You may opt out of all data sharing at any time via your settings.", "keep2"]
     diff = diff_lines(old, ["keep", "keep2"])

@@ -225,3 +225,10 @@ class TestHunkizer:
         new = old + "\nnew tail"
         (hunk,) = hunks_from_texts(old, new)
         assert len(hunk["context_before"]) == 3
+
+    def test_context_stops_at_the_neighbouring_hunk(self):
+        from wayback_diff import hunks_from_texts
+
+        first, second = hunks_from_texts("A\nB removed\nC\nD will change\nE", "A\nB2\nC\nD2\nE")
+        assert (first["context_before"], first["context_after"]) == (["A"], ["C"])
+        assert (second["context_before"], second["context_after"]) == (["C"], ["E"])

@@ -216,17 +216,22 @@ def diff_lines(old_lines: Sequence[str], new_lines: Sequence[str]) -> Diff:
     """difflib.SequenceMatcher over the two snapshots, one pass.
 
     Each non-equal opcode becomes one hunk with up to MAX_CONTEXT_LINES of
-    surrounding context. The similarity badge is character-weighted (matched
-    line characters over total characters) so it reflects "how much of the
-    document is unchanged" — computed from these same opcodes, and stored for
-    display only.
+    surrounding context, stopping at the neighbouring hunk: a line another
+    hunk removes is never shown as unchanged context. The similarity badge is
+    character-weighted (matched line characters over total characters) so it
+    reflects "how much of the document is unchanged" — computed from these
+    same opcodes, and stored for display only.
     """
     matcher = difflib.SequenceMatcher(None, list(old_lines), list(new_lines), autojunk=False)
     hunks: list[Hunk] = []
     removed_all: list[str] = []
     added_all: list[str] = []
     equal_chars = 0
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+    opcodes = matcher.get_opcodes()
+    # Old-side bounds of the neighbouring changes, for each hunk's context.
+    next_starts = [op[1] for op in opcodes if op[0] != "equal"][1:] + [len(old_lines)]
+    prev_end = 0
+    for tag, i1, i2, j1, j2 in opcodes:
         if tag == "equal":
             equal_chars += sum(len(line) + 1 for line in old_lines[i1:i2])
             continue
@@ -235,17 +240,19 @@ def diff_lines(old_lines: Sequence[str], new_lines: Sequence[str]) -> Diff:
         removed_all.extend(removed)
         added_all.extend(added)
         context = schema.MAX_CONTEXT_LINES
+        next_start = next_starts[len(hunks)]
         hunks.append(
             Hunk(
                 id=f"h{len(hunks) + 1}",
                 old_start=i1 + 1,
                 new_start=j1 + 1,
-                context_before=list(old_lines[max(0, i1 - context) : i1]),
+                context_before=list(old_lines[max(prev_end, i1 - context) : i1]),
                 removed=removed,
                 added=added,
-                context_after=list(old_lines[i2 : i2 + context]),
+                context_after=list(old_lines[i2 : min(next_start, i2 + context)]),
             )
         )
+        prev_end = i2
     total_chars = sum(len(line) + 1 for line in old_lines) + sum(
         len(line) + 1 for line in new_lines
     )
