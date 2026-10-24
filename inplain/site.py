@@ -184,7 +184,7 @@ WORD_MARK_MIN_SIMILARITY = 0.5
 
 # A passage this long renders unmarked: the token diff is superlinear, and
 # the build recomputes marks for every published record on every run.
-WORD_MARK_MAX_TOKENS = 3000
+WORD_MARK_MAX_TOKENS = 1500
 
 
 def _tokens(text: str) -> list[tuple[int, int]]:
