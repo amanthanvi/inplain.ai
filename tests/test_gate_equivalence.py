@@ -46,6 +46,10 @@ CASES = [
     {"hunk": "h1", "side": "added", "quote": "   "},
     {"hunk": "h1", "side": "added", "quote": None},
     {"hunk": None, "side": "added", "quote": "We may share your personal information."},
+    # a quote with no whole word of three or more characters is not evidence
+    {"hunk": "h1", "side": "added", "quote": "a"},
+    {"hunk": "h1", "side": "added", "quote": "We may"},
+    {"hunk": "h1", "side": "added", "quote": "may share"},
     # substring across line boundaries within one side
     {"hunk": "h1", "side": "added", "quote": "information.\nYou may not opt out."},
 ]

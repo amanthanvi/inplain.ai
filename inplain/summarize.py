@@ -19,7 +19,9 @@ The one thing that must be true (SPEC §3)
 **A citation must point at text that actually appears in the diff, on the side
 the claim asserts.** :func:`citation_is_valid` is the whole gate and it does
 exactly two things: exact substring match on that side's text, or the same
-match after collapsing whitespace runs and casefolding. Nothing else.
+match after collapsing whitespace runs and casefolding. Nothing else. A quote
+must also carry evidence: at least one whole word of three or more characters,
+so a quote like ``"a"`` cannot validate almost any claim.
 
 There is deliberately **no repair tier**. v0.2.0 had one: it found the
 nearest-similarity chunk and assigned it to the model's claim without
@@ -78,6 +80,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import secrets
 import sys
 from collections.abc import Callable, Sequence
@@ -140,6 +143,10 @@ OUTAGE_STATUSES = frozenset({408, 429, 500, 502, 503, 504, 522, 524, 529})
 HUNK_CHAR_BUDGET = 45_000
 
 VALID_SIDES = ("added", "removed")
+
+# The minimum a quote must contain to be evidence (SPEC §3): one whole word of
+# three or more characters.
+QUOTE_WORD = re.compile(r"\w{3,}")
 
 # Hunk fields the model is shown. Context is included for orientation only and
 # is NOT citable: citations validate against added/removed exclusively.
@@ -249,6 +256,8 @@ def citation_failure(
     quote = citation.get("quote")
     if not isinstance(quote, str) or not quote.strip():
         return "citation carries no quote"
+    if not QUOTE_WORD.search(quote):
+        return "quote has no word of three or more characters"
     if not quote_on_side(quote, hunks_by_id[citation["hunk"]], citation["side"]):
         return "quote does not appear on the side the claim names"
     return None

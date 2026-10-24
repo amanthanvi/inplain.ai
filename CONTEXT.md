@@ -49,7 +49,7 @@ The evidence for a Claim: a verbatim quote, the Hunk it comes from, and the Side
 _Avoid_: reference, source, footnote
 
 **Valid citation**:
-A Citation whose quote appears in the named Hunk, on the named Side, exactly or differing only in whitespace or case. A Claim with any other kind of Citation is dropped, never softened.
+A Citation whose quote contains at least one whole word of three or more characters and appears in the named Hunk, on the named Side, exactly or differing only in whitespace or case. A Claim with any other kind of Citation is dropped, never softened.
 
 ### What we decide
 

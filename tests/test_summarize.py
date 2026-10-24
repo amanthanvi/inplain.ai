@@ -235,6 +235,19 @@ class TestCitationValidation:
         assert not citation_is_valid(cite(quote=42), HUNKS)
         assert not citation_is_valid("not an object", HUNKS)
 
+    def test_a_quote_needs_one_whole_word_of_three_or_more_characters(self):
+        # "a" and "of" appear on the added side, but carry no evidence.
+        assert not citation_is_valid(cite(quote="a"), HUNKS)
+        assert not citation_is_valid(cite(quote="of"), HUNKS)
+        assert not citation_is_valid(cite(quote=" - "), HUNKS)
+        assert citation_is_valid(cite(quote="may opt"), HUNKS)
+        assert citation_is_valid(cite(quote="You"), HUNKS)
+
+    def test_a_short_quote_drops_its_claim_with_a_reason(self):
+        kept, drops = review_bullets([bullet("now sells your data", [cite(quote="a")])], [HUNK])
+        assert kept == []
+        assert "three or more characters" in drops[0].reason
+
     def test_quote_may_span_lines_on_one_side(self):
         hunk = dict(HUNK, added=["First added line.", "Second added line."])
         assert quote_on_side("First added line.\nSecond added line.", hunk, "added")

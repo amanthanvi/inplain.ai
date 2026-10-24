@@ -55,6 +55,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from collections import Counter
@@ -67,6 +68,7 @@ from typing import Any
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 VALID_SIDES = ("added", "removed")
+QUOTE_WORD = re.compile(r"\w{3,}")  # a quote needs one 3+ character word (SPEC §3)
 REQUEST_TIMEOUT = 180  # seconds
 MAX_TOKENS = 12000
 RETRY_BACKOFF = (2, 4, 8)  # seconds before each of the 3 retries
@@ -155,7 +157,7 @@ def citation_is_valid(citation: dict[str, Any], hunks_by_id: dict[str, dict]) ->
     quote = citation.get("quote")
     if hunk is None or side not in VALID_SIDES or not isinstance(quote, str):
         return False
-    if not quote.strip():
+    if not quote.strip() or not QUOTE_WORD.search(quote):
         return False
     haystack = side_text(hunk, side)
     if quote in haystack:
