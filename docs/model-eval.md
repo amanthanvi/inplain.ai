@@ -297,9 +297,12 @@ Verified against OpenRouter's docs, accessed 2026-08-21:
   markup; it charges about 5.5% (min $0.80) on credit purchases, 5% for USDC
   ([FAQ][d]). On a $5/year workload the purchase fee dominates the inference
   cost, which is another way of saying the cost question is closed.
-- **`require_parameters: true`** routes only to providers that honour the
-  parameters we send (`temperature`, `response_format`) rather than silently
-  dropping them.
+- **`require_parameters` is not sent.** It would route only to providers that
+  honour every parameter in the request, but paired with `temperature` it
+  leaves models that reject sampling parameters no endpoint. Instead each
+  model is pinned to one provider (`provider.order`, fallbacks off), and
+  `temperature` is left out for the models that reject it (`NO_TEMPERATURE`
+  in `inplain/summarize.py`).
 
 Going direct to Google instead of through OpenRouter is equally defensible for
 a single-model deployment — one fewer hop, no purchase fee. OpenRouter earns

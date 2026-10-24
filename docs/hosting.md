@@ -225,7 +225,7 @@ confirmed serving, so the old app — not an error page — covers propagation.
 ## 7. Recommendation and runbook
 
 **Recommendation:** GitHub Actions (scheduled crawl + build, one repo secret)
-+ GitHub Pages (site + RSS) on the custom domain, deployed from the crawl
++ GitHub Pages (site + Atom feeds) on the custom domain, deployed from the crawl
 workflow via `actions/deploy-pages`. Cloudflare Pages held as fallback only.
 No new accounts, no new platforms, $0/month in the public endgame.
 
@@ -270,7 +270,7 @@ No new accounts, no new platforms, $0/month in the public endgame.
     `amanthanvi.github.io`, DNS-only. (Owner access required.)
 11. (owner — repo admin) Once the cert is issued, tick **Enforce HTTPS** (may take up to 24 h to
     be offered).
-12. Confirm the site, RSS feeds, and old deep links; then (owner) remove the
+12. Confirm the site, Atom feeds, and old deep links; then (owner) remove the
     domains from the Vercel project and delete the project.
 13. Watch the next two scheduled runs end-to-end: crawl → commit → deploy,
     no CI re-trigger, no overlap.

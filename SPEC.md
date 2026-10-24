@@ -70,7 +70,7 @@ catalog.json ──> crawler (Python) ──> documents/<company>/<doc>.txt
                     ┌─────────────────────────┴──────────────────────┐
                     │                                                │
               change detection                                 site generator
-              (git diff, hunks)                                (static HTML + RSS)
+              (git diff, hunks)                                (static HTML + Atom)
                     │                                                │
               AI summary (cited) ──────> changes/<id>.json ──────────┘
 ```
@@ -166,7 +166,7 @@ Non-negotiable floor, from measured failures in v0.2.0:
 - **AC-6** A robots-disallowed URL is never fetched, including after a redirect.
 - **AC-7** The site builds to static files and is fully readable with JavaScript
   disabled.
-- **AC-8** RSS feeds — global and per company — validate.
+- **AC-8** Atom feeds — global and per company — validate.
 
 ## 11. Open
 
@@ -205,7 +205,7 @@ Non-negotiable floor, from measured failures in v0.2.0:
 | Site | Static | **Reversed** — was server-rendered Next |
 | Renderer | None | **Reversed** — was a Playwright service |
 | Content | Hunks + link | **Reversed** — was full-text republication |
-| Return trigger | RSS | **Reversed** — was in-app notifications |
+| Return trigger | Atom feeds | **Reversed** — was in-app notifications |
 | Citations | Exact/tolerant only | **Reversed** — was three-tier with fuzzy repair |
 | Materiality | Absolute content | **Reversed** — was similarity ratio |
 | Effective dates | Tracked | **Reversed** — were stripped as noise |

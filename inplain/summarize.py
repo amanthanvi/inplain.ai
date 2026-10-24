@@ -10,9 +10,9 @@ Run it: ``python -m inplain.summarize [--root PATH] [--changes PATH]
 [--limit N] [--model ID] [--dry-run] [-v]``
 
 Exit codes: ``0`` everything attempted was summarised (or there was nothing to
-do), ``1`` at least one record was left unsummarised and is retryable, ``2``
-configuration refused the run before any state changed (no API key, unusable
-paths).
+do), ``1`` at least one record was left unsummarised (retryable, or at the
+retry cap and named in the report), ``2`` no API key: the run was refused
+before any state changed.
 
 The one thing that must be true (SPEC §3)
 -----------------------------------------
@@ -686,7 +686,7 @@ class Summarizer:
     # -- selection ---------------------------------------------------------
 
     def pending(self, capped: list[str] | None = None) -> list[Path]:
-        """Material records without a summary, oldest id first (deterministic).
+        """Material records without a summary, in id order (deterministic).
         Records at MAX_SUMMARY_ATTEMPTS are left out and their ids appended to
         ``capped``."""
         if not self.changes_dir.is_dir():
