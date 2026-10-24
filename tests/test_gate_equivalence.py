@@ -46,6 +46,15 @@ CASES = [
     {"hunk": "h1", "side": "added", "quote": "   "},
     {"hunk": "h1", "side": "added", "quote": None},
     {"hunk": None, "side": "added", "quote": "We may share your personal information."},
+    # the minimum quote: no word of three or more characters is not evidence
+    # ("a", "We"), nor is a fragment of a longer word ("ion", "ersonal");
+    # one whole such word is enough ("may share", "information")
+    {"hunk": "h1", "side": "added", "quote": "a"},
+    {"hunk": "h1", "side": "added", "quote": "We"},
+    {"hunk": "h1", "side": "added", "quote": "ion"},
+    {"hunk": "h1", "side": "added", "quote": "ersonal"},
+    {"hunk": "h1", "side": "added", "quote": "may share"},
+    {"hunk": "h1", "side": "added", "quote": "information"},
     # substring across line boundaries within one side
     {"hunk": "h1", "side": "added", "quote": "information.\nYou may not opt out."},
 ]

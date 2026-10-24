@@ -251,6 +251,33 @@ class TestCitationValidation:
         hunk = dict(HUNK, added=["First added line.", "Second added line."])
         assert quote_on_side("First added line.\nSecond added line.", hunk, "added")
 
+    def test_a_quote_needs_one_whole_word_of_three_or_more_characters(self):
+        # "a" and "of" appear on the added side, but carry no evidence.
+        assert not citation_is_valid(cite(quote="a"), HUNKS)
+        assert not citation_is_valid(cite(quote="of"), HUNKS)
+        assert not citation_is_valid(cite(quote=" - "), HUNKS)
+        assert citation_is_valid(cite(quote="may opt"), HUNKS)
+        assert citation_is_valid(cite(quote="You"), HUNKS)
+
+    def test_a_word_fragment_is_not_a_whole_word(self):
+        # "ime" and "eceiving" are on the added side, but only as pieces of
+        # "time" and "receiving"; the word must be whole in the side's text.
+        assert not citation_is_valid(cite(quote="ime"), HUNKS)
+        assert not citation_is_valid(cite(quote="eceiving"), HUNKS)
+        assert not citation_is_valid(cite(quote="commun"), HUNKS)
+        assert citation_is_valid(cite(quote="receiving"), HUNKS)
+        assert citation_is_valid(cite(quote="RECEIVING  these"), HUNKS)
+        # an inner word is whole whatever the edges cut: "these" here
+        assert citation_is_valid(cite(quote="ng these comm"), HUNKS)
+
+    def test_a_short_quote_drops_its_claim_with_a_reason(self):
+        kept, drops = review_bullets([bullet("now sells your data", [cite(quote="a")])], [HUNK])
+        assert kept == []
+        assert "three or more characters" in drops[0].reason
+        kept, drops = review_bullets([bullet("now sells your data", [cite(quote="ime")])], [HUNK])
+        assert kept == []
+        assert "whole word" in drops[0].reason
+
 
 class TestReviewBullets:
     def test_valid_bullets_are_kept_and_normalized(self):
