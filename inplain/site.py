@@ -495,12 +495,12 @@ def build_site(*, catalog_path: Path, changes_dir: Path, out_dir: Path) -> Build
         shutil.rmtree(tmp)
     try:
         report = _render(catalog_path=catalog_path, changes_dir=changes_dir, out_dir=tmp)
+        if out_dir.exists():
+            shutil.rmtree(out_dir)
+        tmp.rename(out_dir)
     except BaseException:
         shutil.rmtree(tmp, ignore_errors=True)
         raise
-    if out_dir.exists():
-        shutil.rmtree(out_dir)
-    tmp.rename(out_dir)
     return report
 
 
