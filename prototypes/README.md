@@ -1,6 +1,7 @@
 # Design prototypes (#37)
 
-> **Chosen 2026-09-27, confirmed by the owner 2026-10-24: D — register.** Literata for everything,
+> **Chosen 2026-09-27 (provisional, unvetoed); confirmed by the lead under the
+> owner's delegation of 2026-10-24: D — register.** Literata for everything,
 > white paper, each Claim followed by the passage it cites with the quoted
 > words highlighted, word-level marks inside replaced passages. A, E and F are
 > kept as screenshots for the record. Decision, scores and rationale are on

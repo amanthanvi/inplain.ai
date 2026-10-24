@@ -183,7 +183,8 @@ Non-negotiable floor, from measured failures in v0.2.0:
   and is retired. Provisional under the owner's delegation until the cutover.
 - ~~Design direction~~ — **re-decided 2026-09-27: direction D, "register"**,
   with Literata self-hosted as the one typeface (`prototypes/README.md`,
-  issue #37). Confirmed by the owner 2026-10-24.
+  issue #37). Provisional decision of 2026-09-27 (#37), unvetoed; confirmed
+  by the lead under the owner's delegation of 2026-10-24.
 - ~~Whether word-level intra-line highlighting ships in v1~~ — **re-decided
   2026-09-27: yes, at launch.** Spans are computed at build time in
   `inplain/site.py` from a Hunk's removed and added text and rendered as
