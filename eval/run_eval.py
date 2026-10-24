@@ -551,6 +551,7 @@ def record_pass(out: Path, number: int, provider: str, model: str,
     recorded = read_pass(out, number)
     _, _, request = build_request(provider, "", model, "")
     del request["messages"]
+    request.pop("system", None)  # Anthropic's system prompt; METHOD names it
     recorded["models"][model] = {
         "finished_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "transport": provider,
@@ -618,6 +619,15 @@ def main(argv: list[str] | None = None) -> int:
     models = list(dict.fromkeys(args.model))
     provider, api_key = resolve_provider(args.provider)
     out = args.out or RESULTS_DIR / f"{provider}-bakeoff-{datetime.now(UTC).date()}"
+    other_method = [
+        path.name for path in sorted(out.glob("pass*.json"))
+        if json.loads(path.read_text(encoding="utf-8")).get("method") != METHOD
+    ]
+    if other_method and not args.limit:
+        raise SystemExit(
+            f"{out} holds {', '.join(other_method)} measured by another method. "
+            "One results directory is one method: use another --out."
+        )
     already = [m for m in models if m in read_pass(out, args.pass_number)["models"]]
     if already and not args.limit:
         raise SystemExit(

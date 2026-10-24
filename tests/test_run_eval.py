@@ -82,13 +82,18 @@ def test_pinned_model_gets_the_system_prompt_temperature_zero_and_no_fallbacks()
 
 @pytest.mark.parametrize("model", [summarize.DEFAULT_MODEL, summarize.FALLBACK_MODEL])
 def test_the_shipped_models_are_measured_with_exactly_the_request_production_sends(model):
-    measured = scripted(http_response(completion()))
-    run_eval.call_model("openrouter", "test-key", model, "the user turn", measured)
-    shipped = scripted(http_response(completion()))
-    summarize.OpenRouterClient("test-key", post=shipped).complete(
+    calls = []
+
+    def post(url, headers=None, json=None, timeout=None):
+        calls.append((url, headers, json, timeout))
+        return http_response(completion())
+
+    run_eval.call_model("openrouter", "test-key", model, "the user turn", post)
+    summarize.OpenRouterClient("test-key", post=post).complete(
         model, summarize.SYSTEM_PROMPT, "the user turn"
     )
-    assert measured.sent == shipped.sent
+    measured, shipped = calls
+    assert measured == shipped
 
 
 def test_each_entry_is_sent_as_production_sends_the_record():
@@ -230,9 +235,31 @@ def test_a_non_object_bullet_drops_alone_as_in_production():
     assert (record["score"]["total_bullets"], record["score"]["kept_bullets"]) == (1, 0)
 
 
+def test_a_results_directory_of_another_method_is_refused_before_any_call(
+    tmp_path, monkeypatch
+):
+    run_eval.write_json(
+        tmp_path / "pass1.json", {"pass": 1, "method": "the September prompt", "models": {}}
+    )
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr(run_eval, "run_model", lambda *a, **k: pytest.fail("no call"))
+    with pytest.raises(SystemExit, match="another method"):
+        run_eval.main(
+            ["--provider", "openrouter", "--out", str(tmp_path), "--pass", "2",
+             "--model", "x-ai/grok-4.7"]
+        )
+
+
+def test_an_anthropic_record_stores_no_prompt(tmp_path):
+    run_eval.record_pass(tmp_path, 1, "anthropic", "claude-x", [])
+    recorded = json.loads((tmp_path / "pass1.json").read_text())
+    assert set(recorded["models"]["claude-x"]["request"]) == {"model", "max_tokens"}
+
+
 def test_a_recorded_pass_is_refused_before_any_call(tmp_path, monkeypatch):
     run_eval.write_json(
-        tmp_path / "pass1.json", {"pass": 1, "models": {"x-ai/grok-4.7": {"calls": []}}}
+        tmp_path / "pass1.json",
+        {"pass": 1, "method": run_eval.METHOD, "models": {"x-ai/grok-4.7": {"calls": []}}},
     )
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
     monkeypatch.setattr(run_eval, "run_model", lambda *a, **k: pytest.fail("no call"))
