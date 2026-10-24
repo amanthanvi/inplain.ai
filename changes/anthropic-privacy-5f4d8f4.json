@@ -66,5 +66,100 @@
   },
   "parent_commit": "92f86be57b38908d8a9509d6dc9f69fa9ebe4054",
   "schema_version": 1,
-  "source_url": "https://www.anthropic.com/privacy"
+  "source_url": "https://www.anthropic.com/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Privacy Policy",
+            "side": "removed"
+          }
+        ],
+        "text": "The opening title line “Privacy Policy” was removed, so that heading no longer appears at the start of the document."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "To provide, maintain and facilitate any products and services offered to you with respect to your Anthropic account, which are governed by our Terms of Service",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To provide, maintain and facilitate optional services and features that enhance platform functionality and user experience",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To provide you with service updates, communications, and to provide tailored recommendations about our Services that may be of interest to you.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To create and administer your Anthropic account",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To facilitate payments for products and services provided by Anthropic",
+            "side": "removed"
+          }
+        ],
+        "text": "Deleted purposes included providing and maintaining account products and services under the Terms of Service, optional features, service updates and tailored recommendations, creating and administering an Anthropic account, and facilitating payments."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "To prevent and investigate fraud, abuse, and violations of our Usage Policy, unlawful or criminal activity, unauthorized access to or use of personal data or Anthropic systems and networks, to protect our rights and the rights of others, to protect your safety or that of any other person, and to meet legal, governmental and institutional policy obligations",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To investigate and resolve disputes",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To investigate and resolve security issues",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To debug and to identify and repair errors that impair existing functionality",
+            "side": "removed"
+          }
+        ],
+        "text": "Also removed were purposes for preventing and investigating fraud, abuse, Usage Policy violations, unlawful activity, and unauthorized access, and for protecting rights and safety and meeting legal and policy obligations, plus investigating disputes and security issues and debugging errors."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "To improve the Services and conduct research (excluding model training)",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To improve the Services and conduct research (including model training). See our Non-User Privacy Policy for more details on the data used to train our models, and the different stages of development.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To enforce our Terms of Service and similar terms and agreements, including our Usage Policy.",
+            "side": "removed"
+          }
+        ],
+        "text": "The table no longer states purposes to improve the Services and conduct research either excluding or including model training, nor the in-table pointer to the Non-User Privacy Policy for training-data details, and it no longer lists enforcement of the Terms of Service, similar agreements, and the Usage Policy."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T04:34:30Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

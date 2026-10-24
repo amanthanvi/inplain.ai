@@ -233,5 +233,110 @@
   },
   "parent_commit": "07ad5f02847fef90182fdf0f433ee3e6707cedc7",
   "schema_version": 1,
-  "source_url": "https://www.atlassian.com/legal/privacy-policy"
+  "source_url": "https://www.atlassian.com/legal/privacy-policy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "including machine learning and artificial intelligence model training",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Publish testimonials or featured customer stories",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Aggregate or de-identify data",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "|   | Legitimate interests (Article 6(1)(f) GDPR) |",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "|   | Contractual necessity (Article 6(1)(b) GDPR) |",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "|   | Consent (where legally required) (Article 6(1)(a) GDPR) |",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "|   | Compliance with a legal obligation (Article 6(1)(c) GDPR) |",
+            "side": "added"
+          }
+        ],
+        "text": "The GDPR legal-basis chart no longer states which processing purposes sit in each row. Removed purpose text included developing and improving the Services, including machine learning and artificial intelligence model training, publishing testimonials or featured customer stories, and aggregating or de-identifying data. The replacement rows keep only the legal-basis labels: legitimate interests, contractual necessity, consent where legally required, and compliance with a legal obligation."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "Process payments Develop and improve our Services Conduct marketing and promotional activities",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Atlassian Companies Atlassian Partners Service Providers Third-Party Apps",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "| Identifiers, such as name, email address, unique identifiers associated with user or user account, IP Address |   |   | Third Party Advertising Providers |",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "| Sensitive personal information, such as login credentials and passwords |   |   | -NA- |",
+            "side": "added"
+          }
+        ],
+        "text": "In the U.S. state privacy disclosures table, the purposes for collecting and disclosing information and the business-purpose recipients were cleared from the category rows. A reader can still see the category names and the sales or sharing recipients, including Third Party Advertising Providers for identifiers and -NA- for sensitive personal information such as login credentials and passwords, but the rows no longer list purposes such as processing payments, developing and improving the Services, and marketing, or business recipients such as Atlassian Companies, Atlassian Partners, Service Providers, and Third-Party Apps."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h8",
+            "quote": "Recommended for you",
+            "side": "removed"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Former Workplace Privacy Notice",
+            "side": "removed"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Careers Privacy Notice",
+            "side": "removed"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Demographic Survey Privacy Notice",
+            "side": "removed"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Related content",
+            "side": "added"
+          }
+        ],
+        "text": "The end of the page no longer lists Former Workplace Privacy Notice, Careers Privacy Notice, and Demographic Survey Privacy Notice under Recommended for you. That heading is replaced with Related content, so those notices are no longer linked from this spot."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 8,
+      "total_hunks": 8
+    },
+    "generated_at": "2026-10-24T04:35:53Z",
+    "model": "x-ai/grok-4.7"
+  }
 }
