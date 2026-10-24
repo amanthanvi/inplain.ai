@@ -29,6 +29,10 @@ it, so a red run means something systemic.
    - **Summarize warning only:** the archive and site are fine, and the
      records are published honestly summary-less and retried next run.
      Check the `MODEL_API_KEY` secret and the provider's status and credit.
+     A record that fails on its own account (an unusable reply, no Valid
+     citation) counts the failure in its `summary_attempts`; after three it
+     is no longer sent and stays summary-less. Delete that key from
+     `changes/<id>.json` through a pull request to retry it.
 3. The issue is not closed automatically. Close it once the next scheduled
    run is green.
 

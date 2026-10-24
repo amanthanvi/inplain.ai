@@ -730,10 +730,15 @@ class TestPartialCoverage:
 # ---------------------------------------------------------------------------
 
 
-def _unchanged(path: Path, before: bytes) -> None:
-    assert path.read_bytes() == before, "the record was modified by a failed run"
+def _unchanged(path: Path, before: bytes, *, attempts: int | None = None) -> None:
+    """Byte-identical except, when the failure was the record's own, its
+    ``summary_attempts`` count (the only key a failed run may write)."""
     record = schema.load_record(path)  # still valid
     assert "summary" not in record, "a failed run must leave the record unsummarised"
+    assert record.pop("summary_attempts", None) == attempts
+    assert schema.dumps_record(record).encode("utf-8") == before, (
+        "the record was modified by a failed run"
+    )
 
 
 class TestNoRaiseAfterTheModelReturns:
@@ -762,7 +767,7 @@ class TestNoRaiseAfterTheModelReturns:
         assert outcome.status == expected
         assert outcome.status in summarize.RETRYABLE
         assert not outcome.halt, "malformed output is a per-record no-op, not a halt"
-        _unchanged(path, before)
+        _unchanged(path, before, attempts=1)
 
     def test_failure_mid_write_leaves_the_record_valid(self, changes, monkeypatch):
         path = write_record(changes, make_record())
@@ -805,7 +810,7 @@ class TestNoRaiseAfterTheModelReturns:
         )
         report = summarizer(changes, client).run()
         assert len(report.outcomes) == 2, "a bad envelope must not stop the run"
-        _unchanged(path, before)
+        _unchanged(path, before, attempts=1)
         assert "summary" in schema.load_record(other)
 
     def test_all_claims_dropped_is_logged_with_the_failed_quote(self, changes, caplog):
@@ -815,6 +820,32 @@ class TestNoRaiseAfterTheModelReturns:
                 changes, FakeClient(reply([bullet("t", [cite(quote="never written")])]))
             ).run()
         assert "never written" in caplog.text
+
+
+class TestRetryCap:
+    def test_a_record_that_keeps_failing_stops_being_sent(self, changes):
+        path = write_record(changes, make_record())
+        for attempt in range(1, summarize.MAX_SUMMARY_ATTEMPTS + 1):
+            report = summarizer(changes, FakeClient("COMPLIANT")).run()
+            assert report.failed == 1
+            assert schema.load_record(path)["summary_attempts"] == attempt
+
+        before = path.read_bytes()
+        client = FakeClient(reply([bullet("t", [cite(quote="You may opt out")])]))
+        report = summarizer(changes, client).run()
+        assert client.calls == [], "a capped record is not billed again"
+        assert report.eligible == 0 and report.failed == 0, "and does not alert"
+        assert path.read_bytes() == before
+
+    def test_a_summary_clears_the_count(self, changes):
+        record = make_record()
+        record["summary_attempts"] = 2
+        path = write_record(changes, record)
+        client = FakeClient(reply([bullet("t", [cite(quote="You may opt out")])]))
+        summarizer(changes, client).run()
+        written = schema.load_record(path)
+        assert written["summary"]["bullets"]
+        assert "summary_attempts" not in written
 
 
 class TestFallback:
@@ -869,7 +900,7 @@ class TestFallback:
         summarised = [p for p in paths if "summary" in schema.load_record(p)]
         assert len(summarised) == 1, "the record after the refused one is reached"
         (skipped,) = [p for p in paths if p not in summarised]
-        _unchanged(skipped, paths[skipped])
+        _unchanged(skipped, paths[skipped], attempts=1)
         assert client.models == [summarize.DEFAULT_MODEL, summarize.DEFAULT_MODEL]
 
     def test_auth_refusal_still_halts_the_run(self, changes):

@@ -46,10 +46,15 @@ Other decisions, each traceable to a verified v0.2.0 defect:
   logged no-op.
 * **Nothing raises after the model returns.** From the moment the API answers,
   every path ends in either a written summary or a logged, retryable no-op that
-  leaves the record byte-identical and valid. v0.2.0 had four raise sites after
+  leaves the record unsummarised and valid. v0.2.0 had four raise sites after
   the spend, which rolled the status back and stranded the change silently.
   Parse failure and zero-surviving-bullets are no-ops, not errors: the record
   keeps no ``summary`` key, so the next run picks it up again.
+* **Retries are capped per record.** A failed run that is the record's fault
+  (not an outage) raises its ``summary_attempts``, the only key a failed run
+  writes. After :data:`MAX_SUMMARY_ATTEMPTS` the record is no longer sent, so
+  one that can never produce a Valid citation stops being billed and alerting
+  daily. Deleting the key re-queues it.
 * **Transport errors are caught by class, never bare.** The one fallback model
   (:data:`FALLBACK_MODEL`) is used **only** on outage-class failures — timeout,
   connection error, 5xx, 429 — and **never** on malformed output. v0.2.0's
@@ -575,6 +580,9 @@ UNREADABLE = "unreadable"
 # retryable on the next scheduled run.
 RETRYABLE = frozenset({NO_VALID_BULLETS, PARSE_FAILURE, MODEL_ERROR, WRITE_FAILURE})
 
+# Failed runs after which a record is no longer sent to the model.
+MAX_SUMMARY_ATTEMPTS = 3
+
 
 @dataclass
 class Outcome:
@@ -653,6 +661,10 @@ class Summarizer:
                 log.warning("skipping record %s: not an object", path.name)
                 continue
             if "summary" in record:
+                continue
+            attempts = record.get("summary_attempts")
+            if isinstance(attempts, int) and attempts >= MAX_SUMMARY_ATTEMPTS:
+                log.warning("%s: not retried after %d failed attempts", path.name, attempts)
                 continue
             materiality = record.get("materiality")
             if not isinstance(materiality, dict) or materiality.get("material") is not True:
@@ -807,6 +819,7 @@ class Summarizer:
             return outcome
 
         candidate = dict(record)
+        candidate.pop("summary_attempts", None)
         candidate["summary"] = {
             "model": used_model,
             "generated_at": self.now(),
@@ -874,7 +887,21 @@ class Summarizer:
                 report.aborted = outcome.detail
                 log.warning("stopping this run: %s", outcome.detail)
                 break
+            if not outcome.ok and outcome.status != UNREADABLE:
+                _count_attempt(path)
         return report
+
+
+def _count_attempt(path: Path) -> None:
+    """One more failed run on this record's own account (an outage halts the
+    run before this). Never raises: the count is a cost control, and a record
+    it cannot update stays exactly as it was."""
+    try:
+        record = schema.load_record(path)
+        record["summary_attempts"] = record.get("summary_attempts", 0) + 1
+        _write_record(record, path)
+    except Exception as exc:  # noqa: BLE001 - after the spend, nothing raises
+        log.warning("%s: could not count the failed attempt: %s", path.stem, exc)
 
 
 def _write_record(record: dict[str, Any], path: Path) -> None:

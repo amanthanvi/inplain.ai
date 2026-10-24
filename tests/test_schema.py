@@ -114,6 +114,13 @@ def test_summary_is_optional():
     validate_record(record)
 
 
+def test_summary_attempts_is_an_optional_positive_integer():
+    validate_record(make_record(summary_attempts=1))
+    for bad in (0, -1, True, "1", 1.0, None):
+        with pytest.raises(SchemaError, match="summary_attempts"):
+            validate_record(make_record(summary_attempts=bad))
+
+
 def test_summary_citation_must_name_a_hunk_and_side():
     bad = {
         "bullets": [
