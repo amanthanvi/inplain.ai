@@ -294,3 +294,40 @@ def test_golden_hunk_key_constant_matches_r2s_key_set():
         "context_after",
         "word_spans",
     }
+
+
+# ------------------------------------------------------------------ catalog
+
+
+def _company(**overrides):
+    entry = {"slug": "x", "name": "X", "policy_urls": {"privacy": "https://x.test/privacy"}}
+    return {**entry, **overrides}
+
+
+def test_the_real_catalog_loads():
+    catalog = schema.load_catalog(Path(__file__).resolve().parents[1] / "catalog.json")
+    assert sum(len(entry["policy_urls"]) for entry in catalog) == 52
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        _company(slug="../x"),
+        _company(slug="a/b"),
+        _company(slug="."),
+        _company(slug="x\n"),
+        _company(slug="X"),
+        _company(name=""),
+        _company(policy_urls={}),
+        _company(policy_urls={"../privacy": "https://x.test/privacy"}),
+        _company(policy_urls={"privacy": "javascript:alert(1)"}),
+        _company(policy_urls={"privacy": "http://x.test/privacy"}),
+        _company(policy_urls={"privacy": "https:///privacy"}),
+        _company(policy_urls={"privacy": 42}),
+    ],
+)
+def test_a_catalog_entry_that_could_escape_a_path_or_an_href_is_refused(tmp_path, entry):
+    path = tmp_path / "catalog.json"
+    path.write_text(json.dumps([entry]), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"catalog\[0\]"):
+        schema.load_catalog(path)

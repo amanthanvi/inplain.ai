@@ -46,7 +46,6 @@ from __future__ import annotations
 
 import argparse
 import difflib
-import json
 import logging
 import math
 import re
@@ -63,7 +62,7 @@ from markupsafe import Markup, escape
 
 from . import REPO_ROOT, schema, setup_cli_logging
 from .detect import spacing_only
-from .schema import SchemaError
+from .schema import SchemaError, load_catalog
 
 log = logging.getLogger("inplain.site")
 
@@ -144,27 +143,6 @@ def load_published_records(changes_dir: Path) -> list[dict[str, Any]]:
     records.sort(key=lambda r: r["id"])
     records.sort(key=lambda r: r["detected_at"], reverse=True)
     return records
-
-
-def load_catalog(catalog_path: Path) -> list[dict[str, Any]]:
-    """catalog.json, minimally validated (slug, name, policy_urls)."""
-    try:
-        entries = json.loads(Path(catalog_path).read_text(encoding="utf-8"))
-    except OSError as exc:
-        raise ValueError(f"cannot read catalog {catalog_path}: {exc}") from exc
-    except ValueError as exc:
-        raise ValueError(f"catalog {catalog_path} is not valid JSON: {exc}") from exc
-    if not isinstance(entries, list):
-        raise ValueError("catalog must be a JSON array of companies")
-    for index, entry in enumerate(entries):
-        if not isinstance(entry, dict):
-            raise ValueError(f"catalog[{index}]: must be an object")
-        for key in ("slug", "name"):
-            if not isinstance(entry.get(key), str) or not entry[key]:
-                raise ValueError(f"catalog[{index}]: {key} must be a non-empty string")
-        if not isinstance(entry.get("policy_urls"), dict):
-            raise ValueError(f"catalog[{index}]: policy_urls must be an object")
-    return entries
 
 
 # --------------------------------------------------------------------------

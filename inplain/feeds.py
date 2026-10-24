@@ -48,8 +48,8 @@ from pathlib import Path
 from typing import Any
 
 from . import REPO_ROOT, setup_cli_logging
-from .schema import SchemaError
-from .site import SITE_URL, doc_title, load_catalog, load_published_records
+from .schema import SchemaError, load_catalog
+from .site import SITE_URL, doc_title, load_published_records
 
 log = logging.getLogger("inplain.feeds")
 

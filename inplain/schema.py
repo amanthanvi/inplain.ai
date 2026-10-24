@@ -33,6 +33,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 SCHEMA_VERSION = 1
 _HUNK_ID = re.compile(r"h[0-9]+")
@@ -380,3 +381,43 @@ def load_record(path: Path, *, validate: bool = True) -> dict[str, Any]:
     if validate:
         validate_record(record)
     return record
+
+
+# --------------------------------------------------------------------------
+# catalog — the one loader of catalog.json, for crawl, site, feeds and detect.
+
+
+def load_catalog(path: Path) -> list[dict[str, Any]]:
+    """catalog.json, validated once for every reader.
+
+    ``slug`` and each ``policy_urls`` key become path components
+    (``documents/<slug>/<doc>.txt``, ``_site/companies/<slug>/``) and URL
+    segments, so both must be whole lowercase slugs: no separator, dot or
+    empty component can reach a path. Document URLs reach the crawler and the
+    site's ``href``s, so they must be https with a host.
+    """
+    try:
+        entries = json.loads(Path(path).read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise ValueError(f"cannot read catalog {path}: {exc}") from exc
+    except ValueError as exc:
+        raise ValueError(f"catalog {path} is not valid JSON: {exc}") from exc
+    if not isinstance(entries, list):
+        raise ValueError("catalog must be a JSON array of companies")
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            raise ValueError(f"catalog[{index}]: must be an object")
+        if not isinstance(entry.get("slug"), str) or not _SLUG.fullmatch(entry["slug"]):
+            raise ValueError(f"catalog[{index}]: slug must be a lowercase slug")
+        if not isinstance(entry.get("name"), str) or not entry["name"]:
+            raise ValueError(f"catalog[{index}]: name must be a non-empty string")
+        urls = entry.get("policy_urls")
+        if not isinstance(urls, dict) or not urls:
+            raise ValueError(f"catalog[{index}]: policy_urls must be a non-empty object")
+        for doc, url in urls.items():
+            if not _SLUG.fullmatch(doc):
+                raise ValueError(f"catalog[{index}]: document {doc!r} must be a lowercase slug")
+            parts = urlsplit(url) if isinstance(url, str) else None
+            if parts is None or parts.scheme != "https" or not parts.hostname:
+                raise ValueError(f"catalog[{index}]: {doc} URL must be https")
+    return entries
