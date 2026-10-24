@@ -46,21 +46,24 @@ def hunks_from_lines(old_lines: list[str], new_lines: list[str]) -> list[dict[st
     """
     matcher = difflib.SequenceMatcher(a=old_lines, b=new_lines, autojunk=False)
     hunks: list[dict[str, Any]] = []
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == "equal":
-            continue
+    changes = [op for op in matcher.get_opcodes() if op[0] != "equal"]
+    # Context stops at the neighbouring change, as in inplain.detect.diff_lines.
+    next_starts = [op[1] for op in changes[1:]] + [len(old_lines)]
+    prev_end = 0
+    for (tag, i1, i2, j1, j2), next_start in zip(changes, next_starts):
         hunks.append(
             {
                 "id": f"h{len(hunks) + 1}",
                 "old_start": i1 + 1,
                 "new_start": j1 + 1,
-                "context_before": old_lines[max(0, i1 - CONTEXT_LINES):i1],
+                "context_before": old_lines[max(prev_end, i1 - CONTEXT_LINES):i1],
                 "removed": old_lines[i1:i2],
                 "added": new_lines[j1:j2],
-                "context_after": old_lines[i2:i2 + CONTEXT_LINES],
+                "context_after": old_lines[i2:min(next_start, i2 + CONTEXT_LINES)],
                 "word_spans": None,
             }
         )
+        prev_end = i2
     return hunks
 
 
