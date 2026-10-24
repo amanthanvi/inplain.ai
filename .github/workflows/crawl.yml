@@ -85,6 +85,13 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
 
+      - name: Rebase the snapshots onto the latest main
+        # main may have moved during the run (a merge), which would reject
+        # the push below. Rebase HERE, before detect, not just before the
+        # push: a Change record is keyed on its Snapshot commit's sha, so the
+        # snapshots must have their final shas before any record names them.
+        run: git pull --rebase origin "$GITHUB_REF_NAME"
+
       - name: Detect changes (documents/ history → changes/*.json)
         run: python -m inplain.detect
 
@@ -151,6 +158,8 @@ jobs:
             echo "no new summaries"
           else
             git commit -m "crawl: summaries"
+            # Only the summaries commit is replayed; nothing is keyed on its sha.
+            git pull --rebase origin "$GITHUB_REF_NAME"
             git push origin "HEAD:$GITHUB_REF_NAME"
           fi
 

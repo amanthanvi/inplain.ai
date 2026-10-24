@@ -18,7 +18,9 @@ it, so a red run means something systemic.
      was lost; the next run diffs across both days. Fix the cause on a
      `ticket/*` branch through a pull request, then re-run with
      `gh workflow run crawl --ref main`.
-   - **Push failed:** for example a concurrent push to `main`. Start a new
+   - **Push failed:** for example a concurrent push to `main` that the
+     run's rebases (before detect, and before the summaries push) did not
+     absorb, or a rebase conflict with a hand edit. Start a new
      run with `gh workflow run crawl --ref main`; GitHub's "Re-run jobs"
      replays the same stale commit and fails the same way.
    - **Build failed on a record:** `python -m inplain.site` refuses a whole
