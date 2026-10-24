@@ -9,9 +9,9 @@
 Throwaway pages that rendered the same real data in every direction, so the
 decision was made on the thing itself rather than on tidy invented examples.
 With D built into the site (#39) and confirmed, the generator
-(`build.py`) and its copy of the fonts are deleted; both stay in git
-history. What remains is the record: this file, the screenshots, and the
-sample data, which `tests/test_detect.py` still reads.
+(`build.py`) and its copy of the fonts are deleted; both stay in git history
+(last present at 14eb71e). What remains is the record: this file, the
+screenshots, and the sample data, which `tests/test_detect.py` still reads.
 
 **The data.** `sample-hunks.json` is Google's privacy policy, first-party
 archived version 2026-04-02 against the version live on 2026-08-03,
