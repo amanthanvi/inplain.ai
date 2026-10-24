@@ -46,7 +46,7 @@ from urllib.parse import urljoin
 
 import trafilatura
 
-from . import REPO_ROOT, setup_cli_logging
+from . import REPO_ROOT, schema, setup_cli_logging
 from .net import (
     DEFAULT_TIMEOUT,
     MAX_BYTES,
@@ -143,24 +143,11 @@ class CrawlReport:
 
 def load_catalog(path: Path) -> list[Document]:
     """Flatten catalog.json into one Document per (company, docType) pair."""
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(raw, list):
-        raise ValueError(f"{path}: expected a list of companies")
-    documents: list[Document] = []
-    for index, company in enumerate(raw):
-        try:
-            slug = company["slug"]
-            name = company["name"]
-            policy_urls = company["policy_urls"]
-        except (TypeError, KeyError) as exc:
-            raise ValueError(f"{path}: entry {index} is missing {exc}") from exc
-        if not isinstance(policy_urls, dict):
-            raise ValueError(f"{path}: {slug} policy_urls is not an object")
-        if not policy_urls:
-            raise ValueError(f"{path}: {slug} has no policy_urls")
-        for doc_type, url in policy_urls.items():
-            documents.append(Document(slug, name, doc_type, url))
-    return documents
+    return [
+        Document(company["slug"], company["name"], doc_type, url)
+        for company in schema.load_catalog(path)
+        for doc_type, url in company["policy_urls"].items()
+    ]
 
 
 # --------------------------------------------------------------------------

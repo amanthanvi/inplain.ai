@@ -44,7 +44,6 @@ from __future__ import annotations
 
 import argparse
 import difflib
-import json
 import logging
 import re
 import subprocess
@@ -419,9 +418,8 @@ class Detector:
             path = self.root / "catalog.json"
             if path.exists():
                 try:
-                    for entry in json.loads(path.read_text(encoding="utf-8")):
-                        self._catalog[entry["slug"]] = entry
-                except (ValueError, TypeError, KeyError) as exc:
+                    self._catalog = {e["slug"]: e for e in schema.load_catalog(path)}
+                except ValueError as exc:
                     log.warning("could not read catalog.json for names: %s", exc)
         return self._catalog.get(company, {})
 

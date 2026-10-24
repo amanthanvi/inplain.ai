@@ -771,6 +771,23 @@ def test_a_catalog_with_non_object_policy_urls_is_refused(tmp_path):
         load_catalog(path)
 
 
+@pytest.mark.parametrize(
+    "entry",
+    [
+        {"slug": "../x", "name": "X", "policy_urls": {"privacy": "https://x.test/p"}},
+        {"slug": "x", "name": "X", "policy_urls": {"privacy": "javascript:alert(1)"}},
+    ],
+)
+def test_the_cli_aborts_on_a_catalog_that_could_escape(tmp_path, capsys, entry):
+    """Refused up front: nothing is fetched and nothing is written."""
+    path = tmp_path / "catalog.json"
+    path.write_text(json.dumps([entry]), encoding="utf-8")
+    code = crawl_module.main(["--root", str(tmp_path), "--catalog", str(path), "--no-commit"])
+    assert code == 2
+    assert "crawl aborted: catalog[0]" in capsys.readouterr().err
+    assert not (tmp_path / "documents").exists()
+
+
 def test_cli_flags():
     args = build_parser().parse_args(["--no-commit", "--only", "google", "--only", "meta"])
     assert args.no_commit is True

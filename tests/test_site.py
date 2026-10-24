@@ -728,6 +728,25 @@ def test_invalid_record_fails_the_whole_build(
     assert not out.exists(), "a failed build must not publish a partial site"
 
 
+@pytest.mark.parametrize(
+    "entry",
+    [
+        dict(CATALOG[0], slug="../x"),
+        dict(CATALOG[0], policy_urls={"privacy": "javascript:alert(1)"}),
+    ],
+)
+def test_a_catalog_that_could_escape_fails_the_build(
+    tmp_path: Path, capsys: pytest.CaptureFixture, entry: dict
+) -> None:
+    """A slug is a path component and a URL an href: refused, nothing written."""
+    (tmp_path / "catalog.json").write_text(json.dumps([entry]), encoding="utf-8")
+    out = tmp_path / "_site"
+    code = site.main(["--root", str(tmp_path), "--out", str(out)])
+    assert code == 2
+    assert "site build aborted: catalog[0]" in capsys.readouterr().err
+    assert not out.exists()
+
+
 def test_filename_id_mismatch_fails_the_build(tmp_path: Path) -> None:
     records = make_records()
     write_inputs(tmp_path, records)
