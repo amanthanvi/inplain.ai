@@ -49,8 +49,10 @@ worse than no product.
 
 Rules:
 - Exact match, or whitespace/case-tolerant match. Nothing else.
-- A quote must contain at least one whole word of three or more characters. A
-  shorter quote (`"a"`, `"We do"`) appears on almost any side and is not
+- A quote must contain at least one word of three or more characters that is a
+  whole word in the cited side's text, word boundaries checked where the quote
+  sits. A shorter quote (`"a"`, `"We do"`) or a fragment of a longer word
+  (`"ion"` from "information") appears on almost any side and is not
   evidence.
 - Every citation carries `side: added | removed` and validates against that side
   only.

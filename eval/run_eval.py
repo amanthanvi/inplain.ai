@@ -68,7 +68,8 @@ from typing import Any
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 VALID_SIDES = ("added", "removed")
-QUOTE_WORD = re.compile(r"\w{3,}")  # a quote needs one 3+ character word (SPEC §3)
+QUOTE_WORD = re.compile(r"\w{3,}")  # a quote needs one whole 3+ character word (SPEC §3)
+WORD_CHAR = re.compile(r"\w")
 REQUEST_TIMEOUT = 180  # seconds
 MAX_TOKENS = 12000
 RETRY_BACKOFF = (2, 4, 8)  # seconds before each of the 3 retries
@@ -160,9 +161,24 @@ def citation_is_valid(citation: dict[str, Any], hunks_by_id: dict[str, dict]) ->
     if not quote.strip() or not QUOTE_WORD.search(quote):
         return False
     haystack = side_text(hunk, side)
-    if quote in haystack:
-        return True
-    return normalize(quote) in normalize(haystack)
+    if quote not in haystack and normalize(quote) not in normalize(haystack):
+        return False
+    return has_whole_word(normalize(quote), normalize(haystack))
+
+
+def has_whole_word(q: str, text: str) -> bool:
+    """Some 3+ character word of the quote is whole where the quote sits in
+    the side's text (both normalized), so "ion" cut from "information" fails."""
+    words = [m.span() for m in QUOTE_WORD.finditer(q)]
+    start = text.find(q) if words else -1
+    while start != -1:
+        end = start + len(q)
+        left = start == 0 or not WORD_CHAR.match(text[start - 1])
+        right = end == len(text) or not WORD_CHAR.match(text[end])
+        if any((s > 0 or left) and (e < len(q) or right) for s, e in words):
+            return True
+        start = text.find(q, start + 1)
+    return False
 
 
 @dataclass

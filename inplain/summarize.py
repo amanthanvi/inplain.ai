@@ -20,8 +20,9 @@ The one thing that must be true (SPEC §3)
 the claim asserts.** :func:`citation_is_valid` is the whole gate and it does
 exactly two things: exact substring match on that side's text, or the same
 match after collapsing whitespace runs and casefolding. Nothing else. A quote
-must also carry evidence: at least one whole word of three or more characters,
-so a quote like ``"a"`` cannot validate almost any claim.
+must also carry evidence: at least one word of three or more characters that
+is whole in that side's text, so neither ``"a"`` nor ``"ion"`` cut from
+``"information"`` can validate almost any claim.
 
 There is deliberately **no repair tier**. v0.2.0 had one: it found the
 nearest-similarity chunk and assigned it to the model's claim without
@@ -144,9 +145,10 @@ HUNK_CHAR_BUDGET = 45_000
 
 VALID_SIDES = ("added", "removed")
 
-# The minimum a quote must contain to be evidence (SPEC §3): one whole word of
-# three or more characters.
+# The minimum a quote must contain to be evidence (SPEC §3): one word of three
+# or more characters, whole in the cited side's text (quote_has_whole_word).
 QUOTE_WORD = re.compile(r"\w{3,}")
+_WORD_CHAR = re.compile(r"\w")
 
 # Hunk fields the model is shown. Context is included for orientation only and
 # is NOT citable: citations validate against added/removed exclusively.
@@ -238,6 +240,26 @@ def quote_on_side(quote: str, hunk: dict[str, Any], side: str) -> bool:
     return normalize(quote) in normalize(haystack)
 
 
+def quote_has_whole_word(quote: str, hunk: dict[str, Any], side: str) -> bool:
+    """The minimum evidence: some run of 3+ word characters in the quote is a
+    whole word where the quote sits on that side, so "ion" cut from
+    "information" does not count. Checked on the normalized forms, at every
+    place the quote occurs; it adds a precondition and matches nothing new."""
+    q, text = normalize(quote), normalize(side_text(hunk, side))
+    words = [m.span() for m in QUOTE_WORD.finditer(q)]
+    start = text.find(q) if words else -1
+    while start != -1:
+        end = start + len(q)
+        # A word inside the quote is bounded by the quote's own characters;
+        # only a word at either edge needs the side text's neighbour checked.
+        left = start == 0 or not _WORD_CHAR.match(text[start - 1])
+        right = end == len(text) or not _WORD_CHAR.match(text[end])
+        if any((s > 0 or left) and (e < len(q) or right) for s, e in words):
+            return True
+        start = text.find(q, start + 1)
+    return False
+
+
 def citation_failure(
     citation: Any, hunks_by_id: dict[str, dict[str, Any]]
 ) -> str | None:
@@ -260,6 +282,8 @@ def citation_failure(
         return "quote has no word of three or more characters"
     if not quote_on_side(quote, hunks_by_id[citation["hunk"]], citation["side"]):
         return "quote does not appear on the side the claim names"
+    if not quote_has_whole_word(quote, hunks_by_id[citation["hunk"]], citation["side"]):
+        return "quote has no whole word of three or more characters on that side"
     return None
 
 
