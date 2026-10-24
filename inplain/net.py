@@ -64,7 +64,6 @@ class Target:
     host_header: str  # hostname[:port] — what goes on the wire as Host
     port: int
     ip: str  # the address we pin the connection to
-    addresses: tuple[str, ...] = ()
 
     @property
     def pinned_url(self) -> str:
@@ -84,10 +83,6 @@ class HttpResponse:
     status: int
     headers: CaseInsensitiveDict = field(default_factory=CaseInsensitiveDict)
     body: bytes = b""
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.headers, CaseInsensitiveDict):
-            self.headers = CaseInsensitiveDict(dict(self.headers))
 
 
 class Transport(Protocol):
@@ -161,7 +156,6 @@ def prepare_target(url: str, resolver=default_resolver) -> Target:
         host_header=parts.netloc,
         port=port,
         ip=ip,
-        addresses=tuple(addresses),
     )
 
 

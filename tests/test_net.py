@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import http.server
+import socket
+import threading
+
 import pytest
 
 from inplain import net
@@ -161,3 +165,67 @@ def test_cap_is_exact():
     assert read_capped(stream, max_bytes=10) == b"1234567890"
     with pytest.raises(SizeCapExceeded):
         read_capped(FakeStream([b"12345678901"]), max_bytes=10)
+
+
+# ---------------------------------------------------------------------------
+# PinnedTransport.get over loopback — the path the urllib3 pin exists for.
+# prepare_target rightly refuses 127.0.0.1, so the Target is built by hand.
+
+
+@pytest.fixture
+def loopback():
+    seen: list[tuple[str, str]] = []
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            seen.append((self.path, self.headers["Host"]))
+            body = b"x" * 64
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("ETag", '"v1"')
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    yield server.server_address[1], seen
+    server.shutdown()
+    server.server_close()
+
+
+def _target(port: int) -> net.Target:
+    return net.Target(
+        url=f"http://example.test:{port}/p?q=1",
+        scheme="http",
+        host="example.test",
+        host_header=f"example.test:{port}",
+        port=port,
+        ip="127.0.0.1",
+    )
+
+
+def test_pinned_transport_connects_to_the_ip_and_sends_the_real_host(loopback):
+    port, seen = loopback
+    response = net.PinnedTransport().get(_target(port), {"User-Agent": USER_AGENT}, 5, 1000)
+    assert seen == [("/p?q=1", f"example.test:{port}")]
+    assert (response.status, response.body) == (200, b"x" * 64)
+    assert response.url == f"http://example.test:{port}/p?q=1"
+    assert response.headers["etag"] == '"v1"'  # case-insensitive as received
+
+
+def test_pinned_transport_enforces_the_body_cap(loopback):
+    port, _ = loopback
+    with pytest.raises(SizeCapExceeded):
+        net.PinnedTransport().get(_target(port), {}, 5, 63)
+
+
+def test_pinned_transport_wraps_a_refused_connection():
+    with socket.socket() as probe:  # a port nobody is listening on
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    with pytest.raises(TransportError):
+        net.PinnedTransport().get(_target(port), {}, 5, 1000)
