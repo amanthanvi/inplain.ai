@@ -464,6 +464,24 @@ def test_word_spans_join_across_a_matching_space() -> None:
     ) == {"removed": [[0, [[16, 24]]]], "added": [[0, [[16, 25]]]]}
 
 
+def test_no_word_spans_above_the_token_cap() -> None:
+    """A passage longer than the cap renders unmarked: the token diff is
+    superlinear and would slow every build."""
+
+    def sides(words: int) -> tuple[list[str], list[str]]:
+        # ``words`` words joined by single spaces are 2 * words - 1 tokens.
+        text = ["word"] * words
+        return [" ".join(text)], [" ".join(["changed", *text[1:]])]
+
+    over = site.WORD_MARK_MAX_TOKENS // 2 + 1
+    assert 2 * over - 1 > site.WORD_MARK_MAX_TOKENS
+    assert site.word_spans(*sides(over)) is None
+    assert site.word_spans(*sides(over - 1)) == {
+        "removed": [[0, [[0, 4]]]],
+        "added": [[0, [[0, 7]]]],
+    }
+
+
 def test_no_word_spans_for_a_rewritten_passage(built: SimpleNamespace) -> None:
     """Below 0.5 token similarity the sides are not aligned: no marks."""
     h2 = built.records["wholesale"]["hunks"][1]

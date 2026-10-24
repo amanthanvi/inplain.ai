@@ -160,6 +160,10 @@ _TOKEN = re.compile(r"\s+|\w+|[^\w\s]")
 # point the eye at noise, so the sides render unmarked.
 WORD_MARK_MIN_SIMILARITY = 0.5
 
+# A passage this long renders unmarked: the token diff is superlinear, and
+# the build recomputes marks for every published record on every run.
+WORD_MARK_MAX_TOKENS = 1500
+
 
 def _tokens(text: str) -> list[tuple[int, int]]:
     return [(m.start(), m.end()) for m in _TOKEN.finditer(text)]
@@ -188,12 +192,15 @@ def _per_line(lines: list[str], spans: list[tuple[int, int]]) -> list[list[Any]]
 
 def word_spans(removed: list[str], added: list[str]) -> dict[str, Any] | None:
     """G1-shaped word spans for one Hunk, or ``None`` when there is nothing to
-    align: a one-sided Hunk, a spacing-only difference, or sides whose token
-    similarity is below :data:`WORD_MARK_MIN_SIMILARITY`."""
+    align: a one-sided Hunk, a spacing-only difference, a side longer than
+    :data:`WORD_MARK_MAX_TOKENS` tokens, or sides whose token similarity is
+    below :data:`WORD_MARK_MIN_SIMILARITY`."""
     if not removed or not added or spacing_only(removed, added):
         return None
     a, b = "\n".join(removed), "\n".join(added)
     ta, tb = _tokens(a), _tokens(b)
+    if max(len(ta), len(tb)) > WORD_MARK_MAX_TOKENS:
+        return None
     matcher = difflib.SequenceMatcher(
         None, [a[s:e] for s, e in ta], [b[s:e] for s, e in tb], autojunk=False
     )
