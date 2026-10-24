@@ -1,0 +1,104 @@
+{
+  "method": "inplain/summarize.py SYSTEM_PROMPT + build_prompt over select_hunks (HUNK_CHAR_BUDGET 45000), scored by parse_bullets + review_bullets against the Hunks shown; temperature 0 (omitted for anthropic/claude-sonnet-5, openai/gpt-6-luna), max_tokens 12000, 3 retries on 408/429/5xx/timeout/connection error, 4-way parallel per model, provider pinned with fallbacks off and data collection denied",
+  "passes": {
+    "1": [
+      "google/gemini-3.7-flash",
+      "google/gemini-3.8-flash",
+      "qwen/qwen3.7-flash",
+      "x-ai/grok-4.7"
+    ],
+    "2": [
+      "google/gemini-3.7-flash",
+      "google/gemini-3.8-flash",
+      "qwen/qwen3.7-flash",
+      "x-ai/grok-4.7"
+    ],
+    "3": [
+      "google/gemini-3.7-flash",
+      "google/gemini-3.8-flash",
+      "x-ai/grok-4.7"
+    ]
+  },
+  "aggregate": [
+    {
+      "model": "x-ai/grok-4.7",
+      "runs": 3,
+      "entries": 51,
+      "citations": 502,
+      "valid": 502,
+      "validity": 1.0,
+      "claim_drop": 0.0,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.9214,
+      "mean_latency": 21.5,
+      "served_providers": {
+        "xAI": 51
+      },
+      "mean_input_tokens": 2935.1,
+      "mean_output_tokens": 2442.2,
+      "mean_reasoning_tokens": 1873.6,
+      "cost_usd": 0.941876
+    },
+    {
+      "model": "google/gemini-3.8-flash",
+      "runs": 3,
+      "entries": 51,
+      "citations": 187,
+      "valid": 187,
+      "validity": 1.0,
+      "claim_drop": 0.0,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.8745,
+      "mean_latency": 5.7,
+      "served_providers": {
+        "Google AI Studio": 51
+      },
+      "mean_input_tokens": 1746.5,
+      "mean_output_tokens": 709.5,
+      "mean_reasoning_tokens": 434.8,
+      "cost_usd": 0.202502
+    },
+    {
+      "model": "google/gemini-3.7-flash",
+      "runs": 3,
+      "entries": 51,
+      "citations": 180,
+      "valid": 180,
+      "validity": 1.0,
+      "claim_drop": 0.0,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.8702,
+      "mean_latency": 6.6,
+      "served_providers": {
+        "Google AI Studio": 51
+      },
+      "mean_input_tokens": 1745.7,
+      "mean_output_tokens": 856.2,
+      "mean_reasoning_tokens": 585.6,
+      "cost_usd": 0.230524
+    },
+    {
+      "model": "qwen/qwen3.7-flash",
+      "runs": 2,
+      "entries": 34,
+      "citations": 165,
+      "valid": 164,
+      "validity": 0.9939,
+      "claim_drop": 0.0109,
+      "parse_failures": 0,
+      "call_failures": 0,
+      "coverage": 0.8743,
+      "mean_latency": 24.4,
+      "served_providers": {
+        "Alibaba": 34
+      },
+      "mean_input_tokens": 1756.4,
+      "mean_output_tokens": 2997.0,
+      "mean_reasoning_tokens": 2572.4,
+      "cost_usd": 0.015191
+    }
+  ]
+}

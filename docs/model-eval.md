@@ -8,6 +8,62 @@ publishes through.
 
 Raw per-model results: `eval/results/openrouter-bakeoff-2026-08-21.json`.
 
+## 2026-10-24 re-measure on the production prompt: the pick stands
+
+Audit #40 item 4, accepted by the owner. The harness no longer has its own
+prompt or gate: `eval/run_eval.py` imports `SYSTEM_PROMPT`, `build_prompt`,
+`select_hunks` (the 45,000-character Hunk budget), `parse_bullets`,
+`review_bullets`, `MAX_OUTPUT_TOKENS`, `NO_TEMPERATURE`, `REQUEST_TIMEOUT` and
+the shipped provider pins from `inplain/summarize.py`, and a test holds its
+request byte-equal to `OpenRouterClient`'s for both shipped models. Each golden
+entry is sent as production would send that record: the system prompt, the
+Company's display name, the nonce fence, and the budgeted Hunk prefix with its
+partial-coverage note. Citations are scored against the Hunks the model was
+shown. Everything else is September's method (temperature 0, 3 retries, 4-way
+parallel, provider pinned with fallbacks off, plus `data_collection: deny` as
+production sends it). The four clean finalists from September were measured:
+passes 1 and 2 on all four, and pass 3 on the three still clean after two
+passes. 187 calls, no call failures, every call served by the pinned
+provider. Raw results: `eval/results/openrouter-production-prompt-2026-10/`.
+The calls ran before #84 added the whole-word quote rule to the gate. All 187
+stored replies were then re-scored with the stricter gate, and every score
+is identical.
+
+| Model | Runs | Validity (valid/total citations) | Parse fails | Coverage (of all / of shown Hunks) | Mean latency (median, max) | Cost measured | $/yr at 300 summaries |
+|---|---|---|---|---|---|---|---|
+| `x-ai/grok-4.7` | 3 | **100.0%** (502/502) | 0/51 | 92.1% / 96.9% | 21.5s (6.7s, 157s) | $0.942 | $5.54 |
+| `google/gemini-3.8-flash` | 3 | **100.0%** (187/187) | 0/51 | 87.5% / 92.3% | 5.7s (4.0s, 16s) | $0.203 | $1.19 |
+| `google/gemini-3.7-flash` | 3 | **100.0%** (180/180) | 0/51 | 87.0% / 91.8% | 6.6s (4.4s, 21s) | $0.231 | $1.36 |
+| `qwen/qwen3.7-flash` | 2 | **99.4%** (164/165) | 0/34 | 87.4% / 92.2% | 24.4s (18.8s, 73s) | $0.015 | $0.13 |
+
+- **Coverage is lower than September for everyone, mostly because of the
+  budget.** The Stripe golden entry (110k characters) now sends 2 of its 11
+  Hunks, as production would, so no model can cover more than 2/11 of it.
+  Coverage of the Hunks shown is in the second figure. The ranking is
+  unchanged: Grok is about five points ahead of the field.
+- `qwen/qwen3.7-flash` produced one invalid citation (pass 2,
+  `constructed-negation-sell-to-share`: one of a claim's two quotes failed, so
+  that claim was dropped). It therefore missed pass 3, as in September's method.
+- Grok's slowest call took 157 s (September: 136 s). That is still inside
+  `summarize.py`'s 300 s request timeout.
+- Grok's output grew to about 2,440 tokens a call, 1,870 of them reasoning,
+  so its yearly cost estimate rose from $4.18 to $5.54. This time Gemini ran
+  on OpenRouter's own credits (`is_byok: false` on every call), not on an
+  attached Google key, so its cost is on OpenRouter's meter.
+
+**By the rubric (validity, then parse reliability, then coverage, then
+latency), the winner and the fallback do not change: primary `x-ai/grok-4.7`,
+outage fallback `google/gemini-3.8-flash`.** On the production prompt the
+fallback no longer needs September's judgement call: Gemini 3.8 Flash ranks
+above 3.7 on both coverage and latency, and Qwen drops out on validity. No
+model id in `summarize.py` was changed.
+
+Spend: OpenRouter key usage went from $1.6425 to $3.7864 ($2.14), against a
+$3 cap. That includes a 2-entry smoke test of each model. The per-call costs
+recorded in the pass files add up to $1.39. The rest of the meter movement is
+not explained by these calls: none was retried, and every reported cost equals
+its upstream cost.
+
 ## 2026-09-27 re-run: the measured pick is `x-ai/grok-4.7`, fallback `google/gemini-3.8-flash`
 
 Resolves issue #36 and closes the "provisional" status SPEC §11 carried since
@@ -76,20 +132,24 @@ the whole field costs $0.14 to $4.98 a year, and Grok's $4.18 is below
 Gemini's 2027 price.
 
 One caveat the audit (#40, item 4) raised and this run did not fix: the
-harness scores its own single-turn prompt, while production sends a system
-prompt, a fenced user turn and a per-Claim keep rule. The gate is the same
-(pinned by `tests/test_gate_equivalence.py`), so validity transfers; the
-coverage and latency figures are indicative. Aligning the harness with the
-shipped prompt is an open owner decision.
+harness scored its own single-turn prompt, with no Hunk budget, while
+production sends a system prompt, a fenced user turn over the budgeted Hunks
+and a per-Claim keep rule. The per-Citation gate was the same (then pinned by
+a test that pinned two copies together), so validity transfers; the coverage
+and latency figures are indicative. The owner accepted aligning the harness;
+see the production-prompt re-measure below.
 
 Made by the lead under the owner's delegation (2026-09-27). Provisional until
 the cutover: comment `veto` on #36 to reverse.
 
 ## Method
 
-- **Prompt and scoring are `eval/run_eval.py`'s**, unmodified — the citation
-  gate that scores these runs is the same function T3 uses to decide what
-  reaches the site (pinned by `tests/test_gate_equivalence.py`).
+- **Prompt and scoring were `eval/run_eval.py`'s own** for the August and
+  September runs: a single-turn prompt, every Hunk sent, and a copy of the
+  citation gate that a test pinned to the one T3 publishes through. The
+  harness now imports the prompt, the Hunk budget and the gate from
+  `inplain/summarize.py` (see the production-prompt re-measure), so those
+  earlier figures were measured on a prompt production never sent.
 - Driven through OpenRouter chat completions at `temperature 0`,
   `max_tokens 12000`, 3 retries on 429/5xx/timeout, 4 entries in parallel.
 - **Pass 1**: all 18 candidates × 17 entries. **Pass 2**: 7 finalists, repeated.
@@ -275,7 +335,8 @@ outage-only fallback semantics are all provider-agnostic and unaffected.
 
 ## What T3 should take from this (unchanged)
 
-- Build against `eval/run_eval.py`'s validation semantics: exact or
-  whitespace/case-tolerant, side-aware, drop-don't-repair.
+- The validation semantics are `inplain/summarize.py`'s, and the harness
+  scores with them: exact or whitespace/case-tolerant, side-aware,
+  drop-don't-repair.
 - Keys come from the environment only, never from files.
 - Treat hunk text as data, never instructions.
