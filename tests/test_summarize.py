@@ -832,13 +832,30 @@ class TestRetryCap:
             report = summarizer(changes, FakeClient("COMPLIANT")).run()
             assert report.failed == 1
             assert schema.load_record(path)["summary_attempts"] == attempt
+        assert report.capped == [path.stem], "the run that reaches the cap names it"
 
         before = path.read_bytes()
         client = FakeClient(reply([bullet("t", [cite(quote="You may opt out")])]))
         report = summarizer(changes, client).run()
         assert client.calls == [], "a capped record is not billed again"
-        assert report.eligible == 0 and report.failed == 0, "and does not alert"
+        assert report.eligible == 0 and report.failed == 0
+        assert report.capped == [path.stem], "but every later run still names it"
         assert path.read_bytes() == before
+
+    def test_a_capped_record_fails_the_cli(self, changes, monkeypatch, capsys):
+        """The cap must never hide a failure: a run-wide garbage reply caps
+        every record, so a run with a capped record exits non-zero (the crawl
+        then sets summarize_failed and the alert fires) and names it."""
+        record = make_record()
+        record["summary_attempts"] = summarize.MAX_SUMMARY_ATTEMPTS
+        path = write_record(changes, record)
+        client = FakeClient("unused")
+        monkeypatch.setenv("MODEL_API_KEY", "k")
+        monkeypatch.setattr(summarize, "OpenRouterClient", lambda *a, **k: client)
+        code = summarize.main(["--root", str(changes.parent), "--changes", str(changes)])
+        assert code == 1
+        assert f"failed=0 capped={path.stem}" in capsys.readouterr().out
+        assert client.calls == []
 
     def test_a_summary_clears_the_count(self, changes):
         record = make_record()

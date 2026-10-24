@@ -54,8 +54,9 @@ Other decisions, each traceable to a verified v0.2.0 defect:
   summary was written raises the record's ``summary_attempts``, the only key a
   failed run writes; a refusal or outage before any reply costs nothing and
   is not counted. After :data:`MAX_SUMMARY_ATTEMPTS` the record is no longer
-  sent, so one that can never produce a Valid citation stops being billed and
-  alerting daily. Deleting the key re-queues it.
+  sent, so one that can never produce a Valid citation stops being billed. The
+  cap never hides a failure: a run with a capped record exits non-zero and
+  names it. Deleting the key re-queues it.
 * **Transport errors are caught by class, never bare.** The one fallback model
   (:data:`FALLBACK_MODEL`) is used **only** on outage-class failures — timeout,
   connection error, 5xx, 429 — and **never** on malformed output. v0.2.0's
@@ -612,6 +613,7 @@ class SummarizeReport:
     outcomes: list[Outcome] = field(default_factory=list)
     eligible: int = 0  # material, unsummarised
     aborted: str = ""  # set when the run stopped early (outage / bad config)
+    capped: list[str] = field(default_factory=list)  # ids at MAX_SUMMARY_ATTEMPTS
 
     @property
     def written(self) -> int:
@@ -650,8 +652,10 @@ class Summarizer:
 
     # -- selection ---------------------------------------------------------
 
-    def pending(self) -> list[Path]:
-        """Material records without a summary, oldest id first (deterministic)."""
+    def pending(self, capped: list[str] | None = None) -> list[Path]:
+        """Material records without a summary, oldest id first (deterministic).
+        Records at MAX_SUMMARY_ATTEMPTS are left out and their ids appended to
+        ``capped``."""
         if not self.changes_dir.is_dir():
             return []
         out = []
@@ -669,6 +673,8 @@ class Summarizer:
             attempts = record.get("summary_attempts")
             if isinstance(attempts, int) and attempts >= MAX_SUMMARY_ATTEMPTS:
                 log.warning("%s: not retried after %d failed attempts", path.name, attempts)
+                if capped is not None:
+                    capped.append(path.stem)
                 continue
             materiality = record.get("materiality")
             if not isinstance(materiality, dict) or materiality.get("material") is not True:
@@ -881,7 +887,7 @@ class Summarizer:
     def run(self, limit: int | None = None) -> SummarizeReport:
         """Summarize every pending record. Never raises for a model failure."""
         report = SummarizeReport()
-        paths = self.pending()
+        paths = self.pending(report.capped)
         report.eligible = len(paths)
         for path in paths[: limit if limit is not None else None]:
             outcome = self.summarize_record(path)
@@ -894,20 +900,23 @@ class Summarizer:
                 log.warning("stopping this run: %s", outcome.detail)
                 break
             if outcome.answered and not outcome.ok:
-                _count_attempt(path)
+                if _count_attempt(path) >= MAX_SUMMARY_ATTEMPTS:
+                    report.capped.append(path.stem)
         return report
 
 
-def _count_attempt(path: Path) -> None:
-    """One more paid run that wrote no summary for this record. Never raises:
-    the count is a cost control, and a record it cannot update stays exactly
-    as it was."""
+def _count_attempt(path: Path) -> int:
+    """One more paid run that wrote no summary for this record; returns the
+    new count (0 if it could not be written). Never raises: the count is a
+    cost control, and a record it cannot update stays exactly as it was."""
     try:
         record = schema.load_record(path)
         record["summary_attempts"] = record.get("summary_attempts", 0) + 1
         _write_record(record, path)
+        return record["summary_attempts"]
     except Exception as exc:  # noqa: BLE001 - after the spend, nothing raises
         log.warning("%s: could not count the failed attempt: %s", path.stem, exc)
+        return 0
 
 
 def _write_record(record: dict[str, Any], path: Path) -> None:
@@ -996,8 +1005,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(
         f"eligible={report.eligible} written={report.written} failed={report.failed}"
         + (f" aborted={report.aborted}" if report.aborted else "")
+        + (f" capped={','.join(report.capped)}" if report.capped else "")
     )
-    return 1 if report.failed else 0
+    # A capped record is a failure that stopped being retried, not a success.
+    return 1 if report.failed or report.capped else 0
 
 
 if __name__ == "__main__":  # pragma: no cover
