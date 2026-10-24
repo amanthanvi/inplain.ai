@@ -30,6 +30,7 @@ from inplain.summarize import (
     OpenRouterClient,
     Summarizer,
     build_prompt,
+    citation_failure,
     citation_is_valid,
     normalize,
     parse_bullets,
@@ -234,6 +235,17 @@ class TestCitationValidation:
         assert not citation_is_valid(cite(quote="   "), HUNKS)
         assert not citation_is_valid(cite(quote=42), HUNKS)
         assert not citation_is_valid("not an object", HUNKS)
+
+    @pytest.mark.parametrize(
+        "citation",
+        [
+            cite(hunk=["h1"], quote="You may opt out"),
+            cite(hunk={"id": "h1"}, quote="You may opt out"),
+            cite(side=["added"], quote="You may opt out"),
+        ],
+    )
+    def test_wrong_typed_hunk_or_side_is_a_reason_not_a_raise(self, citation):
+        assert "wrong type" in citation_failure(citation, HUNKS)
 
     def test_quote_may_span_lines_on_one_side(self):
         hunk = dict(HUNK, added=["First added line.", "Second added line."])
@@ -611,6 +623,21 @@ class TestSummariesWritten:
             )
         )
         summarizer(changes, client).run()
+        assert [b["text"] for b in schema.load_record(path)["summary"]["bullets"]] == ["kept"]
+
+    def test_wrong_typed_hunk_drops_one_claim_not_the_reply(self, changes):
+        path = write_record(changes, make_record())
+        client = FakeClient(
+            reply(
+                [
+                    bullet("kept", [cite(quote="You may opt out")]),
+                    bullet("dropped", [cite(hunk=["h1"], quote="You may opt out")]),
+                ]
+            )
+        )
+        report = summarizer(changes, client).run()
+        assert report.written == 1 and report.failed == 0
+        assert report.outcomes[0].dropped == 1
         assert [b["text"] for b in schema.load_record(path)["summary"]["bullets"]] == ["kept"]
 
     def test_negation_flip_is_dropped_rather_than_repaired(self, changes):
