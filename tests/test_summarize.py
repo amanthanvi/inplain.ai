@@ -1133,7 +1133,6 @@ class TestAC3SweepOverWrittenSummaries:
                         f"{record['id']}: {citation['quote'][:60]!r} is not on the "
                         f"{citation['side']} side of {citation['hunk']}"
                     )
-                    # and never on the other side only
                     checked += 1
         assert checked >= 15
 
@@ -1142,6 +1141,25 @@ class TestAC3SweepOverWrittenSummaries:
             for claim in schema.load_record(path)["summary"]["bullets"]:
                 assert not claim["text"].startswith("WRONG SIDE ")
                 assert not claim["text"].startswith("PARAPHRASE ")
+
+    @pytest.mark.parametrize(
+        "path",
+        sorted((Path(__file__).resolve().parents[1] / "changes").glob("*.json")),
+        ids=lambda p: p.stem,
+    )
+    def test_every_committed_citation_passes_the_gate(self, path):
+        """The same sweep over the archive itself: a hand-edited record (or a
+        gate change) cannot publish a Claim the current gate would drop."""
+        record = schema.load_record(path)
+        summary = record.get("summary")
+        if summary is None:
+            return
+        # The model saw, and the gate checked, the covered prefix only.
+        shown = {h["id"]: h for h in record["hunks"][: summary["coverage"]["covered_hunks"]]}
+        for index, claim in enumerate(summary["bullets"], 1):
+            for citation in claim["citations"]:
+                reason = citation_failure(citation, shown)
+                assert reason is None, f"{record['id']} claim {index}: {reason}"
 
     def test_coverage_never_overstates_what_was_sent(self, written):
         for path in written:
