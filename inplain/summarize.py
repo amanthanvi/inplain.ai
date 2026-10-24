@@ -242,6 +242,10 @@ def citation_failure(
     """
     if not isinstance(citation, dict):
         return "citation is not an object"
+    # Checked first: an unhashable ``hunk`` would raise on the lookup below and
+    # cost the whole reply instead of this one claim.
+    if not isinstance(citation.get("hunk"), str) or not isinstance(citation.get("side"), str):
+        return "citation names its hunk or side with the wrong type"
     if citation.get("hunk") not in hunks_by_id:
         return "citation names a hunk that was not in the payload"
     if citation.get("side") not in VALID_SIDES:
