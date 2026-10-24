@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -40,7 +39,6 @@ from .conftest import (
 
 PRIVACY = "https://example.com/privacy"
 TERMS = "https://other.test/terms"
-FROZEN = datetime(2026, 8, 19, tzinfo=UTC)
 
 ALLOW_ALL = "User-agent: *\nAllow: /\n"
 
@@ -71,7 +69,6 @@ def make_crawler(
         resolver=resolver or resolver_for(),
         politeness=politeness or Politeness(delay=0.0, sleep=SleepRecorder()),
         commit=commit,
-        clock=lambda: FROZEN,
         **kwargs,
     )
 
@@ -191,6 +188,21 @@ def test_state_is_committed_on_its_own(repo):
     transport = FakeTransport(base_routes())
     report = make_crawler(repo, transport).run(only=["example"])
     assert files_in_commit(repo, report.state_commit) == ["documents/.crawlstate.json"]
+
+
+def test_an_unchanged_crawl_commits_no_state(repo):
+    """The state holds validators only: no per-run timestamp turns an
+    unchanged crawl into a state commit."""
+    routes = base_routes(**{PRIVACY: html_response(PRIVACY, ETag='"v1"')})
+    make_crawler(repo, FakeTransport(routes)).run(only=["example"])
+    assert set(state_of(repo)["urls"][PRIVACY]) == {"etag", "content_sha256"}
+    before = commit_count(repo)
+
+    report = make_crawler(repo, FakeTransport(routes)).run(only=["example"])
+
+    assert report.outcomes[0].status is Status.UNCHANGED
+    assert report.state_commit is None
+    assert commit_count(repo) == before
 
 
 # -- conditional GET --------------------------------------------------------

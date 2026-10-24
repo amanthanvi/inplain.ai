@@ -40,7 +40,6 @@ import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, fields
-from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
 from urllib.parse import urljoin
@@ -207,8 +206,6 @@ class UrlState:
     etag: str | None = None
     last_modified: str | None = None
     content_sha256: str | None = None
-    last_fetched_at: str | None = None
-    last_checked_at: str | None = None
 
     def to_json(self) -> dict[str, str]:
         return {k: v for k, v in self.__dict__.items() if v is not None}
@@ -218,8 +215,9 @@ class CrawlState:
     """ETag / Last-Modified per URL, persisted next to the documents.
 
     Committed, because it is what makes the next crawl cheap and polite for
-    the origin, and because anyone auditing the archive should be able to see
-    which snapshots were confirmed unchanged by the server itself.
+    the origin. It holds validators only, no per-run timestamps: a time
+    written on every run would make every crawl a state commit, and the git
+    history of this file already dates each validator change.
 
     **A validator is a claim about the archive, not about this process.**
     Storing one for a body that never reached a commit is how a real change
@@ -259,7 +257,6 @@ class CrawlState:
         url: str,
         headers: Mapping[str, str],
         content_sha256: str,
-        when: str,
     ) -> None:
         """A full 200, already archived. Its validators replace what we stored.
 
@@ -270,13 +267,9 @@ class CrawlState:
         entry.etag = headers.get("ETag")
         entry.last_modified = headers.get("Last-Modified")
         entry.content_sha256 = content_sha256
-        entry.last_fetched_at = when
-        entry.last_checked_at = when
         self.dirty = True
 
-    def record_not_modified(
-        self, url: str, headers: Mapping[str, str], when: str
-    ) -> None:
+    def record_not_modified(self, url: str, headers: Mapping[str, str]) -> None:
         """A 304. Validators are *only* overwritten when the 304 supplies them.
 
         v0.2.0 wrote ``None`` over a stored ETag whenever a 304 omitted the
@@ -290,7 +283,6 @@ class CrawlState:
         last_modified = headers.get("Last-Modified")
         if last_modified:
             entry.last_modified = last_modified
-        entry.last_checked_at = when
         self.dirty = True
 
     def forget(self, url: str) -> None:
@@ -425,7 +417,6 @@ class Crawler:
         timeout: float = DEFAULT_TIMEOUT,
         max_bytes: int = MAX_BYTES,
         git: Git | None = None,
-        clock: Callable[[], datetime] | None = None,
     ) -> None:
         self.root = Path(root)
         self.catalog_path = Path(catalog_path or self.root / "catalog.json")
@@ -437,7 +428,6 @@ class Crawler:
         self.timeout = timeout
         self.max_bytes = max_bytes
         self.git = git or Git(self.root)
-        self.clock = clock or (lambda: datetime.now(UTC))
         self.state = CrawlState(self.documents_dir / STATE_FILENAME)
         self.robots = RobotsCache(self._fetch_robots)
 
@@ -531,12 +521,11 @@ class Crawler:
 
     def crawl_document(self, document: Document) -> DocumentOutcome:
         conditional = self.state.conditional_headers(document.url)
-        now = self.clock().isoformat().replace("+00:00", "Z")
         try:
             response = self._fetch(document.url, {**REQUEST_HEADERS, **conditional})
             if response.status == 304 and conditional:
                 if self.snapshot_is_archived(document):
-                    self.state.record_not_modified(document.url, response.headers, now)
+                    self.state.record_not_modified(document.url, response.headers)
                     log.info("not modified %s", document)
                     return DocumentOutcome(
                         document, Status.NOT_MODIFIED, "304 Not Modified"
@@ -610,9 +599,7 @@ class Crawler:
             if not self.git.has_changes(relpath):
                 # Working tree, index and the fetched body all agree, so the
                 # validators describe what the archive holds.
-                self.state.record_response(
-                    document.url, response.headers, sha256(text), now
-                )
+                self.state.record_response(document.url, response.headers, sha256(text))
                 log.info("unchanged %s", document)
                 return DocumentOutcome(document, Status.UNCHANGED, detail)
             sha = self.git.commit_path(relpath, commit_message(document))
@@ -622,7 +609,7 @@ class Crawler:
             # never committed.
             log.error("commit failed %s: %s", document, exc)
             return DocumentOutcome(document, Status.FAILED, f"commit failed: {exc}")
-        self.state.record_response(document.url, response.headers, sha256(text), now)
+        self.state.record_response(document.url, response.headers, sha256(text))
         log.info("changed %s (%s) %s", document, detail, sha[:7])
         return DocumentOutcome(document, Status.CHANGED, detail, commit=sha)
 
