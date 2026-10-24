@@ -83,5 +83,60 @@
   },
   "parent_commit": "fab215408fd33db5bc122ddaf7d946d21b21829f",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: latamdpo@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: [email protected]",
+            "side": "added"
+          }
+        ],
+        "text": "In the Brazil contact row, the published LGPD Data Protection Officer and Deputy DPO email addresses changed from latamdpo@paypal.com to the placeholder [email protected]. The named officers, Daniel Douglas Diniz and Fabiana Moreira Chaves, are unchanged."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "skrprivacy@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "[email protected]",
+            "side": "added"
+          }
+        ],
+        "text": "In the South Korea contact row, the domestic agent and Data Protection Office email changed from skrprivacy@paypal.com to [email protected]. The named representative, address, and telephone number are otherwise the same."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "email: Aginfo@ag.nv.gov",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "email: [email protected]",
+            "side": "added"
+          }
+        ],
+        "text": "In the Nevada notice, the Bureau of Consumer Protection email changed from Aginfo@ag.nv.gov to [email protected]. The office address and telephone number remain listed."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 3
+    },
+    "generated_at": "2026-10-24T01:37:20Z",
+    "model": "x-ai/grok-4.7"
+  }
 }
