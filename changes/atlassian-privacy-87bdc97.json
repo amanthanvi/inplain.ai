@@ -1,0 +1,237 @@
+{
+  "commit": "87bdc97e4b32558d14eab0e6e992d99b678c0380",
+  "company": "atlassian",
+  "company_name": "Atlassian",
+  "detected_at": "2026-10-24T01:07:30Z",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "added": [
+        " To the extent we use such data, we maintain and use such data in de-identified form and will not attempt to re-identify the data."
+      ],
+      "context_after": [
+        "How we disclose information",
+        "We make collaboration tools, and we want them to work well for you. This means disclosing information through the Services and to certain third parties. We disclose information we collect in the ways discussed below.",
+        "Disclosing to third parties"
+      ],
+      "context_before": [
+        "To aggregate and/or de-identify data: We may aggregate and/or de-identify information collected through the Services so it can no longer be re-identified by us or another party.",
+        "- We may use content that is de-identified and aggregated in accordance with applicable data contribution product functionalities to develop and improve our Services.",
+        "- We may aggregate or de-identify other information described in “Information we collect,” such as data about use of our Services, information provided to support channels, and feedbacks for a number of purposes, including to develop and improve our Services and to conduct marketing and promotional activities."
+      ],
+      "id": "h1",
+      "new_start": 55,
+      "old_start": 55,
+      "removed": [
+        "To the extent we use such data, we maintain and use such data in de-identified form and will not attempt to re-identify the data."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "|  |  | ",
+        "|---|---|"
+      ],
+      "context_after": [
+        "| Purpose (see the How we use information section for more detail) | Legal basis | ",
+        "| To provide the Services and personalize your experience; To develop and improve the Services, including machine learning and artificial intelligence model training; To communicate with you about the Services; To conduct marketing and promotional activities; To provide customer support; Verify your account credentials as needed to log you into the Services and help safeguard your account’s security; Protect our rights, privacy, safety, or property, and/or that of our affiliated companies, you, or other parties, including to enforce this privacy policy and any other agreements or policies; Detect and prevent fraud, illegal activity, or violations of the terms of our agreements and our Service policies, and to maintain the security of our IT systems, architecture, assets, customers, and networks; and Aggregate or de-identify data. | Legitimate interests (Article 6(1)(f) GDPR) | ",
+        "| To provide the Services and personalize your experience; To develop and improve the Services; Communicate with you about changes to our terms, conditions, or policies; or to respond to your inquiries, comments, feedback, or questions; Verify your account credentials as needed to log you into the Services and help safeguard your account’s security; Process payments; Detect and prevent fraud, illegal activity, or violations of Service policies, and to maintain the security of our IT systems, architecture, assets, customers, and networks; and Protect our rights, privacy, safety, or property, and/or that of our affiliated companies, you, or other parties, including to enforce this privacy policy and any other agreements or policies. | Contractual necessity (Article 6(1)(b) GDPR) | "
+      ],
+      "context_before": [
+        "- We need to process your data to comply with a legal obligation.",
+        "If you have consented to our use of information about you for a specific purpose, you have the right to change your mind at any time, but this will not affect any processing that has already taken place. Where we are using your information because we have a legitimate interest to do so, you have the right to object to that use, though, in some cases, this may mean no longer using the Services.",
+        "The following chart identifies the applicable legal basis for each processing purpose:"
+      ],
+      "id": "h2",
+      "new_start": 114,
+      "old_start": 114,
+      "removed": [],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "|   | Legitimate interests (Article 6(1)(f) GDPR) | ",
+        "|   | Contractual necessity (Article 6(1)(b) GDPR) | ",
+        "|   | Consent (where legally required) (Article 6(1)(a) GDPR) | ",
+        "|   | Compliance with a legal obligation (Article 6(1)(c) GDPR) | "
+      ],
+      "context_after": [
+        "Where applicable under local law and subject to applicable exceptions, you have the following rights regarding your personal information:",
+        "- To request access to and/or a copy of certain information we hold about you (including in a portable and/or machine-readable format);",
+        "- To object to how we process your personal information;"
+      ],
+      "context_before": [
+        "If you have consented to our use of information about you for a specific purpose, you have the right to change your mind at any time, but this will not affect any processing that has already taken place. Where we are using your information because we have a legitimate interest to do so, you have the right to object to that use, though, in some cases, this may mean no longer using the Services.",
+        "The following chart identifies the applicable legal basis for each processing purpose:",
+        "| Purpose (see the How we use information section for more detail) | Legal basis | "
+      ],
+      "id": "h3",
+      "new_start": 117,
+      "old_start": 115,
+      "removed": [
+        "| To provide the Services and personalize your experience; To develop and improve the Services, including machine learning and artificial intelligence model training; To communicate with you about the Services; To conduct marketing and promotional activities; To provide customer support; Verify your account credentials as needed to log you into the Services and help safeguard your account’s security; Protect our rights, privacy, safety, or property, and/or that of our affiliated companies, you, or other parties, including to enforce this privacy policy and any other agreements or policies; Detect and prevent fraud, illegal activity, or violations of the terms of our agreements and our Service policies, and to maintain the security of our IT systems, architecture, assets, customers, and networks; and Aggregate or de-identify data. | Legitimate interests (Article 6(1)(f) GDPR) | ",
+        "| To provide the Services and personalize your experience; To develop and improve the Services; Communicate with you about changes to our terms, conditions, or policies; or to respond to your inquiries, comments, feedback, or questions; Verify your account credentials as needed to log you into the Services and help safeguard your account’s security; Process payments; Detect and prevent fraud, illegal activity, or violations of Service policies, and to maintain the security of our IT systems, architecture, assets, customers, and networks; and Protect our rights, privacy, safety, or property, and/or that of our affiliated companies, you, or other parties, including to enforce this privacy policy and any other agreements or policies. | Contractual necessity (Article 6(1)(b) GDPR) | ",
+        "| To develop and improve the Services; Publish testimonials or featured customer stories; and To conduct marketing and promotional activities (where you have provided consent to receive such marketing or promotions). | Consent (where legally required) (Article 6(1)(a) GDPR) | ",
+        "| To maintain Service safety and security; Detect and prevent fraud, illegal activity, or violations of the terms of our agreements and our Service policies; Authenticate account credentials, as necessary to log you into the Services and help protect the security of your account; and Comply with legal obligations and legal process and to protect our rights, privacy, safety, or property, and/or that of our affiliated companies, you, or other parties, including to enforce this privacy policy and any other agreements or policies. | Compliance with a legal obligation (Article 6(1)(c) GDPR) | "
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "EU Representative:",
+        " Atlassian B.V.",
+        " c/o Atlassian US, Inc.",
+        " 350 Bush Street, Floor 13",
+        " San Francisco, CA 94104",
+        " E-Mail: eudatarep@atlassian.com",
+        "UK Representative:",
+        " Atlassian (UK) Operations Limited",
+        " c/o Herbert Smith Freehills LLP",
+        " Exchange House",
+        " Primrose Street",
+        " London EC2A 2EG",
+        " United Kingdom",
+        " E-Mail: ukrepresentative@atlassian.com"
+      ],
+      "context_after": [
+        "International transfers: We collect information globally and may transfer, process, and store your information outside of your country of residence, to wherever we or our third-party service providers operate for the purpose of providing you the Services. Whenever we transfer your information, we take steps to protect it.",
+        "International transfers within the Atlassian Companies: To facilitate our global operations, we transfer information globally and allow access to that information from countries in which the Atlassian owned or operated companies have operations for the purposes described in this privacy policy. These countries may not have equivalent privacy and data protection laws to the laws of your country. When we disclose information about you within and among Atlassian corporate affiliates, we make use of the Data Privacy Framework to receive personal data transfers from the European Union/European Economic Area to the U.S. (see the “Data Privacy Framework notice” section below), and the standard contractual data protection clauses (see here), which have been approved by the European Commission, to safeguard the transfer of information we collect from the European Economic Area, the United Kingdom (the \"UK\"), and Switzerland. Refer to this page for a list of countries to which we regularly transfer personal data.",
+        "Data Privacy Framework notice: On July 10, 2023, the European Commission’s adequacy decision for the EU-U.S. Data Privacy Framework (EU-U.S. DPF) entered into force."
+      ],
+      "context_before": [
+        "- To withdraw your consent at any time (where you have provided consent for the processing of your personal information); and",
+        "- To lodge a complaint with the relevant supervisory authority.",
+        "If you have a complaint or concern about your personal information, we encourage you to contact us first, and we will do our best to resolve your concern. You can submit inquiries to the appropriate representative here:"
+      ],
+      "id": "h4",
+      "new_start": 131,
+      "old_start": 129,
+      "removed": [
+        "EU Representative: Atlassian B.V. c/o Atlassian US, Inc. 350 Bush Street, Floor 13 San Francisco, CA 94104 E-Mail: eudatarep@atlassian.com",
+        "UK Representative: Atlassian (UK) Operations Limited c/o Herbert Smith Freehills LLP Exchange House Primrose Street London EC2A 2EG United Kingdom E-Mail: ukrepresentative@atlassian.com"
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "|  |  |  |  | ",
+        "|---|---|---|---|"
+      ],
+      "context_after": [
+        "| Category of Information | Purpose(s) for Collecting & Disclosing | Recipients of Disclosures for Business Purposes | Recipients of “Sales” or “Sharing” | ",
+        "| Identifiers, such as name, email address, unique identifiers associated with user or user account, IP Address | Operate, maintain, and improve the Services Verify your account credential as needed to log you into the Services and help safeguard your account’s security Service access controls Process payments Develop and improve our Services Conduct marketing and promotional activities For safety and security Debugging Customer support | Atlassian Companies Atlassian Partners Service Providers Third-Party Apps | Third Party Advertising Providers | ",
+        "| Content de-identified and aggregated in accordance with applicable data contribution product settings | Develop and improve our Services | Atlassian Companies Service Providers | -NA- | "
+      ],
+      "context_before": [
+        "U.S. State privacy disclosures",
+        "The disclosures in this section apply only to U.S. residents and are intended to supplement this privacy policy with information required by applicable U.S. state laws.",
+        "The table below describes the categories of personal information we collected in the past 12 months, the purposes for which we collect and disclose this information, the categories of recipients of disclosures made for business purposes in the past 12 months, and the categories of recipients of disclosures made in the past 12 months that may be considered “sales” of personal information or “sharing” of personal information for cross-context behavioral advertising under U.S. state laws."
+      ],
+      "id": "h5",
+      "new_start": 158,
+      "old_start": 144,
+      "removed": [],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "| Identifiers, such as name, email address, unique identifiers associated with user or user account, IP Address |   |   | Third Party Advertising Providers | ",
+        "| Content de-identified and aggregated in accordance with applicable data contribution product settings |   |   | -NA- | ",
+        "| Commercial information, such as purchase details, transaction records, billing information, billing address, payment card details |   |   | -NA- | ",
+        "| Internet or other electronic network activity information, such as information about your usage of the Services, pseudonymous IDs, clickstream data, device and connection information, browser information, crash data, referring/exit URLs, IP Address |   |   | -NA- | ",
+        "| Visual and audio information, such as your image, video and audio recording, with your permission |   |   | -NA- | ",
+        "| Professional or employment information, such as job title, company name, company domain |   |   | -NA- | ",
+        "| Geolocation data, such as your approximate location, IP address, time zone |   |   | Third Party Advertising Providers | ",
+        "| Inferences (drawn about you based on other personal information we collect), such as preferences, interests, user behavior data |   |   | Third Party Advertising Providers | ",
+        "| Sensitive personal information, such as login credentials and passwords |   |   | -NA- | "
+      ],
+      "context_after": [
+        "If you have questions about the categories of information we may collect about you or the sources of such information, please see the “Information we collect” section. For more details about our processing activities, please see the “How we use information” section. And for more information about how we may disclose information to third parties, please see the “How we disclose information” section.",
+        "Sensitive personal information: We do not use or disclose sensitive personal information for purposes other than permitted under applicable law.",
+        "Retention: How long we keep information we collect about you depends on the type of information, the purposes for which it was collected, applicable legal or regulatory requirements, and user expectations and preferences. After such time, we will either delete or de-identify your information or, if this is not possible (for example, because the information has been stored in backup archives), then we will securely store your information and isolate it from any further use until deletion is possible. Please see the “How long we keep information” section for more information about specific retention criteria for different categories of personal information."
+      ],
+      "context_before": [
+        "The disclosures in this section apply only to U.S. residents and are intended to supplement this privacy policy with information required by applicable U.S. state laws.",
+        "The table below describes the categories of personal information we collected in the past 12 months, the purposes for which we collect and disclose this information, the categories of recipients of disclosures made for business purposes in the past 12 months, and the categories of recipients of disclosures made in the past 12 months that may be considered “sales” of personal information or “sharing” of personal information for cross-context behavioral advertising under U.S. state laws.",
+        "| Category of Information | Purpose(s) for Collecting & Disclosing | Recipients of Disclosures for Business Purposes | Recipients of “Sales” or “Sharing” | "
+      ],
+      "id": "h6",
+      "new_start": 161,
+      "old_start": 145,
+      "removed": [
+        "| Identifiers, such as name, email address, unique identifiers associated with user or user account, IP Address | Operate, maintain, and improve the Services Verify your account credential as needed to log you into the Services and help safeguard your account’s security Service access controls Process payments Develop and improve our Services Conduct marketing and promotional activities For safety and security Debugging Customer support | Atlassian Companies Atlassian Partners Service Providers Third-Party Apps | Third Party Advertising Providers | ",
+        "| Content de-identified and aggregated in accordance with applicable data contribution product settings | Develop and improve our Services | Atlassian Companies Service Providers | -NA- | ",
+        "| Commercial information, such as purchase details, transaction records, billing information, billing address, payment card details | Operate, maintain, and improve the Services; Process payments; Develop and improve our Services; Conduct marketing and promotional activities; For safety and security; Debugging; Customer support | Atlassian Companies Atlassian Partners Service Providers | -NA- | ",
+        "| Internet or other electronic network activity information, such as information about your usage of the Services, pseudonymous IDs, clickstream data, device and connection information, browser information, crash data, referring/exit URLs, IP Address | Operate, maintain, and improve the Services | Atlassian Companies Atlassian Partners Event Sponsors Service Providers | -NA- | ",
+        "| Visual and audio information, such as your image, video and audio recording, with your permission | Operate, maintain, and improve the Services | Atlassian Companies Atlassian Partners Event Sponsors Service Providers | -NA- | ",
+        "| Professional or employment information, such as job title, company name, company domain | Operate, maintain, and improve the Services; Conduct marketing and promotional activities; Detecting security incidents; Debugging; Customer support | Atlassian Companies Atlassian Partners Service Providers | -NA- | ",
+        "| Geolocation data, such as your approximate location, IP address, time zone | Operate, maintain, and improve the Services; Conduct marketing and promotional activities; Customer support | Atlassian Companies Atlassian Partners Service Providers | Third Party Advertising Providers | ",
+        "| Inferences (drawn about you based on other personal information we collect), such as preferences, interests, user behavior data | Operate, maintain, and improve the Services; Conduct marketing and promotional activities | Atlassian Companies Service Providers | Third Party Advertising Providers | ",
+        "| Sensitive personal information, such as login credentials and passwords | Verify your account credentials as needed to log you into the Services and help safeguard your account’s security; Service access controls | Atlassian Companies Service Providers | -NA- | "
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "Atlassian Pty Ltd",
+        " c/o Atlassian US, Inc.",
+        " 350 Bush Street, Floor 13",
+        " San Francisco, CA 94104",
+        " E-Mail: privacy@atlassian.com"
+      ],
+      "context_after": [
+        "Individuals in the European Economic Area or United Kingdom may also contact the appropriate representatives identified in the “European Economic Area and United Kingdom privacy disclosures” section.",
+        "In compliance with the EU-U.S. DPF and the UK Extension to the EU-U.S. DPF and the Swiss-U.S. DPF, Atlassian Pty Ltd commits to resolve DPF Principles-related complaints about our collection and use of your personal information. EU and UK and Swiss individuals with inquiries or complaints regarding our handling of personal information received in reliance on the EU-U.S. DPF and the UK Extension to the EU-U.S. DPF and the Swiss-U.S. DPF should first contact us at privacy@atlassian.com.",
+        "Recommended for you"
+      ],
+      "context_before": [
+        "If you disagree with any changes to this privacy policy, you will need to stop using the Services and deactivate your account(s) and/or submit a request to delete your personal information, as outlined in the “How to access and control your information” section.",
+        "How to contact us",
+        "Your information is controlled by Atlassian Pty Ltd and Atlassian, Inc. If you have questions or concerns about how your information is handled, or if you wish to exercise your rights, please direct your inquiry to Atlassian Pty Ltd, which we have appointed to be responsible for facilitating such inquiries:"
+      ],
+      "id": "h7",
+      "new_start": 189,
+      "old_start": 173,
+      "removed": [
+        "Atlassian Pty Ltd c/o Atlassian US, Inc. 350 Bush Street, Floor 13 San Francisco, CA 94104 E-Mail: privacy@atlassian.com"
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "Related content"
+      ],
+      "context_after": [
+        "Stay informed",
+        "Subscribe to receive notifications from us about updates to our legal terms (including our legal policies) and our list of sub-processors."
+      ],
+      "context_before": [
+        "Atlassian Pty Ltd c/o Atlassian US, Inc. 350 Bush Street, Floor 13 San Francisco, CA 94104 E-Mail: privacy@atlassian.com",
+        "Individuals in the European Economic Area or United Kingdom may also contact the appropriate representatives identified in the “European Economic Area and United Kingdom privacy disclosures” section.",
+        "In compliance with the EU-U.S. DPF and the UK Extension to the EU-U.S. DPF and the Swiss-U.S. DPF, Atlassian Pty Ltd commits to resolve DPF Principles-related complaints about our collection and use of your personal information. EU and UK and Swiss individuals with inquiries or complaints regarding our handling of personal information received in reliance on the EU-U.S. DPF and the UK Extension to the EU-U.S. DPF and the Swiss-U.S. DPF should first contact us at privacy@atlassian.com."
+      ],
+      "id": "h8",
+      "new_start": 196,
+      "old_start": 176,
+      "removed": [
+        "Recommended for you",
+        "Former Workplace Privacy Notice",
+        "Careers Privacy Notice",
+        "Demographic Survey Privacy Notice"
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "atlassian-privacy-87bdc97",
+  "materiality": {
+    "added_chars": 1543,
+    "effective_date_change": null,
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 5551,
+    "similarity_badge": 0.9256
+  },
+  "parent_commit": "07ad5f02847fef90182fdf0f433ee3e6707cedc7",
+  "schema_version": 1,
+  "source_url": "https://www.atlassian.com/legal/privacy-policy"
+}

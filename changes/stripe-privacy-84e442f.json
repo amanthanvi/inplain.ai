@@ -1,0 +1,40 @@
+{
+  "commit": "84e442fa909fe7e704c1b40d8feeb6dadfa298fd",
+  "company": "stripe",
+  "company_name": "Stripe",
+  "detected_at": "2026-10-24T01:10:02Z",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "added": [
+        "| This Privacy Policy will be updated on November 20, 2026. Please review the upcoming changes here. | "
+      ],
+      "context_after": [
+        "Last updated: April 28, 2026",
+        "This Privacy Policy includes important information about your personal data and we encourage you to read it carefully.",
+        "Welcome"
+      ],
+      "context_before": [],
+      "id": "h1",
+      "new_start": 1,
+      "old_start": 1,
+      "removed": [],
+      "word_spans": null
+    }
+  ],
+  "id": "stripe-privacy-84e442f",
+  "materiality": {
+    "added_chars": 102,
+    "effective_date_change": {
+      "from": null,
+      "to": "2026-11-20"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 0,
+    "similarity_badge": 0.9993
+  },
+  "parent_commit": "87bdc97e4b32558d14eab0e6e992d99b678c0380",
+  "schema_version": 1,
+  "source_url": "https://stripe.com/privacy"
+}
