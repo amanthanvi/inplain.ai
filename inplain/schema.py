@@ -77,7 +77,7 @@ RECORD_KEYS = frozenset(
         "hunks",
     }
 )
-OPTIONAL_RECORD_KEYS = frozenset({"summary"})
+OPTIONAL_RECORD_KEYS = frozenset({"summary", "summary_attempts"})
 
 _FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 _DETECTED_AT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$")
@@ -278,7 +278,8 @@ def validate_record(record: Any) -> None:
 
     A ``summary`` (added by T3) is optional and, when present, only checked
     structurally here — side-aware citation validation is T3's job and runs
-    against the hunks, not the schema.
+    against the hunks, not the schema. ``summary_attempts`` (also T3's) counts
+    the summarize runs that failed on an unsummarised record.
     """
     _expect(isinstance(record, dict), "record must be an object")
     keys = set(record)
@@ -325,6 +326,12 @@ def validate_record(record: Any) -> None:
         seen.add(hunk["id"])
     if "summary" in record:
         _validate_summary(record["summary"], seen)
+    if "summary_attempts" in record:
+        attempts = record["summary_attempts"]
+        _expect(
+            type(attempts) is int and attempts >= 1,
+            "summary_attempts must be a positive integer",
+        )
 
 
 def _validate_summary(summary: Any, hunk_ids: set[str]) -> None:

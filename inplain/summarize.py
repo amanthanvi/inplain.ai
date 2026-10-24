@@ -49,10 +49,17 @@ Other decisions, each traceable to a verified v0.2.0 defect:
   logged no-op.
 * **Nothing raises after the model returns.** From the moment the API answers,
   every path ends in either a written summary or a logged, retryable no-op that
-  leaves the record byte-identical and valid. v0.2.0 had four raise sites after
+  leaves the record unsummarised and valid. v0.2.0 had four raise sites after
   the spend, which rolled the status back and stranded the change silently.
   Parse failure and zero-surviving-bullets are no-ops, not errors: the record
   keeps no ``summary`` key, so the next run picks it up again.
+* **Retries are capped per record.** A run where the model answered but no
+  summary was written raises the record's ``summary_attempts``, the only key a
+  failed run writes; a refusal or outage before any reply costs nothing and
+  is not counted. After :data:`MAX_SUMMARY_ATTEMPTS` the record is no longer
+  sent, so one that can never produce a Valid citation stops being billed. The
+  cap never hides a failure: a run with a capped record exits non-zero and
+  names it. Deleting the key re-queues it.
 * **Transport errors are caught by class, never bare.** The one fallback model
   (:data:`FALLBACK_MODEL`) is used **only** on outage-class failures — timeout,
   connection error, 5xx, 429 — and **never** on malformed output. v0.2.0's
@@ -608,6 +615,9 @@ UNREADABLE = "unreadable"
 # retryable on the next scheduled run.
 RETRYABLE = frozenset({NO_VALID_BULLETS, PARSE_FAILURE, MODEL_ERROR, WRITE_FAILURE})
 
+# Failed runs after which a record is no longer sent to the model.
+MAX_SUMMARY_ATTEMPTS = 3
+
 
 @dataclass
 class Outcome:
@@ -622,6 +632,9 @@ class Outcome:
     # The failure will repeat for every remaining record (the model is down or
     # is refusing us), so the run stops rather than burning the schedule.
     halt: bool = False
+    # The model replied (the spend happened); a failure then counts against
+    # the record's MAX_SUMMARY_ATTEMPTS.
+    answered: bool = False
 
     @property
     def ok(self) -> bool:
@@ -633,6 +646,7 @@ class SummarizeReport:
     outcomes: list[Outcome] = field(default_factory=list)
     eligible: int = 0  # material, unsummarised
     aborted: str = ""  # set when the run stopped early (outage / bad config)
+    capped: list[str] = field(default_factory=list)  # ids at MAX_SUMMARY_ATTEMPTS
 
     @property
     def written(self) -> int:
@@ -671,8 +685,10 @@ class Summarizer:
 
     # -- selection ---------------------------------------------------------
 
-    def pending(self) -> list[Path]:
-        """Material records without a summary, oldest id first (deterministic)."""
+    def pending(self, capped: list[str] | None = None) -> list[Path]:
+        """Material records without a summary, oldest id first (deterministic).
+        Records at MAX_SUMMARY_ATTEMPTS are left out and their ids appended to
+        ``capped``."""
         if not self.changes_dir.is_dir():
             return []
         out = []
@@ -686,6 +702,12 @@ class Summarizer:
                 log.warning("skipping record %s: not an object", path.name)
                 continue
             if "summary" in record:
+                continue
+            attempts = record.get("summary_attempts")
+            if isinstance(attempts, int) and attempts >= MAX_SUMMARY_ATTEMPTS:
+                log.warning("%s: not retried after %d failed attempts", path.name, attempts)
+                if capped is not None:
+                    capped.append(path.stem)
                 continue
             materiality = record.get("materiality")
             if not isinstance(materiality, dict) or materiality.get("material") is not True:
@@ -753,9 +775,10 @@ class Summarizer:
             # The API answered — the spend happened — but the envelope was not
             # usable. Per-record no-op; the next record may well be fine.
             outcome.status = MODEL_ERROR
+            outcome.answered = True
             outcome.detail = str(exc)
             log.warning(
-                "%s: unusable reply envelope (%s); record is unchanged and retryable",
+                "%s: unusable reply envelope (%s); record left unsummarised and retryable",
                 record_id,
                 exc,
             )
@@ -782,6 +805,7 @@ class Summarizer:
             log.warning("%s: model call failed, record left unsummarised: %s", record_id, exc)
             return outcome
         outcome.model = used_model
+        outcome.answered = True
 
         # ---- past this line NOTHING may raise ----------------------------
         try:
@@ -794,7 +818,7 @@ class Summarizer:
             outcome.status = WRITE_FAILURE
             outcome.detail = f"{type(exc).__name__}: {exc}"
             log.warning(
-                "%s: summary was not written (%s); record is unchanged and retryable",
+                "%s: summary was not written (%s); record left unsummarised and retryable",
                 record_id,
                 outcome.detail,
             )
@@ -840,6 +864,7 @@ class Summarizer:
             return outcome
 
         candidate = dict(record)
+        candidate.pop("summary_attempts", None)
         candidate["summary"] = {
             "model": used_model,
             "generated_at": self.now(),
@@ -895,7 +920,7 @@ class Summarizer:
     def run(self, limit: int | None = None) -> SummarizeReport:
         """Summarize every pending record. Never raises for a model failure."""
         report = SummarizeReport()
-        paths = self.pending()
+        paths = self.pending(report.capped)
         report.eligible = len(paths)
         for path in paths[: limit if limit is not None else None]:
             outcome = self.summarize_record(path)
@@ -907,7 +932,24 @@ class Summarizer:
                 report.aborted = outcome.detail
                 log.warning("stopping this run: %s", outcome.detail)
                 break
+            if outcome.answered and not outcome.ok:
+                if _count_attempt(path) >= MAX_SUMMARY_ATTEMPTS:
+                    report.capped.append(path.stem)
         return report
+
+
+def _count_attempt(path: Path) -> int:
+    """One more paid run that wrote no summary for this record; returns the
+    new count (0 if it could not be written). Never raises: the count is a
+    cost control, and a record it cannot update stays exactly as it was."""
+    try:
+        record = schema.load_record(path)
+        record["summary_attempts"] = record.get("summary_attempts", 0) + 1
+        _write_record(record, path)
+        return record["summary_attempts"]
+    except Exception as exc:  # noqa: BLE001 - after the spend, nothing raises
+        log.warning("%s: could not count the failed attempt: %s", path.stem, exc)
+        return 0
 
 
 def _write_record(record: dict[str, Any], path: Path) -> None:
@@ -996,8 +1038,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(
         f"eligible={report.eligible} written={report.written} failed={report.failed}"
         + (f" aborted={report.aborted}" if report.aborted else "")
+        + (f" capped={','.join(report.capped)}" if report.capped else "")
     )
-    return 1 if report.failed else 0
+    # A capped record is a failure that stopped being retried, not a success.
+    return 1 if report.failed or report.capped else 0
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -101,4 +101,7 @@ Compatibility rules:
 - Adding word-level spans later means populating `word_spans` — no version
   bump, no re-materialisation of published records.
 - Consumers MUST treat `word_spans: null` and a missing `summary` as normal.
+- `summary_attempts` (optional, a positive integer) is written by T3 on an
+  unsummarised record each time the model replied but no summary was
+  written, and removed when a summary is written. Consumers ignore it.
 - `schema_version` bumps only on a breaking change to existing fields.

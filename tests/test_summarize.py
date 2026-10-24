@@ -757,10 +757,18 @@ class TestPartialCoverage:
 # ---------------------------------------------------------------------------
 
 
-def _unchanged(path: Path, before: bytes) -> None:
-    assert path.read_bytes() == before, "the record was modified by a failed run"
+def _unchanged(path: Path, before: bytes, *, attempts: int | None = None) -> None:
+    """Byte-identical except, after a paid run, its ``summary_attempts`` count
+    (the only key a failed run may write)."""
     record = schema.load_record(path)  # still valid
     assert "summary" not in record, "a failed run must leave the record unsummarised"
+    if attempts is None:
+        assert path.read_bytes() == before, "the record was modified by a failed run"
+        return
+    assert record.pop("summary_attempts") == attempts
+    assert schema.dumps_record(record).encode("utf-8") == before, (
+        "the record was modified by a failed run"
+    )
 
 
 class TestNoRaiseAfterTheModelReturns:
@@ -789,7 +797,7 @@ class TestNoRaiseAfterTheModelReturns:
         assert outcome.status == expected
         assert outcome.status in summarize.RETRYABLE
         assert not outcome.halt, "malformed output is a per-record no-op, not a halt"
-        _unchanged(path, before)
+        _unchanged(path, before, attempts=1)
 
     def test_failure_mid_write_leaves_the_record_valid(self, changes, monkeypatch):
         path = write_record(changes, make_record())
@@ -832,7 +840,7 @@ class TestNoRaiseAfterTheModelReturns:
         )
         report = summarizer(changes, client).run()
         assert len(report.outcomes) == 2, "a bad envelope must not stop the run"
-        _unchanged(path, before)
+        _unchanged(path, before, attempts=1)
         assert "summary" in schema.load_record(other)
 
     def test_all_claims_dropped_is_logged_with_the_failed_quote(self, changes, caplog):
@@ -842,6 +850,72 @@ class TestNoRaiseAfterTheModelReturns:
                 changes, FakeClient(reply([bullet("t", [cite(quote="never written")])]))
             ).run()
         assert "never written" in caplog.text
+
+
+class TestRetryCap:
+    def test_a_record_that_keeps_failing_stops_being_sent(self, changes):
+        path = write_record(changes, make_record())
+        for attempt in range(1, summarize.MAX_SUMMARY_ATTEMPTS + 1):
+            report = summarizer(changes, FakeClient("COMPLIANT")).run()
+            assert report.failed == 1
+            assert schema.load_record(path)["summary_attempts"] == attempt
+        assert report.capped == [path.stem], "the run that reaches the cap names it"
+
+        before = path.read_bytes()
+        client = FakeClient(reply([bullet("t", [cite(quote="You may opt out")])]))
+        report = summarizer(changes, client).run()
+        assert client.calls == [], "a capped record is not billed again"
+        assert report.eligible == 0 and report.failed == 0
+        assert report.capped == [path.stem], "but every later run still names it"
+        assert path.read_bytes() == before
+
+    def test_a_capped_record_fails_the_cli(self, changes, monkeypatch, capsys):
+        """The cap must never hide a failure: a run-wide garbage reply caps
+        every record, so a run with a capped record exits non-zero (the crawl
+        then sets summarize_failed and the alert fires) and names it."""
+        record = make_record()
+        record["summary_attempts"] = summarize.MAX_SUMMARY_ATTEMPTS
+        path = write_record(changes, record)
+        client = FakeClient("unused")
+        monkeypatch.setenv("MODEL_API_KEY", "k")
+        monkeypatch.setattr(summarize, "OpenRouterClient", lambda *a, **k: client)
+        code = summarize.main(["--root", str(changes.parent), "--changes", str(changes)])
+        assert code == 1
+        assert f"failed=0 capped={path.stem}" in capsys.readouterr().out
+        assert client.calls == []
+
+    def test_a_summary_clears_the_count(self, changes):
+        record = make_record()
+        record["summary_attempts"] = 2
+        path = write_record(changes, record)
+        client = FakeClient(reply([bullet("t", [cite(quote="You may opt out")])]))
+        summarizer(changes, client).run()
+        written = schema.load_record(path)
+        assert written["summary"]["bullets"]
+        assert "summary_attempts" not in written
+
+    def test_a_failed_write_after_the_reply_counts(self, changes, monkeypatch):
+        path = write_record(changes, make_record())
+        before = path.read_bytes()
+
+        def boom(*args):
+            raise RuntimeError("something nobody predicted")
+
+        monkeypatch.setattr(Summarizer, "_finish", boom)
+        report = summarizer(changes, FakeClient(reply([bullet()]))).run()
+        assert report.outcomes[0].status == summarize.WRITE_FAILURE
+        _unchanged(path, before, attempts=1)
+
+    def test_a_refusal_before_any_reply_is_not_counted(self, changes):
+        """A run-wide 400 (a bad model id or parameter) refuses every record at
+        no cost; counting it would cap the whole queue and silence the alert."""
+        path = write_record(changes, make_record())
+        before = path.read_bytes()
+        refused = ModelRequestError("model API refused the request (HTTP 400)", status=400)
+        for _ in range(summarize.MAX_SUMMARY_ATTEMPTS + 1):
+            report = summarizer(changes, FakeClient(refused)).run()
+            assert report.failed == 1, "it keeps alerting"
+        _unchanged(path, before)
 
 
 class TestFallback:
