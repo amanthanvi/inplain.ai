@@ -83,5 +83,70 @@
   },
   "parent_commit": "0138d42bbcffc0bea719a95247339bb74137888c",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: latamdpo@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: latamdpo@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: [email protected]",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: [email protected]",
+            "side": "added"
+          }
+        ],
+        "text": "In the Brazil contact entry, the published LGPD Data Protection Officer and Deputy DPO emails are no longer latamdpo@paypal.com; both now read [email protected], so those specific addresses are not shown."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "(+82) 02 737 5775, skrprivacy@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "(+82) 02 737 5775, [email protected]",
+            "side": "added"
+          }
+        ],
+        "text": "In the South Korea contact entry, the domestic agent and Data Protection Office email skrprivacy@paypal.com is replaced with [email protected], so that address is no longer displayed next to the listed phone number."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "email: Aginfo@ag.nv.gov",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "email: [email protected]",
+            "side": "added"
+          }
+        ],
+        "text": "In the Nevada notice, the Bureau of Consumer Protection email Aginfo@ag.nv.gov is replaced with [email protected], so the attorney general’s published address is no longer shown."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 3
+    },
+    "generated_at": "2026-10-24T01:25:04Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

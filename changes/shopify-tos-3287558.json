@@ -62,5 +62,45 @@
   },
   "parent_commit": "538a7f4b97a2cdda93f35f5640c676fc36f5e8f5",
   "schema_version": 1,
-  "source_url": "https://www.shopify.com/legal/terms"
+  "source_url": "https://www.shopify.com/legal/terms",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last updated on: August 1, 2026",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last updated on: October 20, 2026",
+            "side": "added"
+          }
+        ],
+        "text": "The Terms of Service last-updated date changed from August 1, 2026 to October 20, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "tools that Shopify offers to you that help you calculate or estimate taxes that arise from or as a result of a sale on your Store (\"Shopify Tax\") is subject to the Shopify Tax Terms of Service or that help you file such taxes (\"Shopify Tax Automated Filing\") is subject to the Shopify Tax Automated Filing Terms of Service.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "any tax-related tools that Shopify offers to you (\"Shopify Tax\") is subject to the Shopify Tax Terms of Service.",
+            "side": "added"
+          }
+        ],
+        "text": "The tax-tools clause no longer separately covers tools that help you calculate or estimate taxes and tools that help you file taxes, and it no longer names Shopify Tax Automated Filing or the Shopify Tax Automated Filing Terms of Service. It now says any tax-related tools Shopify offers (\"Shopify Tax\") are subject to the Shopify Tax Terms of Service."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:29:07Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

@@ -62,5 +62,55 @@
   },
   "parent_commit": "ac2ca90bd15d5e9faeed42297e5574c7f5846060",
   "schema_version": 1,
-  "source_url": "https://www.coursera.org/about/privacy"
+  "source_url": "https://www.coursera.org/about/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last updated: May 11, 2026.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last updated: September 3, 2026.",
+            "side": "added"
+          }
+        ],
+        "text": "The privacy notice’s last-updated date changed from May 11, 2026 to September 3, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "Identity and Contact Data; Account Registration Data; Demographic Information; Personal Data we collect from your device(s)",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Identity and Contact Data; Account Registration Data; Demographic Information; Personal Data we collect from your device(s); Education, Career and Skills Information",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "To facilitate and personalize your interaction with Site features, including tailoring content, recommendations, learning support and engagement tools, and remembering preferences or prior interactions to improve your experience.",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "For our legitimate interests to run, grow and develop our business including by providing you with a personalized Service",
+            "side": "added"
+          }
+        ],
+        "text": "Personalization of Site features now also draws on Education, Career and Skills Information, in addition to identity and contact data, account registration data, demographic information, and device data. The stated use—tailoring content, recommendations, learning support and engagement tools, and remembering preferences or prior interactions—and the legitimate-interests basis for a personalized Service are otherwise unchanged."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:19:51Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

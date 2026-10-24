@@ -332,5 +332,185 @@
   },
   "parent_commit": "79f2918780092bfc9f4a628462a88e624d00f526",
   "schema_version": 1,
-  "source_url": "https://www.canva.com/policies/privacy-policy/"
+  "source_url": "https://www.canva.com/policies/privacy-policy/",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "This Privacy Policy was last updated on April 15, 2026.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "This Privacy Policy was last updated on August 25, 2026. See previous versions of the Privacy Policy in our Policy Archives.(opens in a new tab or window)",
+            "side": "added"
+          }
+        ],
+        "text": "The policy’s stated last-updated date changed from April 15, 2026 to August 25, 2026. The pointer to earlier versions in the Policy Archives is unchanged."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "by emailing us at privacy@canva.com.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "by contacting us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "or by emailing privacy@canva.com.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "or by contacting us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h4",
+            "quote": "by contacting privacy@canva.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "by contacting us here(opens in a new tab or window)",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "or you can contact us directly at privacy@canva.com.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "or you can contact us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "or by emailing privacy@canva.com.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h7",
+            "quote": "or by contacting us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "please contact us at privacy@canva.com(opens in a new tab or window).",
+            "side": "removed"
+          },
+          {
+            "hunk": "h8",
+            "quote": "please contact us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h10",
+            "quote": "please contact us at privacy@canva.com.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h10",
+            "quote": "please contact us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h12",
+            "quote": "withdraw your consent by emailing privacy@canva.com(opens in a new tab or window)",
+            "side": "removed"
+          },
+          {
+            "hunk": "h12",
+            "quote": "withdraw your consent by contacting us here(opens in a new tab or window)",
+            "side": "added"
+          },
+          {
+            "hunk": "h12",
+            "quote": "object to that use by contacting privacy@canva.com(opens in a new tab or window).",
+            "side": "removed"
+          },
+          {
+            "hunk": "h12",
+            "quote": "object to that use by contacting us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h13",
+            "quote": "You may make a request by contacting us at privacy@canva.com.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h13",
+            "quote": "You may make a request by contacting us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h13",
+            "quote": "appeal a refusal to take action on a request by contacting us at privacy@canva.com.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h13",
+            "quote": "appeal a refusal to take action on a request by contacting us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h13",
+            "quote": "or by emailing privacy@canva.com.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h13",
+            "quote": "or by contacting us here(opens in a new tab or window).",
+            "side": "added"
+          },
+          {
+            "hunk": "h14",
+            "quote": "Email: privacy@canva.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h14",
+            "quote": "If you have any questions about this Privacy Policy or the Service, or wish to make a complaint please contact us here(opens in a new tab or window).",
+            "side": "added"
+          }
+        ],
+        "text": "In place of emailing privacy@canva.com, readers are directed to a “contact us here” link for opting out of third-party promotional use, LiveRamp email matching, access/correction/deletion requests, cookie questions, third-party enrichment, personal-information requests, reports about a child’s information, withdrawing consent, objecting to legitimate-interest use, U.S. state rights requests and appeals, and “selling or sharing” opt-outs. The How to contact us section no longer lists that email address and instead sends questions and complaints to the same kind of link."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h11",
+            "quote": "they may submit an authorised request to privacy@canva.com or to any of the contact details provided in section 14 below.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h11",
+            "quote": "they may contact us here(opens in a new tab or window) or to any of the contact details provided in section 14 below.",
+            "side": "added"
+          },
+          {
+            "hunk": "h11",
+            "quote": "Such a request must come from the email address that owns or is the Team Owner of the Canva Education account. To protect children’s privacy and security, we will take reasonable steps to help verify the educational institution’s identity before granting access to any personal information.",
+            "side": "added"
+          }
+        ],
+        "text": "Educational institutions seeking to inspect, review, amend, or delete student data are no longer told to submit an authorised request to privacy@canva.com; they are told to use the contact link or the section 14 contact details. The request must still come from the account owner or Team Owner email, and Canva still says it will take reasonable steps to verify the institution before granting access."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 14,
+      "total_hunks": 14
+    },
+    "generated_at": "2026-10-24T01:18:14Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

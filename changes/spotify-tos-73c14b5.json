@@ -331,5 +331,175 @@
   },
   "parent_commit": "00034379431898c63bb9c8b90db2290a46c2f8e2",
   "schema_version": 1,
-  "source_url": "https://www.spotify.com/us/legal/end-user-agreement/"
+  "source_url": "https://www.spotify.com/us/legal/end-user-agreement/",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last Updated: August 26, 2025",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last Updated: September 4, 2026",
+            "side": "added"
+          }
+        ],
+        "text": "The Terms' last-updated date changes from August 26, 2025 to September 4, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "Governing law, jurisdiction, class action waiver, and jury trial waiver",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "each party may bring claims (whether in court or in arbitration) against the other only in an individual capacity",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Neither party may participate as a plaintiff, claimant, or class member in any class, collective, consolidated, private attorney general, or representative proceeding (whether in court or arbitration).",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "you or Spotify may participate in a class-wide, collective, or representative settlement of claims.",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "any Dispute involving the applicability and enforceability of the Arbitration Agreement",
+            "side": "added"
+          }
+        ],
+        "text": "The governing-law heading now includes a class action waiver, and a new paragraph requires each party to bring claims only in an individual capacity. Neither party may participate as a plaintiff, claimant, or class member in a class, collective, consolidated, private attorney general, or representative proceeding in court or arbitration, though either may still join a class-wide, collective, or representative settlement. New York courts' exclusive jurisdiction is also extended to disputes about whether the Arbitration Agreement applies and can be enforced."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h5",
+            "quote": "Governing law, jurisdiction, class action waiver, and jury trial waiver",
+            "side": "added"
+          }
+        ],
+        "text": "The exceptions-to-arbitration section now points to that renamed heading, so the cross-reference matches the new class-action-waiver title."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "and whether the claims arise during or after the termination of these Terms",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "whether the claims arose before the existence of this or any prior Arbitration Agreement",
+            "side": "added"
+          },
+          {
+            "hunk": "h4",
+            "quote": "any Dispute over the applicable version of the Arbitration Agreement",
+            "side": "added"
+          }
+        ],
+        "text": "Mandatory individual arbitration now covers claims that arose before this Arbitration Agreement or any prior one, replacing language limited to claims arising during or after termination. Courts, not the arbitrator, also have exclusive authority over which version of the Arbitration Agreement applies."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h7",
+            "quote": "You and Spotify agree that the Federal Arbitration Act applies and governs the interpretation and enforcement of this Arbitration Agreement",
+            "side": "removed"
+          },
+          {
+            "hunk": "h7",
+            "quote": "the substantive and procedural provisions of the Federal Arbitration Act (and not state arbitration law) apply",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "The Demand shall also disclose any person or entity that is funding the prosecution of, or has a financial interest in, the arbitration.",
+            "side": "added"
+          }
+        ],
+        "text": "The arbitration clause now says the Federal Arbitration Act's substantive and procedural provisions, and not state arbitration law, govern interpretation and enforcement. An arbitration demand must also disclose any person or entity funding the case or holding a financial interest in it."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h8",
+            "quote": "an arbitrator's ruling will not be binding or have preclusive effect in any proceeding involving different users",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "The arbitrator may make rulings and resolve any disagreements as to the payment and reimbursement of fees or expenses at any time during the proceeding and upon request from either party made within fourteen (14) days of the arbitrator's ruling on the merits.",
+            "side": "removed"
+          }
+        ],
+        "text": "An arbitrator's ruling in one user's case is now expressly not binding and has no preclusive effect in proceedings involving different users. The Terms also remove the arbitrator's stated authority to resolve fee and expense reimbursement disputes within 14 days after a merits ruling."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h9",
+            "quote": "including from a process arbitrator.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h9",
+            "quote": "including from a NAM Procedural Arbitrator.",
+            "side": "added"
+          },
+          {
+            "hunk": "h10",
+            "quote": "fifty (50) cases shall be selected per side (100 cases total)",
+            "side": "removed"
+          },
+          {
+            "hunk": "h10",
+            "quote": "the parties shall repeat the same process as in the first stage outlined above.",
+            "side": "added"
+          }
+        ],
+        "text": "In mass arbitrations, procedural issues that stay in arbitration are directed to a NAM Procedural Arbitrator rather than a process arbitrator. The second stage no longer specifies fifty cases per side (100 total); it instead says the parties repeat the first-stage process."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "the UK Export Control Act 2002, the UK Export Control Act 2002 and the UK Export Control Order 2008",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "the UK Export Control Act 2002 and the UK Export Control Order 2008",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "prohibited by the Trade Controls Laws",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "prohibited by the Trade Control Laws",
+            "side": "added"
+          }
+        ],
+        "text": "Export-control wording is cleaned up: a duplicated citation of the UK Export Control Act 2002 is removed, and the defined term is corrected from \"Trade Controls Laws\" to \"Trade Control Laws.\""
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 10,
+      "total_hunks": 14
+    },
+    "generated_at": "2026-10-24T01:29:59Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

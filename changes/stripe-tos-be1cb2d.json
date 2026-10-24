@@ -970,5 +970,375 @@
   },
   "parent_commit": "43e1c469eb4f234fca515a176f9187956fde24af",
   "schema_version": 1,
-  "source_url": "https://stripe.com/legal/ssa"
+  "source_url": "https://stripe.com/legal/ssa",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "Last modified: September 28, 2026",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Last modified: November 18, 2025",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "| Read more about the changes made September 28, 2026. | ",
+            "side": "added"
+          }
+        ],
+        "text": "The General Terms are now dated September 28, 2026, replacing the November 18, 2025 last-modified date, and the introduction points readers to a note about the September 28, 2026 changes."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "continues until User or Stripe terminates it under Section 10.1 (Suspension and Termination) or other provision allowing for termination (the “Term”).",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "continues until User or Stripe terminates it (the “Term”).",
+            "side": "removed"
+          }
+        ],
+        "text": "The Term still starts when the User first accesses or uses the Services or Stripe Technology, but it now ends when User or Stripe terminates under Section 10.1 (Suspension and Termination) or another provision that allows termination, rather than whenever either party terminates."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Capitalized terms are defined in Section 12 (Definitions), Service Terms, and inline.",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Capitalized terms used in this Agreement that are not defined inline are defined in Section 12 (Definitions).",
+            "side": "removed"
+          }
+        ],
+        "text": "Defined-term guidance is moved into the opening: capitalized terms are defined in Section 12, Service Terms, and inline. The separate sentence that sent readers only to Section 12 for terms not defined inline is deleted."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "basic business and technical support",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "standard technical support",
+            "side": "added"
+          },
+          {
+            "hunk": "h4",
+            "quote": "Stripe is not obligated to provide support to Customers.",
+            "side": "added"
+          }
+        ],
+        "text": "Stripe’s included support is restated as standard technical support rather than basic business and technical support. Optional paid plans may still offer priority support and faster response times, and Stripe still has no obligation to support Customers."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h5",
+            "quote": "Stripe may specify additional requirements or use restrictions that apply to User´s use of Preview Services in Preview Service Terms or Documentation.",
+            "side": "added"
+          },
+          {
+            "hunk": "h5",
+            "quote": "User will provide timely Feedback on the Preview Services if requested byStripe.",
+            "side": "added"
+          },
+          {
+            "hunk": "h5",
+            "quote": "Stripe provides no warranty, indemnity, or support for Preview Services.",
+            "side": "added"
+          },
+          {
+            "hunk": "h5",
+            "quote": "Stripe’s aggregate liability for Preview Services is limited to the lesser of the total Fees paid by User to Stripe (excluding all pass-through fees levied by Financial Providers) during the 12 month period before the first event giving rise to liability and USD $1,000.",
+            "side": "added"
+          },
+          {
+            "hunk": "h5",
+            "quote": "Stripe’s aggregate liability for Preview Services is limited to USD$1,000.",
+            "side": "removed"
+          }
+        ],
+        "text": "Preview Services may now be subject to additional requirements or use restrictions in Preview Service Terms or Documentation, and timely Feedback is required if Stripe requests it. Stripe still gives no warranty, indemnity, or support. The liability cap is no longer a flat USD$1,000; it is the lesser of Fees paid to Stripe in the prior 12 months, excluding Financial Provider pass-through fees, and USD $1,000."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "create or increase a security risk for Stripe, its users, or its Financial Providers",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "create a security risk for Stripe",
+            "side": "removed"
+          }
+        ],
+        "text": "Stripe may still modify or discontinue Services or Stripe Technology and must give reasonable notice if that would materially reduce functionality the User is using. The exception now covers notice that would create or increase a security risk for Stripe, its users, or its Financial Providers, not only a security risk for Stripe."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h7",
+            "quote": "1.7 AI Agent.",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "If User uses an AI Agent to access the Stripe Services, User is solely responsible for each action initiated by or through the AI Agent.",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "Uniform Electronic Transactions Act (UETA) and similar Laws",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "actions initiated or completed by an AI Agent are legally binding on User.",
+            "side": "added"
+          }
+        ],
+        "text": "A new Section 1.7 makes the User solely responsible for each action an AI Agent initiates to access the Stripe Services, treats that agent as an electronic agent under the Uniform Electronic Transactions Act (UETA) and similar laws, and states that actions the agent initiates or completes are legally binding on the User."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h8",
+            "quote": "User must not enable or allow any third party to",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "User must not enable others to",
+            "side": "removed"
+          }
+        ],
+        "text": "The reverse-engineering restriction now forbids the User from enabling or allowing any third party to decompile, reverse engineer, or otherwise tamper with Stripe Technology or Stripe services, not only from enabling others to do so."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h9",
+            "quote": "4.3 Data Breach Notification.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h9",
+            "quote": "User must notify Stripe immediately if User becomes aware of any unauthorized acquisition, modification, disclosure, access to, or loss of Personal Data on User’s systems that was provided to or used by Stripe in connection with the Services.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h9",
+            "quote": "4.3 Data Incident Notification.",
+            "side": "added"
+          },
+          {
+            "hunk": "h9",
+            "quote": "If User experiences a Data Incident that is reasonably likely to impact Stripe or its Affiliates, User must notify Stripe without undue delay, which will be no later than 48 hours, after becoming aware of the Data Incident.",
+            "side": "added"
+          },
+          {
+            "hunk": "h9",
+            "quote": "(a) the type of Personal Data that was the subject of the Data Incident; (b) the categories and potential number of individuals or records affected (including their countries); and (c) the status of User’s investigation and current or planned remediation.",
+            "side": "added"
+          }
+        ],
+        "text": "Section 4.3 is renamed from Data Breach Notification to Data Incident Notification. Instead of an immediate notice of unauthorized acquisition, modification, disclosure, access, or loss of Personal Data on the User’s systems that was provided to or used by Stripe, the User must notify Stripe without undue delay and no later than 48 hours after becoming aware of a Data Incident reasonably likely to impact Stripe or its Affiliates, and must describe the Personal Data involved, affected categories and approximate numbers of individuals or records including countries, and the investigation and remediation status."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h10",
+            "quote": "Stripe will comply with its obligations in the Data Security Exhibit to the DPA.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h10",
+            "quote": "Stripe will comply with its obligations in the Data Security Exhibit.",
+            "side": "added"
+          },
+          {
+            "hunk": "h10",
+            "quote": "4.7 Stripe Output Data.",
+            "side": "added"
+          },
+          {
+            "hunk": "h10",
+            "quote": "User’s use of Stripe Output Data is limited to User’s own internal business purposes and for its intended purpose as may be described in the applicable Service Terms or Documentation.",
+            "side": "added"
+          },
+          {
+            "hunk": "h10",
+            "quote": "User must not use Stripe Output Data: (a) as the sole input into User’s decision making process (e.g., automated decision making, profiling) about engaging, ceasing to engage, or refraining from engaging in a business relationship with any Customer; (b) as a factor in determining a person’s eligibility for credit, insurance, housing or employment; or in any way that could cause Stripe to be a “consumer reporting agency” (as defined in FCRA) or cause the Stripe Output Data to constitute a “consumer report” (as defined in FCRA) or any comparable concept under Law; (c) to discriminate based on race, gender, or other protected characteristics, or take any “adverse action” (as defined in FCRA); (d) in a manner that constitutes a prohibited AI practice under the EU AI Act or in a manner that would cause Stripe to be characterized as a provider or co-deployer of a high-risk AI system; or (e) to develop, test, validate, train, enhance or deploy any machine learning models or algorithms that are a substitute for, or substantially similar to, the Services.",
+            "side": "added"
+          },
+          {
+            "hunk": "h10",
+            "quote": "User must not sell (including, as defined in the CCPA), rent, transfer, make available, or communicate orally or through other means Stripe Output Data.",
+            "side": "added"
+          },
+          {
+            "hunk": "h10",
+            "quote": "User must delete Stripe Output Data promptly upon Stripe's reasonable written request.",
+            "side": "added"
+          }
+        ],
+        "text": "Stripe’s safeguards sentence no longer describes the Data Security Exhibit as “to the DPA.” A new Section 4.7 limits Stripe Output Data to the User’s internal business purposes and its intended purpose, bars listed uses including sole-input customer decisions, credit, insurance, housing, or employment eligibility, FCRA consumer-report uses, discrimination or adverse action, prohibited EU AI Act practices or high-risk AI roles for Stripe, and training substitute or substantially similar models, and prohibits selling, renting, transferring, or otherwise communicating it. The User must delete it promptly if Stripe reasonably requests that in writing."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h11",
+            "quote": "Except as indicated in Section 1.4, Feedback is voluntary",
+            "side": "removed"
+          },
+          {
+            "hunk": "h11",
+            "quote": "Feedback is voluntary and User grants to Stripe, on behalf of itself and its Affiliates, a perpetual, worldwide, non-exclusive, irrevocable, royalty-free license to use that Feedback for any purpose.",
+            "side": "added"
+          }
+        ],
+        "text": "The general Feedback clause no longer carves out Section 1.4. It now says Feedback is voluntary, while still granting Stripe a perpetual, worldwide, royalty-free license to use it for any purpose."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h12",
+            "quote": "no less than the same degree of care that the recipient uses to protect its own confidential information of a similar nature",
+            "side": "added"
+          },
+          {
+            "hunk": "h12",
+            "quote": "6.3 Required Disclosures",
+            "side": "added"
+          },
+          {
+            "hunk": "h12",
+            "quote": "6.3 Exclusions.",
+            "side": "added"
+          },
+          {
+            "hunk": "h12",
+            "quote": "Subject to Stripe’s obligations under the DPA, Recipient will use reasonable efforts to provide Discloser with advance notice of the required disclosure (if permitted by Law).",
+            "side": "added"
+          },
+          {
+            "hunk": "h12",
+            "quote": "Any assistance provided by Recipient to help Discloser contest the disclosure will be at Discloser’s sole expense.",
+            "side": "added"
+          },
+          {
+            "hunk": "h12",
+            "quote": "information that the recipient can prove through written documentation",
+            "side": "removed"
+          }
+        ],
+        "text": "Confidentiality is broken into numbered subsections, and both Required Disclosures and Exclusions are numbered 6.3. Protection must be no less than the care the recipient uses for its own similar confidential information. For legally required disclosure, advance notice is framed as reasonable efforts and is subject to the DPA, and help contesting disclosure is at the Discloser’s sole expense. The exclusions no longer require the recipient to prove them through written documentation."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h13",
+            "quote": "Subject to the requirements of Law, Stripe may revise the Fees and Subscription Plans at any time.",
+            "side": "added"
+          },
+          {
+            "hunk": "h13",
+            "quote": "at least 30 days’ notice of any increase in a Fee or any new Fees for any Service that User is using",
+            "side": "added"
+          },
+          {
+            "hunk": "h13",
+            "quote": "at least 30 days notice (or longer period if Law requires) of any increase in a Fee or any new Fees for any Service provided to User",
+            "side": "removed"
+          }
+        ],
+        "text": "Fee and Subscription Plan changes remain subject to Law, but the notice sentence no longer says the period will be longer if Law requires. It now promises at least 30 days’ notice of a Fee increase, a new Fee, or a materially adverse Subscription Plan change for a Service the User is using."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h14",
+            "quote": "(e) Free Trials.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h14",
+            "quote": "(e) Trials and Promotions.",
+            "side": "added"
+          },
+          {
+            "hunk": "h14",
+            "quote": "on a trial or promotional basis free of charge, or at a discount",
+            "side": "added"
+          }
+        ],
+        "text": "The free-trial clause is expanded to trials and promotions, which may be free or discounted until the trial or promotion ends or a purchased Subscription Plan starts."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h15",
+            "quote": "Stripe may deduct those Taxes from the amount otherwise owed to User or charge those Taxes, as the case may be",
+            "side": "added"
+          },
+          {
+            "hunk": "h15",
+            "quote": "Stripe may deduct those Taxes from the amount otherwise owed to User and pay those Taxes to the appropriate taxing authority.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h15",
+            "quote": "Stripe may send documents to User and Governmental Authorities",
+            "side": "added"
+          },
+          {
+            "hunk": "h15",
+            "quote": "Stripe may send documents to User and taxing authorities",
+            "side": "removed"
+          }
+        ],
+        "text": "Where Law requires Stripe to collect or withhold Taxes, Stripe may charge those Taxes as well as deduct them from amounts otherwise owed to the User. In the tax-information paragraph, references to taxing authorities are changed to Governmental Authorities."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h16",
+            "quote": "(including Data Incident Losses)",
+            "side": "removed"
+          },
+          {
+            "hunk": "h16",
+            "quote": "a party’s total aggregate liability for damages and Losses arising out of or relating to the Agreement is limited to the total Fees paid by User (excluding all pass-through fees levied by Financial Providers) during the 12 month period before the first event giving rise to liability.",
+            "side": "added"
+          },
+          {
+            "hunk": "h16",
+            "quote": "User’s payment obligations, including Fees, Assessed Fines and Taxes are not limited by this Section 8.4.",
+            "side": "added"
+          }
+        ],
+        "text": "The Section 8.4 cap no longer expressly says it includes Data Incident Losses. Except for Excluded Claims, aggregate liability for damages and Losses arising out of or relating to the Agreement is limited to total Fees paid by the User, excluding Financial Provider pass-through fees, during the 12 months before the first event giving rise to liability. The User’s payment obligations, including Fees, Assessed Fines, and Taxes, remain outside that cap."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 16,
+      "total_hunks": 42
+    },
+    "generated_at": "2026-10-24T01:32:26Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

@@ -126,5 +126,80 @@
   },
   "parent_commit": "438c738675f3cd22c14627df4990db826df17ccd",
   "schema_version": 1,
-  "source_url": "https://www.atlassian.com/legal/software-license-agreement"
+  "source_url": "https://www.atlassian.com/legal/software-license-agreement",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Effective starting: August 17, 2026",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Effective starting: October 1, 2026",
+            "side": "added"
+          }
+        ],
+        "text": "The agreement’s stated effective date moves from August 17, 2026 to October 1, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "4.7 Usage-Based Offerings. Cloud Products may be, or include access to, Usage-Based Offerings. Atlassian provides Usage-Based Offerings under the Usage-Based Offering Terms.",
+            "side": "added"
+          },
+          {
+            "hunk": "h5",
+            "quote": "“Usage-Based Offerings” means Usage-Based Offerings as described in the Usage-Based Offering Terms.",
+            "side": "added"
+          },
+          {
+            "hunk": "h5",
+            "quote": "“Usage-Based Offering Terms” means the Atlassian usage-based offering terms available at https://www.atlassian.com/legal/usage-based-offering-terms.",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "including the AI Terms and Usage-Based Offering Terms.",
+            "side": "added"
+          }
+        ],
+        "text": "A new section 4.7 says Cloud Products may include Usage-Based Offerings, which Atlassian provides under separate Usage-Based Offering Terms. Those terms are defined by reference to https://www.atlassian.com/legal/usage-based-offering-terms and are added to Product-Specific Terms alongside the AI Terms."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "entitlements to the Products",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "entitlements to the Products and Usage-Based Offerings",
+            "side": "added"
+          },
+          {
+            "hunk": "h4",
+            "quote": "usage-based subscription units",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "usage-based units",
+            "side": "added"
+          }
+        ],
+        "text": "Scope of Use now covers entitlements to Usage-Based Offerings as well as Products, and the listed usage basis changes from usage-based subscription units to usage-based units."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 5,
+      "total_hunks": 5
+    },
+    "generated_at": "2026-10-24T01:17:11Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

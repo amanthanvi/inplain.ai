@@ -106,5 +106,80 @@
   },
   "parent_commit": "b50846dc40c7e051f80b72f185ed2f8c79e5e59d",
   "schema_version": 1,
-  "source_url": "https://policies.google.com/privacy"
+  "source_url": "https://policies.google.com/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "You may choose to allow certain Google services, including services like Search or Gemini Apps, to access data from other Google services you use, such as Google Photos and Workspace apps like Gmail and Drive, in order to provide you with a more personalized experience, subject to the policies and settings of the accessing service.",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Search may process some of the data that you allow Search to access to personalize content, including ads.",
+            "side": "added"
+          }
+        ],
+        "text": "You may now choose to let certain Google services, including Search or Gemini Apps, access data from other Google services you use, such as Google Photos and Workspace apps like Gmail and Drive, for a more personalized experience. Search may process some of the data you allow it to access in order to personalize content, including ads."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "personalized ads based on your interests and activity across Google services",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "personalized ads based on your interests, activity, or personalized content from Google services",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "if you search for “mountain bikes,” in Search you may see ads for sports equipment on YouTube",
+            "side": "added"
+          }
+        ],
+        "text": "Personalized ads are no longer described only as based on your interests and activity across Google services. They may also be based on personalized content from Google services, and the example now says that a search for “mountain bikes” in Search may lead to sports-equipment ads on YouTube."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "- We don’t show you personalized ads based on your content from Drive, Gmail, or Photos.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "- We don’t show you personalized ads based on your content from Drive, Gmail, or Google Photos, unless you choose to make data from these services available to other Google services that support personalized ads.",
+            "side": "added"
+          }
+        ],
+        "text": "The policy no longer states an unqualified rule against personalized ads based on content from Drive, Gmail, or Photos. It now says Google does not show personalized ads based on content from Drive, Gmail, or Google Photos unless you choose to make data from those services available to other Google services that support personalized ads."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "If you choose to allow certain services to process data from other services, including for features such as Personal Intelligence, the same data may be used to personalize your experience.",
+            "side": "added"
+          },
+          {
+            "hunk": "h4",
+            "quote": "if you ask Search a question about a recent hotel booking, Search may use information about booking details from an email to help suggest things to do near your hotel.",
+            "side": "added"
+          }
+        ],
+        "text": "A new explanation says that if you allow certain services to process data from other services, including for features such as Personal Intelligence, that same data may be used to personalize your experience. The example is Search using booking details from an email about a recent hotel stay to suggest things to do near the hotel."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 4,
+      "total_hunks": 4
+    },
+    "generated_at": "2026-10-24T01:22:54Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

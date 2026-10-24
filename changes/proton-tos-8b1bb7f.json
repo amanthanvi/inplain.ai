@@ -39,5 +39,55 @@
   },
   "parent_commit": "5e7667ccf63b223f8fb12ed391c2701484c0f03d",
   "schema_version": 1,
-  "source_url": "https://proton.me/legal/terms"
+  "source_url": "https://proton.me/legal/terms",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "The Company does not make any warranty about the reliability of the Services or the security of user data, despite best efforts.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "The Service is provided “as is” and “as available,” without warranty of any kind, either express or implied, including but not limited to the implied warranties of merchantability, fitness for a particular purpose, title, accuracy, non-infringement",
+            "side": "removed"
+          }
+        ],
+        "text": "In the limited warranties and liability section, Proton removed the statement that it makes no warranty about the reliability of the Services or the security of user data, and that the Service is provided “as is” and “as available” without express or implied warranties, including merchantability, fitness for a particular purpose, title, accuracy, and non-infringement."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "The Company reserves the right, at its sole discretion, to modify, suspend, or discontinue any of our Services, or any feature or component thereof, with or without notice to you.",
+            "side": "added"
+          }
+        ],
+        "text": "The replacement text lets the Company, at its sole discretion, modify, suspend, or discontinue any Service, or any feature or component, with or without notice."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Where practicable, the Company will endeavor to provide reasonable advance notice of a material discontinuation of any of its Services of which you are a user, through the relevant Service's interface, email, or a posting on our website.",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "However, the Company has no obligation to provide such notice, and is not liable to you or any third party for any modification, suspension, or discontinuation of a Service or feature to the extent permissible by applicable law.",
+            "side": "added"
+          }
+        ],
+        "text": "For a material discontinuation of a Service you use, Proton says it will endeavor, where practicable, to give reasonable advance notice through the Service interface, email, or a website posting, but it has no obligation to give that notice and is not liable for modification, suspension, or discontinuation to the extent permissible by applicable law."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 1,
+      "total_hunks": 1
+    },
+    "generated_at": "2026-10-24T01:28:16Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

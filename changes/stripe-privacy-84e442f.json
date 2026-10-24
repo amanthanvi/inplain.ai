@@ -36,5 +36,25 @@
   },
   "parent_commit": "87bdc97e4b32558d14eab0e6e992d99b678c0380",
   "schema_version": 1,
-  "source_url": "https://stripe.com/privacy"
+  "source_url": "https://stripe.com/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "This Privacy Policy will be updated on November 20, 2026. Please review the upcoming changes here.",
+            "side": "added"
+          }
+        ],
+        "text": "Stripe added a notice that this Privacy Policy will be updated on November 20, 2026, and asks readers to review the upcoming changes."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 1,
+      "total_hunks": 1
+    },
+    "generated_at": "2026-10-24T01:30:02Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

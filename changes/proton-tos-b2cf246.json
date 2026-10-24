@@ -39,5 +39,30 @@
   },
   "parent_commit": "8fe200c00453de5c6e8b882c9eadd8e1a7cd76a4",
   "schema_version": 1,
-  "source_url": "https://proton.me/legal/terms"
+  "source_url": "https://proton.me/legal/terms",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "You will receive notices 30, 15 and 7 days in advance before such action is taken on the recovery email associated with your Account.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "As a mere courtesy, the Company will aim to send notice to the recovery email associated with your Account 30, 15 and 7 days in advance before such action is taken.",
+            "side": "added"
+          }
+        ],
+        "text": "Advance notice before Proton may delete an inactive free account, or data such as Mail, Drive, Calendar, and Pass content, is no longer assured. The prior terms said you will receive notices 30, 15 and 7 days in advance on the recovery email; the new terms say that, as a mere courtesy, the Company will only aim to send notice to that email on the same schedule."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 1,
+      "total_hunks": 1
+    },
+    "generated_at": "2026-10-24T01:28:31Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

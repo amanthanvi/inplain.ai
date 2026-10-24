@@ -83,5 +83,75 @@
   },
   "parent_commit": "d0fff6f993cd164b852a9ab03221d6e9b7d81010",
   "schema_version": 1,
-  "source_url": "https://www.airbnb.com/help/article/2908"
+  "source_url": "https://www.airbnb.com/help/article/2908",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "except as expressly authorized by our Offline Fee Policy",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "except as expressly authorized by our policy on pricing and payment transparency",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "except as expressly authorized by our Offline Fee Policy",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "except as expressly authorized by our policy on pricing and payment transparency",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "except as expressly authorized by our policy on pricing and payment transparency",
+            "side": "added"
+          }
+        ],
+        "text": "Hosts still may not collect fees or charges outside the Airbnb Platform unless expressly authorized, but the Terms now point to Airbnb’s “policy on pricing and payment transparency” instead of the “Offline Fee Policy.”"
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "in violation of our Off-Platform Policy",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "in violation of our policy on limiting host-imposed contracts and other requirements",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "in violation of our Off-Platform Policy",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "in violation of our policy on limiting host-imposed contracts and other requirements",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "in violation of our policy on limiting host-imposed contracts and other requirements",
+            "side": "added"
+          }
+        ],
+        "text": "The ban on encouraging Guests to create third-party accounts, submit reviews, provide contact information, or take other actions outside the platform is restated, but it now refers to “our policy on limiting host-imposed contracts and other requirements” rather than the “Off-Platform Policy.”"
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 3
+    },
+    "generated_at": "2026-10-24T01:11:22Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

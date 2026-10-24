@@ -62,5 +62,40 @@
   },
   "parent_commit": "532be5332ac6027b9dc0ed4c6b24bc2732494ed9",
   "schema_version": 1,
-  "source_url": "https://www.mozilla.org/en-US/about/legal/terms/services/"
+  "source_url": "https://www.mozilla.org/en-US/about/legal/terms/services/",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last Updated June 10, 2025",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last Updated September 16, 2026",
+            "side": "added"
+          }
+        ],
+        "text": "The Mozilla Accounts Terms of Service “Last Updated” date moved from June 10, 2025 to September 16, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "Please note that we do not accept information requests from government agencies at the above address. See our Transparency Page for details about how to submit such requests.",
+            "side": "added"
+          }
+        ],
+        "text": "The Communications section now states that Mozilla does not accept information requests from government agencies at the legal-notices contact address, and directs those requests to its Transparency Page."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:23:16Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

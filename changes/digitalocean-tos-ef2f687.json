@@ -39,5 +39,30 @@
   },
   "parent_commit": "8866d060740f43e2acbf5ab2fdaf982ed749d080",
   "schema_version": 1,
-  "source_url": "https://www.digitalocean.com/legal/terms-of-service-agreement"
+  "source_url": "https://www.digitalocean.com/legal/terms-of-service-agreement",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "we may change the prices for the Services at any time by updating our pricing page (www.digitalocean.com/pricing or webpages linked thereto), updating the prices in your DigitalOcean account, or otherwise providing notice under the TOS.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "we may change the prices for the Services at any time by updating the pricing and billing policies (e.g., DigitalOcean Cloud Dashboard (https://cloud.digitalocean.com/) when logged into your DigitalOcean account) or otherwise providing notice under the TOS.",
+            "side": "added"
+          }
+        ],
+        "text": "Section 6.1 changes how DigitalOcean may raise or otherwise change Service prices. It no longer says prices may be changed by updating the public pricing page (www.digitalocean.com/pricing or pages linked to it) or by updating the prices in your DigitalOcean account. It now says prices may be changed by updating the pricing and billing policies—for example, in the Cloud Dashboard when you are logged into your account—or by otherwise giving notice under the TOS. For a reader, the contract no longer points to that public pricing page as a stated method of a price change and instead points to those pricing and billing policies or other TOS notice."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 1,
+      "total_hunks": 1
+    },
+    "generated_at": "2026-10-24T01:20:25Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

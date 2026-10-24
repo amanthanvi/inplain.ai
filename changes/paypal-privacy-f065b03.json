@@ -83,5 +83,65 @@
   },
   "parent_commit": "45c98b78d8cf716f6b527891bfd14cfc6f3e7eb2",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: latamdpo@paypal.com",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: latamdpo@paypal.com",
+            "side": "added"
+          }
+        ],
+        "text": "For Brazil, the privacy contact table now publishes the previously redacted LGPD Data Protection Officer and Deputy DPO email addresses as latamdpo@paypal.com, while the named officers and other Brazil contact details stay the same."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "[email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "skrprivacy@paypal.com",
+            "side": "added"
+          }
+        ],
+        "text": "For South Korea, the domestic agent and Data Protection Office listing now shows a PayPal privacy email, skrprivacy@paypal.com, in place of the redacted address; the representative, address, and telephone number are unchanged."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "email: [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "email: Aginfo@ag.nv.gov",
+            "side": "added"
+          }
+        ],
+        "text": "In the Nevada notice, the Bureau of Consumer Protection contact email is no longer redacted and is given as Aginfo@ag.nv.gov; the rest of the Nevada mailing-address and Do Not Call language is unchanged."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 3
+    },
+    "generated_at": "2026-10-24T01:27:40Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

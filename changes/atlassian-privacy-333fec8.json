@@ -233,5 +233,160 @@
   },
   "parent_commit": "08fdbcd1007de5eb448f9dd867b52ba0b6ddcf73",
   "schema_version": 1,
-  "source_url": "https://www.atlassian.com/legal/privacy-policy"
+  "source_url": "https://www.atlassian.com/legal/privacy-policy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "|   | Legitimate interests (Article 6(1)(f) GDPR) |",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "including machine learning and artificial intelligence model training",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "and Aggregate or de-identify data. | Legitimate interests (Article 6(1)(f) GDPR) |",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Process payments",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Publish testimonials or featured customer stories",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "To conduct marketing and promotional activities (where you have provided consent to receive such marketing or promotions). | Consent (where legally required) (Article 6(1)(a) GDPR) |",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Comply with legal obligations and legal process",
+            "side": "added"
+          }
+        ],
+        "text": "The EEA/UK legal-basis chart previously listed only the GDPR bases, with blank purpose cells. It now assigns purposes to each basis. Legitimate interests covers providing and personalizing the Services, developing and improving them including machine learning and artificial intelligence model training, communications, marketing, support, credential checks, protecting rights, fraud and security controls, and aggregating or de-identifying data. Contractual necessity covers providing and personalizing the Services, developing and improving them, term-change notices and responses to inquiries, credential checks, payment processing, fraud and security controls, and protecting rights. Consent covers developing and improving the Services, publishing testimonials or featured customer stories, and marketing where consent was given. Legal obligation covers service safety and security, fraud prevention, authenticating credentials, and complying with legal obligations and legal process."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "| Identifiers, such as name, email address, unique identifiers associated with user or user account, IP Address |   |   | Third Party Advertising Providers |",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Atlassian Companies Atlassian Partners Service Providers Third-Party Apps | Third Party Advertising Providers |",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "| Geolocation data, such as your approximate location, IP address, time zone |   |   | Third Party Advertising Providers |",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "| Inferences (drawn about you based on other personal information we collect), such as preferences, interests, user behavior data |   |   | Third Party Advertising Providers |",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Content de-identified and aggregated in accordance with applicable data contribution product settings | Develop and improve our Services | Atlassian Companies Service Providers | -NA- |",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Atlassian Companies Atlassian Partners Event Sponsors Service Providers",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Sensitive personal information, such as login credentials and passwords",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Service access controls | Atlassian Companies Service Providers | -NA- |",
+            "side": "added"
+          }
+        ],
+        "text": "The U.S. state privacy table previously left the purpose and business-disclosure columns blank and only named sale or sharing recipients. Those columns are now filled. Identifiers list operating, security, payment, improvement, marketing, debugging, and support purposes, with business disclosures to Atlassian Companies, Atlassian Partners, Service Providers, and Third-Party Apps. Sale or sharing of identifiers, geolocation data, and inferences remains with Third Party Advertising Providers. De-identified and aggregated content is listed for developing and improving the Services and disclosure to Atlassian Companies and Service Providers, marked -NA- for sale or sharing. Internet or network activity and visual or audio information list Event Sponsors among business recipients. Sensitive personal information such as login credentials and passwords is limited to credential verification and service access controls, disclosed to Atlassian Companies and Service Providers, and marked -NA- for sale or sharing."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "eudatarep@atlassian.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "EU Representative: Atlassian B.V. c/o Atlassian US, Inc. 350 Bush Street, Floor 13 San Francisco, CA 94104 E-Mail: eudatarep@atlassian.com",
+            "side": "added"
+          },
+          {
+            "hunk": "h4",
+            "quote": "ukrepresentative@atlassian.com",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "privacy@atlassian.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h7",
+            "quote": "Atlassian Pty Ltd c/o Atlassian US, Inc. 350 Bush Street, Floor 13 San Francisco, CA 94104 E-Mail: privacy@atlassian.com",
+            "side": "added"
+          }
+        ],
+        "text": "EU and UK representative details, and the Atlassian Pty Ltd privacy contact, are collapsed from separate lines into single lines. The named entities, San Francisco and London addresses, and email addresses are the same."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h8",
+            "quote": "Related content",
+            "side": "removed"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Recommended for you",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Former Workplace Privacy Notice",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Careers Privacy Notice",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Demographic Survey Privacy Notice",
+            "side": "added"
+          }
+        ],
+        "text": "The closing label Related content is replaced by Recommended for you, which lists a Former Workplace Privacy Notice, a Careers Privacy Notice, and a Demographic Survey Privacy Notice."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 8,
+      "total_hunks": 8
+    },
+    "generated_at": "2026-10-24T01:14:05Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

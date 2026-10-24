@@ -61,5 +61,45 @@
   },
   "parent_commit": "02f9add15b91fad65c367db4681a8e8402f2eb9a",
   "schema_version": 1,
-  "source_url": "https://policies.google.com/privacy"
+  "source_url": "https://policies.google.com/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Photos and videos you upload to Google Photos are used to help you create albums, collages, and other creations that you can share. Learn more",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Photos and videos you upload to Google Photos are used to help you create albums, collages, and other creations that you can share.",
+            "side": "added"
+          }
+        ],
+        "text": "The Google Photos example still says uploaded photos and videos are used to help you create albums, collages, and other creations you can share, but the sentence no longer ends with “Learn more.”"
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "Google Trends samples Google web searches to estimate the popularity of searches over a certain period of time and shares those results publicly in aggregated terms. Learn more",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Google Trends samples Google web searches to estimate the popularity of searches over a certain period of time and shares those results publicly in aggregated terms.",
+            "side": "added"
+          }
+        ],
+        "text": "The Google Trends passage still says Google samples web searches to estimate popularity over time and shares those results publicly in aggregated terms, without the previous “Learn more” ending."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:23:05Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

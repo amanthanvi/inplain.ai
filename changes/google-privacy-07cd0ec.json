@@ -39,5 +39,30 @@
   },
   "parent_commit": "59cd2ab2bc299d4164c5c86917d75d2ec87fb8dc",
   "schema_version": 1,
-  "source_url": "https://policies.google.com/privacy"
+  "source_url": "https://policies.google.com/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "whether to show you more relevant search results or ads based on your activity across devices.",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "whether to show you more relevant search results or ads based on your activity.",
+            "side": "removed"
+          }
+        ],
+        "text": "For data not tied to a Google Account, the policy now says that when you are not signed in, Google may use activity across devices to show more relevant search results or ads. The prior wording referred only to activity, without mentioning devices."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 1,
+      "total_hunks": 1
+    },
+    "generated_at": "2026-10-24T01:21:51Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

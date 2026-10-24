@@ -63,5 +63,65 @@
   },
   "parent_commit": "a5cc15f7affd4be2d225d6cb6fd90eac2a782320",
   "schema_version": 1,
-  "source_url": "https://stripe.com/legal/ssa"
+  "source_url": "https://stripe.com/legal/ssa",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "requested byStripe",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "requested by Stripe",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Stripe provides no warranty, indemnity, or support for Preview Services.",
+            "side": "added"
+          }
+        ],
+        "text": "The Preview Services clause is substantively the same; the only edit inserts a missing space so the feedback duty reads “requested by Stripe” instead of “requested byStripe.” Readers still must treat preview use as confidential, may be asked for timely feedback, and still get no warranty, indemnity, or support, with aggregate liability capped at the lesser of fees paid in the prior 12 months and USD $1,000."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "ARecipient may disclose Confidential Information",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "A Recipient may disclose Confidential Information if required by Law, subpoena, or court order, or if directed by a Governmental Authority.",
+            "side": "added"
+          }
+        ],
+        "text": "In the required-disclosure paragraph, a missing space is corrected so the sentence starts “A Recipient” rather than “ARecipient.” The disclosure rule itself is unchanged: a recipient may disclose confidential information if required by law, subpoena, or court order, or if directed by a governmental authority, will use reasonable efforts to give advance notice if permitted, and any help contesting disclosure is at the discloser’s sole expense."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "6.3 Exclusions.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "6.4 Exclusions.",
+            "side": "added"
+          }
+        ],
+        "text": "The Exclusions heading is renumbered from 6.3 to 6.4. That is a section-number correction only; this diff does not alter the wording of the required-disclosure rule or supply new exclusion text."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:30:27Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

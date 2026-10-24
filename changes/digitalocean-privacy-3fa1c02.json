@@ -59,5 +59,50 @@
   },
   "parent_commit": "6ce2bb6267d53e5028acadffb65ca66a9de22d1c",
   "schema_version": 1,
-  "source_url": "https://www.digitalocean.com/legal/privacy-policy"
+  "source_url": "https://www.digitalocean.com/legal/privacy-policy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last Updated on January 1, 2025",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last Updated on October 13, 2026",
+            "side": "added"
+          }
+        ],
+        "text": "The privacy policy’s stated last-updated date changed from January 1, 2025 to October 13, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "13. Google User Data.",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "DigitalOcean’s use and transfer of information received from Google APIs will adhere to the Google API Services User Data Policy, available at developers.google.com/terms/api-services-user-data-policy, including the Limited Use requirements.",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Where a DigitalOcean service accesses Google user data, that service’s documentation describes what data it accesses and how it uses, stores, and shares that data.",
+            "side": "added"
+          }
+        ],
+        "text": "A new section 13, “Google User Data,” was added. It states that DigitalOcean’s use and transfer of information received from Google APIs will adhere to the Google API Services User Data Policy, including the Limited Use requirements, and that where a DigitalOcean service accesses Google user data, that service’s documentation describes what data it accesses and how it uses, stores, and shares that data."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:20:02Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

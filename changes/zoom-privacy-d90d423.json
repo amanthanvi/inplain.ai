@@ -62,5 +62,50 @@
   },
   "parent_commit": "73c14b5441b5fa85d0f7e52eb0e51ce6700899b5",
   "schema_version": 1,
-  "source_url": "https://explore.zoom.us/en/privacy/"
+  "source_url": "https://explore.zoom.us/en/privacy/",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last updated: July 27, 2026",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last updated: September 17, 2026",
+            "side": "added"
+          }
+        ],
+        "text": "The privacy statement’s “Last updated” date changed from July 27, 2026 to September 17, 2026, so this version is presented as newer than the July statement."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "Privacy Statement Update Notes (July 27, 2026):",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "- Add statement for 10DLC Compliance that Zoom will not share opt-in or consent data related to messaging campaigns",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Privacy Statement Update Notes (September 17, 2026):",
+            "side": "added"
+          }
+        ],
+        "text": "The bottom update-notes heading was retitled from the July 27, 2026 notes to September 17, 2026. The July notes were removed, including the 10DLC note that Zoom will not share messaging-campaign opt-in or consent data, and the added text is only the new heading, so this diff does not state any new collection, sharing, or rights practices."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:32:46Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

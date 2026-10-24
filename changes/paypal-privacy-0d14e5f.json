@@ -61,5 +61,45 @@
   },
   "parent_commit": "87fa163d78b16c781226f320cd411ad335018545",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "(+82) 02 737 5775, skrprivacy@paypal.com",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "(+82) 02 737 5775, [email protected]",
+            "side": "removed"
+          }
+        ],
+        "text": "In the South Korea contact row, the domestic agent and Data Protection Office email is now listed as skrprivacy@paypal.com, replacing the prior [email protected] address. Readers looking up that Korea privacy contact can use the published PayPal address."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "email: Aginfo@ag.nv.gov",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "email: [email protected]",
+            "side": "removed"
+          }
+        ],
+        "text": "In the Nevada notice, the Bureau of Consumer Protection email is now Aginfo@ag.nv.gov instead of [email protected]. Nevada readers are given a specific Attorney General contact email for more information."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:23:31Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

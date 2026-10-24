@@ -83,5 +83,55 @@
   },
   "parent_commit": "b92bc72d28ca3fd5c0f9de6d1bb8d469dd2445e8",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "In compliance with LGPD article 41, the identity and contact information of the Data Protection Officer (DPO) and of his deputy (Deputy DPO) are the following: Data Protection Officer (DPO): Daniel Douglas Diniz DPO contact e-mail: latamdpo@paypal.com Deputy Data Protection Officer: Fabiana Moreira Chaves Deputy DPO contact e-mail: latamdpo@paypal.com",
+            "side": "added"
+          }
+        ],
+        "text": "The Brazil contact entry now identifies a Data Protection Officer and a deputy under LGPD article 41, both listed at latamdpo@paypal.com: Daniel Douglas Diniz and Fabiana Moreira Chaves."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "[email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "skrprivacy@paypal.com",
+            "side": "added"
+          }
+        ],
+        "text": "For South Korea, the domestic agent and Data Protection Office email in the contact details changed from [email protected] to skrprivacy@paypal.com."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "[email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Aginfo@ag.nv.gov",
+            "side": "added"
+          }
+        ],
+        "text": "In the Nevada notice, the Bureau of Consumer Protection email changed from [email protected] to Aginfo@ag.nv.gov."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 3
+    },
+    "generated_at": "2026-10-24T01:27:28Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

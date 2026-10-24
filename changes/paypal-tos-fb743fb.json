@@ -147,5 +147,85 @@
   },
   "parent_commit": "0d14e5f267c7f56faffd0f8c661e0525f1215205",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/paypal/useragreement-full"
+  "source_url": "https://www.paypal.com/us/legalhub/paypal/useragreement-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last updated on June 29, 2026",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last updated on September 14, 2026",
+            "side": "added"
+          }
+        ],
+        "text": "The user agreement’s “last updated” date changed from June 29, 2026 to September 14, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "These terms include an agreement to resolve disputes by arbitration on an individual basis.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "These terms include an agreement to resolve most disputes by arbitration on an individual basis, a class action waiver, and a jury trial waiver.",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "In arbitration, there is less discovery and appellate review than in court.",
+            "side": "added"
+          }
+        ],
+        "text": "The opening terms now say users agree to resolve most disputes by individual arbitration and also accept a class action waiver and a jury trial waiver, and they warn that arbitration has less discovery and appellate review than court. The prior text only referred to resolving disputes by arbitration on an individual basis."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "You also agree to comply with each of the other terms or agreements on the Legal Agreements page that apply to you",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "You also acknowledge and agree to comply with each of the other terms or agreements on the Legal Agreements page that apply to you",
+            "side": "added"
+          }
+        ],
+        "text": "Users must now “acknowledge and agree” to comply with the other applicable terms on the Legal Agreements page, rather than only agreeing to comply."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "Business accounts may use the Send Money feature to send payments for goods or services to recipients with or without PayPal accounts. Different terms, conditions, and fees apply depending on whether the recipient has a PayPal account.",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "the recipient will pay the fees applicable to commercial transactions.",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "the payment will be processed as a Bill Pay for Business Accounts transaction. In that case, you will pay the applicable Bill Pay for Business Accounts fees.",
+            "side": "added"
+          }
+        ],
+        "text": "New language lets business accounts use Send Money to pay for goods or services to recipients with or without PayPal accounts, with different terms and fees. If the recipient has a PayPal account, the recipient pays commercial-transaction fees; if not, the payment is treated as Bill Pay for Business Accounts and the sender pays those fees."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 5
+    },
+    "generated_at": "2026-10-24T01:27:53Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

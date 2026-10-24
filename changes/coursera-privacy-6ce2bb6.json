@@ -203,5 +203,125 @@
   },
   "parent_commit": "08d5ecfcb072e116310542424a289eb97c65b7b1",
   "schema_version": 1,
-  "source_url": "https://www.coursera.org/about/privacy"
+  "source_url": "https://www.coursera.org/about/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last updated: September 3, 2026.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last updated: October 12, 2026.",
+            "side": "added"
+          }
+        ],
+        "text": "The notice’s stated update date changed from September 3, 2026 to October 12, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "It also applies to business contacts of Coursera, such as existing and prospective Customers, Content Providers, Partners, and Instructors.",
+            "side": "added"
+          }
+        ],
+        "text": "The privacy notice now also applies to Coursera’s business contacts, including existing and prospective Customers, Content Providers, Partners, and Instructors, not only to people whose data is processed through the Site, products, and Services."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "Business Contact Data: such as your name, job title, company name, business email address, business phone number, and other professional contact information, for example, when you request a demo, complete a contact form, attend an event, or communicate with our sales team in connection with our business and enterprise products.",
+            "side": "added"
+          }
+        ],
+        "text": "Coursera added a Business Contact Data category it may collect directly, covering name, job title, company, business email, business phone, and other professional contact details, for example when someone requests a demo, completes a contact form, attends an event, or contacts sales about business and enterprise products."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "We may also collect Business Contact Data about you from third-party commercial sources, your employer or organization, or from publicly available sources.",
+            "side": "added"
+          }
+        ],
+        "text": "Business Contact Data may also be collected from third-party commercial sources, an employer or organization, or publicly available sources."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h5",
+            "quote": "For our legitimate interests to run, grow and develop our business",
+            "side": "removed"
+          },
+          {
+            "hunk": "h5",
+            "quote": "For our legitimate interests to run, grow and develop our business; or with your consent, where required by applicable law",
+            "side": "added"
+          }
+        ],
+        "text": "For recording and analyzing how learners use the Site and Services to improve products, the legal basis is no longer limited to legitimate interests; Coursera now also cites consent where applicable law requires it."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "and to market the products and services of Coursera",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "affiliates (including Udemy, Inc.) to you.",
+            "side": "added"
+          }
+        ],
+        "text": "The consent-based marketing and advertising purpose now includes marketing products and services of Coursera affiliates, specifically including Udemy, Inc."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h7",
+            "quote": "To market our business and enterprise products and services, and those of Coursera",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "affiliates (including Udemy, Inc.), to existing and prospective Customers, Content Providers, Partners, and Instructors.",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "For our legitimate interests to run, grow and develop our business; or with your consent, where required by applicable law",
+            "side": "added"
+          }
+        ],
+        "text": "A new purpose allows use of Business Contact Data and Identity and Contact Data to market Coursera’s business and enterprise products, and those of affiliates including Udemy, Inc., to existing and prospective Customers, Content Providers, Partners, and Instructors, based on legitimate interests or consent where the law requires consent."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h8",
+            "quote": "If you wish to opt-out of marketing communications, you may do so by using the unsubscribe mechanism in any marketing communication you receive, or by contacting us at privacy@coursera.org.",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "If you register for an account on the Site, you can also change your email preferences in your account.",
+            "side": "added"
+          }
+        ],
+        "text": "The rights section now tells readers they can opt out of marketing by using the unsubscribe mechanism in a marketing message or by emailing privacy@coursera.org, and account holders can also change email preferences in their account."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 8,
+      "total_hunks": 8
+    },
+    "generated_at": "2026-10-24T01:19:38Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

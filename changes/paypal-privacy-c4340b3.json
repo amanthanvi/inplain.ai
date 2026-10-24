@@ -105,5 +105,100 @@
   },
   "parent_commit": "d8bc165de17bd1748f9dafd82a44ff8ee128bf1b",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: latamdpo@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: latamdpo@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: [email protected]",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: [email protected]",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Contact Online for Privacy queries",
+            "side": "added"
+          }
+        ],
+        "text": "In the Brazil contact row, the LGPD Data Protection Officer and Deputy DPO emails that were listed as latamdpo@paypal.com now appear as [email protected], so those addresses are no longer readable; the row still directs readers to Contact Online for Privacy queries."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "skrprivacy@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "[email protected]",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "(+82) 02 737 5775",
+            "side": "added"
+          }
+        ],
+        "text": "For South Korea, the domestic-agent privacy email skrprivacy@paypal.com is now shown as [email protected]. The same contact line still gives the telephone (+82) 02 737 5775."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "email: Aginfo@ag.nv.gov.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "email: [email protected].",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "telephone number: 1-702-486-3132",
+            "side": "added"
+          }
+        ],
+        "text": "In the Nevada notice, the Bureau of Consumer Protection email Aginfo@ag.nv.gov is now written as [email protected]. The notice still lists telephone number: 1-702-486-3132."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "Wycliffe House, Water Lane, Wilmslow, Cheshire, SK9 5AF.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "ICO Head Office, 4th Floor, No.3 Circle Square, 5 Hawkshaw Street, Manchester, M1 7BL.",
+            "side": "added"
+          }
+        ],
+        "text": "UK readers who want to complain to the Information Commissioner’s Office are given a new postal address in Manchester (ICO Head Office, 4th Floor, No.3 Circle Square, 5 Hawkshaw Street, Manchester, M1 7BL) instead of the former Wilmslow address (Wycliffe House, Water Lane, Wilmslow, Cheshire, SK9 5AF)."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 4,
+      "total_hunks": 4
+    },
+    "generated_at": "2026-10-24T01:26:51Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

@@ -62,5 +62,60 @@
   },
   "parent_commit": "fb743fbfb19e417c07cba7ef36298921b2f5c109",
   "schema_version": 1,
-  "source_url": "https://www.salesforce.com/company/privacy/"
+  "source_url": "https://www.salesforce.com/company/privacy/",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "as listed in the Privacy Statement",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "by our affiliates and third parties (as disclosed in the full Privacy Statement).",
+            "side": "added"
+          }
+        ],
+        "text": "The international-transfer notice drops the extra phrase that third parties are “as listed in the Privacy Statement,” after already saying they are disclosed in the full Privacy Statement. The rest of that notice is unchanged: data may still be stored in the United States and elsewhere with weaker protection, with safeguards such as standard contractual clauses and Salesforce’s Data Privacy Framework commitments."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "you can contact our U.S.-based third party dispute resolution provider (free of charge) at https://feedback-form.truste.com/watchdog/request.",
+            "side": "removed"
+          }
+        ],
+        "text": "People with an unresolved privacy concern are no longer told they can contact a free U.S.-based third-party dispute resolution provider at the Truste watchdog form."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "We are committed to working with you to obtain a fair resolution of any complaint or concern about privacy.",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "you are located in the European Economic Area or the United Kingdom, you have the right to lodge a complaint with the competent supervisory authority.",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "you are located in the EEA or the UK, you have the right to lodge a complaint with the competent supervisory authority.",
+            "side": "removed"
+          }
+        ],
+        "text": "Instead, the policy says Salesforce will work with you toward a fair resolution of a privacy complaint, and it spells out that people in the European Economic Area or the United Kingdom may still lodge a complaint with the competent supervisory authority (previously abbreviated as the EEA or the UK)."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:28:48Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

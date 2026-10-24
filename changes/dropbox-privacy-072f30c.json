@@ -36,5 +36,25 @@
   },
   "parent_commit": "ef2f6871a5ec06cd75a261f276e317b7428edd47",
   "schema_version": 1,
-  "source_url": "https://www.dropbox.com/privacy"
+  "source_url": "https://www.dropbox.com/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Dropbox’s Privacy Policy will be changing effective January 1, 2027. Click here to review.",
+            "side": "added"
+          }
+        ],
+        "text": "Dropbox added a notice that its Privacy Policy will change effective January 1, 2027, and points readers to a link to review that upcoming change."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 1,
+      "total_hunks": 1
+    },
+    "generated_at": "2026-10-24T01:20:31Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

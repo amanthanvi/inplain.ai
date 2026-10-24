@@ -172,5 +172,120 @@
   },
   "parent_commit": "f490b54566ef102a8670db1291d6b80cef15eef3",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last updated on July 6, 2026",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last updated on September 28, 2026",
+            "side": "added"
+          },
+          {
+            "hunk": "h5",
+            "quote": "Rev. November 17, 2025",
+            "side": "removed"
+          },
+          {
+            "hunk": "h5",
+            "quote": "Rev. September 28, 2026",
+            "side": "added"
+          }
+        ],
+        "text": "The Privacy Statement’s “last updated” date moved from July 6, 2026 to September 28, 2026, and the U.S. financial-products notice revision date moved from November 17, 2025 to September 28, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "when you receive a payment through the Visa+ service from a PayPal account holder",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "when you receive a payment from a PayPal account holder (through the Visa+ service or other third party wallets, payment networks, and processors)",
+            "side": "added"
+          }
+        ],
+        "text": "PayPal still collects personal information from people who use Services without an account, but it now says that includes receiving a payment from a PayPal account holder through Visa+ or other third-party wallets, payment networks, and processors, not only through Visa+."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "For our affiliates' everyday business purposes – information about your creditworthiness | Yes | Yes",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "For our affiliates' everyday business purposes – information about your creditworthiness | No | We don't share",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "For our affiliates to market to you | Yes | Yes",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "For our affiliates to market to you | No | We don't share",
+            "side": "added"
+          }
+        ],
+        "text": "In the U.S. financial notice, PayPal changed affiliate sharing of creditworthiness information and affiliate marketing from “Yes” (with a limit option) to “No” and “We don't share.” Sharing with nonaffiliates for marketing is unchanged in this diff."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "Avenida General Mariano Escobedo 476, 14th Floor, Colonia Nueva Anzures, Miguel Hidalgo, Mexico City, Mexico 11590",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "Boulevard Manuel Ávila Camacho 137, Piso 7, Polanco I Sección, Alcaldía Miguel Hidalgo, C.P. 11550, Ciudad de México, México",
+            "side": "added"
+          }
+        ],
+        "text": "The Mexico contact entry for Operadora PayPal de México replaces the Escobedo/Mexico City 11590 address with Boulevard Manuel Ávila Camacho 137, Piso 7, Polanco I Sección, C.P. 11550, Ciudad de México."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "[email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "skrprivacy@paypal.com",
+            "side": "added"
+          },
+          {
+            "hunk": "h7",
+            "quote": "[email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h7",
+            "quote": "Aginfo@ag.nv.gov",
+            "side": "added"
+          }
+        ],
+        "text": "Published contact emails replace redacted placeholders: South Korea’s domestic agent/Data Protection Office email is now skrprivacy@paypal.com, and the Nevada Attorney General email in the financial notice is now Aginfo@ag.nv.gov."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 7,
+      "total_hunks": 7
+    },
+    "generated_at": "2026-10-24T01:23:50Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

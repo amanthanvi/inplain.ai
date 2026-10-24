@@ -61,5 +61,55 @@
   },
   "parent_commit": "ea8a636abbc7abce94bac24ba144e2ffdb9cf31f",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "skrprivacy@paypal.com",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "[email protected]",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "the contact details of the domestic agent and Data Protection Office are as follows",
+            "side": "added"
+          }
+        ],
+        "text": "In the South Korea contact row, the domestic agent and Data Protection Office email is no longer shown as skrprivacy@paypal.com; this version prints [email protected] instead, so readers cannot take a usable address from that row."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "Aginfo@ag.nv.gov",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "[email protected]",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Bureau of Consumer Protection, Office of the Nevada Attorney General",
+            "side": "added"
+          }
+        ],
+        "text": "In the Nevada mailing-address notice, the Bureau of Consumer Protection email changed from Aginfo@ag.nv.gov to [email protected], so the published contact is no longer a readable email address."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:25:51Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

@@ -83,5 +83,70 @@
   },
   "parent_commit": "bd91c4f4380a19796452bef0747a85106dcde5a1",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: latamdpo@paypal.com",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: latamdpo@paypal.com",
+            "side": "added"
+          }
+        ],
+        "text": "In the Brazil contact row, the LGPD Data Protection Officer and Deputy DPO emails changed from “[email protected]” to latamdpo@paypal.com, so readers can see a direct PayPal address for both roles."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "(+82) 02 737 5775, [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "(+82) 02 737 5775, skrprivacy@paypal.com",
+            "side": "added"
+          }
+        ],
+        "text": "In the South Korea contact row, the domestic agent and Data Protection Office email changed from “[email protected]” to skrprivacy@paypal.com."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "email: [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "email: Aginfo@ag.nv.gov",
+            "side": "added"
+          }
+        ],
+        "text": "In the Nevada notice, the Bureau of Consumer Protection email changed from “[email protected]” to Aginfo@ag.nv.gov, so the published agency contact is now a specific address."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 3
+    },
+    "generated_at": "2026-10-24T01:25:21Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

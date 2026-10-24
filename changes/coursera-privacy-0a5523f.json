@@ -150,5 +150,105 @@
   },
   "parent_commit": "ffb71ff30fc54a6c293596c32ca7593c653ac02a",
   "schema_version": 1,
-  "source_url": "https://www.coursera.org/about/privacy"
+  "source_url": "https://www.coursera.org/about/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Last updated: October 12, 2026.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Last updated: October 14, 2026.",
+            "side": "added"
+          }
+        ],
+        "text": "The notice’s “last updated” date moved from October 12, 2026 to October 14, 2026, marking a two-day revision of the same privacy notice."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "- Communications with Coursera. we may receive and record Personal Data when you send us an email message or otherwise contact us, including through the use of an in-platform messaging/chat feature.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "- Communications with Coursera: we may receive and record Personal Data when you send us an email message or otherwise contact us, including through the use of an in-platform messaging/chat feature.",
+            "side": "added"
+          }
+        ],
+        "text": "In the list of data collected directly from you, the communications item is unchanged in what Coursera may record (email and in-platform messaging/chat). Only the label punctuation changed, from a period to a colon."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "- Business contact data: We may also collect Business Contact Data about you from third-party commercial sources, your employer or organization, or from publicly available sources.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "- Business Contact Data: We may also collect Business Contact Data about you from third-party commercial sources, your employer or organization, or from publicly available sources.",
+            "side": "added"
+          }
+        ],
+        "text": "The third-party collection heading “Business contact data” was recapitalized to “Business Contact Data.” The stated sources—third-party commercial sources, an employer or organization, and publicly available sources—are unchanged."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h4",
+            "quote": "and the categories of Personal Data we process",
+            "side": "removed"
+          },
+          {
+            "hunk": "h4",
+            "quote": "and the categories of Personal Data we process.",
+            "side": "added"
+          }
+        ],
+        "text": "The introduction to the legal-bases section gained a closing period. It still says Coursera sets out each legal basis it relies on, including the EU and UK GDPR, why and how it uses data, and the categories of Personal Data it processes."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h5",
+            "quote": "and to market the products and services of Coursera’s affiliates (including Udemy, Inc.) to you. | With your consent |",
+            "side": "removed"
+          },
+          {
+            "hunk": "h5",
+            "quote": "and to market the products and Services of Coursera’s affiliates (including Udemy, Inc.) to you. | With your consent |",
+            "side": "added"
+          }
+        ],
+        "text": "In the consent-based marketing and advertising row, “services” was capitalized to “Services” when describing marketing of Coursera affiliates’ products, including Udemy, Inc. The listed data categories and the “With your consent” basis are otherwise the same."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "To market our business and enterprise products and services, and those of Coursera's affiliates (including Udemy, Inc.), to existing and prospective Customers, Content Providers, Partners, and Instructors.",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "To market our business and enterprise products and Services, and those of Coursera's affiliates (including Udemy, Inc.), to existing and prospective Customers, Content Providers, Partners, and Instructors.",
+            "side": "added"
+          }
+        ],
+        "text": "The business-contact marketing row likewise capitalizes “Services” in “products and Services.” It still covers marketing Coursera’s and its affiliates’ (including Udemy, Inc.) business and enterprise offerings to existing and prospective Customers, Content Providers, Partners, and Instructors, on legitimate interests or consent where required."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 6,
+      "total_hunks": 6
+    },
+    "generated_at": "2026-10-24T01:18:44Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

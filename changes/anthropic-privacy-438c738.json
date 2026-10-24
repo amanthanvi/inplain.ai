@@ -83,5 +83,135 @@
   },
   "parent_commit": "c8e9a8c37acbe91ecb204ec59b6f1fd72bda23e3",
   "schema_version": 1,
-  "source_url": "https://www.anthropic.com/privacy"
+  "source_url": "https://www.anthropic.com/privacy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "This section applies to the extent that Anthropic is subject to the Personal Information Protection Act (“PIPA”), and supplements the information in the Privacy Policy.",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "In case of any inconsistency between the Privacy Policy and this Addendum, this Addendum prevails for users in the Republic of Korea.",
+            "side": "added"
+          }
+        ],
+        "text": "Anthropic added a Republic of Korea addendum that applies where it is subject to the Personal Information Protection Act (PIPA) and, if it conflicts with the main Privacy Policy, prevails for users in Korea."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "- Purpose: Identity verification, Fraud and abuse monitoring",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "- Items of Data: Name, birthdate, sex, native-foreigner-code, and DI (duplication information)",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "- Period of retention and use: Until account deletion",
+            "side": "added"
+          }
+        ],
+        "text": "For those users, Anthropic now states it collects name, birthdate, sex, native-foreigner-code, and DI (duplication information) for identity verification and fraud and abuse monitoring, and retains that data until account deletion."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "- Korea Credit Bureau: Fraud and abuse detection and identity verification",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "- Kim & Chang: Assisting with the domestic representative related duties",
+            "side": "added"
+          }
+        ],
+        "text": "Anthropic says it delegates personal-data processing to Korea Credit Bureau for fraud and abuse detection and identity verification, and to Kim & Chang for domestic-representative duties."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "- Recipient’s Name (Contact Information): Persona (privacy@withpersona.com)",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "- Country to which Personal Data to be Transferred: United States",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "- Period of Retention and Use by Recipient: 3 years",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "- Legal Basis for Overseas Transfer: PIPA Article 28-8(1)(iii) delegation",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "you may request this by email us at privacy@anthropic.com and contact our Data Protection Officer at dpo@anthropic.com",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Anthropic may not be able to provide you with all or any of the services we make available through our website.",
+            "side": "added"
+          }
+        ],
+        "text": "The same identity fields are transferred overseas to Persona in the United States for fraud and abuse detection and identity verification, kept by that recipient for 3 years, under PIPA Article 28-8(1)(iii) delegation. Readers may ask that the data not be transferred overseas by emailing privacy@anthropic.com and dpo@anthropic.com, but Anthropic warns it may then be unable to provide some or all website services."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "Telephone: [+82-2-6252-2080]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Email: [anthropicprivacy@bkl.co.kr]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "| Trustees and Contacts | Bae, Kim & Lee LLC (02-3404-0001) | ",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "| Entrusted Data | Name, ID, phone number, email, address, and other information that you may provide to the domestic representative | ",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Telephone: +82 2 734 0940",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "Email: anthropic_privacy@kimchang.com",
+            "side": "added"
+          }
+        ],
+        "text": "The domestic representative’s published telephone and email were replaced, and the prior Bae, Kim & Lee data-processor table—covering name, ID, phone, email, address, and other information provided to the representative—was removed."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 2,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:11:56Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

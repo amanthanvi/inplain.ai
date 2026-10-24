@@ -606,5 +606,170 @@
   },
   "parent_commit": "8e7b1a32bdca5929c5cbd2484baad352cd5dc79e",
   "schema_version": 1,
-  "source_url": "https://www.ebay.com/help/policies/member-behavior-policies/user-privacy-notice-privacy-policy?id=4260"
+  "source_url": "https://www.ebay.com/help/policies/member-behavior-policies/user-privacy-notice-privacy-policy?id=4260",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "This User Privacy Notice applies to your use of this website and all eBay applications, services (including payment services), products and tools",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "The eBay Affiliate responsible for your personal data depends on where you reside and how you use the Services.",
+            "side": "added"
+          }
+        ],
+        "text": "The added notice says it covers the website and all eBay applications, services (including payment services), products and tools, including when reached through a link on partner sites, and that the responsible eBay Affiliate depends on where the user lives and how they use the Services."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "We may change this User Privacy Notice at any time by posting the revised User Privacy Notice on this website and indicating its effective date.",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Previous User Privacy Notice (effective April 21, 2025 to November 25, 2026)",
+            "side": "added"
+          }
+        ],
+        "text": "Readers are told the notice can be changed at any time simply by posting a revised version and stating its effective date. The added text also points to a previous notice effective April 21, 2025 to November 25, 2026."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "government-issued ID (e.g. social security number), date of birth, tax identification numbers (such as VAT identification number), business registration numbers, identification documents and information contained on IDs, selfie photos, and other information (such as bank account number)",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "With regard to our payment services for sellers: data from government or other sources concerning any previous convictions of the respective seller.",
+            "side": "added"
+          }
+        ],
+        "text": "Sellers are told eBay may collect government ID details, date of birth, tax and business registration numbers, ID images, selfie photos and bank account numbers, and, for payment services, data from government or other sources about previous convictions."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Livestreams may be recorded and made available for replay, which may include comments or other content you choose to share during the livestream. Some information you provide in these features may be visible to other users or the public, depending on the feature and your settings.",
+            "side": "added"
+          }
+        ],
+        "text": "For eBay Live and similar features, the added notice says eBay may collect usernames, comments, reactions, messages, images, participation and device metadata, record livestreams for replay, and make some of that content visible to other users or the public depending on settings."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "with your permission, the precise location data from your mobile device",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "The user segment or category into which you as a user fall, for example: female, 20-49 years old, interested in sneakers.",
+            "side": "added"
+          }
+        ],
+        "text": "Precise mobile location is described as collected with permission and usable for location-based services, fraud prevention and, where law allows, advertising or measurement. Cookie data may also place users in segments such as “female, 20-49 years old, interested in sneakers.”"
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "For users outside the European Economic Area (EEA), Switzerland and the United Kingdom: Advertising and content personalization, measurement and analytics, on and off our sites",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "For users within the European Economic Area (EEA), Switzerland and the United Kingdom: Advertising and content personalization, measurement and analytics, on and off our sites",
+            "side": "added"
+          }
+        ],
+        "text": "Advertising and content personalization is split by region: for users outside the EEA, Switzerland and the UK it is listed under legitimate interests, while for users in those places it is listed as consent-based processing."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Provision of identity verification options involving processing of your biometric data to identify you or verify your age",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "For users within the European Economic Area (EEA): Storing your financial information (e.g. credit card and account numbers) for future transactions.",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "including in cases of terminated, failed or subsequently voided transactions, e.g. by sharing your return address so a buyer may return an item",
+            "side": "added"
+          }
+        ],
+        "text": "With consent, the added notice covers biometric identity or age checks, and, for EEA users, storing credit card and account numbers for future transactions. It also says personal data may be shared with other users when needed to complete a transaction, including a return address after a failed or voided sale."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "All messages sent via our messaging tools (including chat messages and emails sent to eBay alias email addresses) are first received by us and then forwarded to the recipient.",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "we may limit the level of detail we provide about our detection, moderation, and enforcement systems, including where disclosure could enable circumvention",
+            "side": "added"
+          }
+        ],
+        "text": "Messages sent through eBay tools are received by eBay before forwarding, and automated systems may filter, assess and escalate chats, emails, listings, images, videos and livestream content. eBay also says it may withhold detail about detection and enforcement systems where disclosure could enable circumvention."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "in some cases we may also use certain user personal data, such as information about your use of our Services, including the items you list, sell, view, or buy",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "where our AI training does involve personal data as defined under applicable law, including in the European Economic Area (EEA), Switzerland, and the United Kingdom, the legal basis of our legitimate interest is set out in section 3.4.",
+            "side": "added"
+          }
+        ],
+        "text": "A new AI section says generative-model training relies mainly on public data but may also use user activity such as items listed, sold, viewed or bought. Where that is personal data in the EEA, Switzerland or the UK, the stated basis is legitimate interest, and certain users are pointed to a right to object."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "Please note that it is not possible to erase data from the blockchain.",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "In Europe, the retention periods are generally between 6 and 10 years (e.g. for contracts, notifications and business letters).",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Our services are not intended for use by children. We do not knowingly collect personal data from users who are considered children under applicable laws.",
+            "side": "added"
+          }
+        ],
+        "text": "Erasure is limited: the notice says blockchain data cannot be erased, and that in Europe retention is generally 6 to 10 years. It also says the services are not for children and that children are not permitted to use them."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 1,
+      "total_hunks": 2
+    },
+    "generated_at": "2026-10-24T01:21:26Z",
+    "model": "x-ai/grok-4.7"
+  }
 }
