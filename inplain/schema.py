@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -109,18 +109,6 @@ class Hunk:
     context_after: list[str]
     word_spans: None = None  # reserved (G1); always null in v1
 
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
-            "old_start": self.old_start,
-            "new_start": self.new_start,
-            "context_before": list(self.context_before),
-            "removed": list(self.removed),
-            "added": list(self.added),
-            "context_after": list(self.context_after),
-            "word_spans": self.word_spans,
-        }
-
 
 @dataclass(frozen=True)
 class Materiality:
@@ -130,20 +118,6 @@ class Materiality:
     removed_chars: int
     similarity_badge: float  # display only, never a gate
     effective_date_change: dict[str, str | None] | None = None  # {"from", "to"}, one side may be null
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "material": self.material,
-            "reason": self.reason,
-            "added_chars": self.added_chars,
-            "removed_chars": self.removed_chars,
-            "similarity_badge": self.similarity_badge,
-            "effective_date_change": (
-                dict(self.effective_date_change)
-                if self.effective_date_change is not None
-                else None
-            ),
-        }
 
 
 @dataclass(frozen=True)
@@ -164,19 +138,9 @@ class ChangeRecord:
         return record_id(self.company, self.doc, self.commit)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "schema_version": self.schema_version,
-            "id": self.id,
-            "company": self.company,
-            "company_name": self.company_name,
-            "doc": self.doc,
-            "source_url": self.source_url,
-            "commit": self.commit,
-            "parent_commit": self.parent_commit,
-            "detected_at": self.detected_at,
-            "materiality": self.materiality.to_dict(),
-            "hunks": [hunk.to_dict() for hunk in self.hunks],
-        }
+        # asdict copies every nested list and dict; ``id`` is a property, not
+        # a field. Key order is irrelevant: dumps_record sorts keys.
+        return {**asdict(self), "id": self.id}
 
 
 # --------------------------------------------------------------------------
