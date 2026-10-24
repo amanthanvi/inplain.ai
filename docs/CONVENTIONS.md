@@ -12,6 +12,7 @@ inplain/                     # ONE Python package, stdlib-leaning
   crawl.py                   # T1: catalog → fetch → extract → write documents/
   net.py                     # T1: SSRF-safe, IP-pinned, size-capped transport
   robots.py                  # T1: protego robots.txt, per origin, fail-closed
+  git.py                     # the git datastore + the Snapshot commit message
   detect.py                  # T2: git diff → change records
   summarize.py               # T3: cited summaries + side-aware validation
   site.py                    # T4: static site generator → _site/

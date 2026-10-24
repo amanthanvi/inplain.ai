@@ -35,7 +35,6 @@ import argparse
 import hashlib
 import json
 import logging
-import subprocess
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -47,6 +46,7 @@ from urllib.parse import urljoin
 import trafilatura
 
 from . import REPO_ROOT, schema, setup_cli_logging
+from .git import Git, GitError, commit_message
 from .net import (
     DEFAULT_TIMEOUT,
     MAX_BYTES,
@@ -292,63 +292,6 @@ class CrawlState:
         text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
         self.path.write_text(text, encoding="utf-8", newline="\n")
         self.dirty = False
-
-
-# --------------------------------------------------------------------------
-# git
-
-
-class GitError(RuntimeError):
-    pass
-
-
-class Git:
-    """The datastore. Thin, on purpose: add, commit one path, read HEAD."""
-
-    def __init__(self, root: Path) -> None:
-        self.root = Path(root)
-
-    def _run(self, *args: str) -> str:
-        result = subprocess.run(
-            ["git", "-C", str(self.root), *args],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-        if result.returncode != 0:
-            raise GitError(
-                f"git {' '.join(args)} failed ({result.returncode}): "
-                f"{result.stderr.strip() or result.stdout.strip()}"
-            )
-        return result.stdout
-
-    def head(self) -> str:
-        return self._run("rev-parse", "HEAD").strip()
-
-    def has_changes(self, relpath: str) -> bool:
-        """True when the working tree copy differs from what is committed."""
-        return bool(self._run("status", "--porcelain", "--", relpath).strip())
-
-    def commit_path(self, relpath: str, message: str) -> str:
-        """Stage and commit exactly one path, and nothing else.
-
-        The pathspec on ``commit`` is what keeps a document commit to a single
-        document, so T2 can map a commit to the document it snapshots.
-        """
-        self._run("add", "--", relpath)
-        self._run("commit", "--no-verify", "-m", message, "--", relpath)
-        return self.head()
-
-
-def commit_message(document: Document) -> str:
-    return (
-        f"crawl: {document.company}/{document.doc}\n"
-        "\n"
-        f"company: {document.company_name} ({document.company})\n"
-        f"doc: {document.doc}\n"
-        f"url: {document.url}\n"
-    )
 
 
 # --------------------------------------------------------------------------
