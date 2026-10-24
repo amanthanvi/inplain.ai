@@ -25,6 +25,9 @@ production sends it). The four clean finalists from September were measured:
 passes 1 and 2 on all four, and pass 3 on the three still clean after two
 passes. 187 calls, no call failures, every call served by the pinned
 provider. Raw results: `eval/results/openrouter-production-prompt-2026-10/`.
+The calls ran before #84 added the whole-word quote rule to the gate. All 187
+stored replies were then re-scored with the stricter gate, and every score
+is identical.
 
 | Model | Runs | Validity (valid/total citations) | Parse fails | Coverage (of all / of shown Hunks) | Mean latency (median, max) | Cost measured | $/yr at 300 summaries |
 |---|---|---|---|---|---|---|---|
