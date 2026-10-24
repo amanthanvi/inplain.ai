@@ -678,7 +678,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--root", type=Path, default=None, help="repository root")
     parser.add_argument("--catalog", type=Path, default=None, help="catalog.json")
-    parser.add_argument("--documents", type=Path, default=None, help="documents/ dir")
     parser.add_argument(
         "--only",
         action="append",
@@ -714,7 +713,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     crawler = Crawler(
         root,
         catalog_path=args.catalog,
-        documents_dir=args.documents,
         commit=not args.no_commit,
         politeness=Politeness(delay=args.delay),
         timeout=args.timeout,

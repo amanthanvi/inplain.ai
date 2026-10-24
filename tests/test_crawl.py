@@ -768,3 +768,10 @@ def test_cli_flags():
     assert default.no_commit is False
     assert default.only is None
     assert default.delay > 0
+
+
+def test_there_is_no_documents_flag():
+    """documents/ outside the repository would store validators for Snapshots
+    git never held; the crawl always writes the repository's documents/."""
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["--documents", "elsewhere"])
