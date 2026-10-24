@@ -9,7 +9,7 @@ runnable standalone as ``python -m inplain.feeds``.
 Load-bearing decisions:
 
 * **The publish filter is shared.** Entries come from
-  :func:`inplain.site.load_published_records` — the exact list the site
+  :func:`inplain.schema.published` — the exact list the site
   publishes, so the feeds and the pages can never disagree about what is
   public. Suppressed records never appear.
 * **Entry ids are permanent.** Each entry's ``atom:id`` is a tag URI
@@ -47,9 +47,9 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from . import REPO_ROOT, setup_cli_logging
+from . import REPO_ROOT, schema, setup_cli_logging
 from .schema import SchemaError, load_catalog
-from .site import SITE_URL, doc_title, load_published_records
+from .site import SITE_URL, doc_title
 
 log = logging.getLogger("inplain.feeds")
 
@@ -159,7 +159,7 @@ def _feed_document(
     subtitle: str | None = None,
 ) -> bytes:
     """One complete Atom document. ``records`` must be newest-first
-    (:func:`load_published_records` order); the feed's ``updated`` is the
+    (:func:`inplain.schema.published` order); the feed's ``updated`` is the
     newest entry's ``detected_at`` — never the wall clock."""
     feed = ET.Element(f"{{{ATOM_NS}}}feed")
     _el(feed, "id", feed_tag_id(tag_name))
@@ -262,7 +262,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     root = args.root or REPO_ROOT
     try:
         catalog = load_catalog(args.catalog or root / "catalog.json")
-        published = load_published_records(args.changes or root / "changes")
+        records = schema.load_records(args.changes or root / "changes")
+        published = schema.published(records)
         written = write_feeds(
             records=published,
             companies=feed_companies(catalog, published),

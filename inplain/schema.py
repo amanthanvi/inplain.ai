@@ -404,6 +404,48 @@ def load_record(path: Path) -> dict[str, Any]:
 
 
 # --------------------------------------------------------------------------
+# the record store — read once by the site and the feeds
+
+
+def load_records(changes_dir: Path) -> list[dict[str, Any]]:
+    """Every record in ``changes_dir``, each validated against the normative
+    schema. Raises :class:`SchemaError` on the first invalid record — a build
+    is all-or-nothing. A missing directory is an empty archive, not an error.
+    """
+    changes_dir = Path(changes_dir)
+    if not changes_dir.is_dir():
+        return []
+    records: list[dict[str, Any]] = []
+    for path in sorted(changes_dir.glob("*.json")):
+        try:
+            record = load_record(path)
+        except SchemaError as exc:
+            raise SchemaError(f"{path.name}: {exc}") from exc
+        except (OSError, ValueError) as exc:
+            raise SchemaError(f"{path.name}: unreadable change record: {exc}") from exc
+        if record["id"] != path.stem:
+            raise SchemaError(
+                f"{path.name}: filename does not match record id {record['id']!r}"
+            )
+        records.append(record)
+    return records
+
+
+def published(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The publishable records, newest first: ``material: true`` only.
+    Suppressed records never leave this function — the site (T4) and the
+    feeds (T5) both publish exactly this list and nothing else.
+
+    Order: ``detected_at`` descending, then id ascending — deterministic for
+    byte-identical rebuilds.
+    """
+    out = [r for r in records if r["materiality"]["material"]]
+    out.sort(key=lambda r: r["id"])
+    out.sort(key=lambda r: r["detected_at"], reverse=True)
+    return out
+
+
+# --------------------------------------------------------------------------
 # catalog — the one loader of catalog.json, for crawl, site, feeds and detect.
 
 

@@ -14,7 +14,7 @@ Load-bearing decisions:
   trust failure, so there is no "skip the bad one" mode.
 * **Suppressed records are never published.** ``materiality.material: false``
   means no page, no link, no mention of the id anywhere in the output.
-  :func:`load_published_records` is the single filter; T5 (``inplain.feeds``)
+  :func:`inplain.schema.published` is the single filter; T5 (``inplain.feeds``)
   reuses it so the site and the feeds can never disagree about what is
   public.
 * **Deterministic output.** Identical inputs rebuild byte-identically: no
@@ -101,48 +101,6 @@ DOC_TITLES = {
 
 def doc_title(doc: str) -> str:
     return DOC_TITLES.get(doc, doc.replace("-", " ").title())
-
-
-# --------------------------------------------------------------------------
-# loading — the seam T5's feeds.py reuses
-
-
-def load_records(changes_dir: Path) -> list[dict[str, Any]]:
-    """Every record in ``changes_dir``, each validated against the normative
-    schema. Raises :class:`SchemaError` on the first invalid record — a build
-    is all-or-nothing. A missing directory is an empty archive, not an error.
-    """
-    changes_dir = Path(changes_dir)
-    if not changes_dir.is_dir():
-        return []
-    records: list[dict[str, Any]] = []
-    for path in sorted(changes_dir.glob("*.json")):
-        try:
-            record = schema.load_record(path)
-        except SchemaError as exc:
-            raise SchemaError(f"{path.name}: {exc}") from exc
-        except (OSError, ValueError) as exc:
-            raise SchemaError(f"{path.name}: unreadable change record: {exc}") from exc
-        if record["id"] != path.stem:
-            raise SchemaError(
-                f"{path.name}: filename does not match record id {record['id']!r}"
-            )
-        records.append(record)
-    return records
-
-
-def load_published_records(changes_dir: Path) -> list[dict[str, Any]]:
-    """The publishable records, newest first: validated, ``material: true``
-    only. Suppressed records never leave this function — the site (T4) and
-    the feeds (T5) both publish exactly this list and nothing else.
-
-    Order: ``detected_at`` descending, then id ascending — deterministic for
-    byte-identical rebuilds.
-    """
-    records = [r for r in load_records(changes_dir) if r["materiality"]["material"]]
-    records.sort(key=lambda r: r["id"])
-    records.sort(key=lambda r: r["detected_at"], reverse=True)
-    return records
 
 
 # --------------------------------------------------------------------------
@@ -524,15 +482,15 @@ class BuildReport:
 
 
 def build_site(*, catalog_path: Path, changes_dir: Path, out_dir: Path) -> BuildReport:
-    # Imported here, not at module top: feeds.py builds on this module's
-    # loaders, so the import must run after site.py is fully initialised.
+    # Imported here, not at module top: feeds.py imports SITE_URL and
+    # doc_title from this module, so it must be fully initialised first.
     from . import feeds
 
     out_dir = Path(out_dir)
     # Validate EVERYTHING before writing anything: all-or-nothing.
     catalog = load_catalog(catalog_path)
-    records = load_records(changes_dir)
-    published = load_published_records(changes_dir)
+    records = schema.load_records(changes_dir)
+    published = schema.published(records)
 
     report = BuildReport(
         published=len(published),
