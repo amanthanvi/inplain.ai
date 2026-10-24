@@ -10,6 +10,7 @@ import subprocess
 import threading
 
 import pytest
+import requests.adapters
 
 from inplain import net
 from inplain.net import (
@@ -234,42 +235,128 @@ def test_pinned_transport_wraps_a_refused_connection():
         net.PinnedTransport().get(_target(port), {}, 5, 1000)
 
 
-@pytest.mark.skipif(shutil.which("openssl") is None, reason="needs the openssl CLI")
-def test_pinned_https_sends_the_real_name_as_sni_and_verifies_the_certificate(tmp_path):
-    """The reason for the urllib3 pin: over TLS the socket goes to the pinned
-    IP while SNI and certificate matching use the real hostname. A throwaway
-    self-signed certificate (generated here, never stored) must be refused."""
-    cert, key = tmp_path / "cert.pem", tmp_path / "key.pem"
-    subprocess.run(
-        ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
-         "-subj", "/CN=example.test", "-keyout", str(key), "-out", str(cert)],
-        check=True, capture_output=True,
+# ---------------------------------------------------------------------------
+# The same over TLS: the reason for the urllib3 pin is that the socket goes to
+# the pinned IP while SNI, certificate trust AND hostname matching use the
+# real hostname. Certificates are throwaway, generated in tmp_path by the
+# openssl CLI and never stored.
+
+needs_openssl = pytest.mark.skipif(shutil.which("openssl") is None, reason="needs the openssl CLI")
+
+
+def _openssl(*args: str) -> None:
+    subprocess.run(["openssl", *args], check=True, capture_output=True)
+
+
+def _ca(tmp_path) -> tuple[str, str]:
+    cert, key = str(tmp_path / "ca.pem"), str(tmp_path / "ca.key")
+    _openssl(
+        "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
+        "-subj", "/CN=throwaway test CA", "-keyout", key, "-out", cert,
+        "-addext", "basicConstraints=critical,CA:TRUE",
+        "-addext", "keyUsage=critical,keyCertSign,cRLSign",
     )
-    names: list[str | None] = []
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain(cert, key)
-    context.sni_callback = lambda sock, name, ctx: names.append(name)
+    return cert, key
+
+
+def _leaf(tmp_path, name: str, ca: tuple[str, str]) -> tuple[str, str]:
+    """A server certificate for ``name``, issued by ``ca``."""
+    base = tmp_path / name
+    ext = tmp_path / f"{name}.ext"
+    ext.write_text(
+        f"subjectAltName=DNS:{name}\nbasicConstraints=CA:FALSE\n"
+        "keyUsage=digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n"
+        "authorityKeyIdentifier=keyid\n"
+    )
+    _openssl(
+        "req", "-newkey", "rsa:2048", "-nodes", "-subj", f"/CN={name}",
+        "-keyout", f"{base}.key", "-out", f"{base}.csr",
+    )
+    _openssl(
+        "x509", "-req", "-in", f"{base}.csr", "-CA", ca[0], "-CAkey", ca[1],
+        "-CAcreateserial", "-days", "1", "-extfile", str(ext), "-out", f"{base}.pem",
+    )
+    return f"{base}.pem", f"{base}.key"
+
+
+@pytest.fixture
+def tls_server():
+    """Start an HTTPS loopback server presenting ``cert``; yields a starter
+    returning (port, SNI names seen)."""
+    servers = []
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Length", "2")
+            self.end_headers()
+            self.wfile.write(b"ok")
+
+        def log_message(self, *args):
+            pass
 
     class Quiet(http.server.HTTPServer):
         def handle_error(self, request, client_address):
-            pass  # the client aborts the handshake on purpose
+            pass  # the client aborts refused handshakes on purpose
 
-    server = Quiet(("127.0.0.1", 0), http.server.BaseHTTPRequestHandler)
-    server.socket = context.wrap_socket(server.socket, server_side=True)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    try:
-        port = server.server_address[1]
-        target = net.Target(
-            url=f"https://example.test:{port}/p",
-            scheme="https",
-            host="example.test",
-            host_header=f"example.test:{port}",
-            port=port,
-            ip="127.0.0.1",
-        )
-        with pytest.raises(TransportError):  # self-signed: verification fails
-            net.PinnedTransport().get(target, {}, 5, 1000)
-    finally:
+    def start(cert: str, key: str) -> tuple[int, list[str | None]]:
+        names: list[str | None] = []
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(cert, key)
+        context.sni_callback = lambda sock, name, ctx: names.append(name)
+        server = Quiet(("127.0.0.1", 0), Handler)
+        server.socket = context.wrap_socket(server.socket, server_side=True)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        servers.append(server)
+        return server.server_address[1], names
+
+    yield start
+    for server in servers:
         server.shutdown()
         server.server_close()
+
+
+def _https_target(port: int) -> net.Target:
+    return net.Target(
+        url=f"https://example.test:{port}/p",
+        scheme="https",
+        host="example.test",
+        host_header=f"example.test:{port}",
+        port=port,
+        ip="127.0.0.1",
+    )
+
+
+@needs_openssl
+def test_pinned_https_sends_the_real_name_as_sni_and_refuses_an_untrusted_certificate(
+    tmp_path, tls_server
+):
+    ca = _ca(tmp_path)  # not trusted by the client here
+    port, names = tls_server(*_leaf(tmp_path, "example.test", ca))
+    with pytest.raises(TransportError):
+        net.PinnedTransport().get(_https_target(port), {}, 5, 1000)
     assert names == ["example.test"]
+
+
+@needs_openssl
+def test_pinned_https_accepts_a_trusted_certificate_for_the_real_name(
+    tmp_path, tls_server, monkeypatch
+):
+    ca = _ca(tmp_path)
+    monkeypatch.setattr(requests.adapters, "DEFAULT_CA_BUNDLE_PATH", ca[0])
+    port, names = tls_server(*_leaf(tmp_path, "example.test", ca))
+    response = net.PinnedTransport().get(_https_target(port), {}, 5, 1000)
+    assert (response.status, response.body) == (200, b"ok")
+    assert names == ["example.test"]
+
+
+@needs_openssl
+def test_pinned_https_refuses_a_trusted_certificate_for_another_name(
+    tmp_path, tls_server, monkeypatch
+):
+    """Trusted issuer, wrong name: only hostname matching can catch this."""
+    ca = _ca(tmp_path)
+    monkeypatch.setattr(requests.adapters, "DEFAULT_CA_BUNDLE_PATH", ca[0])
+    port, _ = tls_server(*_leaf(tmp_path, "other.test", ca))
+    with pytest.raises(TransportError, match="(?i)hostname|match"):
+        net.PinnedTransport().get(_https_target(port), {}, 5, 1000)
