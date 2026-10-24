@@ -13,6 +13,7 @@ import pytest
 import requests
 
 import run_eval  # via the eval/ sys.path entry in conftest.py
+from inplain import summarize
 
 
 def http_response(payload=None, status=200) -> requests.Response:
@@ -61,15 +62,45 @@ def call(model, post):
     return run_eval.call_model("openrouter", "test-key", model, "prompt", post)
 
 
-def test_pinned_model_gets_temperature_zero_12000_tokens_and_no_fallbacks():
+PINNED = {"order": ["google-ai-studio"], "allow_fallbacks": False, "data_collection": "deny"}
+
+
+def test_pinned_model_gets_the_system_prompt_temperature_zero_and_no_fallbacks():
     post = scripted(http_response(completion()))
-    call("google/gemini-3.8-flash", post)
+    call("google/gemini-3.7-flash", post)
     (payload,) = post.sent
+    assert payload["messages"] == [
+        {"role": "system", "content": summarize.SYSTEM_PROMPT},
+        {"role": "user", "content": "prompt"},
+    ]
     assert payload["temperature"] == 0
-    assert payload["max_tokens"] == 12000
-    assert payload["provider"] == {"order": ["google-ai-studio"], "allow_fallbacks": False}
+    assert payload["max_tokens"] == summarize.MAX_OUTPUT_TOKENS
+    assert payload["provider"] == PINNED
     assert "require_parameters" not in json.dumps(payload)
     assert "service_tier" not in payload
+
+
+@pytest.mark.parametrize("model", [summarize.DEFAULT_MODEL, summarize.FALLBACK_MODEL])
+def test_the_shipped_models_are_measured_with_exactly_the_request_production_sends(model):
+    measured = scripted(http_response(completion()))
+    run_eval.call_model("openrouter", "test-key", model, "the user turn", measured)
+    shipped = scripted(http_response(completion()))
+    summarize.OpenRouterClient("test-key", post=shipped).complete(
+        model, summarize.SYSTEM_PROMPT, "the user turn"
+    )
+    assert measured.sent == shipped.sent
+
+
+def test_each_entry_is_sent_as_production_sends_the_record():
+    (entry,) = [e for e in run_eval.load_golden() if e["id"].startswith("stripe-")]
+    prompt, shown = run_eval.production_prompt(entry, run_eval.company_names())
+    # the Hunk budget sends a prefix and says so, as Summarizer does
+    assert shown == summarize.select_hunks(entry["hunks"])
+    assert 0 < len(shown) < len(entry["hunks"])
+    assert f"you have been given the first {len(shown)}" in prompt
+    assert "Company: Stripe\n" in prompt
+    assert "-----BEGIN QUOTED DOCUMENT DATA " in prompt
+    assert entry["hunks"][len(shown)]["added"][0] not in prompt
 
 
 @pytest.mark.parametrize("model", ["openai/gpt-6-luna", "anthropic/claude-sonnet-5"])
@@ -143,9 +174,8 @@ def test_each_pass_gets_its_own_file_and_the_aggregate_spans_them(tmp_path):
         result = recorded["models"]["google/gemini-3.7-flash"]
         assert [c["entry"] for c in result["calls"]] == [e["id"] for e in entries]
         assert result["calls"][0]["served_provider"] == "google-ai-studio"
-        assert result["request"]["provider"] == {
-            "order": ["google-ai-studio"], "allow_fallbacks": False
-        }
+        assert result["request"]["provider"] == PINNED
+        assert result["calls"][0]["shown_hunks"] == len(entries[0]["hunks"])
     aggregate = json.loads((tmp_path / "aggregate.json").read_text())
     assert aggregate["passes"] == {
         "1": ["google/gemini-3.7-flash"], "2": ["google/gemini-3.7-flash"]
@@ -170,12 +200,34 @@ def test_the_key_never_reaches_an_error_or_the_results(key):
     assert "[key]" in str(info.value)
 
 
-def test_a_reply_the_gate_cannot_walk_is_a_parse_failure_not_a_crash():
+def test_a_wrong_typed_hunk_id_drops_its_claim_alone_as_in_production():
+    entries = run_eval.load_golden(limit=1)
+    reply = '{"bullets": [{"text": "t", "citations": [{"hunk": ["h1"], "side": "added", "quote": "q"}]}]}'
+    post = scripted(http_response(completion(reply)))
+    (record,) = run_eval.run_model(entries, "openrouter", "k", "x-ai/grok-4.7", post)
+    assert not record["score"]["parse_failure"]
+    assert record["score"]["total_citations"] == 1
+    assert record["score"]["valid_citations"] == record["score"]["kept_bullets"] == 0
+
+
+def test_a_reply_the_gate_raises_on_loses_every_claim_not_the_run(monkeypatch):
+    def raises(bullets, hunks):
+        raise TypeError("unwalkable")
+
+    monkeypatch.setattr(run_eval.summarize, "review_bullets", raises)
+    entries = run_eval.load_golden(limit=1)
+    post = scripted(http_response(completion('{"bullets": []}')))
+    (record,) = run_eval.run_model(entries, "openrouter", "k", "x-ai/grok-4.7", post)
+    assert record["score"]["parse_failure"]
+    assert record["malformed"] == "unwalkable"
+
+
+def test_a_non_object_bullet_drops_alone_as_in_production():
     entries = run_eval.load_golden(limit=1)
     post = scripted(http_response(completion('{"bullets": ["not an object"]}')))
     (record,) = run_eval.run_model(entries, "openrouter", "k", "x-ai/grok-4.7", post)
-    assert record["score"]["parse_failure"]
-    assert "malformed" in record
+    assert not record["score"]["parse_failure"]
+    assert (record["score"]["total_bullets"], record["score"]["kept_bullets"]) == (1, 0)
 
 
 def test_a_recorded_pass_is_refused_before_any_call(tmp_path, monkeypatch):

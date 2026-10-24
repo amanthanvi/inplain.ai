@@ -40,8 +40,7 @@ from inplain.summarize import (
     select_hunks,
 )
 
-import run_eval  # eval/ is on sys.path via conftest
-from run_eval import load_golden
+from run_eval import load_golden  # eval/ is on sys.path via conftest
 
 # ---------------------------------------------------------------------------
 # fixtures — change records built from the golden hunks
@@ -473,12 +472,6 @@ class TestOpenRouterClient:
         self._client(post).complete("anthropic/claude-sonnet-5", "s", "u")
         assert sent[0]["temperature"] == 0
         assert "temperature" not in sent[1]
-
-    def test_the_request_matches_the_method_the_bake_off_measured(self):
-        # the output cap and the temperature rule are the harness's, so the
-        # measured result predicts production
-        assert summarize.MAX_OUTPUT_TOKENS == run_eval.MAX_TOKENS
-        assert summarize.NO_TEMPERATURE == run_eval.NO_TEMPERATURE
 
     def test_an_unpinned_model_is_refused_without_a_call(self):
         def post(*args, **kwargs):  # pragma: no cover - must not be reached

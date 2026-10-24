@@ -1,19 +1,15 @@
 """Unit tests for the eval harness scoring logic (eval/run_eval.py).
 
-No network. The scoring functions are pure; the golden expectations must
-score 100% citation validity and 0% claim drop (the harness self-test).
+No network. The harness counts with production's gate
+(inplain.summarize.review_bullets and citation_is_valid, tested in
+tests/test_summarize.py); these tests pin how it counts. The golden
+expectations must score 100% citation validity and 0% claim drop (the
+harness self-test).
 """
 
 import pytest
 
-from run_eval import (
-    Aggregate,
-    citation_is_valid,
-    load_golden,
-    normalize,
-    parse_bullets,
-    score_bullets,
-)
+from run_eval import Aggregate, load_golden, score_bullets
 
 HUNK = {
     "id": "h1",
@@ -25,77 +21,10 @@ HUNK = {
     "context_after": [],
     "word_spans": None,
 }
-HUNKS = {"h1": HUNK}
 
 
 def cite(hunk="h1", side="added", quote=""):
     return {"hunk": hunk, "side": side, "quote": quote}
-
-
-class TestNormalize:
-    def test_collapses_whitespace_and_case(self):
-        assert normalize("  We\tRetain \n data ") == "we retain data"
-
-    def test_no_other_transformation(self):
-        # punctuation and unicode stay significant — tolerance is ONLY
-        # whitespace and case (SPEC section 3)
-        assert normalize("don’t") != normalize("don't")
-        assert normalize("24 months") != normalize("12 months")
-
-
-class TestCitationIsValid:
-    def test_exact_match_added_side(self):
-        assert citation_is_valid(
-            cite(quote="You may opt out of receiving these communications"), HUNKS
-        )
-
-    def test_exact_match_removed_side(self):
-        assert citation_is_valid(
-            cite(side="removed", quote="You may not opt out"), HUNKS
-        )
-
-    def test_whitespace_and_case_tolerant(self):
-        assert citation_is_valid(
-            cite(quote="you  MAY opt\nout of receiving these communications"), HUNKS
-        )
-
-    def test_wrong_side_fails_even_when_other_side_matches(self):
-        # the removed text exists — but the citation names "added"
-        assert not citation_is_valid(
-            cite(side="added", quote="You may not opt out"), HUNKS
-        )
-
-    def test_negation_flip_is_not_cross_matched(self):
-        assert not citation_is_valid(
-            cite(side="removed", quote="You may opt out of receiving these communications at any time"),
-            HUNKS,
-        )
-
-    def test_near_miss_paraphrase_fails(self):
-        # no fuzzy matching at any threshold
-        assert not citation_is_valid(
-            cite(quote="You can opt out of receiving these communications"), HUNKS
-        )
-
-    def test_unknown_hunk_fails(self):
-        assert not citation_is_valid(cite(hunk="h99", quote="opt out"), HUNKS)
-
-    def test_invalid_side_fails(self):
-        assert not citation_is_valid(cite(side="both", quote="opt out"), HUNKS)
-
-    def test_empty_or_missing_quote_fails(self):
-        assert not citation_is_valid(cite(quote=""), HUNKS)
-        assert not citation_is_valid(cite(quote="   "), HUNKS)
-        assert not citation_is_valid({"hunk": "h1", "side": "added"}, HUNKS)
-
-    def test_non_string_quote_fails(self):
-        assert not citation_is_valid(cite(quote=42), HUNKS)
-
-    def test_quote_spanning_lines_on_one_side(self):
-        hunk = dict(HUNK, added=["First added line.", "Second added line."])
-        assert citation_is_valid(
-            cite(quote="First added line.\nSecond added line."), {"h1": hunk}
-        )
 
 
 class TestScoreBullets:
@@ -139,6 +68,28 @@ class TestScoreBullets:
         assert score.total_hunks == 2
         assert score.covered_hunks == 1
 
+    def test_a_non_object_bullet_drops_alone_as_production_drops_it(self):
+        bullets = ["not an object", {"text": "a", "citations": [cite(quote="opt out")]}]
+        score = score_bullets(bullets, [HUNK], "e1")
+        assert (score.total_bullets, score.kept_bullets) == (2, 1)
+        assert (score.total_citations, score.valid_citations) == (1, 1)
+        assert not score.parse_failure
+
+    def test_a_bullet_without_text_is_dropped_but_its_quote_still_counts(self):
+        bullets = [{"text": " ", "citations": [cite(quote="opt out")]}]
+        score = score_bullets(bullets, [HUNK], "e1")
+        assert score.kept_bullets == 0
+        assert (score.total_citations, score.valid_citations) == (1, 1)
+
+    def test_a_hunk_the_model_was_not_shown_is_not_evidence_but_counts_as_uncovered(self):
+        h2 = dict(HUNK, id="h2")
+        bullets = [{"text": "a", "citations": [cite(hunk="h2", quote="opt out")]}]
+        score = score_bullets(bullets, [HUNK], "e1", total_hunks=2)
+        assert score.valid_citations == 0
+        assert score.kept_bullets == 0
+        assert (score.covered_hunks, score.total_hunks) == (0, 2)
+        assert score_bullets(bullets, [HUNK, h2], "e1").kept_bullets == 1
+
 
 class TestAggregate:
     def test_rates(self):
@@ -161,22 +112,6 @@ class TestAggregate:
         assert agg.citation_validity_rate == 0.0
         assert agg.claim_drop_rate == 1.0
         assert agg.mean_coverage == 0.0
-
-
-class TestParseBullets:
-    def test_strict_json(self):
-        raw = '{"bullets": [{"text": "t", "citations": []}]}'
-        assert parse_bullets(raw) == [{"text": "t", "citations": []}]
-
-    def test_json_wrapped_in_prose(self):
-        raw = 'Here you go:\n{"bullets": []}\nHope that helps!'
-        assert parse_bullets(raw) == []
-
-    def test_garbage_returns_none(self):
-        assert parse_bullets("COMPLIANT") is None
-        assert parse_bullets("") is None
-        assert parse_bullets('{"not_bullets": 1}') is None
-        assert parse_bullets('{"bullets": "not a list"}') is None
 
 
 class TestSelfTestAgainstGolden:

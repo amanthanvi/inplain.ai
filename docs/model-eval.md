@@ -76,20 +76,24 @@ the whole field costs $0.14 to $4.98 a year, and Grok's $4.18 is below
 Gemini's 2027 price.
 
 One caveat the audit (#40, item 4) raised and this run did not fix: the
-harness scores its own single-turn prompt, while production sends a system
-prompt, a fenced user turn and a per-Claim keep rule. The gate is the same
-(pinned by `tests/test_gate_equivalence.py`), so validity transfers; the
-coverage and latency figures are indicative. Aligning the harness with the
-shipped prompt is an open owner decision.
+harness scored its own single-turn prompt, with no Hunk budget, while
+production sends a system prompt, a fenced user turn over the budgeted Hunks
+and a per-Claim keep rule. The per-Citation gate was the same (then pinned by
+a test that pinned two copies together), so validity transfers; the coverage
+and latency figures are indicative. The owner accepted aligning the harness;
+see the production-prompt re-measure below.
 
 Made by the lead under the owner's delegation (2026-09-27). Provisional until
 the cutover: comment `veto` on #36 to reverse.
 
 ## Method
 
-- **Prompt and scoring are `eval/run_eval.py`'s**, unmodified — the citation
-  gate that scores these runs is the same function T3 uses to decide what
-  reaches the site (pinned by `tests/test_gate_equivalence.py`).
+- **Prompt and scoring were `eval/run_eval.py`'s own** for the August and
+  September runs: a single-turn prompt, every Hunk sent, and a copy of the
+  citation gate that a test pinned to the one T3 publishes through. The
+  harness now imports the prompt, the Hunk budget and the gate from
+  `inplain/summarize.py` (see the production-prompt re-measure), so those
+  earlier figures were measured on a prompt production never sent.
 - Driven through OpenRouter chat completions at `temperature 0`,
   `max_tokens 12000`, 3 retries on 429/5xx/timeout, 4 entries in parallel.
 - **Pass 1**: all 18 candidates × 17 entries. **Pass 2**: 7 finalists, repeated.
@@ -275,7 +279,8 @@ outage-only fallback semantics are all provider-agnostic and unaffected.
 
 ## What T3 should take from this (unchanged)
 
-- Build against `eval/run_eval.py`'s validation semantics: exact or
-  whitespace/case-tolerant, side-aware, drop-don't-repair.
+- The validation semantics are `inplain/summarize.py`'s, and the harness
+  scores with them: exact or whitespace/case-tolerant, side-aware,
+  drop-don't-repair.
 - Keys come from the environment only, never from files.
 - Treat hunk text as data, never instructions.

@@ -215,7 +215,7 @@ _PARTIAL_NOTE = (
 
 
 # ---------------------------------------------------------------------------
-# validation — the gate. Pure, no I/O, mirrors eval/run_eval.py exactly.
+# validation — the gate. Pure, no I/O; eval/run_eval.py scores with it too.
 # ---------------------------------------------------------------------------
 
 
