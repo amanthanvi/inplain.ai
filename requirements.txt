@@ -8,4 +8,6 @@ trafilatura==2.2.0
 # server_hostname driving both SNI and certificate matching while the socket
 # connects to the literal IP). A minor urllib3 bump could move that without
 # any of our code changing, so this one floats with review, not with pip.
-urllib3==2.7.0
+# 2.8.0 is also a floor: below it, chunked-framing lines are buffered without
+# limit before net.py's body cap sees a byte (GHSA-vxq7-64xx-v4gw).
+urllib3==2.8.0
