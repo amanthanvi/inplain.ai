@@ -70,5 +70,55 @@
   },
   "parent_commit": "c0b5358aa5eba0a396bf348fa36cbe415830603b",
   "schema_version": 1,
-  "source_url": "https://www.atlassian.com/legal/software-license-agreement"
+  "source_url": "https://www.atlassian.com/legal/software-license-agreement",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "we have developed the Atlassian Customer Agreement to encompass all these offerings in a comprehensive and customized manner",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "we have developed the Atlassian Customer Agreement to encompass all these offerings in a comprehensive and customized manner",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Our products adhere to an enterprise-level set of controls and policies that align with various international standards and market expectations.",
+            "side": "added"
+          },
+          {
+            "hunk": "h2",
+            "quote": "The agreement is crafted to be customer-friendly, undergoing regular updates informed by market practices and customer input.",
+            "side": "removed"
+          }
+        ],
+        "text": "The same introductory description of the Atlassian Customer Agreement was removed from its place after the agreement heading and added before that heading. The wording is unchanged: it still says Atlassian developed the agreement to cover its products, services, and deployment options in a comprehensive, customized, customer-friendly way, that products follow enterprise-level controls aligned with international standards and market expectations, and that the agreement is updated using market practices and customer input."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "Recommended for you",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Related content",
+            "side": "added"
+          }
+        ],
+        "text": "A section label changed from \"Recommended for you\" to \"Related content.\" This is a labeling change only and does not alter the agreement terms shown in this diff."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 3
+    },
+    "generated_at": "2026-10-25T04:36:31Z",
+    "model": "x-ai/grok-4.7"
+  }
 }

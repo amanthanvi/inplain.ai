@@ -223,5 +223,150 @@
   },
   "parent_commit": "bfff3e2692b2ff8b76401ddf8672ddb97bc70608",
   "schema_version": 1,
-  "source_url": "https://www.atlassian.com/legal/privacy-policy"
+  "source_url": "https://www.atlassian.com/legal/privacy-policy",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "|   | Legitimate interests (Article 6(1)(f) GDPR) | ",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "including machine learning and artificial intelligence model training",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "and Aggregate or de-identify data. | Legitimate interests (Article 6(1)(f) GDPR)",
+            "side": "added"
+          }
+        ],
+        "text": "The EEA/UK legal-basis chart no longer leaves purpose cells blank. Legitimate interests now covers providing and personalizing the Services, developing and improving them including machine learning and artificial intelligence model training, communications, marketing, customer support, credential checks, protecting rights, fraud prevention, and aggregating or de-identifying data."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "Communicate with you about changes to our terms, conditions, or policies",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Process payments",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Contractual necessity (Article 6(1)(b) GDPR)",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Publish testimonials or featured customer stories",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Consent (where legally required) (Article 6(1)(a) GDPR)",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "To maintain Service safety and security",
+            "side": "added"
+          },
+          {
+            "hunk": "h3",
+            "quote": "Compliance with a legal obligation (Article 6(1)(c) GDPR)",
+            "side": "added"
+          }
+        ],
+        "text": "The other GDPR bases are now spelled out as well. Contractual necessity includes providing the Services, communicating about changes to terms, conditions, or policies, processing payments, fraud prevention, and protecting rights. Consent covers developing the Services, publishing testimonials or featured customer stories, and marketing where consent was given. Legal obligation covers service safety and security, fraud prevention, authenticating credentials, and complying with legal obligations."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "| Identifiers, such as name, email address, unique identifiers associated with user or user account, IP Address |   |   | Third Party Advertising Providers | ",
+            "side": "removed"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Atlassian Companies Atlassian Partners Service Providers Third-Party Apps | Third Party Advertising Providers",
+            "side": "added"
+          }
+        ],
+        "text": "The U.S. state privacy table previously left the purpose and business-recipient columns empty. It now lists collection and disclosure purposes and business recipients. For identifiers, business recipients include Atlassian Companies, Atlassian Partners, Service Providers, and Third-Party Apps, while the sales or sharing column still names Third Party Advertising Providers."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "Content de-identified and aggregated in accordance with applicable data contribution product settings | Develop and improve our Services | Atlassian Companies Service Providers | -NA-",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Sensitive personal information, such as login credentials and passwords | Verify your account credentials as needed to log you into the Services and help safeguard your account’s security; Service access controls | Atlassian Companies Service Providers | -NA-",
+            "side": "added"
+          }
+        ],
+        "text": "De-identified and aggregated content is now described as used to develop and improve the Services and disclosed for business purposes to Atlassian Companies and Service Providers, and is marked not sold or shared. Sensitive information such as login credentials and passwords is limited to verifying credentials and service access controls, shared with Atlassian Companies and Service Providers, and also marked not sold or shared."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h6",
+            "quote": "Atlassian Companies Atlassian Partners Event Sponsors Service Providers | -NA-",
+            "side": "added"
+          },
+          {
+            "hunk": "h6",
+            "quote": "Visual and audio information, such as your image, video and audio recording, with your permission | Operate, maintain, and improve the Services | Atlassian Companies Atlassian Partners Event Sponsors Service Providers",
+            "side": "added"
+          }
+        ],
+        "text": "Internet or other electronic network activity and visual and audio information are now listed as disclosed for business purposes to Atlassian Companies, Atlassian Partners, Event Sponsors, and Service Providers, and are marked not sold or shared."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h8",
+            "quote": "Related content",
+            "side": "removed"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Recommended for you",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Former Workplace Privacy Notice",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Careers Privacy Notice",
+            "side": "added"
+          },
+          {
+            "hunk": "h8",
+            "quote": "Demographic Survey Privacy Notice",
+            "side": "added"
+          }
+        ],
+        "text": "The link heading changes from Related content to Recommended for you, and the page now points readers to the Former Workplace Privacy Notice, Careers Privacy Notice, and Demographic Survey Privacy Notice."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 8,
+      "total_hunks": 8
+    },
+    "generated_at": "2026-10-25T04:36:07Z",
+    "model": "x-ai/grok-4.7"
+  }
 }
