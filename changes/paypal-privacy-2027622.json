@@ -83,5 +83,70 @@
   },
   "parent_commit": "3a88ab029d55498cff7464d17b2afd6e7f52f3a6",
   "schema_version": 1,
-  "source_url": "https://www.paypal.com/us/legalhub/privacy-full"
+  "source_url": "https://www.paypal.com/us/legalhub/privacy-full",
+  "summary": {
+    "bullets": [
+      {
+        "citations": [
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h1",
+            "quote": "DPO contact e-mail: latamdpo@paypal.com",
+            "side": "added"
+          },
+          {
+            "hunk": "h1",
+            "quote": "Deputy DPO contact e-mail: latamdpo@paypal.com",
+            "side": "added"
+          }
+        ],
+        "text": "For Brazil, the privacy contact table now publishes the LGPD Data Protection Officer and Deputy DPO email addresses instead of the previous redacted placeholders. Both roles are listed as latamdpo@paypal.com, so readers can see a direct email for those named contacts."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h2",
+            "quote": "(+82) 02 737 5775, [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h2",
+            "quote": "(+82) 02 737 5775, skrprivacy@paypal.com",
+            "side": "added"
+          }
+        ],
+        "text": "For South Korea, the domestic agent and Data Protection Office contact line now shows skrprivacy@paypal.com in place of a redacted email, alongside the same telephone number."
+      },
+      {
+        "citations": [
+          {
+            "hunk": "h3",
+            "quote": "email: [email protected]",
+            "side": "removed"
+          },
+          {
+            "hunk": "h3",
+            "quote": "email: Aginfo@ag.nv.gov",
+            "side": "added"
+          }
+        ],
+        "text": "In the Nevada notice, the Bureau of Consumer Protection email is no longer masked. The published address is Aginfo@ag.nv.gov."
+      }
+    ],
+    "coverage": {
+      "covered_hunks": 3,
+      "total_hunks": 3
+    },
+    "generated_at": "2026-10-27T04:36:15Z",
+    "model": "x-ai/grok-4.7"
+  }
 }
