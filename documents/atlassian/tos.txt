@@ -1,5 +1,5 @@
-Atlassian provides a wide range of products, services, and deployment options. As part of our dedication to building with heart and balance, we have developed the Atlassian Customer Agreement to encompass all these offerings in a comprehensive and customized manner. Our products adhere to an enterprise-level set of controls and policies that align with various international standards and market expectations. The agreement is crafted to be customer-friendly, undergoing regular updates informed by market practices and customer input. For further insight into our approach, please visit this page.
 Atlassian Customer Agreement
+Atlassian provides a wide range of products, services, and deployment options. As part of our dedication to building with heart and balance, we have developed the Atlassian Customer Agreement to encompass all these offerings in a comprehensive and customized manner. Our products adhere to an enterprise-level set of controls and policies that align with various international standards and market expectations. The agreement is crafted to be customer-friendly, undergoing regular updates informed by market practices and customer input. For further insight into our approach, please visit this page.
 Effective starting: October 1, 2026
 This Agreement is between Customer and Atlassian. “Customer” means the entity on behalf of which this Agreement is accepted or, if that does not apply, the individual accepting this Agreement. “Atlassian” means the Atlassian entity that owns or operates the Products that Customer uses or accesses listed at https://www.atlassian.com/legal/product-terms.
 If you (the person accepting this Agreement) are accepting this Agreement on behalf of your employer or another entity, you agree that: (i) you have full legal authority to bind your employer or such entity to this Agreement, and (ii) you agree to this Agreement on behalf of your employer or such entity.
@@ -159,6 +159,6 @@ Atlassian may identify Customer as a customer of Atlassian in its promotional ma
 “Usage-Based Offerings” means Usage-Based Offerings as described in the Usage-Based Offering Terms.
 “Usage-Based Offering Terms” means the Atlassian usage-based offering terms available at https://www.atlassian.com/legal/usage-based-offering-terms.
 “User” means any individual that Customer authorizes to use the Products. Users may include: (i) Customer’s and its Affiliates’ employees, consultants, contractors and agents, (ii) third parties with which Customer or its Affiliates transact business, (iii) individuals invited by Customer’s users, (iv) individuals under managed accounts, or (v) individuals interacting with a Product as Customer’s customer.
-Related content
+Recommended for you
 Stay informed
 Subscribe to receive notifications from us about updates to our legal terms (including our legal policies) and our list of sub-processors.
