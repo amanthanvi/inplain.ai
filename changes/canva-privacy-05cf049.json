@@ -1,0 +1,67 @@
+{
+  "commit": "05cf0490a342e567aeb356d3f265b5521a39daee",
+  "company": "canva",
+  "company_name": "Canva",
+  "detected_at": "2026-11-02T04:23:58Z",
+  "doc": "privacy",
+  "hunks": [
+    {
+      "added": [
+        "This Privacy Policy was last updated on November 02, 2026. See previous versions of the Privacy Policy in our Policy Archives.(opens in a new tab or window)"
+      ],
+      "context_after": [
+        "The highlighted text is aimed to give a plain English summary of our Privacy Policy. Please ensure you read the main text, as the plain English summary is just a summary and doesn’t capture all of the terms.",
+        "What does this policy cover",
+        "Welcome to Canva. Our Privacy Policy explains how the Canva Contracting Entity (as defined in the Terms of Use) (“Canva”, “we” or “us”) and its affiliates collect, use, disclose, and protect information when you use Canva’s services (the \"Service\") or interact with us, and your choices about the collection and use of your information. Capitalized terms that are not defined in this Privacy Policy have the meaning given to them in our Terms of Use(opens in a new tab or window). If you do not want your information processed in accordance with this Privacy Policy in general or any part of it, you should not use our Service. This policy applies to all users of the Service, including, but not limited to users of our Developer Portal(opens in a new tab or window)."
+      ],
+      "context_before": [
+        "- Privacy Policy",
+        "Privacy Policy"
+      ],
+      "id": "h1",
+      "new_start": 3,
+      "old_start": 3,
+      "removed": [
+        "This Privacy Policy was last updated on August 25, 2026. See previous versions of the Privacy Policy in our Policy Archives.(opens in a new tab or window)"
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "Our local representative in the EEA is European Data Protection Office (EDPO) with registered address at 60 Merrion Square South, Dublin 2, D02 HE24, Ireland."
+      ],
+      "context_after": [
+        "Our local representative in the United Kingdom is EDPO UK Ltd, Unit 33, Waterside, Schooner Court, 44-48 Wharf Road, London, N1 7UX, United Kingdom.",
+        "The EDPO and EDPO UK can both be contacted at privacy@edpo.com. If you are in the EEA, data subject request forms can be accessed at http://edpo.com/gdpr-data-request/. If you are in the UK, data subject request forms can be accessed at https://edpo.com/uk-gdpr-data-request/.",
+        "Summary: Your privacy is important to us and we are happy to answer any questions you may have."
+      ],
+      "context_before": [
+        "110 Kippax St",
+        "Surry Hills NSW 2010",
+        "Australia"
+      ],
+      "id": "h2",
+      "new_start": 270,
+      "old_start": 270,
+      "removed": [
+        "Our local representative in the EEA is European Data Protection Office (EDPO) with registered address at Ground Floor, 71 Lower Baggot Street, Dublin, D02 P593, Ireland."
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "canva-privacy-05cf049",
+  "materiality": {
+    "added_chars": 314,
+    "effective_date_change": {
+      "from": "2026-08-25",
+      "to": "2026-11-02"
+    },
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 323,
+    "similarity_badge": 0.9948
+  },
+  "parent_commit": "29756c78d4257a53726dbf42c78ed7f1f9c58179",
+  "schema_version": 1,
+  "source_url": "https://www.canva.com/policies/privacy-policy/"
+}
