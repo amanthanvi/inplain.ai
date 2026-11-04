@@ -8,6 +8,7 @@ import socket
 import ssl
 import subprocess
 import threading
+import tracemalloc
 
 import pytest
 import requests.adapters
@@ -162,6 +163,73 @@ def test_body_under_the_cap_is_returned_whole():
     stream = FakeStream([b"ab", b"cd", b"", b"ef"])
     assert read_capped(stream, max_bytes=MAX_BYTES) == b"abcdef"
     assert stream.closed
+
+
+def test_many_tiny_chunks_cost_the_cap_not_a_multiple_of_it():
+    # Chunked encoding lets an origin send a 5 MiB body as millions of 2-byte
+    # chunks. Held as a list, each costs ~40 bytes of object overhead, so the
+    # cap would bound the payload but not the memory.
+    class TinyChunks(FakeStream):
+        def iter_content(self, chunk_size):
+            for _ in range(10**6):
+                yield bytes((97, 98))  # a fresh object each time, as off the wire
+
+    cap = 1024 * 1024
+    tracemalloc.start()
+    try:
+        assert len(read_capped(TinyChunks([]), max_bytes=4 * cap)) == 2 * 10**6
+        with pytest.raises(SizeCapExceeded):
+            read_capped(TinyChunks([]), max_bytes=cap)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert peak < 3 * 4 * cap  # buffer + its final copy, not 40 bytes a chunk
+
+
+@pytest.mark.parametrize(
+    "preamble",
+    [
+        b"",  # an endless chunk-size line
+        b"1\r\nx\r\n0\r\n",  # a valid body, then an endless trailer line
+    ],
+)
+def test_a_chunk_line_without_end_is_refused_without_buffering_it(preamble):
+    # Lines of chunked framing are read by urllib3 before any body byte reaches
+    # read_capped, so the cap cannot bound them; urllib3 >= 2.8.0 does
+    # (GHSA-vxq7-64xx-v4gw). This holds the pin to that floor.
+    flood = 32 * 1024 * 1024
+    server = socket.socket()
+    server.bind(("127.0.0.1", 0))
+    server.listen(1)
+    port = server.getsockname()[1]
+
+    def serve():
+        conn, _ = server.accept()
+        try:
+            conn.recv(65536)
+            conn.sendall(
+                b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n" + preamble
+            )
+            piece = b"a" * 65536  # hex digits, and never a line feed
+            for _ in range(flood // len(piece)):
+                conn.sendall(piece)
+        except OSError:
+            pass  # the client hung up, which is the point
+        finally:
+            conn.close()
+
+    thread = threading.Thread(target=serve, daemon=True)
+    thread.start()
+    tracemalloc.start()
+    try:
+        with pytest.raises(TransportError, match="exceeded maximum"):
+            net.PinnedTransport().get(_target(port), {}, 10, MAX_BYTES)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+        thread.join(10)
+        server.close()
+    assert peak < MAX_BYTES
 
 
 def test_cap_is_exact():
