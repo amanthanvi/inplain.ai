@@ -1,0 +1,83 @@
+{
+  "commit": "2829fe367ba7b39e45f652a38715ca453a0e1fe1",
+  "company": "proton",
+  "company_name": "Proton",
+  "detected_at": "2026-11-06T04:25:16Z",
+  "doc": "tos",
+  "hunks": [
+    {
+      "added": [
+        "The Company reserves the right to suspend or delete Accounts that have been inactive for a consecutive period of twenty-four months. For more information, we invite you to read our inactive account policy."
+      ],
+      "context_after": [
+        "If you would like to contest the suspension of your account, please submit an appeal through our Abuse Appeal Form.",
+        "3. Inactive Accounts"
+      ],
+      "context_before": [
+        "Any Account found to be committing any of the listed unauthorized activities will be immediately suspended or restricted accordingly (which can include features and capabilities restrictions).",
+        "The Company may also terminate Accounts which are being used for illegal activities that are not listed above, particularly in response to orders from the competent authorities informing of such illegal activity.",
+        "We reserve the right to limit service capacity for Accounts which use of resources (e.g. bandwidth) is excessive and hurts the user experiences of other users in an unfair way."
+      ],
+      "id": "h1",
+      "new_start": 33,
+      "old_start": 33,
+      "removed": [
+        "The Company reserves the right to suspend or delete Accounts that have been inactive for a consecutive period of twelve months. For more information, we invite you to read our inactive account policy."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "The Company reserves the right to suspend or delete free Accounts that have been inactive for a consecutive period of 24 months and/or part or all of their associated data and content according to this section.",
+        "If you have been inactive on your free Account for a consecutive period of 24 months or more, access to your Account and all or part of the data associated with your Account (including but not limited to emails stored in Proton Mail, files stored on Proton Drive, calendar entries in Proton Calendar and passwords in Proton Pass) may be deleted. As a mere courtesy, the Company will aim to send notice to the recovery email associated with your Account 30, 15 and 7 days in advance before such action is taken."
+      ],
+      "context_after": [
+        "Accounts under an active paid subscription are always considered active and no action will be taken against your paid Account under this section. Terminating your active paid subscription (or being downgraded to free due to a failure to pay for the subscription) will make your Account subject to this section again."
+      ],
+      "context_before": [
+        "If you would like to contest the suspension of your account, please submit an appeal through our Abuse Appeal Form.",
+        "3. Inactive Accounts"
+      ],
+      "id": "h2",
+      "new_start": 36,
+      "old_start": 36,
+      "removed": [
+        "The Company reserves the right to suspend or delete free Accounts that have been inactive for a consecutive period of 12 months and/or part or all of their associated data and content according to this section.",
+        "If you have been inactive on your free Account for a consecutive period of 12 months or more, access to your Account and all or part of the data associated with your Account (including but not limited to emails stored in Proton Mail, files stored on Proton Drive, calendar entries in Proton Calendar and passwords in Proton Pass) may be deleted. As a mere courtesy, the Company will aim to send notice to the recovery email associated with your Account 30, 15 and 7 days in advance before such action is taken."
+      ],
+      "word_spans": null
+    },
+    {
+      "added": [
+        "If your account is free, you are considered active by performing one of the following actions at least once in a period of 24 months:"
+      ],
+      "context_after": [
+        "- logging in to your Account on our web, desktop or mobile apps; or",
+        "- if you are already logged in, using one of our products (for example, accessing your inbox, reading an email, connecting to a VPN server, etc.).",
+        "Activity is considered by Account, not by email address. Keeping an active Account ensures that any email addresses you created for that Account (@proton.me, @pm.me, etc.) also remain active."
+      ],
+      "context_before": [
+        "Accounts under an active paid subscription are always considered active and no action will be taken against your paid Account under this section. Terminating your active paid subscription (or being downgraded to free due to a failure to pay for the subscription) will make your Account subject to this section again."
+      ],
+      "id": "h3",
+      "new_start": 39,
+      "old_start": 39,
+      "removed": [
+        "If your account is free, you are considered active by performing one of the following actions at least once in a period of 12 months:"
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "proton-tos-2829fe3",
+  "materiality": {
+    "added_chars": 1058,
+    "effective_date_change": null,
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 1053,
+    "similarity_badge": 0.977
+  },
+  "parent_commit": "f8b763752f447e6c72e22ca7db9ae1b49b209123",
+  "schema_version": 1,
+  "source_url": "https://proton.me/legal/terms"
+}
