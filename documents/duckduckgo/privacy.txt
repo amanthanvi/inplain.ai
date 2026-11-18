@@ -1,11 +1,9 @@
 Privacy Policy
 We don’t track you.
 That’s our Privacy Policy in a nutshell.
-About Us
 DuckDuckGo (officially, Duck Duck Go, Inc.) has been an independent company since our founding in 2008. While we started as a search engine, our apps and extensions now offer protection well beyond search, including when browsing the web, reading email, using chatbots, and even using other apps.
 Trackers lurk nearly everywhere online, trying to scoop up your search history, browsing history, location history, and more. Even everyday online activities like purchasing groceries or looking up the local weather can result in dozens of companies tracking you.
 Other companies track your data — like your search, chat, and browsing history — to create detailed profiles about you, and then use those profiles to follow you around with ads so creepy it can seem like your devices are listening in on you (even when they aren’t). These profiles are also used by companies to influence what you see online, which can lead to manipulation and discrimination. That’s why we offer an all-in-one privacy product as a privacy preserving alternative to products like Google Search, Google Gemini, and Google Chrome, to help protect your everyday online activities.
-Privacy Policy
 We don’t track you. That’s our Privacy Policy in a nutshell.
 We don’t save or share your search, chat, or browsing history when you search on DuckDuckGo, chat on Duck.ai, or use our apps and extensions.
 When you visit our search engine or our other websites, your device sends some information about itself automatically, like its IP address, browser type, and language, and may send additional information upon request like its screen size, operating system, and preferences. However, we only use this information temporarily to deliver content to you and, for security, to ensure you’re not a malicious bot. Similarly, we may also anonymously use information we receive from you when using our products and features, such as click timing in Email Protection, for security, and to protect against fraud and abuse. We don’t save your IP address alongside your searches, Duck.ai chats, or visits to our websites, and we never log IP addresses to disk that could be tied back to you. We also don’t save any other unique identifiers alongside your searches, chats, or visits to our website, and never log unique identifiers to disk that could be tied back to you or to your search, chat, or browsing history. If you enable optional features (more on those below), such as storing chats in encrypted form on our servers with Sync & Backup, we may use random IDs so those features can work, but the master decryption key exists only on your synced devices, meaning DuckDuckGo cannot decrypt and read your chats in any case.
@@ -36,4 +34,5 @@ We do not sell your personal information.
 We have never sold any personal information. Period.
 We will post a notice on this page when our policy is updated.
 We will notify you of changes by posting the modified version on our website. We will indicate the date it was last modified below with an update message on top.
-Last updated
+Last updated: 
+Pre-2023 version
