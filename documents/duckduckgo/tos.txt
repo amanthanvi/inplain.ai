@@ -3,7 +3,6 @@ DuckDuckGo (officially, Duck Duck Go, Inc.) has been an independent company sinc
 We offer an all-in-one privacy product to help protect your everyday online activities. While we started as a search engine, our apps and extensions now offer protection well beyond search, including when browsing websites, reading email, and even using other apps.
 These Terms of Service describe the terms and conditions (“Terms”) that apply to all of the services DuckDuckGo and its subsidiaries offer, including but not limited to our search engine, apps, and browser extensions, as well as all of their associated features (“Services”). By using our Services, you agree to these Terms.
 If you have any questions, please see our Contact Us page.
-We don't track you.
 For details about our privacy practices, please read our Privacy Policy, which applies to your use of our Services.
 We expect you to use our Services as authorized, or we may otherwise suspend access.
 In order to have authorization to use our Services:
