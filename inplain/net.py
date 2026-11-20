@@ -163,21 +163,19 @@ def read_capped(response, max_bytes: int, chunk_bytes: int = CHUNK_BYTES) -> byt
     """Stream a body, aborting the moment it exceeds the cap.
 
     The cap is checked per chunk, never after buffering, and applies to
-    decompressed bytes so a compression bomb hits it too.
+    decompressed bytes so a compression bomb hits it too. Bytes go into one
+    buffer, not a list of chunks: a chunked body sent as millions of tiny
+    chunks would otherwise pin many times the cap in per-object overhead.
     """
-    chunks: list[bytes] = []
-    total = 0
+    body = bytearray()
     try:
         for chunk in response.iter_content(chunk_bytes):
-            if not chunk:
-                continue
-            total += len(chunk)
-            if total > max_bytes:
+            if len(body) + len(chunk) > max_bytes:
                 raise SizeCapExceeded(f"response body exceeded {max_bytes} bytes")
-            chunks.append(chunk)
+            body += chunk
     finally:
         response.close()
-    return b"".join(chunks)
+    return bytes(body)
 
 
 class _PinnedAdapter(HTTPAdapter):
