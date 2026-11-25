@@ -1,0 +1,43 @@
+{
+  "commit": "92fa6ed9c05e994f2d9cf9f2650c30c4a4f162d9",
+  "company": "discord",
+  "company_name": "Discord",
+  "detected_at": "2026-11-25T04:25:22Z",
+  "doc": "tos",
+  "hunks": [
+    {
+      "added": [
+        "If you reside in the European Union, you may also be entitled to submit your complaint to the Out-of-Court Dispute Settlement (“OCDS”) mechanism under DSA Article 21. Note that a submission via the OCDS mechanism alone, without submitting Discord's Dispute Resolution Form available at dis.gd/disputes completely and accurately, will not toll the applicable statutes of limitations or other deadlines."
+      ],
+      "context_after": [
+        "Governing Law, Jurisdiction, Class Action Waiver and Time Limitation.",
+        "EXCEPT WHERE PROHIBITED BY APPLICABLE LAW:",
+        "Choice of Law. These terms and all Disputes between you and Discord, whether in arbitration or court (if a Dispute is non-arbitrable under these terms for any other reason), shall be governed by the law of the United States and the laws of California, without regard to conflicts of law provisions—in other words, any federal law or California law, including any conflict of law principle, that would provide for the application of the laws of another jurisdiction other than the United States or California shall not apply."
+      ],
+      "context_before": [
+        "“Informal Dispute Resolution.” Most Disputes can be resolved informally. If you have an issue with the services or Discord, you agree that you will reach out to us and use good faith efforts to settle the Dispute informally through negotiation before initiating a lawsuit or arbitration. This requires submitting Discord's Dispute Resolution Form available at dis.gd/disputes completely and accurately. This form must be provided on an individual basis and you, along with your counsel if you have one, must be available personally for a telephone or videoconference to resolve your claims, unless Discord states in writing that you are not personally required to attend.",
+        "If the Dispute is not resolved within 60 days after receipt of the form, you and Discord agree to resolve any remaining Dispute through further informal discussions or one of the formal dispute resolution provisions below.",
+        "This Informal Dispute Resolution process, including your personal participation in the meet and confer is a prerequisite and condition precedent to commencing any formal dispute resolution proceeding. You and Discord (the “Parties”) agree that any applicable statute of limitations period and filing fees or other deadlines will be tolled while the Parties engage in this Informal Dispute Resolution process. The Parties further agree that whether a complaining Party has satisfied the requirements of this Informal Dispute Resolution process, including whether a form was properly submitted or contained all required information, is an issue that can be decided by a court as a prerequisite to arbitration."
+      ],
+      "id": "h1",
+      "new_start": 92,
+      "old_start": 92,
+      "removed": [
+        "If you reside in the European Union, you may also be entitled to submit your complaint to the Out-of-Court Dispute Settlement (“OCDS”) mechanism under DSA Article 21. Note that a submission via the OCDS mechanism alone, without submitting Discord's Dispute Resolution Form available at [URL] completely and accurately, will not toll the applicable statutes of limitations or other deadlines."
+      ],
+      "word_spans": null
+    }
+  ],
+  "id": "discord-tos-92fa6ed",
+  "materiality": {
+    "added_chars": 401,
+    "effective_date_change": null,
+    "material": true,
+    "reason": "added_prose_exceeds_sentence_threshold",
+    "removed_chars": 391,
+    "similarity_badge": 0.9934
+  },
+  "parent_commit": "8934187a000a0d662ebad8f466ddc38c6373d439",
+  "schema_version": 1,
+  "source_url": "https://discord.com/terms"
+}
