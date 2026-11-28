@@ -2,7 +2,7 @@
   "urls": {
     "https://about.gitlab.com/privacy/": {
       "content_sha256": "fc446c29e8d4104e58c12cc8ec62c39bd6d30f1c733b1e28f83ca92e3187bd57",
-      "etag": "\"cf66afdb30d06a238d27b3ea4f26d190\""
+      "etag": "\"5471ed97496fe14cbfdbe210f551ae67\""
     },
     "https://aws.amazon.com/agreement/": {
       "content_sha256": "e3151e29cebf8d481e959fc6f2e5581316c4f8851a3cc20f8340bcb514527e66",
@@ -14,11 +14,11 @@
     },
     "https://discord.com/privacy": {
       "content_sha256": "dc717f25bf403eb64cc0fcd86f07a810f1822b2ebad43be5568359b2e7b9aba4",
-      "last_modified": "Tue, 24 Nov 2026 19:57:07 GMT"
+      "last_modified": "Tue, 24 Nov 2026 19:57:01 GMT"
     },
     "https://discord.com/terms": {
       "content_sha256": "032123ec7f16851105609ce53ea2b857f262481922b100415553873311e1106b",
-      "last_modified": "Tue, 24 Nov 2026 19:56:43 GMT"
+      "last_modified": "Tue, 24 Nov 2026 19:56:42 GMT"
     },
     "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service": {
       "content_sha256": "000c7a84064e426e18005aea4884b8fd27f941f36279169ed1b23daffa099176"
@@ -28,11 +28,11 @@
     },
     "https://duckduckgo.com/privacy": {
       "content_sha256": "eee5e8056fb74283eef09bb1da259c38d5be458602d713a4ef9d24c573b78ca9",
-      "etag": "\"6b0841c9-20452\""
+      "etag": "\"6b09cfaf-205d1\""
     },
     "https://duckduckgo.com/terms": {
       "content_sha256": "61148e787820a941a1ee616b4a61b83e89e4e1a217336e4f54577e2661e2d5a5",
-      "etag": "\"6b0841c9-1f496\""
+      "etag": "\"6b09cfaf-1f615\""
     },
     "https://explore.zoom.us/en/privacy/": {
       "content_sha256": "69f3271e08f8c5174ec5237fa5c1dc05d5499af474f3d50ab883fc7b0b04ba8e"
@@ -42,11 +42,11 @@
     },
     "https://foundation.wikimedia.org/wiki/Policy:Privacy_policy": {
       "content_sha256": "e2a6b5ffaa9dd78e6592df77c43ecdbd80b532c1b4817eb888cd95f468e1c27c",
-      "last_modified": "Fri, 27 Nov 2026 02:59:42 GMT"
+      "last_modified": "Sat, 28 Nov 2026 02:52:41 GMT"
     },
     "https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use": {
       "content_sha256": "83d332d7698c7c934d5ecb2cd5e41aa94fc698e2286e5c984d11ba43cfd4e9b3",
-      "last_modified": "Fri, 27 Nov 2026 02:21:11 GMT"
+      "last_modified": "Sat, 28 Nov 2026 03:26:11 GMT"
     },
     "https://help.netflix.com/legal/privacy": {
       "content_sha256": "52aa3bcde4f9fff3ec5ed75c20fa2be966fd88ec71f326e8313cc44c1fd36f54"
@@ -62,13 +62,13 @@
     },
     "https://proton.me/legal/privacy": {
       "content_sha256": "48f5f277378e3fc3ec689ec69db523ffa4e1ad7fb32b52651fca1a72c2e86e06",
-      "etag": "\"79a4-661306c5d117e\"",
-      "last_modified": "Thu, 26 Nov 2026 16:27:44 GMT"
+      "etag": "\"79a3-6613f40e4d2d8\"",
+      "last_modified": "Fri, 27 Nov 2026 10:09:19 GMT"
     },
     "https://proton.me/legal/terms": {
       "content_sha256": "6f6d950e92984f5d9c368af3f5fd3dc42d9cf10a501ebf6b547828d65b5f68b9",
-      "etag": "\"9a12-661306c5d1069\"",
-      "last_modified": "Thu, 26 Nov 2026 16:27:44 GMT"
+      "etag": "\"9a13-6613f40af1897\"",
+      "last_modified": "Fri, 27 Nov 2026 10:09:16 GMT"
     },
     "https://slack.com/privacy-policy": {
       "content_sha256": "ed782509630316e10f47cf550969369cf61897b981e1cef7fd1d6e05ec43a6a2"
@@ -111,19 +111,19 @@
     },
     "https://www.coursera.org/about/privacy": {
       "content_sha256": "68894f50f03c790bd1772e74e24a99bf3657a4dc28665f3d0e7925dafeb54b90",
-      "etag": "W/\"6bebc-YEFtqunekN3NXvlfPNGk9LSS9Vk\""
+      "etag": "W/\"6bec0-BAxdz+l9GvOYFVs0YslZH7xnBGA\""
     },
     "https://www.coursera.org/about/terms": {
       "content_sha256": "b3d8fd7f129a08578dbb16b8154d48c8831e57762c5c140b4abd1d1699e9b1a5",
-      "etag": "W/\"6adf8-R1eHYL0pUh+w21CyqYGQE6UIy3w\""
+      "etag": "W/\"6adfc-nyARGuDVgWJaJy0pFvEm7Z4+Au8\""
     },
     "https://www.digitalocean.com/legal/privacy-policy": {
       "content_sha256": "8ad9dfea6ca8b25c92a959376fdc421f7946615205f2915182425800d4b95279",
-      "etag": "W/\"qs1pg5yzy14idv\""
+      "etag": "W/\"10q078ozpgy4idv\""
     },
     "https://www.digitalocean.com/legal/terms-of-service-agreement": {
       "content_sha256": "242328760244deac4fe9a42fbcb265c24a8d899faf26f16ed2d02d881b538252",
-      "etag": "W/\"3ikxsxaemh64m6\""
+      "etag": "W/\"12dd7shldef64m6\""
     },
     "https://www.dropbox.com/privacy": {
       "content_sha256": "9d9569e24e58e16513a810700bebed2b8ceb001ed498803286acd88597a2c659"
@@ -148,11 +148,11 @@
     },
     "https://www.paypal.com/us/legalhub/paypal/useragreement-full": {
       "content_sha256": "9566c248194545bd901cec726be43fc827efc9d66df8a51d86e3957a6f80996e",
-      "etag": "W/\"246586-1o23Jt1osiJUTqYBG9Yz9n6Flnc\""
+      "etag": "W/\"246586-C35IO5rFg5NaYjSyIkywalrNbyg\""
     },
     "https://www.paypal.com/us/legalhub/privacy-full": {
       "content_sha256": "cb63979efd648fa1a1fe56bf57378a8029b6a49698db7cede65dc97bb77fd2a0",
-      "etag": "W/\"19ebc8-x4EgEjCNFC4Jo6UlDDT9cjn7n80\""
+      "etag": "W/\"19ebc8-L7wUN4xhLiuKn6A7GMIsJJop/BQ\""
     },
     "https://www.redditinc.com/policies/user-agreement": {
       "content_sha256": "38c1082b0652de013f6784881b459d747b6663facb29181b045e112d54cf480b",
@@ -160,33 +160,33 @@
     },
     "https://www.salesforce.com/company/privacy/": {
       "content_sha256": "57e6d955484efdaa277a9dd1b71fab651396134adc030b6eae84d6b6fc442b0e",
-      "etag": "W/\"9c84d-JWhFLJpQCW2IaK+5Sk8awyMkAK0\""
+      "etag": "W/\"9c774-7WRRI1eJd/crHn9amNp6MaUtihI\""
     },
     "https://www.shopify.com/legal/privacy": {
       "content_sha256": "2479befe4cec981236cae3e9b1113ce9a599e46e9b0767f2f773501c63558100",
-      "last_modified": "Fri, 27 Nov 2026 03:56:51 GMT"
+      "last_modified": "Sat, 28 Nov 2026 04:12:41 GMT"
     },
     "https://www.shopify.com/legal/terms": {
       "content_sha256": "5f76c82e310bb34b51ce128dd39a73d3b89ddfe8d468d32c9e9714b7d2373735",
-      "last_modified": "Fri, 27 Nov 2026 04:13:17 GMT"
+      "last_modified": "Sat, 28 Nov 2026 04:20:21 GMT"
     },
     "https://www.spotify.com/us/legal/end-user-agreement/": {
       "content_sha256": "555d772e9da0dee9c45a37def90c93aef5b0bf5417e8a8c7769c54e04de3ee6b",
-      "etag": "\"rygrbpwdf642jn\""
+      "etag": "\"eutgz1xunw42jm\""
     },
     "https://www.spotify.com/us/legal/privacy-policy/": {
       "content_sha256": "dfd8e48cac72ff05cc3d8f611d552b4d83bbed0d93a282f8f4980a92ab41ebe9",
-      "etag": "\"gnxcvha3oy47h4\""
+      "etag": "\"j3ecuu9rkw47h4\""
     },
     "https://www.twitch.tv/p/en/legal/privacy-notice/": {
       "content_sha256": "e303134f74f6a2c64cd3df158b175ecc616f82901d96ad37cee40d3705e5e3b1",
       "etag": "\"106548df0fc479a33c7e55c433839b17\"",
-      "last_modified": "Fri, 27 Nov 2026 00:13:15 GMT"
+      "last_modified": "Sat, 28 Nov 2026 00:13:00 GMT"
     },
     "https://www.twitch.tv/p/en/legal/terms-of-service/": {
       "content_sha256": "2692038807d588317df617332d91363d056f09cfa6ec88612efc27fcd799f327",
       "etag": "\"443e44b01bc477264ce6b2f230ecb55e\"",
-      "last_modified": "Fri, 27 Nov 2026 00:13:16 GMT"
+      "last_modified": "Sat, 28 Nov 2026 00:13:01 GMT"
     }
   },
   "version": 1
